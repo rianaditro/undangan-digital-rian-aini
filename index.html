@@ -547,8 +547,14 @@ h2.title{
   'use strict';
 
   /* ---------- Nama tamu dari URL: ?to=Nama%20Tamu ---------- */
+/* ---------- Nama tamu: dari ?to= atau dari path ---------- */
   try{
     var to = new URLSearchParams(window.location.search).get('to');
+    if(!to){
+      var p = decodeURIComponent(window.location.pathname)
+                .replace(/^\/+|\/+$/g,'').replace(/\.html$/i,'');
+      if(p && p.toLowerCase() !== 'index') to = p.replace(/-/g,' ');
+    }
     if(to && to.trim()){ document.getElementById('guestName').textContent = to.trim().slice(0,60); }
   }catch(e){}
 
@@ -558,7 +564,7 @@ h2.title{
      sendiri, contoh: 'assets/backsound.mp3'
      Bila dikosongkan, dimainkan gamelan sintetis (Web Audio).
      ========================================================= */
-  var BACKSOUND_URL = '';
+  var BACKSOUND_URL = 'assets/backsound.mp3';
 
   var Musik = (function(){
     var btn = document.getElementById('btnMusik');
