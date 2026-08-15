@@ -1,5 +1,14 @@
 {
   "rewrites": [
+    { "source": "/kirim", "destination": "/kirim/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/kirim(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    }
   ]
 }

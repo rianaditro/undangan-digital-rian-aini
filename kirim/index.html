@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kirim Undangan — Rian &amp; 'AINI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Karla:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --nila:#131E33; --nila-2:#1B2A46; --nila-3:#0D1626;
+  --kuningan:#C39A5C; --kuningan-dim:#8C6A3A;
+  --kapur:#EDE7D9; --daun:#7C8B63; --merah:#B4573F;
+  --garis:rgba(237,231,217,.14);
+  --display:'Marcellus',serif; --body:'Karla',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:var(--body);background:var(--nila);color:var(--kapur);
+  font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased;
+  padding:clamp(18px,4vw,40px) clamp(14px,4vw,32px) 80px;
+}
+.wrap{max-width:900px;margin:0 auto;}
+button,input,textarea,select{font:inherit;color:inherit;}
+
+header{border-bottom:1px solid var(--garis);padding-bottom:22px;margin-bottom:30px;}
+.eyebrow{font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--kuningan);}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(24px,5.5vw,34px);letter-spacing:.04em;margin-top:8px;}
+.sub{font-size:14px;color:rgba(237,231,217,.6);margin-top:8px;max-width:560px;}
+
+.panel{border:1px solid var(--garis);padding:clamp(16px,3.4vw,24px);margin-bottom:20px;background:rgba(195,154,92,.03);}
+.panel h2{font-family:var(--display);font-weight:400;font-size:19px;letter-spacing:.03em;margin-bottom:4px;}
+.hint{font-size:12.5px;color:rgba(237,231,217,.5);margin-bottom:14px;}
+label{display:block;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--kuningan-dim);margin:14px 0 6px;}
+input,textarea,select{
+  width:100%;background:rgba(0,0,0,.28);border:1px solid var(--garis);border-radius:2px;
+  padding:11px 13px;font-size:14px;transition:border-color .2s;
+}
+select{appearance:none;cursor:pointer;
+  background-image:linear-gradient(45deg,transparent 50%,var(--kuningan) 50%),linear-gradient(135deg,var(--kuningan) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 20px,calc(100% - 13px) 20px;
+  background-size:5px 5px;background-repeat:no-repeat;}
+.pratinjau{
+  font-family:var(--mono);font-size:11.5px;color:var(--kuningan);
+  background:rgba(0,0,0,.24);border-left:2px solid var(--kuningan-dim);
+  padding:9px 12px;margin-top:9px;overflow-wrap:anywhere;
+}
+.pratinjau span{color:rgba(237,231,217,.4);}
+textarea{resize:vertical;font-family:var(--mono);font-size:12.5px;line-height:1.75;}
+#daftarTamu{min-height:150px;}
+#template{min-height:230px;}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--kuningan-dim);}
+
+.btn{
+  border:1px solid var(--kuningan-dim);background:transparent;color:var(--kuningan);
+  border-radius:2px;padding:11px 20px;cursor:pointer;
+  font-size:10.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  transition:background .2s,color .2s;
+}
+.btn:hover{background:var(--kuningan);color:var(--nila-3);}
+.btn.solid{background:var(--kuningan);color:var(--nila-3);}
+.btn.solid:hover{background:#D9AF6E;}
+.btn.ghost{border-color:var(--garis);color:rgba(237,231,217,.6);}
+.btn.ghost:hover{background:rgba(237,231,217,.08);color:var(--kapur);}
+.btn.kecil{padding:8px 13px;font-size:9.5px;letter-spacing:.12em;}
+.aksi{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center;}
+
+/* progres */
+.stat{display:flex;gap:26px;flex-wrap:wrap;align-items:baseline;margin-bottom:14px;}
+.stat b{font-family:var(--display);font-size:26px;font-weight:400;color:var(--kuningan);}
+.stat span{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:rgba(237,231,217,.5);margin-left:7px;}
+.bar{height:3px;background:rgba(237,231,217,.1);overflow:hidden;}
+.bar i{display:block;height:100%;background:var(--kuningan);width:0;transition:width .5s ease;}
+
+/* daftar tamu */
+.alat{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+.alat input{flex:1;min-width:160px;padding:9px 12px;font-size:13px;}
+.tamu{
+  display:grid;grid-template-columns:1fr auto;gap:10px 14px;align-items:center;
+  padding:13px 0;border-bottom:1px solid var(--garis);
+}
+.tamu.sent .nama{color:rgba(237,231,217,.42);text-decoration:line-through;text-decoration-color:rgba(195,154,92,.5);}
+.nama{font-family:var(--display);font-size:17px;letter-spacing:.02em;}
+.no{font-family:var(--mono);font-size:11.5px;color:rgba(237,231,217,.45);margin-top:3px;}
+.no.kosong{color:var(--merah);}
+.tombol{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;}
+.tandai{
+  width:26px;height:26px;flex:none;border:1px solid var(--kuningan-dim);background:transparent;
+  border-radius:50%;cursor:pointer;color:var(--kuningan);font-size:13px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+}
+.tamu.sent .tandai{background:var(--daun);border-color:var(--daun);color:var(--nila-3);}
+.kosongstate{font-size:13.5px;color:rgba(237,231,217,.45);padding:26px 0;text-align:center;}
+
+#gerbang{
+  position:fixed;inset:0;z-index:40;background:var(--nila);
+  display:flex;align-items:center;justify-content:center;padding:24px;
+}
+#gerbang.pergi{display:none;}
+.gerbang-kotak{width:100%;max-width:330px;border:1px solid var(--garis);padding:30px 26px;background:rgba(195,154,92,.03);}
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);
+  background:var(--kuningan);color:var(--nila-3);padding:11px 22px;border-radius:2px;
+  font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:20;
+}
+.toast.on{opacity:1;transform:translate(-50%,0);}
+
+.catatan{font-size:12.5px;color:rgba(237,231,217,.5);border-left:2px solid var(--kuningan-dim);padding-left:14px;margin-top:16px;line-height:1.75;}
+code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
+@media (max-width:560px){
+  .tamu{grid-template-columns:1fr;}
+  .tombol{justify-content:flex-start;}
+}
+:focus-visible{outline:2px solid var(--kuningan);outline-offset:2px;}
+</style>
+</head>
+<body>
+<div id="gerbang">
+  <div class="gerbang-kotak">
+    <p class="eyebrow">Halaman Panitia</p>
+    <h1 style="font-size:26px;margin:10px 0 6px">Kirim Undangan</h1>
+    <p class="sub" style="margin-bottom:20px">Masukkan kode akses untuk melanjutkan.</p>
+    <input id="kodeInput" type="password" placeholder="Kode akses" autocomplete="off">
+    <button class="btn solid" id="btnMasuk" style="margin-top:14px;width:100%">Masuk</button>
+    <p class="hint" id="kodeSalah" style="margin-top:12px;color:var(--merah);visibility:hidden">Kode tidak cocok.</p>
+  </div>
+</div>
+
+<div class="wrap" id="isi" hidden>
+
+<header>
+  <p class="eyebrow">Alat Bantu Sebar Undangan</p>
+  <h1>Rian &amp; 'Aini</h1>
+  <p class="sub">Tempel daftar tamu, alat ini menyusun link personal dan pesan WhatsApp untuk masing-masing nama. Progres pengiriman tersimpan otomatis.</p>
+</header>
+
+<!-- 1. PENGATURAN -->
+<div class="panel">
+  <h2>1 · Alamat undangan</h2>
+  <p class="hint">Alamat situs undangan setelah di-deploy, tanpa tanda tanya di belakang.</p>
+  <input id="baseUrl" type="url" value="https://undangan-rian-aini.vercel.app" placeholder="https://...">
+
+  <label for="formatLink">Bentuk link</label>
+  <select id="formatLink">
+    <option value="path">Nama di alamat &mdash; /Bapak-Ahmad-Fauzi</option>
+    <option value="query">Nama sebagai parameter &mdash; /?to=Bapak%20Ahmad</option>
+  </select>
+  <div class="pratinjau" id="pratinjau"><span>Pratinjau:</span> &mdash;</div>
+  <p class="hint" id="hintFormat" style="margin-top:9px"></p>
+
+  <label for="template">Template pesan</label>
+  <p class="hint" style="margin-bottom:8px"><code>{nama}</code> diganti nama tamu, <code>{link}</code> diganti link personalnya. Tanda bintang membuat teks tebal di WhatsApp.</p>
+  <textarea id="template" spellcheck="false"></textarea>
+</div>
+
+<!-- 2. DAFTAR TAMU -->
+<div class="panel">
+  <h2>2 · Daftar tamu</h2>
+  <p class="hint">Satu tamu per baris, format <code>Nama, 08xxxxxxxxxx</code>. Nomor boleh dikosongkan — pesannya tetap bisa disalin manual.</p>
+  <textarea id="daftarTamu" spellcheck="false" placeholder="Bapak Ahmad Fauzi, 081234567890&#10;Ibu Siti Aminah sekeluarga, 08987654321&#10;Keluarga Besar Pak Slamet"></textarea>
+  <div class="aksi">
+    <button class="btn solid" id="btnProses">Susun Undangan</button>
+    <button class="btn ghost" id="btnContoh">Isi Contoh</button>
+  </div>
+</div>
+
+<!-- 3. HASIL -->
+<div class="panel" id="panelHasil" hidden>
+  <h2>3 · Kirim satu per satu</h2>
+  <p class="hint">Menekan Kirim membuka WhatsApp dengan pesan sudah terisi — Anda tinggal menekan tombol kirim di sana. Tamu otomatis tertandai terkirim.</p>
+
+  <div class="stat">
+    <div><b id="nTerkirim">0</b><span>Terkirim</span></div>
+    <div><b id="nSisa">0</b><span>Belum</span></div>
+    <div><b id="nTotal">0</b><span>Total</span></div>
+  </div>
+  <div class="bar"><i id="barIsi"></i></div>
+
+  <div class="alat" style="margin-top:20px">
+    <input id="cari" type="search" placeholder="Cari nama…">
+    <button class="btn ghost kecil" id="btnFilter">Tampilkan yang belum</button>
+    <button class="btn ghost kecil" id="btnCsv">Unduh CSV</button>
+    <button class="btn ghost kecil" id="btnReset">Reset progres</button>
+  </div>
+
+  <div id="daftar"></div>
+</div>
+
+<p class="catatan">
+  <strong>Kirim bertahap.</strong> WhatsApp membatasi nomor pribadi yang mengirim pesan beruntun ke banyak kontak baru — risikonya nomor dibatasi sementara. Aman di kisaran 20–30 pesan per sesi, beri jeda beberapa jam, dan dahulukan kontak yang sudah menyimpan nomor Anda.
+  <br><br>
+  <strong>Alternatif untuk kontak tersimpan.</strong> Fitur Broadcast di WhatsApp Business bisa mengirim ke 256 kontak sekaligus, tapi hanya sampai ke orang yang sudah menyimpan nomor Anda, dan pesannya tidak bisa dipersonalisasi per nama.
+</p>
+
+</div>
+
+<div class="toast" id="toast">Tersalin</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var TEMPLATE_AWAL =
+"Assalamu'alaikum Warahmatullahi Wabarakatuh\n\n"+
+"Yth. Bapak/Ibu/Saudara/i\n"+
+"*{nama}*\n\n"+
+"Tanpa mengurangi rasa hormat, kami bermaksud mengundang Anda untuk hadir pada acara pernikahan kami:\n\n"+
+"*Rian Adi Saputro & Nurul Zakiyatul 'Aini*\n\n"+
+"Selasa, 15 September 2026\n"+
+"Akad 13.00 WIB - Resepsi 16.00 WIB\n"+
+"Kediaman mempelai putri\n"+
+"Jl. Pesajen RT 03/04, Demaan, Jepara\n\n"+
+"Detail lengkap, lokasi, dan konfirmasi kehadiran dapat dibuka di:\n"+
+"{link}\n\n"+
+"Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu.\n\n"+
+"Wassalamu'alaikum Warahmatullahi Wabarakatuh\n\n"+
+"Kami yang berbahagia,\n"+
+"Rian & 'Aini";
+
+  var $ = function(id){ return document.getElementById(id); };
+  var tamu = [], terkirim = {}, hanyaBelum = false;
+  var KUNCI = 'undangan-progres';
+
+  $('template').value = TEMPLATE_AWAL;
+
+  /* ---------- Simpan & muat progres (localStorage) ---------- */
+  function simpan(){
+    try{
+      localStorage.setItem(KUNCI, JSON.stringify({
+        base: $('baseUrl').value,
+        tpl: $('template').value,
+        daftar: $('daftarTamu').value,
+        fmt: $('formatLink').value,
+        terkirim: terkirim
+      }));
+    }catch(e){}
+  }
+  function muat(){
+    try{
+      var mentah = localStorage.getItem(KUNCI);
+      if(!mentah) return;
+      var d = JSON.parse(mentah);
+      if(d.base) $('baseUrl').value = d.base;
+      if(d.tpl) $('template').value = d.tpl;
+      if(d.daftar) $('daftarTamu').value = d.daftar;
+      if(d.fmt) $('formatLink').value = d.fmt;
+      terkirim = d.terkirim || {};
+      if(d.daftar) proses(true);
+      perbaruiPratinjau();
+    }catch(e){}
+  }
+
+  /* ---------- Bantu ---------- */
+  function toast(txt){
+    var t = $('toast'); t.textContent = txt; t.classList.add('on');
+    clearTimeout(t._x); t._x = setTimeout(function(){ t.classList.remove('on'); }, 1700);
+  }
+  function esc(s){
+    return String(s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function rapikanNomor(raw){
+    var d = String(raw||'').replace(/\D/g,'');
+    if(!d) return '';
+    if(d.indexOf('62') === 0) return d;
+    if(d.indexOf('0')  === 0) return '62' + d.slice(1);
+    if(d.indexOf('8')  === 0) return '62' + d;
+    return d;
+  }
+  function alamatDasar(){
+    return $('baseUrl').value.trim().replace(/[?#].*$/,'').replace(/\/+$/,'');
+  }
+  function siput(nama){
+    // buang karakter yang punya arti khusus di URL, spasi jadi tanda hubung
+    var bersih = nama.trim()
+      .replace(/[?#&/\\%+]/g,' ')
+      .replace(/\s+/g,'-')
+      .replace(/-{2,}/g,'-')
+      .replace(/^-|-$/g,'');
+    return encodeURIComponent(bersih);
+  }
+  function linkTamu(nama){
+    var base = alamatDasar();
+    return $('formatLink').value === 'path'
+      ? base + '/' + siput(nama)
+      : base + '/?to=' + encodeURIComponent(nama);
+  }
+  function perbaruiPratinjau(){
+    var contoh = (tamu[0] && tamu[0].nama) || 'Bapak Ahmad Fauzi';
+    $('pratinjau').innerHTML = '<span>Pratinjau:</span> ' + esc(linkTamu(contoh));
+    $('hintFormat').textContent = $('formatLink').value === 'path'
+      ? 'Lebih rapi di pratinjau WhatsApp. Butuh vercel.json dan patch pembaca path sudah live di situs.'
+      : 'Bentuk paling aman, jalan tanpa konfigurasi tambahan apa pun.';
+  }
+  function pesanTamu(nama){
+    return $('template').value
+      .split('{nama}').join(nama)
+      .split('{link}').join(linkTamu(nama));
+  }
+  function salin(txt){
+    if(navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(txt);
+    return new Promise(function(res,rej){
+      var ta = document.createElement('textarea');
+      ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); res(); }catch(e){ rej(e); }
+      finally{ document.body.removeChild(ta); }
+    });
+  }
+
+  /* ---------- Proses daftar ---------- */
+  function proses(diam){
+    var baris = $('daftarTamu').value.split('\n');
+    tamu = [];
+    baris.forEach(function(b){
+      b = b.trim();
+      if(!b) return;
+      var bagi = b.split(/[,;\t]/);
+      var nama = (bagi[0]||'').trim();
+      if(!nama) return;
+      tamu.push({ nama:nama, no:rapikanNomor(bagi[1]) });
+    });
+    $('panelHasil').hidden = tamu.length === 0;
+    gambar();
+    perbaruiPratinjau();
+    if(!diam && tamu.length) toast(tamu.length + ' tamu siap');
+    simpan();
+  }
+
+  function gambar(){
+    var cari = $('cari').value.toLowerCase().trim();
+    var tampil = tamu.filter(function(t){
+      if(hanyaBelum && terkirim[t.nama]) return false;
+      if(cari && t.nama.toLowerCase().indexOf(cari) === -1) return false;
+      return true;
+    });
+
+    var n = tamu.filter(function(t){ return terkirim[t.nama]; }).length;
+    $('nTerkirim').textContent = n;
+    $('nSisa').textContent = tamu.length - n;
+    $('nTotal').textContent = tamu.length;
+    $('barIsi').style.width = tamu.length ? (n/tamu.length*100)+'%' : '0';
+
+    if(!tampil.length){
+      $('daftar').innerHTML = '<p class="kosongstate">'+
+        (hanyaBelum ? 'Semua tamu sudah dikirimi undangan.' : 'Tidak ada nama yang cocok.')+'</p>';
+      return;
+    }
+
+    $('daftar').innerHTML = tampil.map(function(t){
+      var sent = !!terkirim[t.nama];
+      var i = tamu.indexOf(t);
+      return '<div class="tamu'+(sent?' sent':'')+'">'
+        + '<div>'
+        +   '<div class="nama">'+esc(t.nama)+'</div>'
+        +   '<div class="no'+(t.no?'':' kosong')+'">'+(t.no ? '+'+t.no : 'nomor belum diisi')+'</div>'
+        + '</div>'
+        + '<div class="tombol">'
+        +   '<button class="tandai" data-tandai="'+i+'" title="Tandai terkirim" aria-label="Tandai terkirim">'+(sent?'&#10003;':'')+'</button>'
+        +   (t.no ? '<button class="btn kecil solid" data-kirim="'+i+'">Kirim</button>' : '')
+        +   '<button class="btn kecil ghost" data-pesan="'+i+'">Salin Pesan</button>'
+        +   '<button class="btn kecil ghost" data-link="'+i+'">Salin Link</button>'
+        + '</div>'
+      + '</div>';
+    }).join('');
+  }
+
+  /* ---------- Aksi baris ---------- */
+  $('daftar').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if(!b) return;
+    var d = b.dataset;
+    var i = parseInt(d.kirim || d.pesan || d.link || d.tandai, 10);
+    var t = tamu[i]; if(!t) return;
+
+    if(d.kirim !== undefined){
+      window.open('https://wa.me/'+t.no+'?text='+encodeURIComponent(pesanTamu(t.nama)), '_blank');
+      terkirim[t.nama] = true; gambar(); simpan();
+    }else if(d.pesan !== undefined){
+      salin(pesanTamu(t.nama)).then(function(){ toast('Pesan tersalin'); })
+        .catch(function(){ toast('Gagal menyalin'); });
+    }else if(d.link !== undefined){
+      salin(linkTamu(t.nama)).then(function(){ toast('Link tersalin'); })
+        .catch(function(){ toast('Gagal menyalin'); });
+    }else if(d.tandai !== undefined){
+      if(terkirim[t.nama]) delete terkirim[t.nama]; else terkirim[t.nama] = true;
+      gambar(); simpan();
+    }
+  });
+
+  /* ---------- Kontrol ---------- */
+  $('btnProses').addEventListener('click', function(){ proses(false); });
+  $('cari').addEventListener('input', gambar);
+  $('template').addEventListener('change', simpan);
+  $('baseUrl').addEventListener('input', perbaruiPratinjau);
+  $('baseUrl').addEventListener('change', simpan);
+  $('formatLink').addEventListener('change', function(){ perbaruiPratinjau(); gambar(); simpan(); });
+
+  $('btnFilter').addEventListener('click', function(){
+    hanyaBelum = !hanyaBelum;
+    this.textContent = hanyaBelum ? 'Tampilkan semua' : 'Tampilkan yang belum';
+    gambar();
+  });
+
+  $('btnContoh').addEventListener('click', function(){
+    $('daftarTamu').value =
+      "Bapak Ahmad Fauzi sekeluarga, 081234567890\n"+
+      "Ibu Siti Aminah, 08987654321\n"+
+      "Mas Bagus Prasetyo, 6285712345678\n"+
+      "Keluarga Besar Bapak Slamet";
+    proses(false);
+  });
+
+  $('btnReset').addEventListener('click', function(){
+    if(!confirm('Hapus semua tanda terkirim? Daftar tamu tetap tersimpan.')) return;
+    terkirim = {}; gambar(); simpan(); toast('Progres direset');
+  });
+
+  $('btnCsv').addEventListener('click', function(){
+    var q = function(s){ return '"'+String(s).replace(/"/g,'""')+'"'; };
+    var isi = ['nama,nomor,link,status'].concat(tamu.map(function(t){
+      return [q(t.nama), q(t.no?'+'+t.no:''), q(linkTamu(t.nama)), q(terkirim[t.nama]?'Terkirim':'Belum')].join(',');
+    })).join('\n');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(["\ufeff"+isi], {type:'text/csv;charset=utf-8'}));
+    a.download = 'daftar-tamu-undangan.csv';
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  });
+
+  /* ---------- Gerbang kode akses ---------- */
+  var KODE_AKSES = 'rian2026';   // ganti sesuai keinginan
+
+  function bukaIsi(){
+    $('gerbang').classList.add('pergi');
+    $('isi').hidden = false;
+    perbaruiPratinjau();
+    muat();
+  }
+  function cekKode(){
+    if($('kodeInput').value.trim() === KODE_AKSES){
+      try{ sessionStorage.setItem('panitia','1'); }catch(e){}
+      bukaIsi();
+    }else{
+      $('kodeSalah').style.visibility = 'visible';
+      $('kodeInput').value = '';
+      $('kodeInput').focus();
+    }
+  }
+  $('btnMasuk').addEventListener('click', cekKode);
+  $('kodeInput').addEventListener('keydown', function(e){ if(e.key === 'Enter') cekKode(); });
+
+  var sudah = false;
+  try{ sudah = sessionStorage.getItem('panitia') === '1'; }catch(e){}
+  if(sudah) bukaIsi(); else $('kodeInput').focus();
+})();
+</script>
+</body>
+</html>
