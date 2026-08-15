@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Undangan Pernikahan — Rian &amp; Nurul</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant:ital,wght@0,400;1,300;1,400&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --nila:#131E33;
+  --nila-2:#1B2A46;
+  --nila-3:#0D1626;
+  --jati:#4A3323;
+  --kuningan:#C39A5C;
+  --kuningan-dim:#8C6A3A;
+  --kapur:#EDE7D9;
+  --kapur-2:#E2DAC7;
+  --daun:#7C8B63;
+
+  --display:'Marcellus', 'Times New Roman', serif;
+  --script:'Cormorant', Georgia, serif;
+  --body:'Karla', 'Helvetica Neue', Arial, sans-serif;
+
+  --pad:clamp(20px, 6vw, 64px);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
+body{
+  font-family:var(--body);
+  background:var(--nila);
+  color:var(--kapur);
+  line-height:1.7;
+  overflow-x:hidden;
+  font-weight:300;
+  -webkit-font-smoothing:antialiased;
+}
+body.locked{overflow:hidden;height:100vh;}
+
+img,svg{display:block;max-width:100%;}
+button,input,select,textarea{font:inherit;color:inherit;}
+
+/* ============ TIPOGRAFI ============ */
+.eyebrow{
+  font-size:11px;letter-spacing:.34em;text-transform:uppercase;
+  font-weight:500;color:var(--kuningan);
+}
+.serif{font-family:var(--display);font-weight:400;line-height:1.25;}
+.amp{font-family:var(--script);font-style:italic;font-weight:300;color:var(--kuningan);}
+.arabic{font-family:'Traditional Arabic','Amiri','Scheherazade New',serif;font-size:clamp(20px,5vw,28px);line-height:2;}
+
+/* ============ ORNAMEN UKIR ============ */
+.ukir path,.ukir line,.ukir circle{vector-effect:non-scaling-stroke;}
+.ukir .stroke{fill:none;stroke:var(--kuningan);stroke-width:1.1;stroke-linecap:round;}
+.ukir .leaf{fill:var(--kuningan);opacity:.85;}
+.ukir .dim{stroke:var(--kuningan-dim);}
+.on-paper .ukir .stroke{stroke:var(--jati);}
+.on-paper .ukir .leaf{fill:var(--jati);opacity:.6;}
+
+.draw .stroke{stroke-dasharray:1;stroke-dashoffset:1;}
+.draw.in .stroke{transition:stroke-dashoffset 1.6s cubic-bezier(.22,.8,.3,1);stroke-dashoffset:0;}
+.draw .leaf{opacity:0;transform:scale(.4);transform-origin:center;transform-box:fill-box;}
+.draw.in .leaf{transition:opacity .7s ease .9s, transform .7s cubic-bezier(.2,1.4,.4,1) .9s;opacity:.85;transform:scale(1);}
+.on-paper .draw.in .leaf{opacity:.6;}
+
+.divider{display:block;margin:0 auto;width:min(260px,64vw);opacity:.95;}
+
+/* ============ SAMPUL ============ */
+#cover{
+  position:fixed;inset:0;z-index:60;
+  background:
+    radial-gradient(120% 80% at 50% 0%, #22355A 0%, var(--nila) 45%, var(--nila-3) 100%);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px 20px;text-align:center;
+  transition:opacity .9s ease, visibility .9s;
+}
+#cover.gone{opacity:0;visibility:hidden;pointer-events:none;}
+.cover-frame{
+  position:relative;width:min(520px,100%);
+  padding:clamp(36px,9vw,60px) clamp(20px,6vw,42px);
+}
+.corner{position:absolute;width:clamp(58px,16vw,84px);height:auto;}
+.c-tl{top:0;left:0;}
+.c-tr{top:0;right:0;transform:scaleX(-1);}
+.c-bl{bottom:0;left:0;transform:scaleY(-1);}
+.c-br{bottom:0;right:0;transform:scale(-1,-1);}
+
+.cover-basmalah{font-size:13px;letter-spacing:.2em;color:var(--kuningan);margin-bottom:20px;}
+.cover-label{margin-bottom:14px;}
+.cover-names{
+  font-family:var(--display);
+  font-size:clamp(30px,9vw,54px);
+  letter-spacing:.06em;line-height:1.15;margin:6px 0 4px;
+}
+.cover-names .amp{display:block;font-size:.72em;margin:2px 0;}
+.cover-date{
+  margin-top:18px;font-size:12px;letter-spacing:.3em;text-transform:uppercase;
+  color:rgba(237,231,217,.7);
+}
+.cover-to{
+  margin-top:34px;padding-top:22px;
+  border-top:1px solid rgba(195,154,92,.28);
+  font-size:12.5px;color:rgba(237,231,217,.66);letter-spacing:.04em;
+}
+.cover-guest{
+  display:block;margin-top:6px;font-family:var(--display);
+  font-size:clamp(18px,5vw,24px);color:var(--kapur);letter-spacing:.04em;
+}
+.btn-open{
+  margin-top:26px;
+  background:var(--kuningan);color:var(--nila-3);
+  border:none;border-radius:2px;
+  padding:15px 34px;
+  font-size:11.5px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;
+  cursor:pointer;transition:background .3s, transform .3s, box-shadow .3s;
+  box-shadow:0 10px 30px -12px rgba(195,154,92,.8);
+}
+.btn-open:hover{background:#D9AF6E;transform:translateY(-2px);}
+.btn-open:active{transform:translateY(0);}
+
+/* ============ SEKSI ============ */
+section{padding:clamp(64px,14vw,110px) var(--pad);position:relative;}
+.wrap{max-width:660px;margin:0 auto;}
+.center{text-align:center;}
+.on-paper{background:var(--kapur);color:var(--nila);}
+.on-paper .eyebrow{color:var(--kuningan-dim);}
+.on-paper::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(94deg,transparent 0 3px,rgba(74,51,35,.028) 3px 4px);
+}
+.on-paper > *{position:relative;}
+
+.reveal{opacity:0;transform:translateY(26px);}
+.reveal.in{opacity:1;transform:none;transition:opacity .9s ease,transform .9s cubic-bezier(.22,.8,.3,1);}
+
+/* HERO ATAS */
+#mulai{
+  min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  background:radial-gradient(110% 70% at 50% 100%, #22355A 0%, var(--nila) 55%, var(--nila-3) 100%);
+  text-align:center;
+}
+.hero-arabic{color:var(--kuningan);margin-bottom:26px;}
+.hero-salam{font-size:13.5px;letter-spacing:.06em;color:rgba(237,231,217,.75);max-width:520px;}
+.hero-verse{
+  font-family:var(--script);font-size:clamp(17px,4.4vw,21px);font-style:italic;font-weight:400;
+  line-height:1.75;margin:28px auto 14px;max-width:540px;color:var(--kapur);
+}
+.hero-source{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--kuningan);}
+
+/* MEMPELAI */
+.pair{display:grid;gap:clamp(38px,9vw,54px);margin-top:44px;}
+.person-name{
+  font-family:var(--display);font-size:clamp(24px,6.4vw,34px);
+  letter-spacing:.04em;line-height:1.2;margin-bottom:10px;
+}
+.person-role{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--kuningan-dim);margin-bottom:14px;}
+.person-parents{font-size:14px;line-height:1.85;color:rgba(19,30,51,.72);}
+.person-parents strong{font-weight:500;color:var(--nila);}
+.alm{font-size:11.5px;letter-spacing:.08em;color:var(--kuningan-dim);}
+.pair-amp{font-family:var(--script);font-style:italic;font-size:40px;color:var(--kuningan-dim);line-height:1;}
+
+/* COUNTDOWN */
+#hitung{background:linear-gradient(180deg,var(--nila-3),var(--nila));text-align:center;}
+.count-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:clamp(6px,2.4vw,16px);margin:36px auto 0;max-width:480px;
+}
+.count-box{
+  border:1px solid rgba(195,154,92,.3);
+  padding:clamp(12px,3.4vw,18px) 4px;
+  background:rgba(195,154,92,.05);
+}
+.count-num{
+  font-family:var(--display);font-size:clamp(24px,7.4vw,38px);
+  color:var(--kuningan);line-height:1;font-variant-numeric:tabular-nums;
+}
+.count-lbl{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:rgba(237,231,217,.55);margin-top:8px;}
+.count-done{font-family:var(--display);font-size:clamp(20px,5.4vw,28px);color:var(--kuningan);margin-top:30px;}
+
+/* ACARA */
+.event{
+  border:1px solid rgba(74,51,35,.22);
+  padding:clamp(24px,6vw,34px);
+  text-align:center;background:rgba(255,255,255,.32);
+}
+.event + .event{margin-top:20px;}
+.event-name{font-family:var(--display);font-size:clamp(21px,5.6vw,27px);letter-spacing:.05em;}
+.event-line{width:34px;height:1px;background:var(--kuningan-dim);margin:14px auto;}
+.event-when{font-size:15px;font-weight:500;letter-spacing:.02em;}
+.event-time{font-size:14px;color:rgba(19,30,51,.7);margin-top:4px;}
+.place{margin-top:34px;text-align:center;}
+.place-name{font-family:var(--display);font-size:clamp(18px,4.8vw,22px);margin-bottom:8px;}
+.place-addr{font-size:14px;color:rgba(19,30,51,.72);max-width:340px;margin:0 auto;}
+.btn{
+  display:inline-block;border:1px solid var(--kuningan-dim);background:transparent;
+  color:var(--jati);text-decoration:none;border-radius:2px;
+  padding:13px 26px;margin-top:20px;
+  font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  cursor:pointer;transition:background .3s,color .3s;
+}
+.btn:hover{background:var(--jati);color:var(--kapur);border-color:var(--jati);}
+
+/* HADIAH */
+#hadiah .note{font-size:14px;color:rgba(237,231,217,.72);max-width:440px;margin:16px auto 0;}
+.rek{
+  border:1px solid rgba(195,154,92,.3);background:rgba(195,154,92,.05);
+  padding:22px clamp(18px,5vw,26px);margin-top:20px;text-align:center;
+}
+.rek-bank{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--kuningan);}
+.rek-no{
+  font-family:var(--display);font-size:clamp(21px,5.6vw,26px);letter-spacing:.09em;
+  margin:10px 0 6px;color:var(--kapur);
+}
+.rek-an{font-size:12.5px;color:rgba(237,231,217,.66);letter-spacing:.05em;}
+.btn-copy{
+  margin-top:16px;background:transparent;border:1px solid rgba(195,154,92,.5);
+  color:var(--kuningan);border-radius:2px;padding:10px 22px;
+  font-size:10.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+  cursor:pointer;transition:background .3s,color .3s;
+}
+.btn-copy:hover{background:var(--kuningan);color:var(--nila-3);}
+.btn-copy.ok{background:var(--daun);border-color:var(--daun);color:var(--nila-3);}
+
+/* UCAPAN */
+.field{margin-top:16px;text-align:left;}
+.field label{display:block;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--kuningan-dim);margin-bottom:7px;}
+.field input,.field select,.field textarea{
+  width:100%;background:rgba(255,255,255,.5);
+  border:1px solid rgba(74,51,35,.25);border-radius:2px;
+  padding:12px 14px;font-size:15px;font-weight:300;color:var(--nila);
+  transition:border-color .25s, background .25s;
+}
+.field textarea{min-height:110px;resize:vertical;}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;border-color:var(--kuningan-dim);background:#fff;
+}
+.field select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--jati) 50%),linear-gradient(135deg,var(--jati) 50%,transparent 50%);background-position:calc(100% - 19px) 21px,calc(100% - 14px) 21px;background-size:5px 5px;background-repeat:no-repeat;}
+.form-note{font-size:12px;color:rgba(19,30,51,.55);margin-top:12px;}
+.form-msg{font-size:13px;margin-top:12px;min-height:20px;}
+.form-msg.err{color:#9C3B2E;}
+.form-msg.ok{color:#4C6B3C;}
+
+.ucapan-list{margin-top:34px;display:grid;gap:14px;text-align:left;}
+.ucapan{border-left:2px solid var(--kuningan-dim);padding:2px 0 2px 16px;}
+.ucapan-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;}
+.ucapan-nama{font-family:var(--display);font-size:17px;letter-spacing:.03em;}
+.ucapan-tag{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--daun);border:1px solid rgba(124,139,99,.5);padding:2px 7px;border-radius:2px;}
+.ucapan-teks{font-size:14.5px;color:rgba(19,30,51,.78);margin-top:5px;white-space:pre-wrap;overflow-wrap:anywhere;}
+.ucapan-waktu{font-size:11px;color:rgba(19,30,51,.45);margin-top:5px;letter-spacing:.05em;}
+.state{font-size:13.5px;color:rgba(19,30,51,.55);margin-top:28px;text-align:center;}
+
+/* PENUTUP */
+#penutup{
+  background:radial-gradient(110% 80% at 50% 0%, #22355A 0%, var(--nila) 50%, var(--nila-3) 100%);
+  text-align:center;padding-bottom:clamp(70px,16vw,120px);
+}
+.close-text{font-size:14.5px;color:rgba(237,231,217,.75);max-width:480px;margin:0 auto;}
+.close-names{
+  font-family:var(--display);font-size:clamp(26px,7.4vw,40px);
+  letter-spacing:.06em;margin:26px 0 8px;
+}
+.credit{margin-top:44px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(237,231,217,.32);}
+
+/* ============ MUSIK LATAR ============ */
+#btnMusik{
+  position:fixed;right:clamp(14px,4vw,26px);bottom:clamp(14px,4vw,26px);z-index:50;
+  width:52px;height:52px;border-radius:50%;
+  background:var(--nila-3);border:1px solid rgba(195,154,92,.55);
+  display:none;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;
+  box-shadow:0 8px 24px -8px rgba(0,0,0,.6);
+  transition:transform .3s, border-color .3s, opacity .5s;
+}
+#btnMusik.show{display:flex;}
+#btnMusik:hover{transform:scale(1.06);border-color:var(--kuningan);}
+#btnMusik svg{width:26px;height:26px;}
+#btnMusik .disc{stroke:var(--kuningan);fill:none;stroke-width:1.2;}
+#btnMusik .pin{fill:var(--kuningan);}
+#btnMusik .spin{transform-origin:50% 50%;animation:putar 9s linear infinite;animation-play-state:paused;}
+#btnMusik.on .spin{animation-play-state:running;}
+#btnMusik .bar{stroke:var(--kuningan);stroke-width:1.6;stroke-linecap:round;opacity:0;transition:opacity .3s;}
+#btnMusik.off .bar{opacity:1;}
+@keyframes putar{to{transform:rotate(360deg);}}
+@media (prefers-reduced-motion:reduce){#btnMusik .spin{animation:none;}}
+
+h2.title{
+  font-family:var(--display);font-weight:400;
+  font-size:clamp(25px,6.6vw,36px);letter-spacing:.05em;margin-top:12px;
+}
+.lead{font-size:14.5px;margin-top:14px;color:rgba(19,30,51,.7);max-width:470px;margin-left:auto;margin-right:auto;}
+#hitung .lead,#hadiah .lead{color:rgba(237,231,217,.7);}
+.gap{height:clamp(26px,7vw,40px);}
+
+@media (min-width:720px){
+  .pair{grid-template-columns:1fr auto 1fr;align-items:center;text-align:center;}
+  .rek-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .rek-grid .rek{margin-top:0;}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto;}
+  .reveal,.reveal.in{opacity:1;transform:none;transition:none;}
+  .draw .stroke{stroke-dashoffset:0;}
+  .draw .leaf{opacity:.85;transform:none;}
+  #cover{transition:none;}
+}
+:focus-visible{outline:2px solid var(--kuningan);outline-offset:3px;}
+</style>
+</head>
+<body class="locked">
+
+<!-- ====== SIMBOL UKIR JEPARA ====== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="ukir-sudut">
+      <path class="stroke" pathLength="1" d="M4 116 C4 74 14 44 40 26 C58 13 78 8 116 6"/>
+      <path class="stroke" pathLength="1" d="M40 26 C30 14 34 4 46 4 C56 4 60 12 55 18 C50 24 42 24 36 30"/>
+      <path class="stroke dim" pathLength="1" d="M12 92 C24 84 30 70 30 56"/>
+      <path class="stroke dim" pathLength="1" d="M70 14 C76 24 88 28 100 26"/>
+      <path class="leaf" d="M30 56 c9 -3 17 3 18 12 c-10 4 -18 -2 -18 -12z"/>
+      <path class="leaf" d="M100 26 c3 -9 12 -13 20 -9 c-3 9 -12 13 -20 9z"/>
+      <path class="leaf" d="M12 92 c-8 2 -14 -4 -13 -13 c9 -1 15 5 13 13z"/>
+    </g>
+    <g id="ukir-pemisah">
+      <path class="stroke" pathLength="1" d="M4 20 C40 20 56 8 74 8 C88 8 96 14 104 20"/>
+      <path class="stroke" pathLength="1" d="M4 20 C40 20 56 32 74 32 C88 32 96 26 104 20"/>
+      <path class="stroke" pathLength="1" d="M236 20 C200 20 184 8 166 8 C152 8 144 14 136 20"/>
+      <path class="stroke" pathLength="1" d="M236 20 C200 20 184 32 166 32 C152 32 144 26 136 20"/>
+      <path class="stroke" pathLength="1" d="M120 10 L130 20 L120 30 L110 20 Z"/>
+      <path class="leaf" d="M74 8 c6 -8 16 -8 21 -1 c-7 6 -16 6 -21 1z"/>
+      <path class="leaf" d="M166 32 c-6 8 -16 8 -21 1 c7 -6 16 -6 21 -1z"/>
+    </g>
+  </defs>
+</svg>
+
+<!-- ====== SAMPUL ====== -->
+<div id="cover">
+  <div class="cover-frame">
+    <svg class="ukir corner c-tl" viewBox="0 0 120 120"><use href="#ukir-sudut"/></svg>
+    <svg class="ukir corner c-tr" viewBox="0 0 120 120"><use href="#ukir-sudut"/></svg>
+    <svg class="ukir corner c-bl" viewBox="0 0 120 120"><use href="#ukir-sudut"/></svg>
+    <svg class="ukir corner c-br" viewBox="0 0 120 120"><use href="#ukir-sudut"/></svg>
+
+    <p class="cover-basmalah">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
+    <p class="eyebrow cover-label">Walimatul 'Ursy</p>
+    <h1 class="cover-names">RIAN<span class="amp">&amp;</span>NURUL</h1>
+    <p class="cover-date">Selasa · 15 September 2026</p>
+
+    <div class="cover-to">
+      Kepada Bapak/Ibu/Saudara/i
+      <span class="cover-guest" id="guestName">Tamu Undangan</span>
+    </div>
+    <button class="btn-open" id="btnOpen">Buka Undangan</button>
+  </div>
+</div>
+
+<!-- ====== TOMBOL MUSIK ====== -->
+<button id="btnMusik" class="off" aria-label="Nyalakan musik latar" title="Musik latar">
+  <svg viewBox="0 0 32 32" aria-hidden="true">
+    <g class="spin">
+      <circle class="disc" cx="16" cy="16" r="12"/>
+      <circle class="disc" cx="16" cy="16" r="7"/>
+      <circle class="pin" cx="16" cy="16" r="2"/>
+      <path class="pin" d="M16 4.2 a1.2 1.2 0 0 1 0 2.4 z"/>
+    </g>
+    <line class="bar" x1="7" y1="25" x2="25" y2="7"/>
+  </svg>
+</button>
+
+<!-- ====== PEMBUKA ====== -->
+<section id="mulai">
+  <div class="wrap">
+    <p class="arabic hero-arabic reveal">وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا</p>
+    <p class="hero-salam reveal">Assalamu'alaikum Warahmatullahi Wabarakatuh</p>
+    <p class="hero-verse reveal">Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu pasangan hidup dari jenismu sendiri, supaya kamu merasa tenteram di sisinya, dan dijadikan-Nya di antaramu rasa kasih dan sayang.</p>
+    <p class="hero-source reveal">QS. Ar-Rum : 21</p>
+    <div class="gap"></div>
+    <svg class="ukir divider draw reveal" viewBox="0 0 240 40"><use href="#ukir-pemisah"/></svg>
+  </div>
+</section>
+
+<!-- ====== MEMPELAI ====== -->
+<section class="on-paper center" id="mempelai">
+  <div class="wrap">
+    <p class="eyebrow reveal">Bismillahirrahmanirrahim</p>
+    <h2 class="title reveal">Kami yang berbahagia</h2>
+    <p class="lead reveal">Dengan memohon rahmat dan ridha Allah Subhanahu wa Ta'ala, kami bermaksud menyelenggarakan pernikahan putra-putri kami.</p>
+
+    <div class="pair">
+      <div class="reveal">
+        <p class="person-role">Mempelai Pria</p>
+        <h3 class="person-name">RIAN ADI SAPUTRO</h3>
+        <p class="person-parents">
+          Putra dari<br>
+          <strong>Bapak Joko Sudarno</strong> <span class="alm">(Alm)</span><br>
+          &amp; <strong>Ibu Sri Kanah</strong> <span class="alm">(Almh)</span>
+        </p>
+      </div>
+
+      <div class="pair-amp reveal">&amp;</div>
+
+      <div class="reveal">
+        <p class="person-role">Mempelai Wanita</p>
+        <h3 class="person-name">NURUL ZAKIYATUL 'AINI</h3>
+        <p class="person-parents">
+          Putri dari<br>
+          <strong>Bapak Surahmad</strong><br>
+          &amp; <strong>Ibu Robi'atun</strong> <span class="alm">(Almh)</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="gap"></div>
+    <svg class="ukir divider draw reveal" viewBox="0 0 240 40"><use href="#ukir-pemisah"/></svg>
+  </div>
+</section>
+
+<!-- ====== COUNTDOWN ====== -->
+<section id="hitung">
+  <div class="wrap">
+    <p class="eyebrow reveal">Menghitung Hari</p>
+    <h2 class="title reveal">Selasa, 15 September 2026</h2>
+    <p class="lead reveal">Semoga Allah memudahkan langkah kami sampai pada hari itu.</p>
+
+    <div class="count-grid reveal" id="countGrid">
+      <div class="count-box"><div class="count-num" id="cd-d">—</div><div class="count-lbl">Hari</div></div>
+      <div class="count-box"><div class="count-num" id="cd-h">—</div><div class="count-lbl">Jam</div></div>
+      <div class="count-box"><div class="count-num" id="cd-m">—</div><div class="count-lbl">Menit</div></div>
+      <div class="count-box"><div class="count-num" id="cd-s">—</div><div class="count-lbl">Detik</div></div>
+    </div>
+    <p class="count-done" id="countDone" hidden>Alhamdulillah, hari bahagia telah tiba.</p>
+  </div>
+</section>
+
+<!-- ====== ACARA ====== -->
+<section class="on-paper center" id="acara">
+  <div class="wrap">
+    <p class="eyebrow reveal">Waktu &amp; Tempat</p>
+    <h2 class="title reveal">Rangkaian Acara</h2>
+
+    <div class="gap"></div>
+
+    <div class="event reveal">
+      <p class="event-name">Akad Nikah</p>
+      <div class="event-line"></div>
+      <p class="event-when">Selasa, 15 September 2026</p>
+      <p class="event-time">Pukul 13.00 WIB</p>
+    </div>
+
+    <div class="event reveal">
+      <p class="event-name">Resepsi</p>
+      <div class="event-line"></div>
+      <p class="event-when">Selasa, 15 September 2026</p>
+      <p class="event-time">Pukul 16.00 WIB — selesai</p>
+    </div>
+
+    <div class="place reveal">
+      <p class="eyebrow" style="margin-bottom:12px">Bertempat di</p>
+      <p class="place-name">Kediaman Mempelai Putri</p>
+      <p class="place-addr">Jalan Pesajen RT 03 / RW 04, Demaan, Jepara, Jawa Tengah</p>
+      <a class="btn" href="https://maps.app.goo.gl/xSdwqbrQoHadeU2A6" target="_blank" rel="noopener">Buka Peta Lokasi</a>
+    </div>
+
+    <div class="gap"></div>
+    <svg class="ukir divider draw reveal" viewBox="0 0 240 40"><use href="#ukir-pemisah"/></svg>
+  </div>
+</section>
+
+<!-- ====== HADIAH ====== -->
+<section id="hadiah" class="center">
+  <div class="wrap">
+    <p class="eyebrow reveal">Tanda Kasih</p>
+    <h2 class="title reveal">Amplop Digital</h2>
+    <p class="lead reveal">Doa restu Anda sudah lebih dari cukup bagi kami. Namun bila berkenan memberi tanda kasih, dapat dikirim melalui:</p>
+
+    <div class="rek-grid">
+      <div class="rek reveal">
+        <p class="rek-bank">DANA</p>
+        <p class="rek-no">085727641452</p>
+        <p class="rek-an">a.n. Nurul Zakiyatul 'Aini</p>
+        <button class="btn-copy" data-copy="085727641452">Salin Nomor</button>
+      </div>
+
+      <div class="rek reveal">
+        <p class="rek-bank">SeaBank</p>
+        <p class="rek-no">901316451657</p>
+        <p class="rek-an">a.n. Rian Adi Saputro</p>
+        <button class="btn-copy" data-copy="901316451657">Salin Nomor</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== UCAPAN ====== -->
+<section class="on-paper center" id="ucapan">
+  <div class="wrap">
+    <p class="eyebrow reveal">Ucapan &amp; Doa</p>
+    <h2 class="title reveal">Kirim doa untuk kami</h2>
+    <p class="lead reveal">Tulis ucapan Anda di bawah ini. Kami akan membacanya satu per satu.</p>
+
+    <div class="reveal">
+      <div class="field">
+        <label for="inNama">Nama</label>
+        <input id="inNama" type="text" maxlength="40" placeholder="Nama Anda" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="inHadir">Konfirmasi kehadiran</label>
+        <select id="inHadir">
+          <option value="Hadir">Insya Allah hadir</option>
+          <option value="Belum pasti">Masih belum pasti</option>
+          <option value="Tidak hadir">Berhalangan hadir</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="inPesan">Ucapan</label>
+        <textarea id="inPesan" maxlength="500" placeholder="Barakallahu lakuma wa baraka 'alaikuma..."></textarea>
+      </div>
+      <button class="btn" id="btnKirim" style="margin-top:18px">Kirim Ucapan</button>
+      <p class="form-note">Ucapan yang terkirim dapat dibaca oleh semua tamu undangan.</p>
+      <p class="form-msg" id="formMsg" role="status"></p>
+    </div>
+
+    <div class="ucapan-list" id="listUcapan"></div>
+    <p class="state" id="stateUcapan">Memuat ucapan…</p>
+
+    <div class="gap"></div>
+    <svg class="ukir divider draw reveal" viewBox="0 0 240 40"><use href="#ukir-pemisah"/></svg>
+  </div>
+</section>
+
+<!-- ====== PENUTUP ====== -->
+<section id="penutup">
+  <div class="wrap center">
+    <p class="close-text reveal">Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu kepada kedua mempelai.</p>
+    <p class="close-text reveal" style="margin-top:16px">Atas kehadiran dan doa restunya, kami ucapkan terima kasih.</p>
+    <p class="hero-salam reveal" style="margin-top:26px">Wassalamu'alaikum Warahmatullahi Wabarakatuh</p>
+
+    <h2 class="close-names reveal">RIAN <span class="amp">&amp;</span> NURUL</h2>
+    <p class="eyebrow reveal">Beserta Keluarga</p>
+    <p class="credit reveal">Jepara · 15 September 2026</p>
+  </div>
+</section>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------- Nama tamu dari URL: ?to=Nama%20Tamu ---------- */
+  try{
+    var to = new URLSearchParams(window.location.search).get('to');
+    if(to && to.trim()){ document.getElementById('guestName').textContent = to.trim().slice(0,60); }
+  }catch(e){}
+
+  /* =========================================================
+     MUSIK LATAR
+     Isi BACKSOUND_URL dengan path file lagu Anda saat di-hosting
+     sendiri, contoh: 'assets/backsound.mp3'
+     Bila dikosongkan, dimainkan gamelan sintetis (Web Audio).
+     ========================================================= */
+  var BACKSOUND_URL = '';
+
+  var Musik = (function(){
+    var btn = document.getElementById('btnMusik');
+    var aktif = false, siap = false;
+    var audio = null, ctx = null, master = null, jadwal = null;
+
+    /* --- Mode 1: file audio --- */
+    function siapkanFile(){
+      audio = new Audio(BACKSOUND_URL);
+      audio.loop = true;
+      audio.volume = 0;
+      siap = true;
+    }
+    function fadeFile(ke){
+      var langkah = (ke - audio.volume) / 30, n = 0;
+      var t = setInterval(function(){
+        audio.volume = Math.min(1, Math.max(0, audio.volume + langkah));
+        if(++n >= 30){ clearInterval(t); audio.volume = ke; if(ke === 0) audio.pause(); }
+      }, 40);
+    }
+
+    /* --- Mode 2: gamelan sintetis --- */
+    // Laras mendekati slendro: lima nada berjarak hampir sama
+    var LARAS = [261.6, 300.4, 344.9, 396.0, 454.7];
+    var pola  = [0,2,1,3,2,4,3,1,0,2,3,4], langkah = 0;
+
+    function siapkanSintetis(){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return false;
+      ctx = new AC();
+      master = ctx.createGain();
+      master.gain.value = 0;
+
+      // ruang gema sederhana
+      var conv = ctx.createConvolver();
+      var dur = ctx.sampleRate * 2.6;
+      var buf = ctx.createBuffer(2, dur, ctx.sampleRate);
+      for(var c=0;c<2;c++){
+        var d = buf.getChannelData(c);
+        for(var i=0;i<dur;i++){ d[i] = (Math.random()*2-1) * Math.pow(1 - i/dur, 2.6); }
+      }
+      conv.buffer = buf;
+      var basah = ctx.createGain(); basah.gain.value = 0.42;
+      master.connect(ctx.destination);
+      master.connect(conv); conv.connect(basah); basah.connect(ctx.destination);
+      siap = true;
+      return true;
+    }
+
+    function petik(freq, waktu, keras){
+      // timbre logam: parsial inharmonis seperti bilah gamelan
+      [[1,1],[2.02,.42],[3.06,.22],[4.71,.11],[6.3,.05]].forEach(function(p){
+        var osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq * p[0];
+        g.gain.setValueAtTime(0, waktu);
+        g.gain.linearRampToValueAtTime(keras * p[1], waktu + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, waktu + 2.4 + p[1]*1.6);
+        osc.connect(g); g.connect(master);
+        osc.start(waktu); osc.stop(waktu + 4.4);
+      });
+    }
+
+    function main(){
+      var t = ctx.currentTime + 0.06;
+      var nada = LARAS[pola[langkah % pola.length]];
+      var oktaf = (langkah % 8 === 0) ? 0.5 : ((langkah % 3 === 0) ? 2 : 1);
+      petik(nada * oktaf, t, oktaf === 0.5 ? 0.16 : 0.1);
+      if(langkah % 4 === 2){ petik(LARAS[0] * 0.5, t + 0.9, 0.07); }  // gong lirih
+      langkah++;
+    }
+
+    function nyala(){
+      if(BACKSOUND_URL){
+        if(!siap) siapkanFile();
+        audio.play().then(function(){ fadeFile(0.45); }).catch(function(){});
+      }else{
+        if(!siap && !siapkanSintetis()) return false;
+        if(ctx.state === 'suspended') ctx.resume();
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+        master.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 2.5);
+        main();
+        jadwal = setInterval(main, 1900);
+      }
+      aktif = true;
+      btn.classList.add('on'); btn.classList.remove('off');
+      btn.setAttribute('aria-label','Matikan musik latar');
+      return true;
+    }
+
+    function padam(){
+      if(BACKSOUND_URL){ if(audio) fadeFile(0); }
+      else if(ctx){
+        clearInterval(jadwal); jadwal = null;
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+        master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
+      }
+      aktif = false;
+      btn.classList.remove('on'); btn.classList.add('off');
+      btn.setAttribute('aria-label','Nyalakan musik latar');
+    }
+
+    btn.addEventListener('click', function(){ aktif ? padam() : nyala(); });
+
+    // berhenti sendiri saat tab ditinggalkan
+    document.addEventListener('visibilitychange', function(){
+      if(document.hidden && aktif) padam();
+    });
+
+    return {
+      tampilkan: function(){ btn.classList.add('show'); },
+      mulai: function(){ nyala(); }
+    };
+  })();
+
+  /* ---------- Buka undangan ---------- */
+  var cover = document.getElementById('cover');
+  document.getElementById('btnOpen').addEventListener('click', function(){
+    Musik.tampilkan();
+    Musik.mulai();
+    cover.classList.add('gone');
+    document.body.classList.remove('locked');
+    window.scrollTo(0,0);
+    setTimeout(function(){
+      var t = document.getElementById('mulai');
+      if(t) t.scrollIntoView({behavior:'smooth'});
+    }, 250);
+  });
+
+  /* ---------- Reveal saat digulir ---------- */
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, {threshold:.15, rootMargin:'0px 0px -8% 0px'});
+  document.querySelectorAll('.reveal, .draw').forEach(function(el){ io.observe(el); });
+
+  /* ---------- Hitung mundur ---------- */
+  var target = new Date('2026-09-15T13:00:00+07:00').getTime();
+  var eD=document.getElementById('cd-d'), eH=document.getElementById('cd-h'),
+      eM=document.getElementById('cd-m'), eS=document.getElementById('cd-s'),
+      grid=document.getElementById('countGrid'), done=document.getElementById('countDone');
+  function pad(n){ return n<10 ? '0'+n : ''+n; }
+  function tick(){
+    var diff = target - Date.now();
+    if(diff <= 0){ grid.hidden = true; done.hidden = false; clearInterval(timer); return; }
+    var s = Math.floor(diff/1000);
+    eD.textContent = Math.floor(s/86400);
+    eH.textContent = pad(Math.floor(s%86400/3600));
+    eM.textContent = pad(Math.floor(s%3600/60));
+    eS.textContent = pad(s%60);
+  }
+  tick();
+  var timer = setInterval(tick, 1000);
+
+  /* ---------- Salin nomor rekening ---------- */
+  function copyText(txt){
+    if(navigator.clipboard && window.isSecureContext){
+      return navigator.clipboard.writeText(txt);
+    }
+    return new Promise(function(res, rej){
+      var ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); res(); }catch(e){ rej(e); }
+      finally{ document.body.removeChild(ta); }
+    });
+  }
+  document.querySelectorAll('.btn-copy').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var original = 'Salin Nomor';
+      copyText(btn.dataset.copy).then(function(){
+        btn.textContent = 'Nomor Tersalin'; btn.classList.add('ok');
+      }).catch(function(){
+        btn.textContent = 'Salin manual';
+      });
+      setTimeout(function(){ btn.textContent = original; btn.classList.remove('ok'); }, 2400);
+    });
+  });
+
+  /* ---------- Buku ucapan (tersimpan & dibagikan) ---------- */
+  var listEl  = document.getElementById('listUcapan');
+  var stateEl = document.getElementById('stateUcapan');
+  var msgEl   = document.getElementById('formMsg');
+  var btnKirim= document.getElementById('btnKirim');
+  /* ---- Konfigurasi Supabase ----
+     Salin dari Supabase > Project Settings > API */
+  var SB_URL   = 'https://mavjlhlyrtacxleulbom.supabase.co';
+  var SB_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hdmpsaGx5cnRhY3hsZXVsYm9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NTQwMTUsImV4cCI6MjEwMjMzMDAxNX0.z-ggUETNyHPLWdhXkLTuWHMZdb-E98YcqGzM74d1uq8';
+  var SB_TABEL = 'ucapan';
+  var sbHead   = {
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer ' + SB_KEY,
+    'Content-Type': 'application/json'
+  };
+  function belumDisetel(){ return SB_KEY.indexOf('GANTI_') === 0; }
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function waktu(ts){
+    try{
+      return new Date(ts).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})
+           + ' · ' + new Date(ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+    }catch(e){ return ''; }
+  }
+  function setState(txt){ stateEl.textContent = txt; stateEl.hidden = !txt; }
+
+  function render(items){
+    if(!items.length){
+      listEl.innerHTML = '';
+      setState('Belum ada ucapan. Jadilah yang pertama mengirim doa.');
+      return;
+    }
+    setState('');
+    listEl.innerHTML = items.map(function(u){
+      return '<div class="ucapan">'
+           +   '<div class="ucapan-head"><span class="ucapan-nama">'+esc(u.nama)+'</span>'
+           +   '<span class="ucapan-tag">'+esc(u.hadir)+'</span></div>'
+           +   '<p class="ucapan-teks">'+esc(u.pesan)+'</p>'
+           +   '<p class="ucapan-waktu">'+waktu(u.ts)+'</p>'
+           + '</div>';
+    }).join('');
+  }
+
+  async function muat(){
+    if(belumDisetel()){ setState('Sambungkan Supabase dulu di bagian konfigurasi.'); return; }
+    try{
+      var url = SB_URL + '/rest/v1/' + SB_TABEL
+              + '?select=nama,hadir,pesan,created_at&order=created_at.desc&limit=100';
+      var r = await fetch(url, { headers: sbHead });
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      var data = await r.json();
+      render(data.map(function(d){
+        return { nama:d.nama, hadir:d.hadir, pesan:d.pesan, ts:new Date(d.created_at).getTime() };
+      }));
+    }catch(e){
+      setState('Ucapan belum bisa dimuat. Coba muat ulang halaman.');
+    }
+  }
+
+  btnKirim.addEventListener('click', async function(){
+    var nama  = document.getElementById('inNama').value.trim();
+    var hadir = document.getElementById('inHadir').value;
+    var pesan = document.getElementById('inPesan').value.trim();
+
+    msgEl.className = 'form-msg';
+    if(!nama){ msgEl.classList.add('err'); msgEl.textContent = 'Isi nama Anda dulu.'; return; }
+    if(!pesan){ msgEl.classList.add('err'); msgEl.textContent = 'Tulis ucapan Anda dulu.'; return; }
+    if(belumDisetel()){ msgEl.classList.add('err'); msgEl.textContent = 'Ucapan belum bisa dikirim. Supabase belum tersambung.'; return; }
+
+    btnKirim.disabled = true;
+    var label = btnKirim.textContent;
+    btnKirim.textContent = 'Mengirim…';
+    try{
+      var kirim = Object.assign({ 'Prefer':'return=minimal' }, sbHead);
+      var r = await fetch(SB_URL + '/rest/v1/' + SB_TABEL, {
+        method:'POST',
+        headers: kirim,
+        body: JSON.stringify({
+          nama:  nama.slice(0,40),
+          hadir: hadir,
+          pesan: pesan.slice(0,500)
+        })
+      });
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      msgEl.classList.add('ok');
+      msgEl.textContent = 'Terima kasih, ucapan Anda sudah terkirim.';
+      document.getElementById('inPesan').value = '';
+      await muat();
+    }catch(e){
+      msgEl.classList.add('err');
+      msgEl.textContent = 'Ucapan gagal terkirim. Coba sekali lagi.';
+    }finally{
+      btnKirim.disabled = false;
+      btnKirim.textContent = label;
+    }
+  });
+
+  muat();
+})();
+</script>
+</body>
+</html>
