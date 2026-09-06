@@ -468,9 +468,11 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     },
 
     async ubahPihak(t, pihak){
-      /* pemegang link bercakupan sempit tidak boleh memindah tamu keluar
-         dari pihaknya; tombolnya juga disembunyikan di tampilan */
-      throw new Error('Link ini hanya untuk satu pihak, jadi pihak tamu tidak bisa diubah.');
+      /* server menolak bila token ini bercakupan sempit — memindahkan tamu
+         keluar dari jangkauan sendiri tidak bisa ditarik kembali */
+      await rpc('panitia_ubah_pihak', {
+        p_token: TOKEN, p_tamu_id: t.id, p_pihak: pihak
+      });
     }
 
   } : {

@@ -299,11 +299,37 @@ begin
   end if;
 end $$;
 
+create or replace function public.panitia_ubah_pihak(
+  p_token text, p_tamu_id uuid, p_pihak text)
+returns void
+language plpgsql volatile security definer set search_path = public as $$
+declare a public.panitia_akses;
+begin
+  a := public._panitia(p_token);
+
+  -- yang bercakupan sempit akan memindahkan tamu keluar dari
+  -- jangkauannya sendiri, dan tidak akan bisa menariknya kembali
+  if a.pihak is not null then
+    raise exception 'Link ini hanya untuk satu pihak, jadi pihak tamu tidak bisa diubah'
+      using errcode = '42501';
+  end if;
+
+  if p_pihak not in ('pria','wanita','keluarga-pria','keluarga-wanita') then
+    raise exception 'Pihak tidak dikenal';
+  end if;
+
+  update public.tamu t set pihak = p_pihak where t.id = p_tamu_id;
+  if not found then
+    raise exception 'Tamu tidak ditemukan' using errcode = '42501';
+  end if;
+end $$;
+
 grant execute on function public.panitia_masuk(text)                     to anon, authenticated;
 grant execute on function public.panitia_daftar(text)                    to anon, authenticated;
 grant execute on function public.panitia_tambah(text, jsonb)             to anon, authenticated;
 grant execute on function public.panitia_tandai(text, uuid, text, text)  to anon, authenticated;
 grant execute on function public.panitia_hapus(text, uuid)               to anon, authenticated;
+grant execute on function public.panitia_ubah_pihak(text, uuid, text)    to anon, authenticated;
 
 -- Membuat kelima link. Jalankan sekali, lalu salin tokennya.
 --
