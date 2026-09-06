@@ -74,9 +74,32 @@ link yang sudah beredar di grup WhatsApp tidak bisa ditarik lagi.
 
 ---
 
-## 3. Sebar undangan
+## 3. Siapa membuka apa
 
-Buka `/kirim`, masuk dengan akun panitia tadi.
+Ada dua cara masuk ke `/kirim`, dan keduanya membatasi apa yang terlihat:
+
+| Cara masuk | Untuk siapa | Yang terlihat |
+|---|---|---|
+| Login email | Rian &amp; 'Aini | seluruh tamu, semua pihak |
+| `/kirim?t=…` | tiap pihak | hanya tamu pihaknya sendiri |
+
+Link bertoken tidak perlu login sama sekali — cocok untuk bapak, ibu,
+dan mertua. **Pembatasannya mengikat di server, bukan di tampilan.**
+Halaman hanya memegang anon key, dan anon tidak bisa membaca tabel
+`tamu` sama sekali; semua lewat RPC yang memeriksa token lalu menyaring
+hasilnya. Pemegang link satu pihak tidak bisa melihat, menandai, atau
+menghapus tamu pihak lain sekalipun ia mengubah alamat atau memanggil
+API langsung. Tamu yang ia tambahkan otomatis masuk ke pihaknya —
+menyebut pihak lain di data kiriman pun akan diabaikan server.
+
+Yang perlu diingat: **link itu sendiri adalah kuncinya.** Siapa pun yang
+menerima teruskan link tersebut ikut bisa masuk. Kalau satu link bocor,
+ganti tokennya lewat perintah di bagian bawah `supabase/schema.sql` —
+link lama langsung mati tanpa mengganggu yang lain.
+
+## 4. Sebar undangan
+
+Buka `/kirim`, masuk dengan akun panitia atau lewat link pihak Anda.
 
 1. **Tambah tamu.** Pilih pihak pengundang, lalu tempel daftarnya, satu tamu
    per baris: `Nama, 08xxxxxxxxxx`. Nomor dirapikan otomatis (`08`, `62`,
@@ -107,7 +130,7 @@ benar.
 
 ---
 
-## 4. Empat varian undangan
+## 5. Empat varian undangan
 
 Yang **berbeda** antar pihak:
 

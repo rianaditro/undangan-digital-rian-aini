@@ -130,6 +130,204 @@ revoke all on function public.undangan_tamu(text) from public;
 grant execute on function public.undangan_tamu(text) to anon, authenticated;
 
 -- ============================================================
+--  AKSES PANITIA LEWAT LINK RAHASIA, TANPA LOGIN
+--
+--  Bapak, ibu, dan mertua enggan mengurus akun, jadi tiap pihak
+--  dapat satu link berisi token. Tanpa login, halaman hanya
+--  memegang anon key — dan anon tidak boleh menyentuh tabel tamu
+--  sama sekali. Karena itu semua lewat RPC di bawah: token
+--  diperiksa di sisi server, lalu hasilnya dibatasi ke pihak
+--  milik token itu. Pembatasannya mengikat di API, bukan cuma
+--  di tampilan.
+-- ============================================================
+
+create table if not exists public.panitia_akses (
+  id               uuid primary key default gen_random_uuid(),
+  nama             text not null,
+  token            text not null,
+  pihak            text,          -- null = boleh melihat semua pihak
+  aktif            boolean not null default true,
+  dibuat           timestamptz not null default now(),
+  terakhir_dipakai timestamptz
+);
+
+create unique index if not exists panitia_akses_token_idx on public.panitia_akses (token);
+
+alter table public.panitia_akses drop constraint if exists panitia_akses_pihak_check;
+alter table public.panitia_akses add  constraint panitia_akses_pihak_check
+  check (pihak is null or pihak in ('pria','wanita','keluarga-pria','keluarga-wanita'));
+
+alter table public.panitia_akses enable row level security;
+
+drop policy if exists "akses panitia" on public.panitia_akses;
+create policy "akses panitia" on public.panitia_akses
+  for all to authenticated using (true) with check (true);
+
+-- Penerjemah token. TIDAK diberikan ke anon; hanya dipakai di dalam
+-- RPC lain yang juga security definer.
+create or replace function public._panitia(p_token text)
+returns public.panitia_akses
+language plpgsql stable security definer set search_path = public as $$
+declare a public.panitia_akses;
+begin
+  select * into a from public.panitia_akses
+   where token = p_token and aktif limit 1;
+  if a.id is null then
+    raise exception 'Link tidak dikenal atau sudah dinonaktifkan'
+      using errcode = '28000';
+  end if;
+  return a;
+end $$;
+
+revoke all on function public._panitia(text) from public, anon, authenticated;
+
+create or replace function public.panitia_masuk(p_token text)
+returns table (nama text, pihak text)
+language plpgsql volatile security definer set search_path = public as $$
+declare a public.panitia_akses;
+begin
+  a := public._panitia(p_token);
+  update public.panitia_akses set terakhir_dipakai = now() where id = a.id;
+  return query select a.nama, a.pihak;
+end $$;
+
+create or replace function public.panitia_daftar(p_token text)
+returns table (
+  id uuid, nama text, slug text, telepon text, pihak text,
+  undangan text, berkat text
+)
+language plpgsql stable security definer set search_path = public as $$
+declare a public.panitia_akses;
+begin
+  a := public._panitia(p_token);
+  return query
+    select t.id, t.nama, t.slug, t.telepon, t.pihak,
+           coalesce(u.status, 'belum') as undangan,
+           coalesce(b.status, 'belum') as berkat
+      from public.tamu t
+      left join public.pengiriman u on u.tamu_id = t.id and u.jenis = 'undangan'
+      left join public.pengiriman b on b.tamu_id = t.id and b.jenis = 'berkat'
+     where a.pihak is null or t.pihak = a.pihak
+     order by t.nama;
+end $$;
+
+-- p_baris: [{"nama":"...","slug":"...","telepon":"..."}]
+-- Rujukan tabel diberi alias: nama parameter keluaran (id, slug)
+-- bertabrakan dengan kolom tabel di dalam badan fungsi.
+create or replace function public.panitia_tambah(p_token text, p_baris jsonb)
+returns table (id uuid, nama text, slug text, telepon text, pihak text,
+               undangan text, berkat text)
+language plpgsql volatile security definer set search_path = public as $$
+declare
+  a       public.panitia_akses;
+  baris   jsonb;
+  v_pihak text;
+  v_slug  text;
+  v_dasar text;
+  n       int;
+  baru    uuid[] := '{}';
+  id_baru uuid;
+begin
+  a := public._panitia(p_token);
+
+  for baris in select * from jsonb_array_elements(p_baris) loop
+    -- token bercakupan penuh boleh menyebut pihak; yang lain dipaksa
+    v_pihak := coalesce(a.pihak, baris->>'pihak', 'keluarga-wanita');
+
+    v_dasar := coalesce(nullif(baris->>'slug', ''), 'tamu');
+    v_slug  := v_dasar;
+    n := 2;
+    while exists (select 1 from public.tamu tt where tt.slug = v_slug) loop
+      v_slug := v_dasar || '-' || n;
+      n := n + 1;
+    end loop;
+
+    insert into public.tamu as t (nama, slug, telepon, pihak)
+    values (baris->>'nama', v_slug, nullif(baris->>'telepon',''), v_pihak)
+    returning t.id into id_baru;
+
+    baru := baru || id_baru;
+  end loop;
+
+  return query
+    select t.id, t.nama, t.slug, t.telepon, t.pihak,
+           'belum'::text, 'belum'::text
+      from public.tamu t
+     where t.id = any(baru)
+     order by t.nama;
+end $$;
+
+create or replace function public.panitia_tandai(
+  p_token text, p_tamu_id uuid, p_jenis text, p_status text)
+returns void
+language plpgsql volatile security definer set search_path = public as $$
+declare a public.panitia_akses;
+begin
+  a := public._panitia(p_token);
+
+  if p_jenis not in ('undangan','berkat') then
+    raise exception 'Jenis pengiriman tidak dikenal';
+  end if;
+  if p_status not in ('belum','terkirim','gagal') then
+    raise exception 'Status tidak dikenal';
+  end if;
+
+  if not exists (
+    select 1 from public.tamu t
+     where t.id = p_tamu_id and (a.pihak is null or t.pihak = a.pihak)
+  ) then
+    raise exception 'Tamu tidak ada dalam cakupan link ini' using errcode = '42501';
+  end if;
+
+  insert into public.pengiriman (tamu_id, jenis, status, waktu)
+  values (p_tamu_id, p_jenis, p_status,
+          case when p_status = 'terkirim' then now() else null end)
+  on conflict (tamu_id, jenis) do update
+    set status = excluded.status, waktu = excluded.waktu;
+end $$;
+
+create or replace function public.panitia_hapus(p_token text, p_tamu_id uuid)
+returns void
+language plpgsql volatile security definer set search_path = public as $$
+declare a public.panitia_akses;
+begin
+  a := public._panitia(p_token);
+  delete from public.tamu t
+   where t.id = p_tamu_id and (a.pihak is null or t.pihak = a.pihak);
+  if not found then
+    raise exception 'Tamu tidak ada dalam cakupan link ini' using errcode = '42501';
+  end if;
+end $$;
+
+grant execute on function public.panitia_masuk(text)                     to anon, authenticated;
+grant execute on function public.panitia_daftar(text)                    to anon, authenticated;
+grant execute on function public.panitia_tambah(text, jsonb)             to anon, authenticated;
+grant execute on function public.panitia_tandai(text, uuid, text, text)  to anon, authenticated;
+grant execute on function public.panitia_hapus(text, uuid)               to anon, authenticated;
+
+-- Membuat kelima link. Jalankan sekali, lalu salin tokennya.
+--
+--   insert into public.panitia_akses (nama, token, pihak) values
+--     ('Rian & ''Aini (semua pihak)', encode(gen_random_bytes(24),'hex'), null),
+--     ('Pengantin Pria — Rian',       encode(gen_random_bytes(24),'hex'), 'pria'),
+--     ('Pengantin Wanita — ''Aini',   encode(gen_random_bytes(24),'hex'), 'wanita'),
+--     ('Keluarga Pihak Pria',         encode(gen_random_bytes(24),'hex'), 'keluarga-pria'),
+--     ('Keluarga Pihak Wanita',       encode(gen_random_bytes(24),'hex'), 'keluarga-wanita');
+--
+--   select nama, coalesce(pihak,'(semua)') as cakupan, token
+--     from public.panitia_akses order by dibuat;
+--
+-- Mengganti token yang bocor — link lama langsung mati:
+--
+--   update public.panitia_akses
+--      set token = encode(gen_random_bytes(24),'hex')
+--    where nama = 'Keluarga Pihak Pria';
+--
+-- Mematikan satu link tanpa menghapusnya:
+--
+--   update public.panitia_akses set aktif = false where nama = '...';
+
+-- ============================================================
 --  SETELAH MENJALANKAN FILE INI
 --  1. Authentication → Users → Add user: isi email & sandi
 --     panitia. Itu yang dipakai login di /kirim.
