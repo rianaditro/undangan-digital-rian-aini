@@ -68,16 +68,22 @@
     }
   };
 
+  /* Sebuah acara boleh mengunci tempatnya sendiri lewat kunci `tempat`.
+     Akad dikunci ke sisi wanita karena hanya digelar sekali, di kediaman
+     mempelai putri. Resepsi tidak dikunci, jadi ikut pihak tamu:
+     tamu pihak pria diarahkan ke kediaman mempelai putra. */
   var ACARA = {
     wanita: {
       mulai: '2026-09-15T13:00:00+07:00',
       daftar: [
-        { nama: 'Akad Nikah', tanggal: 'Selasa, 15 September 2026', jam: 'Pukul 13.00 WIB' },
-        { nama: 'Resepsi',    tanggal: 'Selasa, 15 September 2026', jam: 'Pukul 16.00 WIB — selesai' }
+        { nama: 'Akad Nikah', tanggal: 'Selasa, 15 September 2026',
+          jam: 'Pukul 13.00 WIB',           ringkas: 'Akad 13.00 WIB',
+          tempat: 'wanita' },
+        { nama: 'Resepsi',    tanggal: 'Selasa, 15 September 2026',
+          jam: 'Pukul 16.00 WIB — selesai', ringkas: 'Resepsi 16.00 WIB' }
       ],
       /* dipakai di judul hitung mundur dan pesan WhatsApp */
-      tanggalRingkas: 'Selasa, 15 September 2026',
-      jamRingkas:     'Akad 13.00 WIB · Resepsi 16.00 WIB'
+      tanggalRingkas: 'Selasa, 15 September 2026'
     },
 
     /* Belum ada rangkaian acara tersendiri untuk sisi pria, jadi
@@ -177,6 +183,25 @@
   function tempatVarian(v) { return TEMPAT[v.sisi] || TEMPAT.wanita; }
   function acaraVarian(v)  { return ACARA[v.sisi]  || ACARA.wanita;  }
 
+  /* tempat sebuah acara: yang dikunci di acara itu, kalau tidak ada
+     baru ikut sisi keluarga tamunya */
+  function tempatAcara(v, ac) {
+    if (ac && ac.tempat && TEMPAT[ac.tempat]) return TEMPAT[ac.tempat];
+    return tempatVarian(v);
+  }
+
+  /* rangkaian acara lengkap dengan tempatnya masing-masing */
+  function acaraBertempat(v) {
+    return acaraVarian(v).daftar.map(function (ac) {
+      return { acara: ac, tempat: tempatAcara(v, ac) };
+    });
+  }
+
+  /* benar bila seluruh acara digelar di tempat yang sama */
+  function satuTempat(daftar) {
+    return daftar.every(function (d) { return d.tempat === daftar[0].tempat; });
+  }
+
   /* "Bapak Ahmad Fauzi" → "bapak-ahmad-fauzi" */
   function siput(nama) {
     var s = String(nama == null ? '' : nama).toLowerCase();
@@ -216,22 +241,33 @@
     return dasar + '/' + slug + (v ? '?p=' + VARIAN[v].kode : '');
   }
 
-  /* pesan WhatsApp, isinya menyesuaikan pihak tamu */
+  /* pesan WhatsApp, isinya menyesuaikan pihak tamu.
+     Bila acaranya tidak semua di satu tempat, tiap acara ditulis
+     bersama alamatnya sendiri supaya tamu tidak salah datang. */
   function pesanWA(nama, slug, pihak) {
-    var v  = varian(pihak);
-    var t  = tempatVarian(v);
-    var a  = acaraVarian(v);
-    var ur = v.ttdNama[0] + " & " + v.ttdNama[1];
+    var v      = varian(pihak);
+    var a      = acaraVarian(v);
+    var daftar = acaraBertempat(v);
+    var ur     = v.ttdNama[0] + " & " + v.ttdNama[1];
+
+    var blok;
+    if (satuTempat(daftar)) {
+      var t = daftar[0].tempat;
+      blok = daftar.map(function (d) { return d.acara.ringkas; }).join('\n')
+           + "\n" + t.nama + "\n" + t.ringkas;
+    } else {
+      blok = daftar.map(function (d) {
+        return d.acara.ringkas + "\n" + d.tempat.nama + "\n" + d.tempat.ringkas;
+      }).join("\n\n");
+    }
 
     return "Assalamu'alaikum Warahmatullahi Wabarakatuh\n\n"
       + "Yth. Bapak/Ibu/Saudara/i\n"
       + "*" + nama + "*\n\n"
       + "Tanpa mengurangi rasa hormat, kami bermaksud mengundang Anda untuk hadir pada acara pernikahan kami:\n\n"
       + "*" + ur + "*\n\n"
-      + a.tanggalRingkas + "\n"
-      + a.jamRingkas + "\n"
-      + t.nama + "\n"
-      + t.ringkas + "\n\n"
+      + a.tanggalRingkas + "\n\n"
+      + blok + "\n\n"
       + "Detail lengkap, lokasi, dan konfirmasi kehadiran dapat dibuka di:\n"
       + linkTamu(slug, pihak) + "\n\n"
       + "Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu.\n\n"
@@ -254,6 +290,9 @@
     varian: varian,
     tempatVarian: tempatVarian,
     acaraVarian: acaraVarian,
+    tempatAcara: tempatAcara,
+    acaraBertempat: acaraBertempat,
+    satuTempat: satuTempat,
     siput: siput,
     nomorRapi: nomorRapi,
     kunciNama: kunciNama,

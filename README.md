@@ -110,21 +110,28 @@ Yang **berbeda** antar pihak:
 Yang **disatukan**: kartu ucapan. Semua varian menulis dan membaca daftar
 ucapan yang sama, jadi tamu dari pihak mana pun melihat doa yang sama.
 
-### Dua alamat
+### Dua alamat, satu jadwal
 
-| | Alamat | Peta |
+Tanggal dan jamnya sama untuk semua tamu — 15 September 2026, akad 13.00,
+resepsi 16.00. Yang berpindah hanya lokasi resepsinya:
+
+| Acara | Tamu pihak wanita | Tamu pihak pria |
 |---|---|---|
-| Sisi wanita | Jl. Pesajen RT 03 / RW 04, Demaan, Jepara | `maps.app.goo.gl/xSdwqbrQoHadeU2A6` |
-| Sisi pria | Jl. Pesajen RT 01 / RW 04, Demaan, Jepara | `goo.gl/maps/HbCrjVDvgopegQHW8` |
+| Akad 13.00 | Kediaman Mempelai Putri, RT 03 / RW 04 | Kediaman Mempelai Putri, RT 03 / RW 04 |
+| Resepsi 16.00 | Kediaman Mempelai Putri, RT 03 / RW 04 | **Kediaman Mempelai Putra, RT 01 / RW 04** |
 
-Alamat ini juga ikut terbawa ke pesan WhatsApp yang disusun halaman
-panitia, jadi tamu pihak pria diarahkan ke RT 01 sejak dari pesannya.
+Akad hanya digelar sekali, jadi dikunci ke kediaman mempelai putri lewat
+`tempat: 'wanita'` pada acara itu di `assets/varian.js`. Resepsi tidak
+dikunci, sehingga mengikuti pihak tamunya.
 
-**Tanggal dan jamnya masih sama untuk kedua sisi** — `ACARA.pria` di
-`assets/varian.js` sengaja dibiarkan `null` supaya mengikuti sisi wanita.
-Kalau acara di kediaman mempelai putra digelar pada waktu yang berbeda,
-isi blok itu; bentuknya persis seperti blok `wanita` tepat di atasnya,
-dan hitung mundurnya ikut menyesuaikan sendiri.
+Tampilannya menyesuaikan sendiri: bila semua acara jatuh di satu tempat
+(tamu pihak wanita), alamatnya ditulis sekali di bawah rangkaian acara.
+Bila berbeda (tamu pihak pria), tiap acara membawa alamat dan tombol
+petanya masing-masing. Hal yang sama berlaku di pesan WhatsApp yang
+disusun halaman panitia.
+
+Peta: sisi wanita `maps.app.goo.gl/xSdwqbrQoHadeU2A6`, sisi pria
+`goo.gl/maps/HbCrjVDvgopegQHW8`.
 
 ---
 

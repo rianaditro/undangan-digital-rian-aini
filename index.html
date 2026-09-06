@@ -211,6 +211,13 @@ section{padding:clamp(64px,14vw,110px) var(--pad);position:relative;}
 .event-line{width:34px;height:1px;background:var(--kuningan-dim);margin:14px auto;}
 .event-when{font-size:15px;font-weight:500;letter-spacing:.02em;}
 .event-time{font-size:14px;color:rgba(19,30,51,.7);margin-top:4px;}
+/* alamat menempel di kartu acara hanya bila acaranya tidak satu tempat */
+.event-tempat{
+  font-family:var(--display);font-size:clamp(16px,4.2vw,19px);
+  letter-spacing:.03em;margin-top:18px;
+}
+.event-alamat{font-size:13.5px;color:rgba(19,30,51,.7);max-width:320px;margin:6px auto 0;}
+.event .btn{margin-top:16px;}
 .place{margin-top:34px;text-align:center;}
 .place-name{font-family:var(--display);font-size:clamp(18px,4.8vw,22px);margin-bottom:8px;}
 .place-addr{font-size:14px;color:rgba(19,30,51,.72);max-width:340px;margin:0 auto;}
@@ -482,7 +489,9 @@ h2.title{
       </div>
     </div>
 
-    <div class="place reveal">
+    <!-- Blok ini dipakai bila seluruh acara di satu tempat. Bila tidak,
+         blok disembunyikan dan alamat pindah ke tiap kartu acara. -->
+    <div class="place reveal" id="tempatBersama">
       <p class="eyebrow" style="margin-bottom:12px">Bertempat di</p>
       <p class="place-name" id="tempatNama">Kediaman Mempelai Putri</p>
       <p class="place-addr" id="tempatAlamat">Jalan Pesajen RT 03 / RW 04, Demaan, Jepara, Jawa Tengah</p>
@@ -848,17 +857,29 @@ h2.title{
       + '<div class="pair-amp reveal">&amp;</div>'
       + kartuMempelai(M.MEMPELAI[v.urutan[1]]);
 
-    /* rangkaian acara */
-    document.getElementById('daftarAcara').innerHTML = acara.daftar.map(function(ac){
+    /* Rangkaian acara. Akad selalu di kediaman mempelai putri; resepsi
+       mengikuti pihak tamu. Kalau keduanya jatuh di tempat yang sama —
+       seperti pada tamu pihak wanita — alamatnya cukup ditulis sekali
+       di bawah, seperti sebelumnya. */
+    var daftar   = M.acaraBertempat(v);
+    var seragam  = M.satuTempat(daftar);
+
+    document.getElementById('daftarAcara').innerHTML = daftar.map(function(d){
+      var ac = d.acara;
       return '<div class="event reveal">'
         +   '<p class="event-name">'+esc(ac.nama)+'</p>'
         +   '<div class="event-line"></div>'
         +   '<p class="event-when">'+esc(ac.tanggal)+'</p>'
         +   '<p class="event-time">'+esc(ac.jam)+'</p>'
+        +   (seragam ? '' :
+              '<p class="event-tempat">'+esc(d.tempat.nama)+'</p>'
+            + '<p class="event-alamat">'+esc(d.tempat.alamat)+'</p>'
+            + '<a class="btn" href="'+esc(d.tempat.maps)+'" target="_blank" rel="noopener">Buka Peta Lokasi</a>')
         + '</div>';
     }).join('');
 
-    /* alamat & peta */
+    /* alamat bersama di bawah, hanya bila acaranya satu tempat */
+    document.getElementById('tempatBersama').hidden = !seragam;
     document.getElementById('tempatNama').textContent   = tempat.nama;
     document.getElementById('tempatAlamat').textContent = tempat.alamat;
     document.getElementById('tempatMaps').href          = tempat.maps;
