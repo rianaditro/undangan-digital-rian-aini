@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/kirim", "destination": "/kirim/index.html" },
+    { "source": "/kirim/", "destination": "/kirim/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
