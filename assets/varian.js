@@ -59,15 +59,13 @@
       maps:    'https://maps.app.goo.gl/xSdwqbrQoHadeU2A6'
     },
 
-    /* ISI DI SINI bila pihak pria punya acara di alamat lain.
-       Contoh bentuknya persis seperti blok di atas.
-       pria: {
-         nama:    'Kediaman Mempelai Putra',
-         alamat:  '...',
-         ringkas: '...',
-         maps:    'https://maps.app.goo.gl/...'
-       },                                                        */
-    pria: null
+    /* Jalan dan RW sama dengan sisi wanita, hanya RT-nya berbeda. */
+    pria: {
+      nama:    'Kediaman Mempelai Putra',
+      alamat:  'Jalan Pesajen RT 01 / RW 04, Demaan, Jepara, Jawa Tengah',
+      ringkas: 'Jl. Pesajen RT 01/04, Demaan, Jepara',
+      maps:    'https://goo.gl/maps/HbCrjVDvgopegQHW8'
+    }
   };
 
   var ACARA = {
@@ -82,7 +80,10 @@
       jamRingkas:     'Akad 13.00 WIB · Resepsi 16.00 WIB'
     },
 
-    /* ISI DI SINI bila pihak pria punya rangkaian acara sendiri. */
+    /* Belum ada rangkaian acara tersendiri untuk sisi pria, jadi
+       tanggal dan jamnya mengikuti sisi wanita. Isi blok ini —
+       bentuknya persis seperti blok wanita di atas — bila acara di
+       kediaman mempelai putra digelar pada waktu yang berbeda. */
     pria: null
   };
 

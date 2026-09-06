@@ -110,13 +110,21 @@ Yang **berbeda** antar pihak:
 Yang **disatukan**: kartu ucapan. Semua varian menulis dan membaca daftar
 ucapan yang sama, jadi tamu dari pihak mana pun melihat doa yang sama.
 
-### Alamat acara sisi pria
+### Dua alamat
 
-`TEMPAT.pria` dan `ACARA.pria` di `assets/varian.js` masih `null`, jadi
-untuk sementara pihak pria ikut memakai alamat dan acara sisi wanita.
-Isi kedua blok itu begitu acara di rumah mempelai pria sudah pasti —
-bentuknya persis seperti blok `wanita` tepat di atasnya, dan tidak ada
-tempat lain yang perlu diubah.
+| | Alamat | Peta |
+|---|---|---|
+| Sisi wanita | Jl. Pesajen RT 03 / RW 04, Demaan, Jepara | `maps.app.goo.gl/xSdwqbrQoHadeU2A6` |
+| Sisi pria | Jl. Pesajen RT 01 / RW 04, Demaan, Jepara | `goo.gl/maps/HbCrjVDvgopegQHW8` |
+
+Alamat ini juga ikut terbawa ke pesan WhatsApp yang disusun halaman
+panitia, jadi tamu pihak pria diarahkan ke RT 01 sejak dari pesannya.
+
+**Tanggal dan jamnya masih sama untuk kedua sisi** — `ACARA.pria` di
+`assets/varian.js` sengaja dibiarkan `null` supaya mengikuti sisi wanita.
+Kalau acara di kediaman mempelai putra digelar pada waktu yang berbeda,
+isi blok itu; bentuknya persis seperti blok `wanita` tepat di atasnya,
+dan hitung mundurnya ikut menyesuaikan sendiri.
 
 ---
 
