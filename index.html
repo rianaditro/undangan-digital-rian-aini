@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Undangan Pernikahan — Rian &amp; 'AINI</title>
+<script>document.documentElement.className += ' js';</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant:ital,wght@0,400;1,300;1,400&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -51,19 +52,34 @@ button,input,select,textarea{font:inherit;color:inherit;}
 .amp{font-family:var(--script);font-style:italic;font-weight:300;color:var(--kuningan);}
 .arabic{font-family:'Traditional Arabic','Amiri','Scheherazade New',serif;font-size:clamp(20px,5vw,28px);line-height:2;}
 
-/* ============ ORNAMEN UKIR ============ */
-.ukir path,.ukir line,.ukir circle{vector-effect:non-scaling-stroke;}
-.ukir .stroke{fill:none;stroke:var(--kuningan);stroke-width:1.1;stroke-linecap:round;}
-.ukir .leaf{fill:var(--kuningan);opacity:.85;}
-.ukir .dim{stroke:var(--kuningan-dim);}
-.on-paper .ukir .stroke{stroke:var(--jati);}
-.on-paper .ukir .leaf{fill:var(--jati);opacity:.6;}
+/* ============ ORNAMEN UKIR ============
+   Ornamen digambar sekali di <defs> lalu dipanggil dengan <use>.
+   Selektor turunan CSS tidak bisa menembus shadow tree <use>, jadi
+   warna dan animasinya dijalankan lewat custom property — yang
+   justru diwariskan ke dalam. Nilainya dibaca oleh style inline
+   pada tiap path di dalam <defs>. */
+@property --ukir-off   { syntax:'<number>'; inherits:true; initial-value:0; }
+@property --ukir-daun  { syntax:'<number>'; inherits:true; initial-value:.85; }
 
-.draw .stroke{stroke-dasharray:1;stroke-dashoffset:1;}
-.draw.in .stroke{transition:stroke-dashoffset 1.6s cubic-bezier(.22,.8,.3,1);stroke-dashoffset:0;}
-.draw .leaf{opacity:0;transform:scale(.4);transform-origin:center;transform-box:fill-box;}
-.draw.in .leaf{transition:opacity .7s ease .9s, transform .7s cubic-bezier(.2,1.4,.4,1) .9s;opacity:.85;transform:scale(1);}
-.on-paper .draw.in .leaf{opacity:.6;}
+.ukir{
+  --ukir-garis:var(--kuningan);
+  --ukir-garis-dim:var(--kuningan-dim);
+  --ukir-isi:var(--kuningan);
+}
+.on-paper .ukir{
+  --ukir-garis:var(--jati);
+  --ukir-garis-dim:var(--jati);
+  --ukir-isi:var(--jati);
+  --ukir-daun:.6;
+}
+
+/* goresan tergambar saat ornamen masuk layar */
+.js .draw{--ukir-off:1;--ukir-daun:0;}
+.js .draw.in{
+  --ukir-off:0;--ukir-daun:.85;
+  transition:--ukir-off 1.6s cubic-bezier(.22,.8,.3,1), --ukir-daun .7s ease .9s;
+}
+.js .on-paper .draw.in{--ukir-daun:.6;}
 
 .divider{display:block;margin:0 auto;width:min(260px,64vw);opacity:.95;}
 
@@ -81,6 +97,11 @@ button,input,select,textarea{font:inherit;color:inherit;}
   position:relative;width:min(520px,100%);
   padding:clamp(36px,9vw,60px) clamp(20px,6vw,42px);
 }
+/* Isi sampul menyesuaikan pihak tamu, jadi ditahan sebentar sampai
+   variannya diketahui. Tanpa JS, kelas .js tidak pernah dipasang dan
+   sampul tampil apa adanya. */
+.js .cover-frame{opacity:0;transition:opacity .5s ease;}
+.js .cover-frame.siap{opacity:1;}
 .corner{position:absolute;width:clamp(58px,16vw,84px);height:auto;}
 .c-tl{top:0;left:0;}
 .c-tr{top:0;right:0;transform:scaleX(-1);}
@@ -301,9 +322,9 @@ h2.title{
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto;}
   .reveal,.reveal.in{opacity:1;transform:none;transition:none;}
-  .draw .stroke{stroke-dashoffset:0;}
-  .draw .leaf{opacity:.85;transform:none;}
-  #cover{transition:none;}
+  .js .draw,.js .draw.in{--ukir-off:0;--ukir-daun:.85;transition:none;}
+  .js .on-paper .draw,.js .on-paper .draw.in{--ukir-daun:.6;}
+  #cover,.js .cover-frame{transition:none;}
 }
 :focus-visible{outline:2px solid var(--kuningan);outline-offset:3px;}
 </style>
@@ -313,23 +334,25 @@ h2.title{
 <!-- ====== SIMBOL UKIR JEPARA ====== -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
+    <!-- style ditulis inline: hanya style inline dan custom property
+         yang berlaku di dalam shadow tree <use> -->
     <g id="ukir-sudut">
-      <path class="stroke" pathLength="1" d="M4 116 C4 74 14 44 40 26 C58 13 78 8 116 6"/>
-      <path class="stroke" pathLength="1" d="M40 26 C30 14 34 4 46 4 C56 4 60 12 55 18 C50 24 42 24 36 30"/>
-      <path class="stroke dim" pathLength="1" d="M12 92 C24 84 30 70 30 56"/>
-      <path class="stroke dim" pathLength="1" d="M70 14 C76 24 88 28 100 26"/>
-      <path class="leaf" d="M30 56 c9 -3 17 3 18 12 c-10 4 -18 -2 -18 -12z"/>
-      <path class="leaf" d="M100 26 c3 -9 12 -13 20 -9 c-3 9 -12 13 -20 9z"/>
-      <path class="leaf" d="M12 92 c-8 2 -14 -4 -13 -13 c9 -1 15 5 13 13z"/>
+      <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M4 116 C4 74 14 44 40 26 C58 13 78 8 116 6"/>
+      <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M40 26 C30 14 34 4 46 4 C56 4 60 12 55 18 C50 24 42 24 36 30"/>
+      <path style="fill:none;stroke:var(--ukir-garis-dim);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M12 92 C24 84 30 70 30 56"/>
+      <path style="fill:none;stroke:var(--ukir-garis-dim);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M70 14 C76 24 88 28 100 26"/>
+      <path style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" d="M30 56 c9 -3 17 3 18 12 c-10 4 -18 -2 -18 -12z"/>
+      <path style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" d="M100 26 c3 -9 12 -13 20 -9 c-3 9 -12 13 -20 9z"/>
+      <path style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" d="M12 92 c-8 2 -14 -4 -13 -13 c9 -1 15 5 13 13z"/>
     </g>
     <g id="ukir-pemisah">
-      <path class="stroke" pathLength="1" d="M4 20 C40 20 56 8 74 8 C88 8 96 14 104 20"/>
-      <path class="stroke" pathLength="1" d="M4 20 C40 20 56 32 74 32 C88 32 96 26 104 20"/>
-      <path class="stroke" pathLength="1" d="M236 20 C200 20 184 8 166 8 C152 8 144 14 136 20"/>
-      <path class="stroke" pathLength="1" d="M236 20 C200 20 184 32 166 32 C152 32 144 26 136 20"/>
-      <path class="stroke" pathLength="1" d="M120 10 L130 20 L120 30 L110 20 Z"/>
-      <path class="leaf" d="M74 8 c6 -8 16 -8 21 -1 c-7 6 -16 6 -21 1z"/>
-      <path class="leaf" d="M166 32 c-6 8 -16 8 -21 1 c7 -6 16 -6 21 -1z"/>
+      <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M4 20 C40 20 56 8 74 8 C88 8 96 14 104 20"/>
+      <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M4 20 C40 20 56 32 74 32 C88 32 96 26 104 20"/>
+      <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M236 20 C200 20 184 8 166 8 C152 8 144 14 136 20"/>
+      <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M236 20 C200 20 184 32 166 32 C152 32 144 26 136 20"/>
+      <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M120 10 L130 20 L120 30 L110 20 Z"/>
+      <path style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" d="M74 8 c6 -8 16 -8 21 -1 c-7 6 -16 6 -21 1z"/>
+      <path style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" d="M166 32 c-6 8 -16 8 -21 1 c7 -6 16 -6 21 -1z"/>
     </g>
   </defs>
 </svg>
@@ -344,8 +367,8 @@ h2.title{
 
     <p class="cover-basmalah">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
     <p class="eyebrow cover-label">Walimatul 'Ursy</p>
-    <h1 class="cover-names">RIAN<span class="amp">&amp;</span>'AINI</h1>
-    <p class="cover-date">Selasa · 15 September 2026</p>
+    <h1 class="cover-names" id="coverNama">RIAN<span class="amp">&amp;</span>'AINI</h1>
+    <p class="cover-date" id="coverTanggal">Selasa · 15 September 2026</p>
 
     <div class="cover-to">
       Kepada Bapak/Ibu/Saudara/i
@@ -387,7 +410,8 @@ h2.title{
     <h2 class="title reveal">Kami yang berbahagia</h2>
     <p class="lead reveal">Dengan memohon rahmat dan ridha Allah Subhanahu wa Ta'ala, kami bermaksud menyelenggarakan pernikahan putra-putri kami.</p>
 
-    <div class="pair">
+    <!-- Urutan kartu mengikuti pihak tamu; isi di bawah adalah cadangan tanpa JS. -->
+    <div class="pair" id="pasangan">
       <div class="reveal">
         <p class="person-role">Mempelai Pria</p>
         <h3 class="person-name">RIAN ADI SAPUTRO</h3>
@@ -420,7 +444,7 @@ h2.title{
 <section id="hitung">
   <div class="wrap">
     <p class="eyebrow reveal">Menghitung Hari</p>
-    <h2 class="title reveal">Selasa, 15 September 2026</h2>
+    <h2 class="title reveal" id="hitungJudul">Selasa, 15 September 2026</h2>
     <p class="lead reveal">Semoga Allah memudahkan langkah kami sampai pada hari itu.</p>
 
     <div class="count-grid reveal" id="countGrid">
@@ -441,25 +465,28 @@ h2.title{
 
     <div class="gap"></div>
 
-    <div class="event reveal">
-      <p class="event-name">Akad Nikah</p>
-      <div class="event-line"></div>
-      <p class="event-when">Selasa, 15 September 2026</p>
-      <p class="event-time">Pukul 13.00 WIB</p>
-    </div>
+    <!-- Rangkaian acara dan alamat mengikuti sisi keluarga pengundang. -->
+    <div id="daftarAcara">
+      <div class="event reveal">
+        <p class="event-name">Akad Nikah</p>
+        <div class="event-line"></div>
+        <p class="event-when">Selasa, 15 September 2026</p>
+        <p class="event-time">Pukul 13.00 WIB</p>
+      </div>
 
-    <div class="event reveal">
-      <p class="event-name">Resepsi</p>
-      <div class="event-line"></div>
-      <p class="event-when">Selasa, 15 September 2026</p>
-      <p class="event-time">Pukul 16.00 WIB — selesai</p>
+      <div class="event reveal">
+        <p class="event-name">Resepsi</p>
+        <div class="event-line"></div>
+        <p class="event-when">Selasa, 15 September 2026</p>
+        <p class="event-time">Pukul 16.00 WIB — selesai</p>
+      </div>
     </div>
 
     <div class="place reveal">
       <p class="eyebrow" style="margin-bottom:12px">Bertempat di</p>
-      <p class="place-name">Kediaman Mempelai Putri</p>
-      <p class="place-addr">Jalan Pesajen RT 03 / RW 04, Demaan, Jepara, Jawa Tengah</p>
-      <a class="btn" href="https://maps.app.goo.gl/xSdwqbrQoHadeU2A6" target="_blank" rel="noopener">Buka Peta Lokasi</a>
+      <p class="place-name" id="tempatNama">Kediaman Mempelai Putri</p>
+      <p class="place-addr" id="tempatAlamat">Jalan Pesajen RT 03 / RW 04, Demaan, Jepara, Jawa Tengah</p>
+      <a class="btn" id="tempatMaps" href="https://maps.app.goo.gl/xSdwqbrQoHadeU2A6" target="_blank" rel="noopener">Buka Peta Lokasi</a>
     </div>
 
     <div class="gap"></div>
@@ -474,7 +501,8 @@ h2.title{
     <h2 class="title reveal">Amplop Digital</h2>
     <p class="lead reveal">Doa restu Anda sudah lebih dari cukup bagi kami. Namun bila berkenan memberi tanda kasih, dapat dikirim melalui:</p>
 
-    <div class="rek-grid">
+    <!-- Urutan dompet digital mengikuti pihak tamu. -->
+    <div class="rek-grid" id="dompet">
       <div class="rek reveal">
         <p class="rek-bank">DANA</p>
         <p class="rek-no">085727641452</p>
@@ -536,35 +564,56 @@ h2.title{
     <p class="close-text reveal" style="margin-top:16px">Atas kehadiran dan doa restunya, kami ucapkan terima kasih.</p>
     <p class="hero-salam reveal" style="margin-top:26px">Wassalamu'alaikum Warahmatullahi Wabarakatuh</p>
 
-    <h2 class="close-names reveal">RIAN <span class="amp">&amp;</span> 'AINI</h2>
-    <p class="eyebrow reveal">Beserta Keluarga</p>
+    <p class="eyebrow reveal" id="ttdLabel">Kami yang berbahagia</p>
+    <h2 class="close-names reveal" id="ttdNama">RIAN <span class="amp">&amp;</span> 'AINI</h2>
+    <p class="eyebrow reveal" id="ttdSub">Beserta Keluarga</p>
     <p class="credit reveal">Jepara · 15 September 2026</p>
   </div>
 </section>
 
+<script src="/assets/varian.js"></script>
 <script>
 (function(){
   'use strict';
 
-  /* ---------- Nama tamu dari URL: ?to=Nama%20Tamu ---------- */
-/* ---------- Nama tamu: dari ?to= atau dari path ---------- */
+  var M = window.MENGUNDANG;
+
+  /* =========================================================
+     SIAPA TAMUNYA, DAN DARI PIHAK MANA
+
+     Link personal berbentuk  /nama-tamu?p=kode.
+     Slug dipakai untuk menanyakan nama asli dan pihak tamu ke
+     Supabase; ?p= dipakai lebih dulu supaya sampul tidak perlu
+     menunggu jaringan, sekaligus jadi cadangan bila database
+     tidak bisa dihubungi.
+     ========================================================= */
+  var slugTamu = '', namaTamu = '', pihakTamu = null;
+
   try{
-    var to = new URLSearchParams(window.location.search).get('to');
-    if(!to){
-      var p = decodeURIComponent(window.location.pathname)
-                .replace(/^\/+|\/+$/g,'').replace(/\.html$/i,'');
-      if(p && p.toLowerCase() !== 'index') to = p.replace(/-/g,' ');
-    }
-    if(to && to.trim()){ document.getElementById('guestName').textContent = to.trim().slice(0,60); }
+    var q = new URLSearchParams(window.location.search);
+    pihakTamu = M.pihakSah(q.get('p'));
+
+    var to = q.get('to');
+    var jalur = decodeURIComponent(window.location.pathname)
+                  .replace(/^\/+|\/+$/g,'').replace(/\.html$/i,'');
+    if(jalur && jalur.toLowerCase() !== 'index') slugTamu = M.siput(jalur);
+
+    if(to && to.trim())      namaTamu = to.trim().slice(0,60);
+    else if(slugTamu)        namaTamu = slugTamu.replace(/-/g,' ');
   }catch(e){}
+
+  function judulKata(s){
+    return String(s).replace(/\S+/g, function(w){
+      return w.charAt(0).toUpperCase() + w.slice(1);
+    });
+  }
 
   /* =========================================================
      MUSIK LATAR
-     Isi BACKSOUND_URL dengan path file lagu Anda saat di-hosting
-     sendiri, contoh: 'assets/backsound.mp3'
-     Bila dikosongkan, dimainkan gamelan sintetis (Web Audio).
+     Bila BACKSOUND_URL dikosongkan di assets/varian.js,
+     dimainkan gamelan sintetis (Web Audio).
      ========================================================= */
-  var BACKSOUND_URL = 'assets/backsound.mp3';
+  var BACKSOUND_URL = M.BACKSOUND_URL;
 
   var Musik = (function(){
     var btn = document.getElementById('btnMusik');
@@ -705,14 +754,15 @@ h2.title{
   document.querySelectorAll('.reveal, .draw').forEach(function(el){ io.observe(el); });
 
   /* ---------- Hitung mundur ---------- */
-  var target = new Date('2026-09-15T13:00:00+07:00').getTime();
+  var target = new Date(M.ACARA.wanita.mulai).getTime();
   var eD=document.getElementById('cd-d'), eH=document.getElementById('cd-h'),
       eM=document.getElementById('cd-m'), eS=document.getElementById('cd-s'),
       grid=document.getElementById('countGrid'), done=document.getElementById('countDone');
   function pad(n){ return n<10 ? '0'+n : ''+n; }
   function tick(){
     var diff = target - Date.now();
-    if(diff <= 0){ grid.hidden = true; done.hidden = false; clearInterval(timer); return; }
+    if(diff <= 0){ grid.hidden = true; done.hidden = false; return; }
+    grid.hidden = false; done.hidden = true;
     var s = Math.floor(diff/1000);
     eD.textContent = Math.floor(s/86400);
     eH.textContent = pad(Math.floor(s%86400/3600));
@@ -720,7 +770,7 @@ h2.title{
     eS.textContent = pad(s%60);
   }
   tick();
-  var timer = setInterval(tick, 1000);
+  setInterval(tick, 1000);
 
   /* ---------- Salin nomor rekening ---------- */
   function copyText(txt){
@@ -736,40 +786,175 @@ h2.title{
       finally{ document.body.removeChild(ta); }
     });
   }
-  document.querySelectorAll('.btn-copy').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      var original = 'Salin Nomor';
-      copyText(btn.dataset.copy).then(function(){
-        btn.textContent = 'Nomor Tersalin'; btn.classList.add('ok');
-      }).catch(function(){
-        btn.textContent = 'Salin manual';
-      });
-      setTimeout(function(){ btn.textContent = original; btn.classList.remove('ok'); }, 2400);
+  document.getElementById('dompet').addEventListener('click', function(e){
+    var btn = e.target.closest('.btn-copy');
+    if(!btn) return;
+    var original = 'Salin Nomor';
+    copyText(btn.dataset.copy).then(function(){
+      btn.textContent = 'Nomor Tersalin'; btn.classList.add('ok');
+    }).catch(function(){
+      btn.textContent = 'Salin manual';
     });
+    setTimeout(function(){ btn.textContent = original; btn.classList.remove('ok'); }, 2400);
   });
+
+  /* =========================================================
+     VARIAN — yang membedakan undangan tiap pihak
+
+     Yang berubah: urutan nama mempelai, alamat & rangkaian
+     acara, dan urutan dompet digital. Kartu ucapan sengaja
+     tidak ikut berubah — satu daftar untuk semua tamu.
+     ========================================================= */
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function kartuMempelai(m){
+    return '<div class="reveal">'
+      +   '<p class="person-role">'+esc(m.peran)+'</p>'
+      +   '<h3 class="person-name">'+esc(m.lengkap)+'</h3>'
+      +   '<p class="person-parents">'
+      +     esc(m.anak)+'<br>'
+      +     '<strong>'+esc(m.ayah)+'</strong>'+(m.ayahKet ? ' <span class="alm">'+esc(m.ayahKet)+'</span>' : '')+'<br>'
+      +     '&amp; <strong>'+esc(m.ibu)+'</strong>'+(m.ibuKet ? ' <span class="alm">'+esc(m.ibuKet)+'</span>' : '')
+      +   '</p>'
+      + '</div>';
+  }
+
+  function terapkanVarian(pihak){
+    var v = M.varian(pihak);
+    var tempat = M.tempatVarian(v);
+    var acara  = M.acaraVarian(v);
+
+    /* sampul & penutup */
+    var a = v.ttdNama[0], b = v.ttdNama[1];
+    document.getElementById('coverNama').innerHTML =
+      esc(a)+'<span class="amp">&amp;</span>'+esc(b);
+    document.getElementById('ttdNama').innerHTML =
+      esc(a)+' <span class="amp">&amp;</span> '+esc(b);
+    document.getElementById('ttdLabel').textContent = v.ttdLabel;
+    document.getElementById('ttdSub').textContent   = v.ttdSub;
+    document.title = 'Undangan Pernikahan — ' + a + ' & ' + b;
+
+    document.getElementById('coverTanggal').textContent =
+      acara.tanggalRingkas.replace(', ', ' · ');
+    document.getElementById('hitungJudul').textContent = acara.tanggalRingkas;
+
+    /* kartu mempelai, urutannya menyesuaikan pihak */
+    document.getElementById('pasangan').innerHTML =
+        kartuMempelai(M.MEMPELAI[v.urutan[0]])
+      + '<div class="pair-amp reveal">&amp;</div>'
+      + kartuMempelai(M.MEMPELAI[v.urutan[1]]);
+
+    /* rangkaian acara */
+    document.getElementById('daftarAcara').innerHTML = acara.daftar.map(function(ac){
+      return '<div class="event reveal">'
+        +   '<p class="event-name">'+esc(ac.nama)+'</p>'
+        +   '<div class="event-line"></div>'
+        +   '<p class="event-when">'+esc(ac.tanggal)+'</p>'
+        +   '<p class="event-time">'+esc(ac.jam)+'</p>'
+        + '</div>';
+    }).join('');
+
+    /* alamat & peta */
+    document.getElementById('tempatNama').textContent   = tempat.nama;
+    document.getElementById('tempatAlamat').textContent = tempat.alamat;
+    document.getElementById('tempatMaps').href          = tempat.maps;
+
+    /* dompet digital */
+    document.getElementById('dompet').innerHTML = v.dompet.map(function(k){
+      var d = M.DOMPET[k];
+      return '<div class="rek reveal">'
+        +   '<p class="rek-bank">'+esc(d.bank)+'</p>'
+        +   '<p class="rek-no">'+esc(d.nomor)+'</p>'
+        +   '<p class="rek-an">'+esc(d.an)+'</p>'
+        +   '<button class="btn-copy" data-copy="'+esc(d.nomor)+'">Salin Nomor</button>'
+        + '</div>';
+    }).join('');
+
+    /* hitung mundur mengikuti acara sisi ini */
+    target = new Date(acara.mulai).getTime();
+    tick();
+
+    /* elemen baru belum diamati IntersectionObserver */
+    document.querySelectorAll('.reveal:not(.in), .draw:not(.in)').forEach(function(el){
+      io.observe(el);
+    });
+  }
+
+  /* ---------- Tampilkan sampul begitu variannya pasti ---------- */
+  var sampulSiap = false;
+  function bukaSampul(){
+    if(sampulSiap) return;
+    sampulSiap = true;
+    document.querySelector('.cover-frame').classList.add('siap');
+  }
+  /* jaring pengaman: apa pun yang terjadi, sampul tidak boleh tertahan */
+  setTimeout(bukaSampul, 2500);
+
+  var namaOtomatis = '';
+  function pasangNamaTamu(){
+    var rapi = namaTamu ? judulKata(namaTamu).slice(0,60) : '';
+    document.getElementById('guestName').textContent = rapi || 'Tamu Undangan';
+
+    /* isian nama pada kartu ucapan ikut terisi, selama tamu
+       belum mengetik namanya sendiri */
+    var inNama = document.getElementById('inNama');
+    if(rapi && (inNama.value === '' || inNama.value === namaOtomatis)){
+      inNama.value = rapi.slice(0,40);
+      namaOtomatis = inNama.value;
+    }
+  }
+
+  /* Varian dari ?p= dipakai langsung supaya tidak ada jeda.
+     Bila tidak ada, tunggu jawaban database sebentar. */
+  terapkanVarian(pihakTamu);
+  pasangNamaTamu();
+  if(pihakTamu) bukaSampul();
+
+  /* ---------- Tanya database: nama asli dan pihak tamu ---------- */
+  (function(){
+    if(!slugTamu) { bukaSampul(); return; }
+    fetch(M.SB.url + '/rest/v1/rpc/undangan_tamu', {
+      method: 'POST',
+      headers: {
+        'apikey': M.SB.key,
+        'Authorization': 'Bearer ' + M.SB.key,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ p_slug: slugTamu })
+    }).then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).then(function(baris){
+      var t = Array.isArray(baris) ? baris[0] : baris;
+      if(!t) return;
+      if(t.nama){ namaTamu = t.nama; pasangNamaTamu(); }
+      var p = M.pihakSah(t.pihak);
+      /* ?p= di link tetap menang; database mengisi bila link tidak menyebut */
+      if(p && !pihakTamu){ pihakTamu = p; terapkanVarian(p); }
+    }).catch(function(){
+      /* biarkan tampilan cadangan yang sudah terpasang */
+    }).then(bukaSampul);
+  })();
 
   /* ---------- Buku ucapan (tersimpan & dibagikan) ---------- */
   var listEl  = document.getElementById('listUcapan');
   var stateEl = document.getElementById('stateUcapan');
   var msgEl   = document.getElementById('formMsg');
   var btnKirim= document.getElementById('btnKirim');
-  /* ---- Konfigurasi Supabase ----
-     Salin dari Supabase > Project Settings > API */
-  var SB_URL   = 'https://mavjlhlyrtacxleulbom.supabase.co';
-  var SB_KEY   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hdmpsaGx5cnRhY3hsZXVsYm9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NTQwMTUsImV4cCI6MjEwMjMzMDAxNX0.z-ggUETNyHPLWdhXkLTuWHMZdb-E98YcqGzM74d1uq8';
+  /* Konfigurasi Supabase ada di assets/varian.js */
+  var SB_URL   = M.SB.url;
+  var SB_KEY   = M.SB.key;
   var SB_TABEL = 'ucapan';
   var sbHead   = {
     'apikey': SB_KEY,
     'Authorization': 'Bearer ' + SB_KEY,
     'Content-Type': 'application/json'
   };
-  function belumDisetel(){ return SB_KEY.indexOf('GANTI_') === 0; }
 
-  function esc(s){
-    return String(s).replace(/[&<>"']/g, function(c){
-      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
-    });
-  }
   function waktu(ts){
     try{
       return new Date(ts).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'})
@@ -796,7 +981,6 @@ h2.title{
   }
 
   async function muat(){
-    if(belumDisetel()){ setState('Sambungkan Supabase dulu di bagian konfigurasi.'); return; }
     try{
       var url = SB_URL + '/rest/v1/' + SB_TABEL
               + '?select=nama,hadir,pesan,created_at&order=created_at.desc&limit=100';
@@ -819,22 +1003,31 @@ h2.title{
     msgEl.className = 'form-msg';
     if(!nama){ msgEl.classList.add('err'); msgEl.textContent = 'Isi nama Anda dulu.'; return; }
     if(!pesan){ msgEl.classList.add('err'); msgEl.textContent = 'Tulis ucapan Anda dulu.'; return; }
-    if(belumDisetel()){ msgEl.classList.add('err'); msgEl.textContent = 'Ucapan belum bisa dikirim. Supabase belum tersambung.'; return; }
 
     btnKirim.disabled = true;
     var label = btnKirim.textContent;
     btnKirim.textContent = 'Mengirim…';
     try{
       var kirim = Object.assign({ 'Prefer':'return=minimal' }, sbHead);
-      var r = await fetch(SB_URL + '/rest/v1/' + SB_TABEL, {
-        method:'POST',
-        headers: kirim,
-        body: JSON.stringify({
-          nama:  nama.slice(0,40),
-          hadir: hadir,
-          pesan: pesan.slice(0,500)
-        })
-      });
+      var isi = {
+        nama:  nama.slice(0,40),
+        hadir: hadir,
+        pesan: pesan.slice(0,500),
+        pihak: pihakTamu || null
+      };
+      async function kirimUcapan(muatan){
+        return fetch(SB_URL + '/rest/v1/' + SB_TABEL, {
+          method:'POST', headers: kirim, body: JSON.stringify(muatan)
+        });
+      }
+
+      var r = await kirimUcapan(isi);
+      /* Kolom pihak baru ada setelah supabase/schema.sql dijalankan.
+         Bila belum, ucapan tetap harus bisa masuk. */
+      if(r.status === 400){
+        delete isi.pihak;
+        r = await kirimUcapan(isi);
+      }
       if(!r.ok) throw new Error('HTTP ' + r.status);
       msgEl.classList.add('ok');
       msgEl.textContent = 'Terima kasih, ucapan Anda sudah terkirim.';

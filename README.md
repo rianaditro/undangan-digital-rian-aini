@@ -1,67 +1,124 @@
-# Undangan Pernikahan — Rian & Nurul
+# Undangan Pernikahan — Rian & 'Aini
 
 Situs statis. Tidak ada build step, tidak perlu framework.
 
 ```
-undangan/
-├── index.html      ← seluruh situs
-├── supabase.sql    ← skema tabel ucapan
-└── assets/
-    └── backsound.mp3   (opsional)
+.
+├── index.html            ← halaman undangan
+├── kirim/index.html      ← halaman panitia (daftar tamu & pengiriman)
+├── assets/
+│   ├── varian.js         ← SEMUA konfigurasi ada di sini
+│   └── backsound.mp3
+├── supabase/schema.sql   ← skema tabel + row level security
+└── vercel.json
 ```
+
+Satu tempat untuk semua isian: **`assets/varian.js`**. Halaman undangan dan
+halaman panitia sama-sama membacanya, jadi mengubah alamat acara atau nomor
+dompet cukup sekali.
+
+---
 
 ## 1. Siapkan database
 
-Buka Supabase → **SQL Editor** → tempel isi `supabase.sql` → **Run**.
+Supabase → **SQL Editor** → tempel isi `supabase/schema.sql` → **Run**.
+Aman dijalankan berulang kali.
 
-Lalu ke **Project Settings → API**, salin dua nilai:
-- Project URL
-- anon public key
+Lalu, masih di Supabase:
 
-## 2. Sambungkan ke situs
+1. **Authentication → Users → Add user.** Isi email dan kata sandi panitia.
+   Ini yang dipakai untuk masuk ke `/kirim`.
+2. **Authentication → Sign In / Providers → matikan "Allow new users to
+   sign up".** Tanpa ini, siapa pun bisa mendaftar sendiri lalu ikut membaca
+   daftar tamu beserta nomor teleponnya.
 
-Buka `index.html`, cari blok konfigurasi di dalam `<script>`:
+Kalau URL atau anon key project-nya berbeda dari yang sudah tertulis, ganti
+di `assets/varian.js` bagian `SB`. Anon key memang aman ditaruh di file ini:
+dengan key itu saja, tabel `tamu` dan `pengiriman` tidak bisa dibaca.
 
-```js
-var SB_URL   = 'https://XXXXXXXXXXXX.supabase.co';
-var SB_KEY   = 'GANTI_DENGAN_ANON_PUBLIC_KEY';
-```
+---
 
-Isi keduanya. Anon key memang aman ditaruh di sini — RLS hanya mengizinkan
-baca dan tulis, bukan ubah atau hapus.
-
-## 3. Musik latar (opsional)
-
-```js
-var BACKSOUND_URL = 'assets/backsound.mp3';
-```
-
-Dikosongkan = memakai gamelan sintetis bawaan. Pastikan lagu yang dipakai
-bebas royalti.
-
-## 4. Deploy
+## 2. Deploy
 
 ```bash
 npm i -g vercel
-cd undangan
 vercel --prod
 ```
 
-Pilih **Other** saat ditanya framework, biarkan build command kosong,
-output directory titik (`.`).
+Pilih **Other** saat ditanya framework, build command dikosongkan, output
+directory titik (`.`).
 
-Alternatif tanpa terminal: buka vercel.com/new, seret folder ini ke halaman
-tersebut.
+Tanpa terminal: buka vercel.com/new, seret folder ini ke sana.
 
-## 5. Sebar undangan
+### Memasang domain `rian-aini.mengundang.id`
 
-Nama tamu diambil dari parameter URL:
+1. Vercel → project → **Settings → Domains → Add** → isi
+   `rian-aini.mengundang.id`.
+2. Di Cloudflare (tempat `mengundang.id` dikelola), tambahkan record `CNAME`
+   dengan nama `rian-aini` mengarah ke `cname.vercel-dns.com`, proxy
+   **dimatikan** (awan abu-abu).
+3. Tunggu Vercel menerbitkan sertifikatnya, biasanya beberapa menit.
+
+**Selama domainnya belum siap,** ganti `SITUS` di `assets/varian.js` menjadi
+alamat `.vercel.app` bawaan. Link yang disusun halaman panitia mengikuti
+nilai itu — jadi jangan menyebar undangan sebelum nilainya benar, karena
+link yang sudah beredar di grup WhatsApp tidak bisa ditarik lagi.
+
+---
+
+## 3. Sebar undangan
+
+Buka `/kirim`, masuk dengan akun panitia tadi.
+
+1. **Tambah tamu.** Pilih pihak pengundang, lalu tempel daftarnya, satu tamu
+   per baris: `Nama, 08xxxxxxxxxx`. Nomor dirapikan otomatis (`08`, `62`,
+   `+62`, spasi, tanda hubung semuanya diterima). Nama atau nomor yang sudah
+   ada di daftar akan dilewati, dan yang dilewati dicatat di console browser.
+2. **Kirim.** Tombol *Kirim* membuka WhatsApp dengan pesan yang sudah
+   disesuaikan pihak tamu, lalu menandai undangannya terkirim.
+3. **Berkat** ditandai terpisah dari undangan — dua jalur yang statusnya
+   tidak saling memengaruhi.
+
+Semuanya tersimpan di Supabase. Menutup browser, berganti HP, atau dibuka
+bergantian oleh beberapa orang — progresnya tetap sama.
+
+Link personal tamu berbentuk:
 
 ```
-https://undangan-rian-nurul.vercel.app/?to=Bapak%20Ahmad%20Fauzi
+https://rian-aini.mengundang.id/bapak-ahmad-fauzi?p=kw
 ```
 
-Spasi ditulis `%20`. Tanpa parameter, tertulis "Tamu Undangan".
+Bagian `?p=` menyebutkan pihak tamu supaya sampul tidak perlu menunggu
+jaringan. Bila bagian itu hilang atau dihapus orang, halaman menanyakan
+sendiri ke database berdasarkan nama di alamat, jadi undangannya tetap
+benar.
+
+---
+
+## 4. Empat varian undangan
+
+Yang **berbeda** antar pihak:
+
+| | Pengantin Pria | Keluarga Pria | Pengantin Wanita | Keluarga Wanita |
+|---|---|---|---|---|
+| Urutan nama | Rian & 'Aini | Rian & 'Aini | 'Aini & Rian | 'Aini & Rian |
+| Alamat & peta | sisi pria | sisi pria | sisi wanita | sisi wanita |
+| Rangkaian acara | sisi pria | sisi pria | sisi wanita | sisi wanita |
+| Dompet digital | SeaBank dulu | SeaBank dulu | DANA dulu | DANA dulu |
+| Tanda tangan | Kami yang berbahagia | Keluarga Bapak Joko Sudarno | Kami yang berbahagia | Keluarga Bapak Surahmad |
+
+Yang **disatukan**: kartu ucapan. Semua varian menulis dan membaca daftar
+ucapan yang sama, jadi tamu dari pihak mana pun melihat doa yang sama.
+
+### Alamat acara sisi pria
+
+`TEMPAT.pria` dan `ACARA.pria` di `assets/varian.js` masih `null`, jadi
+untuk sementara pihak pria ikut memakai alamat dan acara sisi wanita.
+Isi kedua blok itu begitu acara di rumah mempelai pria sudah pasti —
+bentuknya persis seperti blok `wanita` tepat di atasnya, dan tidak ada
+tempat lain yang perlu diubah.
+
+---
 
 ## Memantau ucapan
 
