@@ -74,12 +74,29 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--kuningan
 .bar.berkat i{background:var(--daun);}
 .bar-label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:rgba(237,231,217,.4);margin-bottom:14px;}
 
-.pihak-ringkas{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
-.chip{
-  font-size:11px;letter-spacing:.06em;border:1px solid var(--garis);
-  padding:5px 11px;border-radius:2px;color:rgba(237,231,217,.65);
+.lingkup{font-size:11.5px;color:rgba(237,231,217,.45);margin:-6px 0 16px;}
+
+/* rekap per pihak */
+.rekap{width:100%;border-collapse:collapse;margin-top:20px;font-size:13px;}
+.rekap th,.rekap td{padding:9px 8px;text-align:right;border-bottom:1px solid var(--garis);}
+.rekap th:first-child,.rekap td:first-child{text-align:left;}
+.rekap thead th{
+  font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--kuningan-dim);font-weight:500;
 }
-.chip b{color:var(--kuningan);font-weight:500;}
+.rekap tbody td{color:rgba(237,231,217,.75);}
+.rekap .angka{font-family:var(--mono);font-size:12.5px;}
+.rekap .nol{color:rgba(237,231,217,.28);}
+.rekap .beres{color:var(--daun);}
+.rekap tfoot td{
+  color:var(--kapur);font-weight:500;border-bottom:none;
+  border-top:1px solid rgba(195,154,92,.35);
+}
+@media (max-width:520px){
+  .rekap{font-size:12px;}
+  .rekap th,.rekap td{padding:8px 4px;}
+  .rekap .angka{font-size:11.5px;}
+}
 
 /* daftar tamu */
 .alat{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
@@ -200,13 +217,20 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     <div><b id="nUndangan">0</b><span>Undangan terkirim</span></div>
     <div><b id="nBerkat">0</b><span>Berkat terkirim</span></div>
   </div>
+  <p class="lingkup" id="lingkup">Menghitung seluruh tamu.</p>
 
   <div class="bar"><i id="barUndangan"></i></div>
   <p class="bar-label">Undangan</p>
   <div class="bar berkat"><i id="barBerkat"></i></div>
   <p class="bar-label">Berkat</p>
 
-  <div class="pihak-ringkas" id="pihakRingkas"></div>
+  <table class="rekap" id="rekapPihak">
+    <thead>
+      <tr><th>Pihak</th><th>Tamu</th><th>Undangan</th><th>Berkat</th></tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot></tfoot>
+  </table>
 </div>
 
 <!-- 3. DAFTAR -->
@@ -510,11 +534,26 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     });
   }
 
+  function hitung(daftar, jenis){
+    return daftar.filter(function(t){ return t.kirim[jenis] === 'terkirim'; }).length;
+  }
+
+  /* satu sel angka; yang nol diredupkan, yang sudah lengkap dihijaukan */
+  function sel(n, dari){
+    var kelas = 'angka';
+    if(n === 0)           kelas += ' nol';
+    else if(n === dari)   kelas += ' beres';
+    return '<td class="'+kelas+'">'+n+'</td>';
+  }
+
   function gambar(){
-    /* ringkasan */
-    var total = tamu.length;
-    var nU = tamu.filter(function(t){ return t.kirim.undangan === 'terkirim'; }).length;
-    var nB = tamu.filter(function(t){ return t.kirim.berkat   === 'terkirim'; }).length;
+    var tampil = tersaring();
+
+    /* Angka besar mengikuti saringan yang sedang aktif, supaya cocok
+       dengan baris yang terlihat di bawahnya. */
+    var total = tampil.length;
+    var nU = hitung(tampil, 'undangan');
+    var nB = hitung(tampil, 'berkat');
 
     $('nTotal').textContent    = total;
     $('nUndangan').textContent = nU;
@@ -522,16 +561,34 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     $('barUndangan').style.width = total ? (nU/total*100)+'%' : '0';
     $('barBerkat').style.width   = total ? (nB/total*100)+'%' : '0';
 
-    $('pihakRingkas').innerHTML = Object.keys(M.VARIAN).map(function(k){
-      var n = tamu.filter(function(t){ return t.pihak === k; }).length;
-      return '<span class="chip">'+esc(M.VARIAN[k].label)+' <b>'+n+'</b></span>';
+    var disaring = tampil.length !== tamu.length;
+    $('lingkup').textContent = disaring
+      ? 'Menghitung ' + total + ' tamu yang sedang tersaring, dari ' + tamu.length + ' tamu seluruhnya.'
+      : 'Menghitung seluruh tamu.';
+
+    /* Rekap per pihak selalu memakai daftar penuh, jadi tetap bisa
+       dibaca sebagai gambaran menyeluruh meski saringan sedang aktif. */
+    var tbody = Object.keys(M.VARIAN).map(function(k){
+      var isi = tamu.filter(function(t){ return t.pihak === k; });
+      return '<tr><td>'+esc(M.VARIAN[k].label)+'</td>'
+        + '<td class="angka'+(isi.length ? '' : ' nol')+'">'+isi.length+'</td>'
+        + sel(hitung(isi, 'undangan'), isi.length)
+        + sel(hitung(isi, 'berkat'),   isi.length)
+        + '</tr>';
     }).join('');
 
+    $('rekapPihak').querySelector('tbody').innerHTML = tbody;
+    $('rekapPihak').querySelector('tfoot').innerHTML =
+      '<tr><td>Seluruhnya</td>'
+      + '<td class="angka">'+tamu.length+'</td>'
+      + sel(hitung(tamu, 'undangan'), tamu.length)
+      + sel(hitung(tamu, 'berkat'),   tamu.length)
+      + '</tr>';
+
     /* daftar */
-    var tampil = tersaring();
     if(!tampil.length){
       $('daftar').innerHTML = '<p class="kosongstate">'
-        + (total ? 'Tidak ada tamu yang cocok dengan saringan.' : 'Daftar tamu masih kosong. Tambahkan di kotak nomor 1.')
+        + (tamu.length ? 'Tidak ada tamu yang cocok dengan saringan.' : 'Daftar tamu masih kosong. Tambahkan di kotak nomor 1.')
         + '</p>';
       return;
     }

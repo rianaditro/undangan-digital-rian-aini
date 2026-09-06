@@ -78,6 +78,10 @@ Buka `/kirim`, masuk dengan akun panitia tadi.
    disesuaikan pihak tamu, lalu menandai undangannya terkirim.
 3. **Berkat** ditandai terpisah dari undangan — dua jalur yang statusnya
    tidak saling memengaruhi.
+4. **Rekap per pihak** di kotak nomor 2 memperlihatkan berapa tamu dan
+   berapa yang sudah dikirimi undangan serta berkat, dipecah per pihak.
+   Angka besar di atasnya mengikuti saringan yang sedang aktif, jadi
+   selalu cocok dengan baris yang terlihat di bawah.
 
 Semuanya tersimpan di Supabase. Menutup browser, berganti HP, atau dibuka
 bergantian oleh beberapa orang — progresnya tetap sama.
