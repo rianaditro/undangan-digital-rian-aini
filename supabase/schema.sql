@@ -74,6 +74,13 @@ alter table public.tamu       enable row level security;
 alter table public.pengiriman enable row level security;
 alter table public.ucapan     enable row level security;
 
+-- Policy dari skema versi pertama. Namanya menyesatkan (mengatur ucapan,
+-- bukan tabel tamu) dan yang INSERT tidak membatasi panjang. Policy
+-- permissive digabung dengan OR, jadi kalau dibiarkan hidup ia akan
+-- meniadakan validasi panjang di bawah.
+drop policy if exists "tamu boleh membaca" on public.ucapan;
+drop policy if exists "tamu boleh menulis" on public.ucapan;
+
 -- ---- ucapan: publik boleh baca dan menulis ----
 drop policy if exists "ucapan baca publik"  on public.ucapan;
 create policy "ucapan baca publik" on public.ucapan

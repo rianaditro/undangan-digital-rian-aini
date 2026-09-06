@@ -21,8 +21,16 @@ dompet cukup sekali.
 
 ## 1. Siapkan database
 
-Supabase → **SQL Editor** → tempel isi `supabase/schema.sql` → **Run**.
-Aman dijalankan berulang kali.
+Skema ini **sudah diterapkan** ke project `undangan-digital-rian-aini`
+(ref `mavjlhlyrtacxleulbom`) pada 6 September 2026. Berkas
+`supabase/schema.sql` disimpan sebagai catatan dan untuk memasang ulang
+bila project berpindah — SQL Editor → tempel → **Run**, aman dijalankan
+berulang kali.
+
+Catatan: project free tier tidur sendiri setelah beberapa hari tanpa
+lalu lintas, dan project ini sempat ditemukan dalam keadaan `INACTIVE`.
+Selama tidur, buku ucapan dan halaman panitia mati total. Periksa
+statusnya sehari sebelum acara.
 
 Lalu, masih di Supabase:
 
