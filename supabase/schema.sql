@@ -324,12 +324,40 @@ begin
   end if;
 end $$;
 
+create or replace function public.panitia_ubah_nama(
+  p_token text, p_tamu_id uuid, p_nama text)
+returns void
+language plpgsql volatile security definer set search_path = public as $$
+declare
+  a      public.panitia_akses;
+  bersih text;
+begin
+  a := public._panitia(p_token);
+
+  bersih := regexp_replace(trim(coalesce(p_nama, '')), '\s+', ' ', 'g');
+  if char_length(bersih) < 1 or char_length(bersih) > 80 then
+    raise exception 'Nama harus 1 sampai 80 karakter';
+  end if;
+
+  -- slug sengaja TIDAK ikut berubah: link tamu mungkin sudah tersebar
+  -- di grup WhatsApp dan tidak bisa ditarik kembali
+  update public.tamu t
+     set nama = bersih
+   where t.id = p_tamu_id
+     and (a.pihak is null or t.pihak = a.pihak);
+
+  if not found then
+    raise exception 'Tamu tidak ada dalam cakupan link ini' using errcode = '42501';
+  end if;
+end $$;
+
 grant execute on function public.panitia_masuk(text)                     to anon, authenticated;
 grant execute on function public.panitia_daftar(text)                    to anon, authenticated;
 grant execute on function public.panitia_tambah(text, jsonb)             to anon, authenticated;
 grant execute on function public.panitia_tandai(text, uuid, text, text)  to anon, authenticated;
 grant execute on function public.panitia_hapus(text, uuid)               to anon, authenticated;
 grant execute on function public.panitia_ubah_pihak(text, uuid, text)    to anon, authenticated;
+grant execute on function public.panitia_ubah_nama(text, uuid, text)     to anon, authenticated;
 
 -- Membuat kelima link. Jalankan sekali, lalu salin tokennya.
 --

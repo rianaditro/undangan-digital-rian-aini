@@ -488,6 +488,12 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
       await rpc('panitia_ubah_pihak', {
         p_token: TOKEN, p_tamu_id: t.id, p_pihak: pihak
       });
+    },
+
+    async ubahNama(t, nama){
+      await rpc('panitia_ubah_nama', {
+        p_token: TOKEN, p_tamu_id: t.id, p_nama: nama
+      });
     }
 
   } : {
@@ -532,6 +538,15 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
         headers:{ 'Prefer':'return=minimal' },
         body: JSON.stringify({ pihak: pihak })
       });
+    },
+
+    async ubahNama(t, nama){
+      /* slug sengaja tidak ikut diubah — link tamu mungkin sudah tersebar */
+      await api('tamu?id=eq.' + encodeURIComponent(t.id), {
+        method:'PATCH',
+        headers:{ 'Prefer':'return=minimal' },
+        body: JSON.stringify({ nama: nama })
+      });
     }
   };
 
@@ -549,6 +564,17 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   async function ubahPihak(t, pihak){
     await Sumber.ubahPihak(t, pihak);
     t.pihak = pihak;
+    gambar();
+  }
+
+  function rapikanNama(s){
+    return String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
+  }
+
+  async function ubahNama(t, nama){
+    await Sumber.ubahNama(t, nama);
+    t.nama = nama;
+    tamu.sort(function(a,b){ return a.nama.localeCompare(b.nama, 'id'); });
     gambar();
   }
 
@@ -745,6 +771,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
         +   (t.telepon ? '<button class="btn kecil solid" data-aksi="kirim">Kirim</button>' : '')
         +   '<button class="btn kecil ghost" data-aksi="pesan">Salin Pesan</button>'
         +   '<button class="btn kecil ghost" data-aksi="link">Salin Link</button>'
+        +   '<button class="btn kecil ghost" data-aksi="nama">Ubah Nama</button>'
         +   (cakupanPenuh() ? '<button class="btn kecil ghost" data-aksi="pihak">Ubah Pihak</button>' : '')
         +   '<button class="btn kecil bahaya" data-aksi="hapus">Hapus</button>'
         + '</div>'
@@ -780,6 +807,25 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
       }else if(aksi === 'link'){
         await salin(M.linkTamu(t.slug, t.pihak));
         toast('Link tersalin');
+
+      }else if(aksi === 'nama'){
+        /* Nama undangan boleh berbeda dari nama kontak — "Ahmad Fauzi
+           Kantor" di HP jadi "Bapak Ahmad Fauzi sekeluarga" di undangan.
+           Link tamu TIDAK ikut berubah, jadi aman dipakai walau
+           undangannya sudah terlanjur dikirim. */
+        var usul = prompt(
+          'Nama yang tampil di undangan untuk tamu ini.\n\n'
+          + 'Link tamu tidak ikut berubah, jadi aman diubah walaupun '
+          + 'undangannya sudah dikirim.', t.nama);
+        if(usul === null) return;
+
+        var baru = rapikanNama(usul);
+        if(!baru){ toast('Nama tidak boleh kosong', true); return; }
+        if(baru.length > 80){ toast('Nama terlalu panjang, maksimal 80 huruf', true); return; }
+        if(baru === t.nama) return;
+
+        await ubahNama(t, baru);
+        toast('Nama diubah, link tetap sama');
 
       }else if(aksi === 'pihak'){
         var urut = Object.keys(M.VARIAN);
