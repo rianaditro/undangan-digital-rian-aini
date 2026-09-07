@@ -211,28 +211,27 @@ graphic parallax, tema tambahan, silsilah, cetakan pendamping.
 
 ---
 
-## 5. Tiga hal yang perlu diputuskan sebelum menulis kode
+## 5. Tiga keputusan — sudah diambil
 
-**Tetap di Vercel atau pindah ke Cloudflare Workers?**
-Ringkasan memilih Workers karena Cloudflare *Pages* tidak mendukung
-wildcard subdomain. Tapi itu alasan untuk menghindari Pages, bukan untuk
-meninggalkan Vercel — dan situs sekarang sudah jalan mulus di Vercel.
-Lebih penting lagi: bentuk URL bawaan adalah `mengundang.id/{slug}/{tamu}`
-yang **tidak butuh wildcard sama sekali**. Wildcard baru perlu saat ada
-yang membeli add-on subdomain, dan itu fase 4. Jangan biarkan fitur fase 4
-menentukan platform di fase 0. Perlu diperiksa: apakah wildcard domain
-tersedia di paket Vercel Anda sekarang.
+Ketiganya diputuskan 7 September 2026. Rinciannya di
+`docs/arsitektur.md`.
 
-**Dedupe lintas pihak.**
-Sekarang dedupe berlaku dalam satu cakupan. Kalau bapak dan mertua
-mengundang orang yang sama, sistem tidak menghalangi dan orang itu dapat
-dua undangan. Menghalanginya berarti membocorkan keberadaan tamu pihak
-lain. Perlu diputuskan: biarkan, atau tampilkan penanda hanya di tampilan
-penuh milik pengantin.
+**Hosting: VPS sendiri sebagai tujuan akhir.** Vercel dan Supabase
+sementara. Cloudflare Workers dicoret — alasan aslinya adalah
+keterbatasan Cloudflare Pages, dan itu tidak relevan lagi. Konsekuensinya
+untuk fase 0: jangan menambah ketergantungan khas penyedia, dan sisipkan
+server API sendiri di antara peramban dan database selagi permukaannya
+masih kecil.
 
-**Retensi dan UU PDP.**
-Daftar tamu adalah data pribadi milik orang yang bukan pelanggan kita.
-Harus ditulis sebelum pelanggan berbayar pertama, bukan sesudah.
+**Dedupe lintas pihak: jangan dihalangi.** Dua pihak boleh mengundang
+orang yang sama — menghalanginya berarti membocorkan keberadaan tamu
+pihak lain. Tampilan penuh milik pengantin memunculkan penanda duplikat
+supaya bisa dirapikan manual.
+
+**Retensi: daftar tamu masa aktif + 90 hari**, slug selamanya, transaksi
+10 tahun. Ditambah satu hal yang tidak boleh lupa — **jalur permintaan
+hapus untuk tamu**, karena tamu tidak pernah memberi persetujuan kepada
+platform.
 
 ---
 
