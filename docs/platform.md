@@ -76,13 +76,20 @@ Dikelompokkan per wilayah. Yang **tebal** sudah ada dalam bentuk apa pun.
 | `transaksi` | pasangan_id, reseller_id, paket, nominal, komisi, status | |
 | `pembayaran` | transaksi_id, penyedia, referensi, status | split payment, jangan pegang dana |
 | `pencairan` | reseller_id, nominal, status, bukti | |
+| `kredit` | pemilik, paket, add-on, berlaku_sampai | dari nikah batal; ditukar jadi pasangan baru **dengan slug baru** |
 
-### 1.5 Buku kondangan — nanti, tapi siapkan kolomnya
+### 1.5 Pemberian dan buku kondangan
 
 | Entitas | Isi pokok | Catatan |
 |---|---|---|
-| `buku` | pasangan_id, nama pemilik (bapak/ibu/pengantin/besan) | sumbunya **penerima**, bukan rumah tangga |
-| `sumbangan` | buku_id, tamu_id, jenis, nominal, barang, fase | satu tamu boleh muncul di dua buku dengan angka beda |
+| **`pemberian`** | tamu_id, jenis (uang/transfer/barang/tenaga), nominal, barang, **buku_id boleh kosong** | **naik ke fase 1** — pengantin mengetiknya setelah acara |
+| `buku` | pasangan_id, nama pemilik (bapak/ibu/pengantin/besan) | fase 3; sumbunya **penerima**, bukan rumah tangga |
+
+Kolom `datang` di `tamu` menyertai `pemberian` — rekap kehadiran dan
+rekap pemberian dikerjakan bersamaan setelah acara.
+
+`buku_id` dibuat sejak fase 1 walau selalu kosong, supaya buku paralel
+bisa menyusul tanpa migrasi data.
 
 Data paling sensitif di seluruh produk. Tidak pernah publik, tidak masuk
 analytics, **reseller tidak boleh bisa melihatnya.**

@@ -4,8 +4,9 @@ Pelengkap `docs/platform.md` (entitas dan fase) dan `docs/arsitektur.md`
 (stack dan keamanan). Dokumen ini merinci apa yang dilakukan tiap orang,
 apa yang dikerjakan sistem, dan data apa yang berubah di tiap langkah.
 
-Ada **enam pelaku**, bukan lima. Alur "rekap nominal amplop" memunculkan
-satu yang belum pernah kita sebut: petugas meja penerima tamu.
+Ada **lima pelaku**: pengantin, reseller, keluarga, tamu, dan admin.
+Petugas meja penerima tamu sempat dimasukkan sebagai pelaku keenam —
+lihat bagian 5 untuk alasan kenapa itu dibatalkan.
 
 ---
 
@@ -15,8 +16,8 @@ Hampir semua alur di bawah adalah perpindahan antar status ini:
 
 ```
 draf → menunggu_bayar → aktif → lewat → arsip → kedaluwarsa
-                ↓
-            batal (kedaluwarsa tanpa bayar)
+         ↓                ↓
+      hangus            batal → kredit → (pasangan baru, slug baru)
 ```
 
 | Status | Artinya | Undangan bisa dibuka? |
@@ -27,9 +28,16 @@ draf → menunggu_bayar → aktif → lewat → arsip → kedaluwarsa
 | `lewat` | tanggal acara sudah berlalu | ya |
 | `arsip` | acara lewat + 90 hari, hanya baca | ya, tanpa RSVP |
 | `kedaluwarsa` | masa aktif habis | tidak — halaman "undangan tidak aktif" |
+| `hangus` | tagihan tidak pernah dibayar | tidak; slug dilepas kembali |
+| `batal` | nikah batal setelah lunas, bayaran jadi kredit | tidak — halaman "undangan tidak aktif" |
 
 `terbit` adalah penanda terpisah, bukan status: klien boleh menahan
 undangannya walaupun sudah `aktif`.
+
+`hangus` dan `batal` sengaja dibedakan. Yang tidak pernah dibayar boleh
+melepas slug-nya kembali — belum ada link yang tersebar. Yang batal
+setelah lunas **memegang slug-nya selamanya**, karena undangannya sudah
+beredar.
 
 ---
 
@@ -61,12 +69,17 @@ Melihat perbandingan Basic / Lengkap / Custom, mencentang add-on.
 Sistem: menyusun ringkasan harga. Belum ada baris database.
 
 ### 1.4 Memilih slug
-Mengetik `rian-aini`. Sistem memeriksa daftar terlarang dan bentrokan,
-lalu **menahannya sementara selama 24 jam**.
+Mengetik `rian-aini`. Sistem memeriksa daftar terlarang dan bentrokan.
+Tidak ada penahanan, tidak ada kedaluwarsa — **diperiksa saat mengetik,
+dikunci saat lunas.**
 
-> **Perlu diputuskan.** Menahan slug sebelum bayar berarti orang bisa
-> memborong nama bagus tanpa membayar. Penahanan 24 jam plus batas
-> beberapa penahanan per nomor HP sudah cukup untuk skala ini.
+Slug di sini adalah nama pasangan itu sendiri, bukan kata benda umum yang
+bernilai jual. Tidak ada yang mau memborong `budi-siti`. Kekhawatiran
+memborong nama tidak berlaku di sini.
+
+Satu-satunya bentrokan nyata adalah dua pasangan yang kebetulan
+sama namanya. Tangani seperti bentrokan biasa: tawarkan `rian-aini-2`,
+atau biarkan mereka menambahkan sesuatu sendiri.
 
 ### 1.5 Membayar
 Nama, nomor HP, email, lalu ke Midtrans/Xendit.
@@ -140,25 +153,74 @@ Peringatan pengiriman bertahap tetap ditampilkan — 20–30 per sesi.
 Jalur kedua, terpisah dari undangan. **Sudah jalan hari ini.**
 
 ### 1.15 Selama acara
-Melihat RSVP masuk dan ucapan. Petugas meja mencatat kehadiran dan
-amplop — lihat pelaku nomor 5.
+Melihat RSVP masuk dan ucapan. Tidak ada pencatatan langsung di meja —
+keluarga tetap memakai buku tulis seperti biasa.
 
 ### 1.16 Setelah acara — rekap
-Yang diminta di alur Anda:
+Pengantin duduk dengan buku tulis dari meja penerima tamu, lalu menyusuri
+daftar tamunya sendiri. Untuk tiap tamu ia menandai dua hal:
 
-- **Rekap kehadiran** — diundang, RSVP hadir, benar-benar datang
-- **Rekap amplop** — per buku, per tamu, uang dan barang
-- Ekspor CSV dan PDF
+**Datang atau tidak** — daftar yang sama yang dipakai mengirim undangan,
+sekarang dipakai mencatat kehadiran. Kolomnya jadi tiga: diundang, RSVP,
+benar-benar datang.
+
+**Memberi apa** — satu tamu bisa memberi lebih dari satu:
+
+| Jenis | Yang dicatat |
+|---|---|
+| Uang | nominal |
+| Transfer | nominal |
+| Barang | keterangan bebas — gula, rokok, beras, kain |
+| Tenaga | rewang, tanpa nominal |
+
+Lalu keluar:
+
+- Rekap kehadiran: diundang / RSVP hadir / benar-benar datang
+- Rekap pemberian: total uang, dan daftar barang
+- Ekspor CSV
 - Buku ucapan jadi PDF kenangan
 
-> **Ini menggeser rencana fase.** Rekap amplop adalah buku kondangan, dan
-> buku kondangan tadinya fase 3 karena butuh sinkronisasi offline. Kalau
-> rekap amplop masuk alur inti pengantin, fase 3 naik jadi bagian dari
-> penawaran pertama. Lihat bagian 7.
+**Tidak butuh sinkronisasi offline.** Ini pengetikan setelah acara, di
+rumah, dengan sinyal normal. Itu membuatnya masuk fase 1 tanpa menyeret
+bagian tersulit buku kondangan.
+
+Entitas yang dibutuhkan cuma satu tabel baru: `pemberian` — `tamu_id`,
+`jenis`, `nominal`, `barang`, `catatan`. Ditambah kolom `datang` di
+`tamu`. Siapkan juga `buku_id` yang boleh kosong, supaya saat buku
+kondangan penuh datang nanti tidak perlu migrasi data.
 
 ### 1.17 Masa aktif habis
 H-30 dan H-7 diingatkan, dengan tombol ekspor dan tombol perpanjang.
 Lewat itu → `arsip` → `kedaluwarsa`. Slug **tidak pernah** dilepas.
+
+### 1.18 Nikah batal
+Tidak ada pengembalian uang. Yang dibayar **disimpan sebagai hak pakai
+untuk pernikahan berikutnya.**
+
+Sederhana di permukaan, tapi ada satu jebakan yang harus dihindari:
+
+> **Jangan pakai ulang slug yang sama.** Kalau `rian-aini` batal lalu
+> dipakai lagi untuk `rian` dengan orang lain, tamu yang menyimpan link
+> lama akan membuka undangan pernikahan yang berbeda — lengkap dengan
+> nama mempelai yang baru. Ini persis skenario yang dicegah aturan "slug
+> tidak pernah dilepas", dan justru lebih parah karena mempelainya
+> memang orang yang sama.
+
+Jadi bentuknya:
+
+1. Pasangan lama → status `batal`. Slug-nya tetap dipegang selamanya,
+   menampilkan halaman "undangan tidak aktif". Tidak pernah dialihkan.
+2. Hak pakai berpindah: satu baris `kredit` — pemilik, paket, add-on yang
+   sudah dibayar, dan masa berlaku.
+3. Saat menikah lagi, klien membuat pasangan baru dengan **slug baru**,
+   dan kreditnya menutup tagihan.
+4. Daftar tamunya bisa disalin — kemungkinan besar sebagian besar orang
+   yang sama, dan mengetik ulang 300 nama itu kejam.
+
+Yang perlu diputuskan: **berapa lama kredit berlaku, dan boleh berpindah
+tangan atau tidak.** Usulan: berlaku 2 tahun, tidak bisa dipindahkan ke
+orang lain, dan reseller asal tidak mendapat komisi kedua kali karena
+tidak ada uang baru yang masuk.
 
 ---
 
@@ -225,41 +287,24 @@ Langkah 7 dan 8 keduanya baru.
 
 ---
 
-## 5. Petugas meja penerima tamu — pelaku baru
+## 5. Petugas meja penerima tamu — belum jadi pelaku
 
-Muncul dari "rekap nominal amplop". Orangnya bukan pengantin dan bukan
-keluarga inti: biasanya saudara atau tetangga yang diminta tolong,
-memakai HP sendiri, berdiri di meja depan selama lima jam.
+Saya sempat memasukkan ini sebagai pelaku keenam, hasil membaca
+spesifikasi buku kondangan di ringkasan. **Itu berlebihan untuk apa yang
+sebenarnya dibutuhkan.**
 
-**Fase 1 — saat acara berlangsung**
+Yang diminta adalah rekap setelah acara oleh pengantin — bukan
+pencatatan langsung di meja saat acara. Selama itu yang dibutuhkan,
+petugas meja tidak menyentuh sistem sama sekali. Ia memakai buku tulis,
+seperti selalu.
 
-1. Membuka link petugas. Tanpa login.
-2. Tamu datang, petugas mengetik beberapa huruf namanya.
-3. Menandai **hadir**, dan berapa orang.
-4. Mencatat yang diterima: amplop (**ditandai diterima saja, nominal
-   dikosongkan**), uang tunai, transfer, sembako, rokok, kain, atau
-   tenaga rewang.
-5. Memilih buku penerimanya — buku bapak, buku ibu, buku pengantin, buku
-   besan.
+Peran ini baru hidup kalau buku kondangan penuh dibangun (fase 3), dan
+saat itu syaratnya tetap berlaku: wajib offline karena sinyal mati saat
+300 orang berkumpul, di bawah tiga ketukan per tamu, petugas tidak boleh
+melihat total, dan amplop hanya ditandai diterima dengan nominal
+dikosongkan untuk dibuka keluarga inti setelah acara.
 
-Syarat yang tidak bisa ditawar:
-
-- **Wajib jalan offline.** Sinyal di kampung mati saat 300 orang
-  berkumpul. Simpan lokal, sinkronkan saat sinyal kembali.
-- **Di bawah tiga ketukan per tamu.** Antrean tidak menunggu.
-- **Petugas tidak boleh melihat total.** Ia tidak berhak tahu berapa yang
-  masuk.
-- Tamu tak dikenal harus bisa ditambah cepat.
-
-**Fase 2 — setelah acara, membuka amplop**
-
-Dikerjakan keluarga inti, bukan petugas meja. Tumpukan amplop tidak
-berurutan dan nama di amplop sering tidak cocok dengan daftar.
-
-1. Ambil amplop, ketik beberapa huruf, pencocokan longgar.
-2. Pilih, isi nominal. **Target di bawah 10 detik per amplop.**
-3. Jalur khusus: amplop tanpa nama, dan nama tak dikenal.
-4. Rekonsiliasi: jumlah amplop fisik versus yang tercatat.
+Dicatat di sini supaya tidak hilang, bukan untuk dibangun sekarang.
 
 ---
 
@@ -277,42 +322,43 @@ berurutan dan nama di amplop sering tidak cocok dengan daftar.
 
 ---
 
-## 7. Yang berubah dari rencana fase
+## 7. Buku kondangan: sudah diputuskan
 
-Alur Anda memasukkan **rekap nominal amplop** ke perjalanan inti
-pengantin. Itu buku kondangan, dan sebelumnya kita taruh di fase 3 karena
-butuh sinkronisasi offline — bagian paling sulit di seluruh rencana.
+Rekap yang diminta adalah **pengetikan setelah acara oleh pengantin**,
+bukan pencatatan langsung di meja. Itu menjawab pertanyaan fase yang
+sempat terbuka: jalan B.
 
-Ada tiga jalan keluar:
+| | Fase 1 | Fase 3 |
+|---|---|---|
+| Siapa mencatat | pengantin | petugas meja |
+| Kapan | setelah acara, di rumah | saat acara, di meja depan |
+| Sinyal | normal | **wajib jalan offline** |
+| Yang dicatat | datang, uang, barang | amplop diterima, nominal menyusul |
+| Buku | satu | paralel per penerima |
 
-**A. Tarik buku kondangan ke fase 1.** Penawaran lengkap sejak awal, tapi
-fase 1 jadi jauh lebih lama dan risiko teknisnya menumpuk di depan.
+Fase 1 mendapat seluruh nilai rekapnya — siapa datang, siapa memberi apa,
+bisa dicari bertahun kemudian — tanpa menyentuh sinkronisasi offline yang
+merupakan bagian tersulit di seluruh rencana.
 
-**B. Pisahkan pencatatan dari rekap.** Fase 1 hanya menyediakan
-**pencatatan setelah acara** — keluarga mengetik hasilnya dari buku
-tulis, online, tanpa offline sync. Rekapnya tetap ada. Yang ditunda
-hanya pencatatan langsung di meja saat acara.
+Yang perlu dijaga sejak sekarang cuma satu: tabel `pemberian` sudah punya
+kolom `buku_id` yang boleh kosong, supaya buku paralel bisa menyusul
+tanpa migrasi data.
 
-**C. Tetap fase 3.** Fase 1 hanya merekap kehadiran dan RSVP, tanpa
-nominal.
+## 8. Keputusan
 
-**Saya condong ke B.** Nilai terbesar buku kondangan ada di rekap dan
-pencariannya bertahun kemudian, bukan di kecepatan input saat acara. Dan
-kenyataannya keluarga tetap akan memegang buku tulis di meja depan pada
-acara pertama, apa pun yang kita bangun. Offline sync bisa menyusul
-setelah ada yang benar-benar memakainya.
+Sudah diputuskan 7 September 2026:
 
-Ini keputusan Anda, dan ini yang paling menentukan besarnya fase 1.
+| # | Pertanyaan | Keputusan |
+|---|---|---|
+| 2 | Slug ditahan sebelum bayar? | **tidak** — diperiksa saat mengetik, dikunci saat lunas. Nama pasangan tidak punya nilai borong |
+| 5 | Nikah batal? | **tidak ada refund**; jadi kredit untuk pernikahan berikutnya, dengan **slug baru** |
+| 6 | Buku kondangan fase berapa? | **B** — rekap setelah acara di fase 1, pencatatan di meja menyusul di fase 3 |
 
----
-
-## 8. Keputusan yang menunggu
+Masih menunggu:
 
 | # | Pertanyaan | Usulan |
 |---|---|---|
-| 1 | Atribusi reseller bertahan berapa lama, dan apa cadangannya kalau cookie hilang? | cookie 90 hari + kode manual + konfirmasi sebelum bayar |
-| 2 | Slug ditahan sebelum bayar? | ditahan 24 jam, dibatasi per nomor HP |
-| 3 | Komisi cair kapan? | H+7 setelah tanggal acara |
+| 1 | Atribusi reseller bertahan berapa lama, dan cadangannya apa? | cookie 90 hari + kode manual + konfirmasi sebelum bayar |
+| 3 | Komisi cair kapan? | H+7 setelah tanggal acara, bukan setelah bayar |
 | 4 | Add-on yang dibeli belakangan tetap berkomisi? | ya, dibatasi 6 bulan |
-| 5 | Nikah batal setelah undangan tersebar? | belum ada usulan — perlu aturan tertulis |
-| 6 | Buku kondangan masuk fase berapa? | **B: rekap dulu, offline menyusul** |
+| 7 | Kredit nikah batal berlaku berapa lama? | 2 tahun, tidak bisa dipindahtangankan, tanpa komisi kedua |
