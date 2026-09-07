@@ -65,6 +65,13 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--kuningan
 .btn.bahaya{border-color:rgba(180,87,63,.5);color:var(--merah);}
 .btn.bahaya:hover{background:var(--merah);color:var(--kapur);}
 .btn.kecil{padding:8px 13px;font-size:9.5px;letter-spacing:.12em;}
+/* label memakai tampilan tombol; aturan label di bawah harus dikalahkan */
+label.btn.berkas{
+  display:inline-block;margin:0;
+  font-size:10.5px;font-weight:700;letter-spacing:.18em;
+  color:rgba(237,231,217,.6);
+}
+label.btn.berkas:hover{color:var(--kapur);}
 .aksi{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center;}
 
 /* ringkasan */
@@ -207,8 +214,15 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
 
   <div class="aksi">
     <button class="btn solid" id="btnTambah">Simpan ke Daftar</button>
+    <label class="btn ghost berkas" for="berkasVcf">Ambil dari .vcf</label>
+    <input id="berkasVcf" type="file" accept=".vcf,text/vcard,text/x-vcard,text/directory" hidden>
     <button class="btn ghost" id="btnContoh">Isi Contoh</button>
   </div>
+  <p class="hint" style="margin:12px 0 0">
+    <strong>Ambil dari .vcf</strong> membaca berkas ekspor kontak dari HP dan
+    menuangkan namanya ke kotak di atas — belum tersimpan, jadi masih bisa
+    Anda rapikan dan buang yang tidak diundang sebelum menekan Simpan.
+  </p>
 </div>
 
 <!-- 2. RINGKASAN -->
@@ -270,6 +284,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
 <div class="toast" id="toast"></div>
 
 <script src="/assets/varian.js"></script>
+<script src="/assets/vcf.js"></script>
 <script>
 (function(){
   'use strict';
@@ -793,6 +808,52 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   $('btnSegarkan').addEventListener('click', async function(){
     try{ await muatTamu(); toast('Daftar dimuat ulang'); }
     catch(e){ toast('Gagal memuat: ' + e.message, true); }
+  });
+
+  /* ---------- Ambil kontak dari berkas .vcf ----------
+     Hasilnya dituangkan ke kotak daftar, bukan langsung disimpan:
+     ekspor kontak HP selalu berisi orang yang tidak diundang, dan
+     alur simpan yang sudah ada sekalian menangani normalisasi nomor
+     serta deteksi kembar. */
+  function bacaBerkas(berkas){
+    if(berkas.text) return berkas.text();
+    return new Promise(function(res, rej){
+      var fr = new FileReader();
+      fr.onload  = function(){ res(String(fr.result)); };
+      fr.onerror = function(){ rej(new Error('gagal dibaca')); };
+      fr.readAsText(berkas);
+    });
+  }
+
+  $('berkasVcf').addEventListener('change', async function(e){
+    var berkas = e.target.files && e.target.files[0];
+    if(!berkas) return;
+    try{
+      var kontak = window.VCF.baca(await bacaBerkas(berkas));
+      if(!kontak.length){
+        toast('Tidak ada kontak yang terbaca dari berkas itu', true);
+        return;
+      }
+
+      var baris = kontak.map(function(k){
+        /* koma dan titik koma memisahkan kolom di kotak daftar, jadi
+           gelar seperti "Ahmad, S.Pd" harus dirapikan dulu */
+        var nama = k.nama.replace(/[,;\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+        return k.telepon ? nama + ', ' + k.telepon : nama;
+      });
+
+      var ta = $('daftarTempel');
+      ta.value = (ta.value.trim() ? ta.value.replace(/\s*$/, '') + '\n' : '') + baris.join('\n');
+
+      var tanpaNomor = kontak.filter(function(k){ return !k.telepon; }).length;
+      toast(kontak.length + ' kontak terbaca'
+        + (tanpaNomor ? ' · ' + tanpaNomor + ' tanpa nomor' : ''));
+    }catch(err){
+      toast('Berkas tidak terbaca: ' + err.message, true);
+    }finally{
+      /* dikosongkan supaya berkas yang sama bisa dipilih lagi */
+      e.target.value = '';
+    }
   });
 
   $('btnContoh').addEventListener('click', function(){

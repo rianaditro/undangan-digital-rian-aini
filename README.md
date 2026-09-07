@@ -8,6 +8,7 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 ├── kirim/index.html      ← halaman panitia (daftar tamu & pengiriman)
 ├── assets/
 │   ├── varian.js         ← SEMUA konfigurasi ada di sini
+│   ├── vcf.js            ← pembaca berkas kontak .vcf
 │   └── backsound.mp3
 ├── supabase/schema.sql   ← skema tabel + row level security
 └── vercel.json
@@ -58,19 +59,30 @@ directory titik (`.`).
 
 Tanpa terminal: buka vercel.com/new, seret folder ini ke sana.
 
-### Memasang domain `rian-aini.mengundang.id`
+### Domain `rian-aini.mengundang.id`
 
-1. Vercel → project → **Settings → Domains → Add** → isi
-   `rian-aini.mengundang.id`.
-2. Di Cloudflare (tempat `mengundang.id` dikelola), tambahkan record `CNAME`
-   dengan nama `rian-aini` mengarah ke `cname.vercel-dns.com`, proxy
-   **dimatikan** (awan abu-abu).
-3. Tunggu Vercel menerbitkan sertifikatnya, biasanya beberapa menit.
+Sudah terpasang. `mengundang.id` dikelola di **Hostinger**, dan subdomainnya
+diarahkan ke Vercel lewat satu record:
 
-**Selama domainnya belum siap,** ganti `SITUS` di `assets/varian.js` menjadi
-alamat `.vercel.app` bawaan. Link yang disusun halaman panitia mengikuti
-nilai itu — jadi jangan menyebar undangan sebelum nilainya benar, karena
-link yang sudah beredar di grup WhatsApp tidak bisa ditarik lagi.
+| Kolom | Isi |
+|---|---|
+| Type | CNAME |
+| Name | `rian-aini` (tanpa nama domain di belakangnya) |
+| Target | `cname.vercel-dns.com` |
+
+Kalau suatu saat perlu dipasang ulang: tambahkan dulu domainnya di Vercel →
+Settings → Domains, baru buat record di hPanel Hostinger → Domains →
+`mengundang.id` → DNS Records.
+
+**Vercel Authentication sengaja dibiarkan menyala** dengan mode
+*all except custom domains*. Efeknya semua URL `*.vercel.app` terkunci di
+balik login Vercel, sementara `rian-aini.mengundang.id` terbuka untuk umum.
+Itu yang diinginkan: tamu tidak bisa nyasar lewat alamat lama, dan link
+panitia hanya hidup di domain yang benar.
+
+`SITUS` di `assets/varian.js` harus selalu sama dengan domain yang aktif.
+Link yang disusun halaman panitia mengikuti nilai itu, dan link yang sudah
+beredar di grup WhatsApp tidak bisa ditarik lagi.
 
 ---
 
@@ -105,6 +117,15 @@ Buka `/kirim`, masuk dengan akun panitia atau lewat link pihak Anda.
    per baris: `Nama, 08xxxxxxxxxx`. Nomor dirapikan otomatis (`08`, `62`,
    `+62`, spasi, tanda hubung semuanya diterima). Nama atau nomor yang sudah
    ada di daftar akan dilewati, dan yang dilewati dicatat di console browser.
+
+   Atau tekan **Ambil dari .vcf** dan pilih berkas ekspor kontak dari HP.
+   Isinya dituangkan ke kotak daftar — belum tersimpan, jadi bisa dirapikan
+   dan dibuang yang tidak diundang sebelum menekan Simpan. Parser-nya ada di
+   `assets/vcf.js` dan sudah menangani vCard 2.1 (termasuk
+   QUOTED-PRINTABLE dari Android), 3.0, dan 4.0; nomor bertipe seluler
+   didahulukan bila satu kontak punya beberapa nomor, kontak tanpa nama
+   dilewati, dan koma pada gelar dirapikan supaya tidak terbaca sebagai
+   pemisah kolom.
 2. **Kirim.** Tombol *Kirim* membuka WhatsApp dengan pesan yang sudah
    disesuaikan pihak tamu, lalu menandai undangannya terkirim.
 3. **Berkat** ditandai terpisah dari undangan — dua jalur yang statusnya
