@@ -160,7 +160,7 @@ Yang **berbeda** antar pihak:
 | Urutan nama | Rian & 'Aini | Rian & 'Aini | 'Aini & Rian | 'Aini & Rian |
 | Alamat & peta | sisi pria | sisi pria | sisi wanita | sisi wanita |
 | Rangkaian acara | sisi pria | sisi pria | sisi wanita | sisi wanita |
-| Dompet digital | SeaBank dulu | SeaBank dulu | DANA dulu | DANA dulu |
+| Dompet digital | DANA Rian dulu | DANA Rian dulu | DANA 'Aini dulu | DANA 'Aini dulu |
 | Tanda tangan | Kami yang berbahagia | Keluarga Bapak Joko Sudarno | Kami yang berbahagia | Keluarga Bapak Surahmad |
 
 Yang **disatukan**: kartu ucapan. Semua varian menulis dan membaca daftar
