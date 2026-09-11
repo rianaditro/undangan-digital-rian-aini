@@ -37,11 +37,17 @@ statusnya sehari sebelum acara.
 
 Lalu, masih di Supabase:
 
-1. **Authentication → Users → Add user.** Isi email dan kata sandi panitia.
-   Ini yang dipakai untuk masuk ke `/kirim`.
-2. **Authentication → Sign In / Providers → matikan "Allow new users to
-   sign up".** Tanpa ini, siapa pun bisa mendaftar sendiri lalu ikut membaca
-   daftar tamu beserta nomor teleponnya.
+**Matikan "Allow new users to sign up"** di Authentication → Sign In /
+Providers. Ini tetap dianjurkan, tapi sejak migrasi `006` ia bukan lagi
+satu-satunya penjaga: mendaftar sendiri tidak lagi memberi akses apa pun,
+karena kebijakan RLS sekarang menuntut baris di tabel `pemilik`, bukan
+sekadar peran `authenticated`. Tabel itu sengaja kosong.
+
+Panitia masuk lewat link bertoken (bagian 3), jadi akun email tidak perlu
+dibuat sama sekali. Kalau suatu saat mau dipakai juga: buat user di
+Authentication → Users, lalu jalankan perintah `insert into pemilik` yang
+ada di bagian bawah `supabase/migrations/006_fase0_pemilik_dan_rls_penyewa.sql`.
+Tanpa perintah itu, akun barunya tidak melihat apa pun.
 
 Kalau URL atau anon key project-nya berbeda dari yang sudah tertulis, ganti
 di `assets/varian.js` bagian `SB`. Anon key memang aman ditaruh di file ini:
@@ -90,12 +96,14 @@ beredar di grup WhatsApp tidak bisa ditarik lagi.
 
 ## 3. Siapa membuka apa
 
-Ada dua cara masuk ke `/kirim`, dan keduanya membatasi apa yang terlihat:
+Masuk ke `/kirim` lewat link bertoken, dan tokennya menentukan apa yang
+terlihat:
 
 | Cara masuk | Untuk siapa | Yang terlihat |
 |---|---|---|
-| Login email | Rian &amp; 'Aini | seluruh tamu, semua pihak |
-| `/kirim?t=…` | tiap pihak | hanya tamu pihaknya sendiri |
+| `/kirim?t=…` cakupan penuh | Rian &amp; 'Aini | seluruh tamu, semua pihak |
+| `/kirim?t=…` cakupan pihak | tiap pihak | hanya tamu pihaknya sendiri |
+| Login email | — | tidak dipakai; lihat bagian 1 |
 
 Link bertoken tidak perlu login sama sekali — cocok untuk bapak, ibu,
 dan mertua. **Pembatasannya mengikat di server, bukan di tampilan.**
@@ -114,7 +122,7 @@ link lama langsung mati tanpa mengganggu yang lain.
 
 ## 4. Sebar undangan
 
-Buka `/kirim`, masuk dengan akun panitia atau lewat link pihak Anda.
+Buka `/kirim` lewat link pihak Anda.
 
 1. **Tambah tamu.** Pilih pihak pengundang, lalu tempel daftarnya, satu tamu
    per baris: `Nama, 08xxxxxxxxxx`. Nomor dirapikan otomatis (`08`, `62`,
