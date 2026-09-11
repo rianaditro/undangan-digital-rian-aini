@@ -10,7 +10,7 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 │   ├── varian.js         ← SEMUA konfigurasi ada di sini
 │   ├── vcf.js            ← pembaca berkas kontak .vcf
 │   └── backsound.mp3
-├── supabase/schema.sql   ← skema tabel + row level security
+├── supabase/migrations/  ← migrasi bernomor, dijalankan berurutan
 └── vercel.json
 ```
 
@@ -23,10 +23,12 @@ dompet cukup sekali.
 ## 1. Siapkan database
 
 Skema ini **sudah diterapkan** ke project `undangan-digital-rian-aini`
-(ref `mavjlhlyrtacxleulbom`) pada 6 September 2026. Berkas
-`supabase/schema.sql` disimpan sebagai catatan dan untuk memasang ulang
-bila project berpindah — SQL Editor → tempel → **Run**, aman dijalankan
-berulang kali.
+(ref `mavjlhlyrtacxleulbom`). Berkas migrasinya ada di
+`supabase/migrations/`, bernomor dan dijalankan berurutan — SQL Editor →
+tempel → **Run**. Semuanya idempoten, aman dijalankan berulang kali.
+
+Migrasi `002` ke atas adalah Fase 0 platform mengundang.id: undangan ini
+jadi baris pertama `pasangan`. Lihat `docs/platform.md`.
 
 Catatan: project free tier tidur sendiri setelah beberapa hari tanpa
 lalu lintas, dan project ini sempat ditemukan dalam keadaan `INACTIVE`.
@@ -106,7 +108,8 @@ menyebut pihak lain di data kiriman pun akan diabaikan server.
 
 Yang perlu diingat: **link itu sendiri adalah kuncinya.** Siapa pun yang
 menerima teruskan link tersebut ikut bisa masuk. Kalau satu link bocor,
-ganti tokennya lewat perintah di bagian bawah `supabase/schema.sql` —
+ganti tokennya lewat perintah di bagian bawah
+`supabase/migrations/001_awal_satu_pasangan.sql` —
 link lama langsung mati tanpa mengganggu yang lain.
 
 ## 4. Sebar undangan
