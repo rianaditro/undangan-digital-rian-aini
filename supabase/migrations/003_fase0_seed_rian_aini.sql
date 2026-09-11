@@ -51,7 +51,7 @@ select p.id, 2, 'Resepsi', 'Selasa, 15 September 2026', 'Pukul 16.00 WIB — sel
 
 insert into public.dompet (pasangan_id, kode, bank, nomor, atas_nama)
 select p.id, v.* from public.pasangan p cross join (values
-  ('rian', 'SeaBank', '901316451657', 'a.n. Rian Adi Saputro'),
+  ('rian', 'DANA',    '085330794639', 'a.n. Rian Adi Saputro'),
   ('aini', 'DANA',    '085727641452', 'a.n. Nurul Zakiyatul ''Aini')
 ) as v(kode, bank, nomor, atas_nama)
 where p.slug = 'rian-aini'

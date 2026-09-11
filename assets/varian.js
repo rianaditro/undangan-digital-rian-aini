@@ -95,7 +95,7 @@
 
   /* ---------- Dompet digital ---------- */
   var DOMPET = {
-    rian: { bank: 'SeaBank', nomor: '901316451657', an: 'a.n. Rian Adi Saputro' },
+    rian: { bank: 'DANA',    nomor: '085330794639', an: 'a.n. Rian Adi Saputro' },
     aini: { bank: 'DANA',    nomor: '085727641452', an: "a.n. Nurul Zakiyatul 'Aini" }
   };
 
