@@ -227,6 +227,26 @@ Buka `/kirim` lewat link pihak Anda.
 Semuanya tersimpan di Supabase. Menutup browser, berganti HP, atau dibuka
 bergantian oleh beberapa orang — progresnya tetap sama.
 
+### Kotak 4 · Halaman terima kasih
+
+Muncul **hanya untuk pemegang link bercakupan penuh**, dan hanya lewat
+jalur token. Jalur login email sengaja tidak menampilkannya: jalur itu tidak
+punya token panitia sama sekali, sementara edge function `foto-unggah`
+justru memeriksa token itu — jadi panelnya disembunyikan, bukan ditampilkan
+lalu gagal waktu ditekan.
+
+**Foto.** Tekan *Pilih Foto*, boleh banyak sekaligus. Tiap berkas dikecilkan
+dulu di HP ini (lihat bagian 1b) baru dikirim, jadi tidak perlu diperkecil
+sendiri. Satu berkas yang gagal tidak menghentikan sisanya — yang gagal
+dicatat di console. Tiap foto bisa diberi keterangan, dinaikturunkan,
+disembunyikan, atau dihapus.
+
+**Ucapan.** Balasan tampil di bawah ucapannya sebagai tulisan pengantin.
+Mengosongkan kotaknya lalu menyimpan berarti menarik balasan itu kembali.
+Tombol *Sembunyikan* memakai `ucapan_tampil` — ucapannya hilang dari halaman
+terima kasih dan dari buku tamu undangan, tapi barisnya tetap ada dan bisa
+ditampilkan lagi.
+
 Link personal tamu berbentuk:
 
 ```

@@ -131,6 +131,10 @@ async function unggah(db: any, pasanganId: string, req: Request) {
       lebar:  angkaWajar(form.get('lebar')),
       tinggi: angkaWajar(form.get('tinggi')),
       bita:   penuh.size,
+      // Urutan diberi nilai berurutan sejak awal. Kalau dibiarkan 0
+      // semua, galeri jatuh ke urutan unggah dan tombol naik/turun di
+      // halaman panitia tidak punya apa-apa untuk ditukar.
+      urutan: count ?? 0,
       keterangan: (form.get('keterangan') as string | null)?.slice(0, 280) || null,
     })
     .select('id, jalur, jalur_kecil, lebar, tinggi, bita, urutan, keterangan, tampil')
