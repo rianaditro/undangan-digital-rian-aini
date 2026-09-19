@@ -9,8 +9,11 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 ├── assets/
 │   ├── varian.js         ← SEMUA konfigurasi ada di sini
 │   ├── vcf.js            ← pembaca berkas kontak .vcf
+│   ├── gambar.js         ← pengecil foto sebelum diunggah
 │   └── backsound.mp3
-├── supabase/migrations/  ← migrasi bernomor, dijalankan berurutan
+├── supabase/
+│   ├── migrations/       ← migrasi bernomor, dijalankan berurutan
+│   └── functions/        ← edge function (jalur tulis yang dijaga)
 └── vercel.json
 ```
 
@@ -52,6 +55,42 @@ Tanpa perintah itu, akun barunya tidak melihat apa pun.
 Kalau URL atau anon key project-nya berbeda dari yang sudah tertulis, ganti
 di `assets/varian.js` bagian `SB`. Anon key memang aman ditaruh di file ini:
 dengan key itu saja, tabel `tamu` dan `pengiriman` tidak bisa dibaca.
+
+---
+
+## 1b. Foto acara
+
+Bucket `foto` di Supabase Storage, dibaca publik, ditulis **hanya** lewat
+edge function `foto-unggah`.
+
+Bucket-nya sengaja publik: foto resepsi memang untuk dilihat orang banyak,
+dan signed URL yang kedaluwarsa akan mematikan link yang sudah diteruskan
+orang. Gantinya nama berkasnya uuid acak. Konsekuensinya harus disadari —
+sekali sebuah URL foto bocor, ia tetap bisa dibuka walau fotonya sudah
+disembunyikan dari halaman. Jangan taruh apa pun yang lebih peka di sini.
+
+Menulisnya lain cerita. `storage.objects` dibiarkan **tanpa satu pun
+policy**, jadi anon dan authenticated ditolak secara bawaan. Sebabnya: RLS
+storage cuma bisa melihat `auth.role()`, ia tidak punya cara memeriksa token
+panitia kita. Kalau anon diizinkan menulis, siapa pun di internet bisa
+menitipkan berkas. Maka satu-satunya pintu adalah edge function, yang
+memeriksa token dulu lalu menulis dengan service_role — dan service_role
+tidak pernah keluar dari sana.
+
+Token yang dipakai harus **bercakupan penuh**. Pemegang link keluarga tidak
+bisa mengunggah maupun menghapus foto acara; itu urusan pengantin.
+
+Sebelum berangkat, `assets/gambar.js` mengecilkan gambarnya di HP
+pengunggah: sisi terpanjang 1600px untuk versi penuh dan 480px untuk
+thumbnail, diekspor WebP. Foto 12 MB dari kamera turun ke sekitar 180 KB.
+Ini bukan kemewahan — tanpa itu kuota habis di satu pasangan, dan tiap tamu
+yang membuka halaman ikut menarik berkas sebesar aslinya.
+
+Redeploy edge function-nya:
+
+```bash
+supabase functions deploy foto-unggah
+```
 
 ---
 
