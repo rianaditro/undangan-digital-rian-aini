@@ -159,9 +159,16 @@ alter table public.panitia_akses add  constraint panitia_akses_pihak_check
 
 alter table public.panitia_akses enable row level security;
 
+-- Sengaja TIDAK ada policy di sini. Tabel ini berisi token — kunci ke
+-- seluruh daftar tamu — dan versi lama berkas ini membuat policy
+-- `using (true)` yang membuka isinya untuk siapa pun berperan
+-- `authenticated`. Migrasi 006 menggantinya dengan saringan per pasangan,
+-- tapi selama baris itu masih berdiri di sini, menjalankan 001 sendirian
+-- pada pemasangan baru akan menghidupkan lubangnya lagi.
+--
+-- RLS menyala tanpa satu pun policy berarti tertutup rapat, dan itu yang
+-- benar: seluruh akses ke tabel ini lewat RPC security definer di bawah.
 drop policy if exists "akses panitia" on public.panitia_akses;
-create policy "akses panitia" on public.panitia_akses
-  for all to authenticated using (true) with check (true);
 
 -- Penerjemah token. TIDAK diberikan ke anon; hanya dipakai di dalam
 -- RPC lain yang juga security definer.

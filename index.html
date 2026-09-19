@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Undangan Pernikahan — Rian &amp; 'AINI</title>
+<title>Undangan Pernikahan</title>
 <script>document.documentElement.className += ' js';</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -576,7 +576,7 @@ h2.title{
     <p class="eyebrow reveal" id="ttdLabel">Kami yang berbahagia</p>
     <h2 class="close-names reveal" id="ttdNama">RIAN <span class="amp">&amp;</span> 'AINI</h2>
     <p class="eyebrow reveal" id="ttdSub">Beserta Keluarga</p>
-    <p class="credit reveal">Jepara · 15 September 2026</p>
+    <p class="credit reveal" id="credit"></p>
   </div>
 </section>
 
@@ -598,9 +598,14 @@ h2.title{
      ========================================================= */
   var slugTamu = '', namaTamu = '', pihakTamu = null;
 
+  /* Nilai ?p= disimpan mentah dulu. Daftar pihak yang sah baru ada
+     sesudah M.muat() selesai, jadi memanggil pihakSah() di sini akan
+     selalu menjawab null — dan seluruh tamu jatuh ke varian bawaan. */
+  var pihakMentah = null;
+
   try{
     var q = new URLSearchParams(window.location.search);
-    pihakTamu = M.pihakSah(q.get('p'));
+    pihakMentah = q.get('p');
 
     var to = q.get('to');
     var jalur = decodeURIComponent(window.location.pathname)
@@ -763,12 +768,15 @@ h2.title{
   document.querySelectorAll('.reveal, .draw').forEach(function(el){ io.observe(el); });
 
   /* ---------- Hitung mundur ---------- */
-  var target = new Date(M.ACARA.wanita.mulai).getTime();
+  /* Diisi terapkanVarian() sesudah isinya turun dari database. Sampai
+     saat itu tick() tidak menampilkan apa-apa, bukan menampilkan salah. */
+  var target = 0;
   var eD=document.getElementById('cd-d'), eH=document.getElementById('cd-h'),
       eM=document.getElementById('cd-m'), eS=document.getElementById('cd-s'),
       grid=document.getElementById('countGrid'), done=document.getElementById('countDone');
   function pad(n){ return n<10 ? '0'+n : ''+n; }
   function tick(){
+    if(!target) return;
     var diff = target - Date.now();
     if(diff <= 0){ grid.hidden = true; done.hidden = false; return; }
     grid.hidden = false; done.hidden = true;
@@ -832,6 +840,15 @@ h2.title{
       + '</div>';
   }
 
+  var BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli',
+                  'Agustus','September','Oktober','November','Desember'];
+
+  function tanggalTanpaHari(iso){
+    var p = String(iso || '').slice(0,10).split('-');
+    if(p.length !== 3) return '';
+    return Number(p[2]) + ' ' + BULAN_ID[Number(p[1]) - 1] + ' ' + p[0];
+  }
+
   function terapkanVarian(pihak){
     var v = M.varian(pihak);
     var tempat = M.tempatVarian(v);
@@ -884,6 +901,17 @@ h2.title{
     document.getElementById('tempatAlamat').textContent = tempat.alamat;
     document.getElementById('tempatMaps').href          = tempat.maps;
 
+    /* judul tab dan baris penutup — keduanya ikut isi database */
+    var namaPasangan = v.ttdNama[0] + " & " + v.ttdNama[1];
+    document.title = 'Undangan Pernikahan — ' + namaPasangan;
+    var kredit = document.getElementById('credit');
+    if(kredit){
+      /* Tanpa nama hari, supaya bunyinya sama seperti sebelum isinya
+         pindah ke database: "Jepara · 15 September 2026". */
+      kredit.textContent = [M.KONF.kota, tanggalTanpaHari(M.KONF.tanggalAcara)]
+        .filter(Boolean).join(' · ');
+    }
+
     /* dompet digital */
     document.getElementById('dompet').innerHTML = v.dompet.map(function(k){
       var d = M.DOMPET[k];
@@ -929,37 +957,79 @@ h2.title{
     }
   }
 
-  /* Varian dari ?p= dipakai langsung supaya tidak ada jeda.
-     Bila tidak ada, tunggu jawaban database sebentar. */
-  terapkanVarian(pihakTamu);
-  pasangNamaTamu();
-  if(pihakTamu) bukaSampul();
+  /* ---------- Memuat ----------
+     Isi undangan dan data tamu ditanyakan BERBARENGAN, bukan berurutan.
+     Keduanya tidak saling bergantung, dan tamu membuka ini dari HP di
+     jaringan desa — satu perjalanan bolak-balik yang bisa dihemat
+     sebaiknya dihemat.
 
-  /* ---------- Tanya database: nama asli dan pihak tamu ---------- */
-  (function(){
-    if(!slugTamu) { bukaSampul(); return; }
-    fetch(M.SB.url + '/rest/v1/rpc/undangan_tamu', {
-      method: 'POST',
-      headers: {
-        'apikey': M.SB.key,
-        'Authorization': 'Bearer ' + M.SB.key,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ p_slug: slugTamu })
-    }).then(function(r){
-      if(!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    }).then(function(baris){
-      var t = Array.isArray(baris) ? baris[0] : baris;
-      if(!t) return;
+     Sebelum tahap 2, isi undangan sudah tertanam di berkas ini sehingga
+     halaman langsung tampil. Sekarang ia menunggu jawaban database dulu.
+     Itu harga yang dibayar supaya satu halaman bisa melayani banyak
+     pasangan, dan sampulnya memang sengaja tidak dibuka sampai isinya
+     siap — lebih baik sampul tertutup sebentar daripada nama yang salah
+     sekejap. */
+  var janjiTamu = slugTamu
+    ? fetch(M.SB.url + '/rest/v1/rpc/undangan_tamu', {
+        method: 'POST',
+        headers: {
+          'apikey': M.SB.key,
+          'Authorization': 'Bearer ' + M.SB.key,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ p_slug: slugTamu })
+      }).then(function(r){
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }).catch(function(){ return null; })
+    : Promise.resolve(null);
+
+  M.muat().then(function(){
+    pihakTamu = M.pihakSah(pihakMentah);
+    terapkanVarian(pihakTamu);
+    pasangNamaTamu();
+    pasangKanonik();
+    return janjiTamu;
+  }).then(function(baris){
+    var t = Array.isArray(baris) ? baris[0] : baris;
+    if(t){
       if(t.nama){ namaTamu = t.nama; pasangNamaTamu(); }
       var p = M.pihakSah(t.pihak);
       /* ?p= di link tetap menang; database mengisi bila link tidak menyebut */
       if(p && !pihakTamu){ pihakTamu = p; terapkanVarian(p); }
-    }).catch(function(){
-      /* biarkan tampilan cadangan yang sudah terpasang */
-    }).then(bukaSampul);
-  })();
+    }
+    bukaSampul();
+    muat();
+  }).catch(function(e){
+    gagalMuat(e);
+  });
+
+  /* Alamat kanonik ditandai lewat <link rel="canonical">, bukan dengan
+     melempar pengunjung ke host lain. Undangan ini sudah tersebar ke
+     ratusan orang; sebuah pengalihan yang salah arah akan mematikan
+     semuanya sekaligus, sementara tag ini paling buruk cuma diabaikan.
+     Pengalihan 301 yang sebenarnya urusan lapisan server nanti. */
+  function pasangKanonik(){
+    if(!M.KONF.canonicalHost) return;
+    var el = document.querySelector('link[rel="canonical"]');
+    if(!el){
+      el = document.createElement('link');
+      el.rel = 'canonical';
+      document.head.appendChild(el);
+    }
+    el.href = 'https://' + M.KONF.canonicalHost + location.pathname + location.search;
+  }
+
+  function gagalMuat(e){
+    var kotak = document.getElementById('coverNama');
+    if(kotak){
+      kotak.textContent = e && e.tidakAktif
+        ? 'Undangan belum tersedia'
+        : 'Undangan belum bisa dimuat';
+    }
+    var sub = document.getElementById('coverSub');
+    if(sub) sub.textContent = 'Periksa sambungan internet, lalu muat ulang halaman.';
+  }
 
   /* ---------- Buku ucapan (tersimpan & dibagikan) ---------- */
   var listEl  = document.getElementById('listUcapan');
@@ -1029,26 +1099,22 @@ h2.title{
     var label = btnKirim.textContent;
     btnKirim.textContent = 'Mengirim…';
     try{
-      var kirim = Object.assign({ 'Prefer':'return=minimal' }, sbHead);
-      var isi = {
-        nama:  nama.slice(0,40),
-        hadir: hadir,
-        pesan: pesan.slice(0,500),
-        pihak: pihakTamu || null
-      };
-      async function kirimUcapan(muatan){
-        return fetch(SB_URL + '/rest/v1/' + SB_TABEL, {
-          method:'POST', headers: kirim, body: JSON.stringify(muatan)
-        });
-      }
-
-      var r = await kirimUcapan(isi);
-      /* Kolom pihak baru ada setelah supabase/schema.sql dijalankan.
-         Bila belum, ucapan tetap harus bisa masuk. */
-      if(r.status === 400){
-        delete isi.pihak;
-        r = await kirimUcapan(isi);
-      }
+      /* Ditulis lewat RPC, bukan POST langsung ke tabel. Sebabnya
+         pasangan_id: kalau peramban yang menentukannya, sebuah tulisan
+         bisa dititipkan ke undangan pasangan lain. ucapan_tulis()
+         menetapkannya sendiri dari slug, dan sejak migrasi 012 jalan
+         menulis langsung ke tabel sudah ditutup sama sekali. */
+      var r = await fetch(SB_URL + '/rest/v1/rpc/ucapan_tulis', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type':'application/json' }, sbHead),
+        body: JSON.stringify({
+          p_slug:  M.KONF.slug,
+          p_nama:  nama.slice(0,60),
+          p_hadir: hadir,
+          p_pesan: pesan.slice(0,800),
+          p_pihak: pihakTamu || null
+        })
+      });
       if(!r.ok) throw new Error('HTTP ' + r.status);
       msgEl.classList.add('ok');
       msgEl.textContent = 'Terima kasih, ucapan Anda sudah terkirim.';

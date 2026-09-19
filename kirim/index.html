@@ -442,15 +442,17 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     });
   }
 
-  /* isi kedua dropdown pihak dari daftar varian */
-  (function isiPilihanPihak(){
+  /* Isi kedua dropdown pihak dari daftar varian. Dipanggil SESUDAH
+     M.muat(), bukan saat berkas ini dibaca — daftar variannya sekarang
+     datang dari database, jadi waktu skrip ini jalan isinya masih kosong. */
+  function isiPilihanPihak(){
     var opsi = Object.keys(M.VARIAN).map(function(k){
       return '<option value="'+k+'">'+esc(M.VARIAN[k].label)+'</option>';
     }).join('');
     $('pihakBaru').innerHTML = opsi;
     $('pihakBaru').value = M.PIHAK_BAWAAN;
     $('filterPihak').innerHTML = '<option value="">Semua pihak</option>' + opsi;
-  })();
+  }
 
   /* ============================================================
      Data
@@ -1297,6 +1299,20 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
 
   /* ---------- Menentukan cara masuk ---------- */
   (async function mulai(){
+    /* Isi undangan sekarang datang dari database, dan dropdown pihak
+       disusun dari situ — jadi harus turun dulu sebelum apa pun digambar. */
+    try{
+      await M.muat();
+    }catch(e){
+      tampilkanGerbang('');
+      $('gerbang').querySelector('.gerbang-kotak').innerHTML =
+        '<p class="eyebrow">Halaman Panitia</p>'
+      + '<h1 style="font-size:24px;margin:10px 0 8px">Data undangan belum bisa dimuat</h1>'
+      + '<p class="sub">' + esc(e.message) + '</p>';
+      return;
+    }
+    isiPilihanPihak();
+
     if(TOKEN){
       /* link rahasia: tanyakan ke server siapa pemegangnya */
       $('pesanMasuk').textContent = '';

@@ -8,7 +8,7 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 ├── kirim/index.html      ← halaman panitia (daftar tamu & pengiriman)
 ├── terimakasih/index.html ← halaman terima kasih, publik
 ├── assets/
-│   ├── varian.js         ← SEMUA konfigurasi ada di sini
+│   ├── varian.js         ← konfigurasi platform + pemuat isi + pembantu
 │   ├── vcf.js            ← pembaca berkas kontak .vcf
 │   ├── gambar.js         ← pengecil foto sebelum diunggah
 │   └── backsound.mp3
@@ -18,9 +18,21 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 └── vercel.json
 ```
 
-Satu tempat untuk semua isian: **`assets/varian.js`**. Halaman undangan dan
-halaman panitia sama-sama membacanya, jadi mengubah alamat acara atau nomor
-dompet cukup sekali.
+Sejak tahap 2, **isi undangan tidak lagi ada di berkas ini.** Nama mempelai,
+alamat acara, nomor dompet, dan varian per pihak semuanya datang dari
+database lewat satu panggilan `undangan_isi(slug)`. Yang tersisa di
+`assets/varian.js` cuma milik platform — alamat Supabase dan berkas musik —
+plus pembantu yang bentuknya fungsi murni.
+
+Artinya halaman ini sudah bisa melayani lebih dari satu pasangan. Menambah
+klien baru berarti menambah baris di tabel, bukan menyalin berkas.
+
+Urutan pakainya berubah satu langkah: tunggu dulu, baru baca.
+
+```js
+await MENGUNDANG.muat();
+var v = MENGUNDANG.varian('keluarga-pria');
+```
 
 ---
 
@@ -107,11 +119,8 @@ Fungsi itu `security definer`, jadi RLS tidak berlaku di dalamnya. Artinya
 menahan foto dan ucapan yang disembunyikan. Hapus salah satunya dan justru
 halaman publik inilah yang membocorkan apa yang sengaja disembunyikan.
 
-Pasangan mana yang ditampilkan ditentukan dari nama host —
-`rian-aini.mengundang.id` → `rian-aini`. Kalau bukan subdomain, jatuh ke
-segmen path pertama (`/budi-sari/terimakasih`), lalu ke slug bawaan.
-Sementara ini ada di dalam halamannya sendiri; tahap 2 memindahkannya ke
-satu tempat bersama halaman undangan.
+Pasangan mana yang ditampilkan ditentukan `MENGUNDANG.slugPasangan()`,
+dipakai bersama halaman undangan. Lihat bagian 1d.
 
 ### Jebakan routing
 
@@ -130,6 +139,54 @@ diketahui sesudah JS jalan — mengisinya butuh render di server. Efeknya:
 waktu link-nya dibagikan di WhatsApp, pratinjaunya belum memunculkan foto.
 Untuk halaman yang memang dibuat sebagai bahan jualan, ini layak
 dibereskan di tahap 2.
+
+---
+
+## 1d. Satu halaman, banyak pasangan
+
+Pasangan mana yang ditampilkan ditentukan `MENGUNDANG.slugPasangan()`:
+
+| Alamat | Slug |
+|---|---|
+| `rian-aini.mengundang.id/…` | `rian-aini` (subdomain) |
+| `mengundang.id/budi-sari/…` | `budi-sari` (segmen path pertama) |
+| selain itu | slug cadangan |
+
+Alamat IP sengaja tidak dibaca sebagai subdomain — `127.0.0.1` akan
+terbaca sebagai slug `127` dan halamannya diam-diam kosong waktu dites
+lokal.
+
+Penentu ini dipakai bersama oleh halaman undangan dan halaman terima
+kasih. Sebelumnya disalin di dua tempat, dan salinan seperti itu selalu
+berakhir beda perilaku dari induknya.
+
+### Alamat kanonik
+
+`canonical_host` dipasang sebagai `<link rel="canonical">`, **bukan**
+sebagai pengalihan. Undangan ini sudah tersebar ke ratusan orang; sebuah
+pengalihan yang salah arah akan mematikan semuanya sekaligus, sementara
+tag ini paling buruk cuma diabaikan. Pengalihan 301 yang sebenarnya
+urusan lapisan server nanti, waktu pindah dari Vercel.
+
+### Harga yang dibayar
+
+Dulu isi undangan tertanam di `index.html` sehingga halaman langsung
+tampil. Sekarang ia menunggu jawaban database dulu. Supaya tidak
+menumpuk, panggilan `undangan_isi` dan `undangan_tamu` dijalankan
+**berbarengan**, bukan berurutan — tamu membuka ini dari HP di jaringan
+desa, dan satu perjalanan bolak-balik yang bisa dihemat sebaiknya
+dihemat. Sampulnya sengaja tidak dibuka sampai isinya siap: lebih baik
+sampul tertutup sebentar daripada nama yang salah sekejap. Ada jaring
+pengaman 2,5 detik supaya sampul tidak pernah tertahan selamanya.
+
+### Menulis ucapan
+
+Tamu tidak lagi POST langsung ke tabel `ucapan`; sejak migrasi `012`
+policy INSERT-nya dicabut sama sekali. Satu-satunya jalan masuk adalah
+`ucapan_tulis(slug, …)`, yang menetapkan `pasangan_id` sendiri dari slug.
+Sebabnya: kalau peramban yang menentukan pasangan_id, sebuah tulisan bisa
+dititipkan ke undangan pasangan lain. Ini utang dari migrasi `010` yang
+baru bisa dilunasi setelah ada resolusi penyewa.
 
 ---
 

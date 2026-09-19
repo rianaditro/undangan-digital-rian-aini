@@ -1,171 +1,165 @@
 /* ============================================================
-   Undangan Rian & 'Aini — konfigurasi & varian per pihak
-   Dipakai bersama oleh halaman undangan dan halaman panitia.
+   mengundang.id — konfigurasi platform, pemuat isi, dan pembantu
 
-   Semua yang perlu diubah ada di file ini. Tidak ada build step.
+   Sampai tahap 1 berkas ini juga menyimpan seluruh isi undangan Rian &
+   'Aini sebagai konstanta. Sekarang tidak lagi: isinya datang dari
+   undangan_isi(slug) di database, dan yang tersisa di sini cuma dua hal
+   yang memang milik platform — alamat Supabase dan berkas musik — plus
+   pembantu yang bentuknya fungsi murni.
+
+   Cara pakainya berubah satu langkah: panggil MENGUNDANG.muat() dan
+   tunggu, baru baca MEMPELAI, VARIAN, dan kawan-kawannya.
+
+     await MENGUNDANG.muat();
+     var v = MENGUNDANG.varian('keluarga-pria');
+
+   Wadah datanya diisi di tempat, bukan diganti. Jadi kode yang terlanjur
+   memegang rujukan ke MENGUNDANG.VARIAN tetap melihat isi yang benar
+   sesudah muat() selesai.
    ============================================================ */
 (function (global) {
   'use strict';
 
-  /* ---------- Supabase ----------
-     anon key memang aman ditaruh di sini: RLS hanya mengizinkan
-     baca/tulis ucapan. Daftar tamu tidak bisa dibaca dengan key ini. */
+  /* ---------- Milik platform, bukan milik satu pasangan ----------
+     anon key memang aman ditaruh di sini: dengan key ini saja, tabel
+     tamu dan pengiriman tidak bisa dibaca sama sekali. */
   var SB = {
     url: 'https://mavjlhlyrtacxleulbom.supabase.co',
     key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1hdmpsaGx5cnRhY3hsZXVsYm9tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3NTQwMTUsImV4cCI6MjEwMjMzMDAxNX0.z-ggUETNyHPLWdhXkLTuWHMZdb-E98YcqGzM74d1uq8'
   };
 
-  /* ---------- Alamat situs ----------
-     Dipakai halaman panitia untuk menyusun link personal tamu. */
-  var SITUS = 'https://rian-aini.mengundang.id';
-
-  /* ---------- Musik latar ---------- */
   var BACKSOUND_URL = '/assets/backsound.mp3';
 
-  /* ---------- Mempelai ---------- */
-  var MEMPELAI = {
-    pria: {
-      panggilan: 'RIAN',
-      lengkap:   'RIAN ADI SAPUTRO',
-      peran:     'Mempelai Pria',
-      anak:      'Putra dari',
-      ayah:      'Bapak Joko Sudarno',  ayahKet: '(Alm)',
-      ibu:       'Ibu Sri Kanah',       ibuKet:  '(Almh)'
-    },
-    wanita: {
-      panggilan: "'AINI",
-      lengkap:   "NURUL ZAKIYATUL 'AINI",
-      peran:     'Mempelai Wanita',
-      anak:      'Putri dari',
-      ayah:      'Bapak Surahmad',      ayahKet: '',
-      ibu:       "Ibu Robi'atun",       ibuKet:  '(Almh)'
-    }
-  };
+  /* Dipakai kalau database tidak menyebut canonical_host. */
+  var SITUS_CADANGAN = 'https://rian-aini.mengundang.id';
+  var SLUG_CADANGAN  = 'rian-aini';
 
-  /* ---------- Tempat & acara, per sisi keluarga ----------
-
-     TEMPAT.wanita / ACARA.wanita  → dilihat pihak wanita
-     TEMPAT.pria   / ACARA.pria    → dilihat pihak pria
-
-     Selama TEMPAT.pria masih null, pihak pria ikut memakai
-     alamat dan acara sisi wanita. Isi begitu acara di rumah
-     mempelai pria (ngunduh mantu) sudah pasti. */
-
-  var TEMPAT = {
-    wanita: {
-      nama:    'Kediaman Mempelai Putri',
-      alamat:  'Jalan Pesajen RT 03 / RW 04, Demaan, Jepara, Jawa Tengah',
-      ringkas: 'Jl. Pesajen RT 03/04, Demaan, Jepara',
-      maps:    'https://maps.app.goo.gl/xSdwqbrQoHadeU2A6'
-    },
-
-    /* Jalan dan RW sama dengan sisi wanita, hanya RT-nya berbeda. */
-    pria: {
-      nama:    'Kediaman Mempelai Putra',
-      alamat:  'Jalan Pesajen RT 01 / RW 04, Demaan, Jepara, Jawa Tengah',
-      ringkas: 'Jl. Pesajen RT 01/04, Demaan, Jepara',
-      maps:    'https://goo.gl/maps/HbCrjVDvgopegQHW8'
-    }
-  };
-
-  /* Sebuah acara boleh mengunci tempatnya sendiri lewat kunci `tempat`.
-     Akad dikunci ke sisi wanita karena hanya digelar sekali, di kediaman
-     mempelai putri. Resepsi tidak dikunci, jadi ikut pihak tamu:
-     tamu pihak pria diarahkan ke kediaman mempelai putra. */
-  var ACARA = {
-    wanita: {
-      mulai: '2026-09-15T13:00:00+07:00',
-      daftar: [
-        { nama: 'Akad Nikah', tanggal: 'Selasa, 15 September 2026',
-          jam: 'Pukul 13.00 WIB',           ringkas: 'Akad 13.00 WIB',
-          tempat: 'wanita' },
-        { nama: 'Resepsi',    tanggal: 'Selasa, 15 September 2026',
-          jam: 'Pukul 16.00 WIB — selesai', ringkas: 'Resepsi 16.00 WIB' }
-      ],
-      /* dipakai di judul hitung mundur dan pesan WhatsApp */
-      tanggalRingkas: 'Selasa, 15 September 2026'
-    },
-
-    /* Belum ada rangkaian acara tersendiri untuk sisi pria, jadi
-       tanggal dan jamnya mengikuti sisi wanita. Isi blok ini —
-       bentuknya persis seperti blok wanita di atas — bila acara di
-       kediaman mempelai putra digelar pada waktu yang berbeda. */
-    pria: null
-  };
-
-  /* ---------- Dompet digital ---------- */
-  var DOMPET = {
-    rian: { bank: 'DANA',    nomor: '085330794639', an: 'a.n. Rian Adi Saputro' },
-    aini: { bank: 'DANA',    nomor: '085727641452', an: "a.n. Nurul Zakiyatul 'Aini" }
-  };
-
-  /* ---------- Empat varian undangan ----------
-
-     sisi     → tempat & acara mana yang ditampilkan
-     urutan   → urutan kartu mempelai dan urutan nama di judul
-     dompet   → dompet digital yang tampil, urutan menentukan posisi
-     ttdNama  → tanda tangan di penutup, menyesuaikan siapa yang mengundang
-
-     Kartu ucapan sengaja TIDAK dibedakan: semua varian menulis dan
-     membaca daftar ucapan yang sama.                                */
-
-  var VARIAN = {
-    'pria': {
-      label:   'Pengantin Pria',
-      kode:    'p',
-      sisi:    'pria',
-      urutan:  ['pria', 'wanita'],
-      dompet:  ['rian', 'aini'],
-      ttdLabel: 'Kami yang berbahagia',
-      ttdNama:  ["RIAN", "'AINI"],
-      ttdSub:   'Beserta Keluarga'
-    },
-
-    'keluarga-pria': {
-      label:   'Keluarga Pihak Pria',
-      kode:    'kp',
-      sisi:    'pria',
-      urutan:  ['pria', 'wanita'],
-      dompet:  ['rian', 'aini'],
-      ttdLabel: 'Hormat kami',
-      ttdNama:  ["RIAN", "'AINI"],
-      ttdSub:   'Beserta Keluarga Besar Bapak Joko Sudarno (Alm) & Ibu Sri Kanah (Almh)'
-    },
-
-    'wanita': {
-      label:   'Pengantin Wanita',
-      kode:    'w',
-      sisi:    'wanita',
-      urutan:  ['wanita', 'pria'],
-      dompet:  ['aini', 'rian'],
-      ttdLabel: 'Kami yang berbahagia',
-      ttdNama:  ["'AINI", "RIAN"],
-      ttdSub:   'Beserta Keluarga'
-    },
-
-    'keluarga-wanita': {
-      label:   'Keluarga Pihak Wanita',
-      kode:    'kw',
-      sisi:    'wanita',
-      urutan:  ['wanita', 'pria'],
-      dompet:  ['aini', 'rian'],
-      ttdLabel: 'Hormat kami',
-      ttdNama:  ["'AINI", "RIAN"],
-      ttdSub:   "Beserta Keluarga Besar Bapak Surahmad & Ibu Robi'atun (Almh)"
-    }
-  };
-
-  var PIHAK_BAWAAN = 'keluarga-wanita';
-
-  /* kode pendek (?p=kp) → nama pihak */
+  /* ---------- Wadah isi undangan ----------
+     Kosong sampai muat() selesai. Jangan diganti dengan objek baru;
+     isinya diganti di tempat supaya rujukan lama tetap sah. */
+  var MEMPELAI = {};
+  var TEMPAT   = {};
+  var DOMPET   = {};
+  var VARIAN   = {};
+  var ACARA    = [];
   var DARI_KODE = {};
-  Object.keys(VARIAN).forEach(function (k) { DARI_KODE[VARIAN[k].kode] = k; });
+
+  var KONF = {
+    siap: false,
+    slug: '',
+    tema: '',
+    status: '',
+    canonicalHost: '',
+    kota: '',
+    situs: SITUS_CADANGAN,
+    pihakBawaan: '',
+    tanggalRingkas: '',
+    tanggalAcara: '',
+    mulai: ''
+  };
+
+  /* ---------- Pasangan mana yang sedang dibuka ----------
+     rian-aini.mengundang.id  → rian-aini        (subdomain)
+     mengundang.id/budi-sari/ → budi-sari        (segmen path pertama)
+
+     Alamat IP tidak diperlakukan sebagai subdomain: 127.0.0.1 akan
+     terbaca sebagai slug "127" dan halamannya diam-diam kosong waktu
+     dites lokal. */
+  var LOMPATI_HOST = { www: 1, mengundang: 1, localhost: 1 };
+
+  function slugPasangan(host, jalur) {
+    host  = host  != null ? host  : (global.location ? location.hostname : '');
+    jalur = jalur != null ? jalur : (global.location ? location.pathname : '');
+
+    var sepertiIP = /^[0-9.]+$/.test(host) || host.indexOf(':') !== -1;
+    var bagian = host.split('.');
+
+    if (!sepertiIP && bagian.length >= 3 && !LOMPATI_HOST[bagian[0]]) {
+      return bagian[0];
+    }
+
+    /* Bentuk path hanya berlaku bila ada segmen sesudahnya — satu segmen
+       saja adalah slug tamu di undangan, bukan slug pasangan. */
+    var seg = jalur.split('/').filter(Boolean);
+    if (seg.length >= 2) return seg[0];
+
+    return SLUG_CADANGAN;
+  }
+
+  /* ---------- Memuat ---------- */
+  var janji = null;
+
+  function muat(slug) {
+    if (janji) return janji;
+    var s = slug || slugPasangan();
+
+    janji = fetch(SB.url + '/rest/v1/rpc/undangan_isi', {
+      method: 'POST',
+      headers: {
+        'apikey': SB.key,
+        'Authorization': 'Bearer ' + SB.key,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ p_slug: s })
+    }).then(function (r) {
+      if (!r.ok) throw new Error('Gagal memuat undangan (HTTP ' + r.status + ')');
+      return r.json();
+    }).then(function (d) {
+      if (!d || d.aktif !== true) {
+        var e = new Error('Undangan belum tersedia');
+        e.tidakAktif = true;
+        throw e;
+      }
+      pasang(d);
+      return d;
+    });
+
+    return janji;
+  }
+
+  function isiUlang(wadah, isi) {
+    Object.keys(wadah).forEach(function (k) { delete wadah[k]; });
+    Object.keys(isi || {}).forEach(function (k) { wadah[k] = isi[k]; });
+  }
+
+  function pasang(d) {
+    isiUlang(MEMPELAI, d.mempelai);
+    isiUlang(TEMPAT,   d.tempat);
+    isiUlang(DOMPET,   d.dompet);
+    isiUlang(VARIAN,   d.pihak);
+
+    ACARA.length = 0;
+    (d.acara || []).forEach(function (a) { ACARA.push(a); });
+
+    isiUlang(DARI_KODE, {});
+    Object.keys(VARIAN).forEach(function (k) { DARI_KODE[VARIAN[k].kode] = k; });
+
+    KONF.slug          = d.slug || '';
+    KONF.tema          = d.tema || '';
+    KONF.status        = d.status || '';
+    KONF.canonicalHost = d.canonical_host || '';
+    KONF.kota          = d.kota || '';
+    KONF.tanggalAcara  = d.tanggal_acara || '';
+    KONF.situs         = d.canonical_host ? 'https://' + d.canonical_host : SITUS_CADANGAN;
+    KONF.pihakBawaan   = d.pihak_bawaan || Object.keys(VARIAN)[0] || '';
+
+    /* Dulu dua nilai ini disimpan sendiri di ACARA[sisi]. Keduanya selalu
+       sama dengan acara pertama, jadi diturunkan saja — satu sumber. */
+    KONF.tanggalRingkas = ACARA.length ? ACARA[0].tanggal : '';
+    KONF.mulai          = ACARA.length ? ACARA[0].mulai   : '';
+    KONF.siap = true;
+  }
+
+  function pastikanSiap() {
+    if (!KONF.siap) {
+      throw new Error('MENGUNDANG.muat() belum selesai dipanggil');
+    }
+  }
 
   /* ============================================================
-     Pembantu
+     Pembantu — fungsi murni, tidak berubah dari sebelumnya
      ============================================================ */
 
-  /* nama pihak yang sah, atau nilai bawaan */
   function pihakSah(p) {
     if (!p) return null;
     p = String(p).trim().toLowerCase();
@@ -175,13 +169,22 @@
   }
 
   function varian(pihak) {
-    return VARIAN[pihakSah(pihak) || PIHAK_BAWAAN];
+    pastikanSiap();
+    return VARIAN[pihakSah(pihak) || KONF.pihakBawaan];
   }
 
-  /* tempat & acara yang berlaku untuk sebuah varian,
-     dengan sisi pria jatuh kembali ke sisi wanita bila belum diisi */
   function tempatVarian(v) { return TEMPAT[v.sisi] || TEMPAT.wanita; }
-  function acaraVarian(v)  { return ACARA[v.sisi]  || ACARA.wanita;  }
+
+  /* Rangkaian acaranya satu untuk semua pihak — yang berpindah cuma
+     tempatnya, dan itu ditentukan per acara. Bentuk kembaliannya
+     dipertahankan supaya pemanggil lama tidak perlu diubah. */
+  function acaraVarian(v) {
+    return {
+      daftar: ACARA,
+      mulai: KONF.mulai,
+      tanggalRingkas: KONF.tanggalRingkas
+    };
+  }
 
   /* tempat sebuah acara: yang dikunci di acara itu, kalau tidak ada
      baru ikut sisi keluarga tamunya */
@@ -190,14 +193,12 @@
     return tempatVarian(v);
   }
 
-  /* rangkaian acara lengkap dengan tempatnya masing-masing */
   function acaraBertempat(v) {
-    return acaraVarian(v).daftar.map(function (ac) {
+    return ACARA.map(function (ac) {
       return { acara: ac, tempat: tempatAcara(v, ac) };
     });
   }
 
-  /* benar bila seluruh acara digelar di tempat yang sama */
   function satuTempat(daftar) {
     return daftar.every(function (d) { return d.tempat === daftar[0].tempat; });
   }
@@ -222,8 +223,6 @@
     return d;
   }
 
-  /* kunci pembanding untuk mendeteksi nama kembar:
-     huruf kecil, gelar dan sapaan dibuang, spasi dirapatkan */
   var SAPAAN = /\b(bapak|bpk|pak|ibu|bu|mas|mbak|mbk|saudara|saudari|sdr|sdri|kakak|kak|adik|dek|haji|hajjah|hj|h|drs|dra|ir|dr|s\.?pd|s\.?e|s\.?h|s\.?t|m\.?pd|sekeluarga|keluarga|besar)\b/g;
 
   function kunciNama(nama) {
@@ -236,14 +235,11 @@
   }
 
   function linkTamu(slug, pihak) {
-    var dasar = SITUS.replace(/\/+$/, '');
+    var dasar = KONF.situs.replace(/\/+$/, '');
     var v = pihakSah(pihak);
     return dasar + '/' + slug + (v ? '?p=' + VARIAN[v].kode : '');
   }
 
-  /* pesan WhatsApp, isinya menyesuaikan pihak tamu.
-     Bila acaranya tidak semua di satu tempat, tiap acara ditulis
-     bersama alamatnya sendiri supaya tamu tidak salah datang. */
   function pesanWA(nama, slug, pihak) {
     var v      = varian(pihak);
     var a      = acaraVarian(v);
@@ -276,16 +272,19 @@
       + ur;
   }
 
-  global.MENGUNDANG = {
+  var API = {
     SB: SB,
-    SITUS: SITUS,
     BACKSOUND_URL: BACKSOUND_URL,
+
     MEMPELAI: MEMPELAI,
     TEMPAT: TEMPAT,
     ACARA: ACARA,
     DOMPET: DOMPET,
     VARIAN: VARIAN,
-    PIHAK_BAWAAN: PIHAK_BAWAAN,
+    KONF: KONF,
+
+    muat: muat,
+    slugPasangan: slugPasangan,
     pihakSah: pihakSah,
     varian: varian,
     tempatVarian: tempatVarian,
@@ -299,4 +298,16 @@
     linkTamu: linkTamu,
     pesanWA: pesanWA
   };
-})(window);
+
+  /* SITUS dan PIHAK_BAWAAN dulu berupa nilai tetap. Nilainya sekarang baru
+     diketahui sesudah muat(), dan string tidak bisa diubah di tempat —
+     jadi keduanya jadi properti baca yang mengambil nilai terkini. */
+  Object.defineProperty(API, 'SITUS', {
+    enumerable: true, get: function () { return KONF.situs; }
+  });
+  Object.defineProperty(API, 'PIHAK_BAWAAN', {
+    enumerable: true, get: function () { return KONF.pihakBawaan; }
+  });
+
+  global.MENGUNDANG = API;
+})(typeof window !== 'undefined' ? window : globalThis);

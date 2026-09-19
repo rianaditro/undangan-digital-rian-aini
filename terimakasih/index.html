@@ -188,29 +188,11 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
     });
   }
 
-  /* ---------- Pasangan mana ini? ----------
-     Sementara dari nama host: rian-aini.mengundang.id → rian-aini.
-     Kalau bukan subdomain (localhost, *.vercel.app, apex), jatuh ke
-     segmen path pertama, lalu ke slug bawaan.
-     Tahap 2 memindahkan ini ke satu tempat bersama halaman undangan. */
-  var SLUG_CADANGAN = 'rian-aini';
-
-  function slugPasangan(){
-    var host = location.hostname;
-    /* Alamat IP jangan diperlakukan sebagai subdomain — 127.0.0.1 akan
-       terbaca sebagai slug "127" dan halamannya diam-diam kosong waktu
-       dites lokal. */
-    var sepertiIP = /^[0-9.]+$/.test(host) || host.indexOf(':') !== -1;
-    var h = host.split('.');
-    var lompati = { www:1, mengundang:1, localhost:1 };
-
-    if (!sepertiIP && h.length >= 3 && !lompati[h[0]]) return h[0];
-
-    var seg = location.pathname.split('/').filter(Boolean);
-    if (seg.length >= 2) return seg[0];          // /budi-sari/terimakasih
-
-    return SLUG_CADANGAN;
-  }
+  /* ---------- Pasangan mana ini? ---------- */
+  /* Penentu pasangan sekarang tinggal satu, di assets/varian.js, dipakai
+     bersama halaman undangan. Sebelumnya disalin di sini — dan salinan
+     seperti itu selalu berakhir beda perilaku dari induknya. */
+  var slugPasangan = M.slugPasangan;
 
   var BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli',
                'Agustus','September','Oktober','November','Desember'];
