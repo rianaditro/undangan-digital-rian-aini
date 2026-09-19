@@ -1,16 +1,51 @@
 {
   "rewrites": [
-    { "source": "/kirim", "destination": "/kirim/index.html" },
-    { "source": "/kirim/", "destination": "/kirim/index.html" },
-    { "source": "/terimakasih", "destination": "/terimakasih/index.html" },
-    { "source": "/terimakasih/", "destination": "/terimakasih/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/kirim",
+      "destination": "/kirim/index.html"
+    },
+    {
+      "source": "/kirim/",
+      "destination": "/kirim/index.html"
+    },
+    {
+      "source": "/terimakasih",
+      "destination": "/terimakasih/index.html"
+    },
+    {
+      "source": "/terimakasih/",
+      "destination": "/terimakasih/index.html"
+    },
+    {
+      "source": "/dasbor",
+      "destination": "/dasbor/index.html"
+    },
+    {
+      "source": "/dasbor/",
+      "destination": "/dasbor/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/kirim(.*)",
       "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/dasbor(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
       ]
     }
   ]

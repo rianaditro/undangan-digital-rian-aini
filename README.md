@@ -7,6 +7,7 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 ├── index.html            ← halaman undangan
 ├── kirim/index.html      ← halaman panitia (daftar tamu & pengiriman)
 ├── terimakasih/index.html ← halaman terima kasih, publik
+├── dasbor/index.html     ← halaman klien: isi & terbitkan undangannya sendiri
 ├── assets/
 │   ├── varian.js         ← konfigurasi platform + pemuat isi + pembantu
 │   ├── vcf.js            ← pembaca berkas kontak .vcf
@@ -339,6 +340,74 @@ kedua: tamu tidak pernah mengunggah apa pun, dan mengirimi mereka 7 KB
 pustaka yang tak terpakai itu mahal di jaringan desa.
 
 Mengelolanya di kotak **5** halaman panitia.
+
+---
+
+## 1h. Dasbor klien
+
+`/dasbor` — pengantin masuk dengan email, mengisi undangannya sendiri,
+lalu menerbitkannya. Ini yang membuat klien baru tidak lagi berarti Anda
+yang mengetik datanya.
+
+### Membuka klien baru
+
+Dua langkah, sekali saja:
+
+1. Supabase → **Authentication → Users → Add user**, isi email dan kata
+   sandi pengantin.
+2. SQL Editor:
+
+```sql
+select public.pasangan_siapkan(
+         'budi-sari', 'budi@contoh.com', 'Budi', 'Sari',
+         date '2027-03-20', 'Semarang');
+```
+
+Satu perintah itu membuat pasangan (masih **draf**), dua mempelai, dua
+tempat kosong, **keempat** baris pihak, lima link panitia dengan token
+acak, dan menghubungkan akunnya ke tabel `pemilik`. Sesudah itu pengantin
+masuk sendiri ke `/dasbor` dan mengisi sisanya.
+
+Keempat baris `pihak` dibuat di sini justru karena itulah yang paling
+mudah terlewat kalau dikerjakan dengan tangan: tanpa mereka, undangannya
+tampil kosong **tanpa pesan galat apa pun**.
+
+### Kenapa login email, bukan link bertoken
+
+Halaman panitia (`/kirim`) memakai link — cocok untuk bapak, ibu, dan
+mertua yang cuma perlu mengirim undangan. Dasbor lain urusannya: ia
+mengubah isi undangan, dan pemiliknya butuh kunci yang melekat padanya
+serta bisa dicabut, bukan link yang bisa diteruskan siapa saja.
+
+Sesudah masuk, halaman ini menulis **langsung ke tabel** lewat REST —
+tanpa RPC perantara. Itu aman karena RLS sejak migrasi `006` sudah
+menyaring tiap tabel dengan `pasangan_saya()`. Diuji dengan akun pemilik
+sungguhan: ia melihat undangannya sendiri, **nol baris** tamu pasangan
+lain, dan setiap usaha menyunting atau menitipkan baris ke pasangan lain
+ditolak RLS — termasuk waktu id pasangan lain itu sudah diketahui.
+
+### Yang sengaja tidak jadi isian
+
+Urutan nama dan urutan dompet per pihak **tidak ada di dasbor**. Keduanya
+selalu berbunyi "sisi tamu dulu, lawannya belakangan", jadi sejak migrasi
+`015` nilainya diturunkan `undangan_isi()` dari nama panggilan mempelai
+dan kolom `dompet.sisi`. Meminta klien mengetik sesuatu yang sudah
+diketahui sistem cuma menyiapkan sumber kedua yang akan berbeda.
+
+### Jam acara
+
+Kotak *Mulai* memakai waktu lokal peramban, sementara database menyimpan
+UTC. Pergeserannya dikerjakan dua arah waktu memuat dan menyimpan —
+tanpa itu jam yang muncul meleset sebesar selisih zona. Diuji di
+`Asia/Jakarta`: `01:00 UTC` tampil sebagai `08:00`, dan disunting jadi
+`16:30` terkirim kembali sebagai `09:30 UTC`.
+
+### Belum ada di sini
+
+Rekap sesudah acara — menandai siapa yang datang dan mencatat amplop —
+belum dibangun. Tabel `pemberian` dan kolom `tamu.datang` sudah ada sejak
+migrasi `004` tapi masih kosong, dan selama itu angka kehadiran di
+`/terimakasih` memang tidak ditampilkan.
 
 ---
 

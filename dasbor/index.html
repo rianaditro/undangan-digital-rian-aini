@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dasbor — mengundang.id</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --nila:#131E33; --nila-2:#1B2A46; --nila-3:#0D1626;
+  --kuningan:#C39A5C; --kuningan-dim:#8C6A3A; --kapur:#EDE7D9;
+  --daun:#7C8B63; --merah:#B4573F;
+  --garis:rgba(195,154,92,.22);
+  --display:'Marcellus',serif; --body:'Karla',system-ui,sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--nila);color:var(--kapur);font-family:var(--body);font-weight:300;line-height:1.65;-webkit-font-smoothing:antialiased;}
+[hidden]{display:none!important;}
+img{display:block;max-width:100%;}
+button{font:inherit;color:inherit;}
+
+.bungkus{max-width:860px;margin:0 auto;padding:clamp(18px,4vw,34px);}
+header.atas{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:22px;}
+.eyebrow{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--kuningan);}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(22px,5vw,30px);letter-spacing:.03em;margin-top:6px;}
+.sub{font-size:12.5px;color:rgba(237,231,217,.55);margin-top:4px;}
+
+.panel{border:1px solid var(--garis);background:rgba(195,154,92,.03);padding:clamp(15px,3.4vw,22px);margin-bottom:18px;}
+.panel h2{font-family:var(--display);font-weight:400;font-size:18px;letter-spacing:.03em;margin-bottom:3px;}
+.hint{font-size:12.5px;color:rgba(237,231,217,.5);margin-bottom:12px;}
+label{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--kuningan-dim);margin:13px 0 5px;}
+input,textarea,select{
+  width:100%;background:rgba(0,0,0,.28);border:1px solid var(--garis);border-radius:2px;
+  color:var(--kapur);padding:10px 12px;font:inherit;font-size:14px;transition:border-color .2s;
+}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--kuningan-dim);}
+textarea{resize:vertical;min-height:70px;}
+select{appearance:none;cursor:pointer;}
+.duo{display:grid;gap:12px;}
+@media(min-width:640px){.duo{grid-template-columns:1fr 1fr;}}
+.trio{display:grid;gap:12px;}
+@media(min-width:640px){.trio{grid-template-columns:1fr 1fr 1fr;}}
+
+.btn{border:1px solid var(--kuningan-dim);background:transparent;color:var(--kuningan);border-radius:2px;
+  padding:10px 18px;cursor:pointer;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  transition:background .2s,color .2s,opacity .2s;}
+.btn:hover{background:var(--kuningan);color:var(--nila-3);}
+.btn:disabled{opacity:.45;cursor:default;}
+.btn:disabled:hover{background:transparent;color:var(--kuningan);}
+.btn.solid{background:var(--kuningan);color:var(--nila-3);}
+.btn.ghost{border-color:var(--garis);color:rgba(237,231,217,.6);}
+.btn.ghost:hover{background:rgba(237,231,217,.08);color:var(--kapur);}
+.btn.bahaya{border-color:rgba(180,87,63,.5);color:var(--merah);}
+.btn.kecil{padding:7px 12px;font-size:9.5px;letter-spacing:.1em;}
+.aksi{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px;}
+
+/* gerbang masuk */
+#gerbang{min-height:100svh;display:grid;place-items:center;padding:24px;}
+.kotak-masuk{width:min(380px,100%);border:1px solid var(--garis);padding:28px;background:rgba(195,154,92,.03);}
+.pesan{font-size:12.5px;margin-top:10px;min-height:1.2em;}
+.pesan.err{color:var(--merah);} .pesan.ok{color:var(--daun);}
+
+/* status terbit */
+.status{display:inline-flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  padding:5px 11px;border-radius:99px;border:1px solid currentColor;}
+.status.draf{color:var(--kuningan);} .status.terbit{color:var(--daun);}
+
+.baris{border:1px solid var(--garis);padding:12px;margin-top:10px;background:rgba(0,0,0,.18);}
+.baris-kepala{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.baris-judul{font-family:var(--display);font-size:15px;}
+.kosongstate{font-size:13px;color:rgba(237,231,217,.45);padding:12px 0;}
+
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);z-index:80;
+  background:var(--nila-2);border:1px solid var(--garis);padding:11px 18px;font-size:13px;
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:92vw;}
+.toast.on{opacity:1;transform:translate(-50%,0);}
+.toast.galat{border-color:rgba(180,87,63,.6);color:#E8B4A4;}
+</style>
+</head>
+<body>
+
+<div id="gerbang">
+  <div class="kotak-masuk">
+    <p class="eyebrow">mengundang.id</p>
+    <h1 style="font-size:23px">Dasbor Pengantin</h1>
+    <p class="sub">Masuk dengan email yang didaftarkan untuk undangan Anda.</p>
+    <label for="inEmail">Email</label>
+    <input id="inEmail" type="email" autocomplete="username" inputmode="email">
+    <label for="inSandi">Kata sandi</label>
+    <input id="inSandi" type="password" autocomplete="current-password">
+    <div class="aksi"><button class="btn solid" id="btnMasuk">Masuk</button></div>
+    <p class="pesan" id="pesanMasuk"></p>
+  </div>
+</div>
+
+<div class="bungkus" id="isi" hidden>
+  <header class="atas">
+    <div>
+      <p class="eyebrow">Dasbor Pengantin</p>
+      <h1 id="judulPasangan">&nbsp;</h1>
+      <p class="sub" id="alamatUndangan"></p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span class="status draf" id="lencanaStatus">Draf</span>
+      <button class="btn ghost kecil" id="btnPratinjau">Pratinjau</button>
+      <button class="btn ghost kecil" id="btnKeluar">Keluar</button>
+    </div>
+  </header>
+
+  <!-- 1 -->
+  <div class="panel">
+    <h2>1 · Mempelai</h2>
+    <p class="hint">Nama panggilan dipakai di sampul dan tanda tangan. Nama lengkap dipakai di kartu mempelai.</p>
+    <div id="formMempelai" class="duo"></div>
+  </div>
+
+  <!-- 2 -->
+  <div class="panel">
+    <h2>2 · Tempat</h2>
+    <p class="hint">Tamu pihak pria diarahkan ke alamat pria, tamu pihak wanita ke alamat wanita — kecuali acaranya dikunci ke satu tempat di kotak 3.</p>
+    <div id="formTempat"></div>
+  </div>
+
+  <!-- 3 -->
+  <div class="panel">
+    <h2>3 · Rangkaian acara</h2>
+    <p class="hint">Acara yang <strong>dikunci</strong> ke satu tempat ditampilkan sama untuk semua tamu. Yang dibiarkan <em>mengikuti pihak tamu</em> berpindah alamat sesuai undangan yang dibuka.</p>
+    <div id="formAcara"></div>
+    <div class="aksi"><button class="btn ghost kecil" id="btnAcaraBaru">Tambah Acara</button></div>
+  </div>
+
+  <!-- 4 -->
+  <div class="panel">
+    <h2>4 · Dompet digital</h2>
+    <p class="hint">Urutannya mengikuti pihak tamu sendiri — dompet sisi tamu ditampilkan lebih dulu. Tidak perlu diatur.</p>
+    <div id="formDompet"></div>
+    <div class="aksi"><button class="btn ghost kecil" id="btnDompetBaru">Tambah Dompet</button></div>
+  </div>
+
+  <!-- 5 -->
+  <div class="panel">
+    <h2>5 · Penutup</h2>
+    <p class="hint">Kalimat tanda tangan di bagian bawah undangan, berbeda untuk tamu pengantin dan tamu keluarga.</p>
+    <div id="formPihak"></div>
+  </div>
+
+  <!-- 6 -->
+  <div class="panel">
+    <h2>6 · Acara &amp; tampilan</h2>
+    <div class="trio">
+      <div><label for="inTanggal">Tanggal acara</label><input id="inTanggal" type="date"></div>
+      <div><label for="inKota">Kota</label><input id="inKota" type="text" maxlength="60" placeholder="Jepara"></div>
+      <div><label for="inTema">Tema</label><select id="inTema"></select></div>
+    </div>
+    <label for="inPihakBawaan">Varian bawaan</label>
+    <select id="inPihakBawaan"></select>
+    <p class="hint" style="margin-top:6px">Dipakai kalau link tamu tidak menyebut pihaknya.</p>
+  </div>
+
+  <!-- 7 -->
+  <div class="panel">
+    <h2>7 · Terbitkan</h2>
+    <p class="hint" id="hintTerbit"></p>
+    <div class="aksi">
+      <button class="btn solid" id="btnSimpan">Simpan Semua</button>
+      <button class="btn" id="btnTerbit">Terbitkan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/assets/varian.js"></script>
+<script>
+(function(){
+  'use strict';
+  var M = window.MENGUNDANG;
+  var $ = function(id){ return document.getElementById(id); };
+
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function toast(t, galat){
+    var el=$('toast'); el.textContent=t;
+    el.classList.toggle('galat', !!galat); el.classList.add('on');
+    clearTimeout(el._x); el._x=setTimeout(function(){el.classList.remove('on');}, galat?4200:1900);
+  }
+
+  /* ============================================================
+     Sesi
+
+     Dasbor memakai login email, bukan link bertoken seperti /kirim.
+     Bedanya disengaja: link bisa diteruskan siapa saja, sementara
+     pemilik undangan butuh kunci yang melekat padanya dan bisa dicabut.
+
+     Sesudah masuk, halaman ini menulis LANGSUNG ke tabel lewat REST —
+     tanpa RPC perantara. Itu aman karena RLS sejak migrasi 006 sudah
+     menyaring tiap tabel dengan pasangan_saya(), yang membaca tabel
+     `pemilik`. Akun yang tidak terdaftar di sana tidak melihat apa pun,
+     sekalipun ia berhasil mendaftar sendiri.
+     ============================================================ */
+  var KUNCI='dasbor-sesi', sesi=null, pasangan=null;
+  var data = { mempelai:[], tempat:[], acara:[], dompet:[], pihak:[] };
+
+  try{ sesi = JSON.parse(localStorage.getItem(KUNCI)||'null'); }catch(e){}
+
+  function simpanSesi(s){
+    sesi=s;
+    try{ s ? localStorage.setItem(KUNCI, JSON.stringify(s)) : localStorage.removeItem(KUNCI); }catch(e){}
+  }
+
+  async function masuk(email, sandi){
+    var r = await fetch(M.SB.url+'/auth/v1/token?grant_type=password',{
+      method:'POST',
+      headers:{'apikey':M.SB.key,'Content-Type':'application/json'},
+      body: JSON.stringify({email:email, password:sandi})
+    });
+    var j = await r.json();
+    if(!r.ok) throw new Error(j.error_description || j.msg || 'Email atau kata sandi salah');
+    simpanSesi({akses:j.access_token, segar:j.refresh_token});
+  }
+
+  async function api(jalur, opsi){
+    opsi = opsi || {};
+    var r = await fetch(M.SB.url+'/rest/v1/'+jalur, Object.assign({}, opsi, {
+      headers: Object.assign({
+        'apikey': M.SB.key,
+        'Authorization': 'Bearer ' + (sesi && sesi.akses),
+        'Content-Type': 'application/json',
+        'Prefer': opsi.prefer || 'return=representation'
+      }, opsi.headers||{})
+    }));
+    var teks = await r.text();
+    if(r.status === 401){ simpanSesi(null); location.reload(); throw new Error('Sesi habis'); }
+    if(!r.ok){
+      var pesan = teks;
+      try{ pesan = JSON.parse(teks).message || teks; }catch(e){}
+      throw new Error(pesan);
+    }
+    return teks ? JSON.parse(teks) : null;
+  }
+
+  /* ---------- memuat ---------- */
+  async function muat(){
+    var p = await api('pasangan?select=*&limit=1');
+    if(!p || !p.length){
+      throw new Error('Akun ini belum dihubungkan ke undangan mana pun. Hubungi admin.');
+    }
+    pasangan = p[0];
+
+    var hasil = await Promise.all([
+      api('mempelai?select=*&pasangan_id=eq.'+pasangan.id+'&order=sisi'),
+      api('tempat?select=*&pasangan_id=eq.'+pasangan.id+'&order=kode'),
+      api('acara?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan'),
+      api('dompet?select=*&pasangan_id=eq.'+pasangan.id+'&order=kode'),
+      api('pihak?select=*&pasangan_id=eq.'+pasangan.id+'&order=kode')
+    ]);
+    data.mempelai=hasil[0]; data.tempat=hasil[1]; data.acara=hasil[2];
+    data.dompet=hasil[3];   data.pihak=hasil[4];
+    gambar();
+  }
+
+  /* ---------- menggambar ---------- */
+  var SISI = { pria:'Mempelai Pria', wanita:'Mempelai Wanita' };
+
+  function gambar(){
+    $('judulPasangan').textContent = data.mempelai.map(function(m){return m.panggilan;}).join(' & ') || pasangan.slug;
+    $('alamatUndangan').textContent = (pasangan.canonical_host || (pasangan.slug+'.mengundang.id'));
+    kabarStatus();
+
+    $('formMempelai').innerHTML = data.mempelai.map(function(m,i){
+      return '<div data-blok="mempelai" data-i="'+i+'">'
+        + '<label>'+esc(SISI[m.sisi]||m.sisi)+' — panggilan</label>'
+        + '<input data-k="panggilan" maxlength="30" value="'+esc(m.panggilan)+'">'
+        + '<label>Nama lengkap</label>'
+        + '<input data-k="lengkap" maxlength="80" value="'+esc(m.lengkap)+'">'
+        + '<label>Anak ke-berapa / keterangan</label>'
+        + '<input data-k="anak" maxlength="60" value="'+esc(m.anak||'')+'" placeholder="Putra dari">'
+        + '</div>';
+    }).join('');
+
+    $('formTempat').innerHTML = data.tempat.map(function(t,i){
+      return '<div class="baris" data-blok="tempat" data-i="'+i+'">'
+        + '<p class="baris-judul">'+esc(t.kode==='pria'?'Sisi pria':'Sisi wanita')+'</p>'
+        + '<label>Nama tempat</label><input data-k="nama" maxlength="80" value="'+esc(t.nama||'')+'">'
+        + '<label>Alamat lengkap</label><textarea data-k="alamat" maxlength="200">'+esc(t.alamat||'')+'</textarea>'
+        + '<label>Alamat ringkas (untuk pesan WhatsApp)</label><input data-k="ringkas" maxlength="120" value="'+esc(t.ringkas||'')+'">'
+        + '<label>Link Google Maps</label><input data-k="maps" maxlength="300" value="'+esc(t.maps||'')+'" placeholder="https://maps.app.goo.gl/…">'
+        + '</div>';
+    }).join('');
+
+    $('formAcara').innerHTML = data.acara.length ? data.acara.map(function(a,i){
+      var opsi = '<option value="">Mengikuti pihak tamu</option>'
+        + data.tempat.map(function(t){
+            return '<option value="'+esc(t.id)+'"'+(a.tempat_id===t.id?' selected':'')+'>Dikunci di: '+esc(t.nama||t.kode)+'</option>';
+          }).join('');
+      return '<div class="baris" data-blok="acara" data-i="'+i+'">'
+        + '<div class="baris-kepala"><p class="baris-judul">Acara '+(i+1)+'</p>'
+        +   '<button class="btn bahaya kecil" data-aksi="hapus-acara">Hapus</button></div>'
+        + '<div class="duo">'
+        +   '<div><label>Nama acara</label><input data-k="nama" maxlength="60" value="'+esc(a.nama||'')+'" placeholder="Akad Nikah"></div>'
+        +   '<div><label>Mulai (untuk hitung mundur)</label><input data-k="mulai" type="datetime-local" value="'+esc(keLokal(a.mulai))+'"></div>'
+        + '</div>'
+        + '<div class="duo">'
+        +   '<div><label>Tanggal (tulisan)</label><input data-k="tanggal" maxlength="60" value="'+esc(a.tanggal||'')+'" placeholder="Selasa, 15 September 2026"></div>'
+        +   '<div><label>Jam (tulisan)</label><input data-k="jam" maxlength="60" value="'+esc(a.jam||'')+'" placeholder="Pukul 13.00 WIB"></div>'
+        + '</div>'
+        + '<label>Ringkas (untuk pesan WhatsApp)</label><input data-k="ringkas" maxlength="60" value="'+esc(a.ringkas||'')+'" placeholder="Akad 13.00 WIB">'
+        + '<label>Tempat</label><select data-k="tempat_id">'+opsi+'</select>'
+        + '</div>';
+    }).join('') : '<p class="kosongstate">Belum ada acara.</p>';
+
+    $('formDompet').innerHTML = data.dompet.length ? data.dompet.map(function(d,i){
+      return '<div class="baris" data-blok="dompet" data-i="'+i+'">'
+        + '<div class="baris-kepala"><p class="baris-judul">'+esc(d.bank||'Dompet')+'</p>'
+        +   '<button class="btn bahaya kecil" data-aksi="hapus-dompet">Hapus</button></div>'
+        + '<div class="trio">'
+        +   '<div><label>Bank / dompet</label><input data-k="bank" maxlength="40" value="'+esc(d.bank||'')+'"></div>'
+        +   '<div><label>Nomor</label><input data-k="nomor" maxlength="40" value="'+esc(d.nomor||'')+'"></div>'
+        +   '<div><label>Milik sisi</label><select data-k="sisi">'
+        +     '<option value="pria"'+(d.sisi==='pria'?' selected':'')+'>Pria</option>'
+        +     '<option value="wanita"'+(d.sisi==='wanita'?' selected':'')+'>Wanita</option>'
+        +   '</select></div>'
+        + '</div>'
+        + '<label>Atas nama</label><input data-k="atas_nama" maxlength="80" value="'+esc(d.atas_nama||'')+'">'
+        + '</div>';
+    }).join('') : '<p class="kosongstate">Belum ada dompet digital.</p>';
+
+    $('formPihak').innerHTML = data.pihak.map(function(ph,i){
+      return '<div class="baris" data-blok="pihak" data-i="'+i+'">'
+        + '<p class="baris-judul">'+esc(ph.label)+'</p>'
+        + '<div class="duo">'
+        +   '<div><label>Kalimat pembuka</label><input data-k="ttd_label" maxlength="60" value="'+esc(ph.ttd_label||'')+'"></div>'
+        +   '<div><label>Kalimat penutup</label><input data-k="ttd_sub" maxlength="160" value="'+esc(ph.ttd_sub||'')+'"></div>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    $('inTanggal').value = pasangan.tanggal_acara || '';
+    $('inKota').value    = pasangan.kota || '';
+    $('inTema').innerHTML = ['ukir-jepara'].map(function(t){
+      return '<option value="'+esc(t)+'"'+(pasangan.tema===t?' selected':'')+'>'+esc(t)+'</option>';
+    }).join('');
+    $('inPihakBawaan').innerHTML = data.pihak.map(function(ph){
+      return '<option value="'+esc(ph.kode)+'"'+(pasangan.pihak_bawaan===ph.kode?' selected':'')+'>'+esc(ph.label)+'</option>';
+    }).join('');
+  }
+
+  function kabarStatus(){
+    var l = $('lencanaStatus');
+    l.textContent = pasangan.terbit ? 'Terbit' : 'Draf';
+    l.className = 'status ' + (pasangan.terbit ? 'terbit' : 'draf');
+    $('btnTerbit').textContent = pasangan.terbit ? 'Tarik dari Publik' : 'Terbitkan';
+    $('hintTerbit').textContent = pasangan.terbit
+      ? 'Undangan Anda sudah bisa dibuka tamu. Menariknya membuat alamatnya menjawab “belum tersedia”, tapi tidak menghapus apa pun.'
+      : 'Selama masih draf, alamat undangannya menjawab “belum tersedia”. Terbitkan kalau isinya sudah siap dibaca tamu.';
+  }
+
+  /* datetime-local perlu waktu LOKAL tanpa zona; timestamptz dari server
+     datang dalam UTC, jadi digeser dulu — kalau tidak, jam yang muncul
+     meleset sebesar selisih zona waktunya. */
+  function keLokal(iso){
+    if(!iso) return '';
+    var d = new Date(iso);
+    if(isNaN(d)) return '';
+    var g = new Date(d.getTime() - d.getTimezoneOffset()*60000);
+    return g.toISOString().slice(0,16);
+  }
+  function dariLokal(v){ return v ? new Date(v).toISOString() : null; }
+
+  /* ---------- mengumpulkan & menyimpan ---------- */
+  function panen(){
+    document.querySelectorAll('[data-blok]').forEach(function(blok){
+      var baris = data[blok.dataset.blok][Number(blok.dataset.i)];
+      if(!baris) return;
+      blok.querySelectorAll('[data-k]').forEach(function(el){
+        var k = el.dataset.k;
+        baris[k] = (k === 'mulai') ? dariLokal(el.value)
+                 : (k === 'tempat_id') ? (el.value || null)
+                 : el.value;
+      });
+    });
+    pasangan.tanggal_acara = $('inTanggal').value || null;
+    pasangan.kota          = $('inKota').value.trim() || null;
+    pasangan.tema          = $('inTema').value;
+    pasangan.pihak_bawaan  = $('inPihakBawaan').value;
+  }
+
+  function bersih(baris, kolom){
+    var o = {};
+    kolom.forEach(function(k){ o[k] = baris[k]; });
+    return o;
+  }
+
+  async function simpan(){
+    panen();
+    var btn = $('btnSimpan');
+    btn.disabled = true; btn.textContent = 'Menyimpan…';
+    try{
+      await api('pasangan?id=eq.'+pasangan.id, {
+        method:'PATCH', prefer:'return=minimal',
+        body: JSON.stringify(bersih(pasangan, ['tanggal_acara','kota','tema','pihak_bawaan']))
+      });
+
+      var tugas = [];
+      data.mempelai.forEach(function(m){
+        tugas.push(api('mempelai?id=eq.'+m.id,{method:'PATCH',prefer:'return=minimal',
+          body:JSON.stringify(bersih(m,['panggilan','lengkap','anak']))}));
+      });
+      data.tempat.forEach(function(t){
+        tugas.push(api('tempat?id=eq.'+t.id,{method:'PATCH',prefer:'return=minimal',
+          body:JSON.stringify(bersih(t,['nama','alamat','ringkas','maps']))}));
+      });
+      data.acara.forEach(function(a,i){
+        a.urutan = i+1;
+        tugas.push(api('acara?id=eq.'+a.id,{method:'PATCH',prefer:'return=minimal',
+          body:JSON.stringify(bersih(a,['nama','tanggal','jam','ringkas','mulai','tempat_id','urutan']))}));
+      });
+      data.dompet.forEach(function(d){
+        tugas.push(api('dompet?id=eq.'+d.id,{method:'PATCH',prefer:'return=minimal',
+          body:JSON.stringify(bersih(d,['bank','nomor','atas_nama','sisi']))}));
+      });
+      data.pihak.forEach(function(ph){
+        tugas.push(api('pihak?id=eq.'+ph.id,{method:'PATCH',prefer:'return=minimal',
+          body:JSON.stringify(bersih(ph,['ttd_label','ttd_sub']))}));
+      });
+      await Promise.all(tugas);
+      toast('Tersimpan');
+    }catch(e){ toast(e.message, true); }
+    finally{ btn.disabled=false; btn.textContent='Simpan Semua'; }
+  }
+
+  async function tambahAcara(){
+    panen();
+    try{
+      var baru = await api('acara',{method:'POST',body:JSON.stringify({
+        pasangan_id: pasangan.id, urutan: data.acara.length+1,
+        nama:'Acara Baru', tanggal:'', jam:'', ringkas:'', mulai:null, tempat_id:null
+      })});
+      data.acara.push(Array.isArray(baru)?baru[0]:baru);
+      gambar(); toast('Acara ditambahkan');
+    }catch(e){ toast(e.message, true); }
+  }
+
+  async function tambahDompet(){
+    panen();
+    var kode = 'dompet-' + Date.now().toString(36);
+    try{
+      var baru = await api('dompet',{method:'POST',body:JSON.stringify({
+        pasangan_id: pasangan.id, kode: kode, bank:'', nomor:'', atas_nama:'', sisi:'pria'
+      })});
+      data.dompet.push(Array.isArray(baru)?baru[0]:baru);
+      gambar(); toast('Dompet ditambahkan');
+    }catch(e){ toast(e.message, true); }
+  }
+
+  async function hapusBaris(tabel, baris, daftar){
+    if(!confirm('Hapus baris ini?')) return;
+    panen();
+    try{
+      await api(tabel+'?id=eq.'+baris.id,{method:'DELETE',prefer:'return=minimal'});
+      var i = daftar.indexOf(baris);
+      if(i>=0) daftar.splice(i,1);
+      gambar(); toast('Dihapus');
+    }catch(e){ toast(e.message, true); }
+  }
+
+  async function alihTerbit(){
+    var btn=$('btnTerbit'); btn.disabled=true;
+    try{
+      await simpan();
+      var mau = !pasangan.terbit;
+      await api('pasangan?id=eq.'+pasangan.id,{method:'PATCH',prefer:'return=minimal',
+        body:JSON.stringify({ terbit: mau, status: mau ? 'aktif' : 'draf' })});
+      pasangan.terbit = mau;
+      pasangan.status = mau ? 'aktif' : 'draf';
+      kabarStatus();
+      toast(mau ? 'Undangan diterbitkan' : 'Undangan ditarik dari publik');
+    }catch(e){ toast(e.message, true); }
+    finally{ btn.disabled=false; }
+  }
+
+  /* ---------- pendengar ---------- */
+  document.addEventListener('click', function(e){
+    var t = e.target.closest('[data-aksi]');
+    if(!t) return;
+    var blok = t.closest('[data-blok]');
+    var i = Number(blok.dataset.i);
+    if(t.dataset.aksi==='hapus-acara')  hapusBaris('acara', data.acara[i], data.acara);
+    if(t.dataset.aksi==='hapus-dompet') hapusBaris('dompet', data.dompet[i], data.dompet);
+  });
+
+  $('btnSimpan').addEventListener('click', simpan);
+  $('btnTerbit').addEventListener('click', alihTerbit);
+  $('btnAcaraBaru').addEventListener('click', tambahAcara);
+  $('btnDompetBaru').addEventListener('click', tambahDompet);
+  $('btnPratinjau').addEventListener('click', function(){
+    var host = pasangan.canonical_host || (pasangan.slug + '.mengundang.id');
+    window.open('https://'+host, '_blank', 'noopener');
+  });
+  $('btnKeluar').addEventListener('click', function(){ simpanSesi(null); location.reload(); });
+
+  async function cobaMasuk(){
+    var email=$('inEmail').value.trim(), sandi=$('inSandi').value;
+    if(!email||!sandi){ $('pesanMasuk').className='pesan err'; $('pesanMasuk').textContent='Email dan kata sandi harus diisi.'; return; }
+    var b=$('btnMasuk'); b.disabled=true; b.textContent='Memeriksa…';
+    try{
+      await masuk(email,sandi);
+      $('inSandi').value=''; $('pesanMasuk').textContent='';
+      await buka();
+    }catch(e){
+      $('pesanMasuk').className='pesan err';
+      $('pesanMasuk').textContent=e.message;
+    }finally{ b.disabled=false; b.textContent='Masuk'; }
+  }
+  $('btnMasuk').addEventListener('click', cobaMasuk);
+  $('inSandi').addEventListener('keydown', function(e){ if(e.key==='Enter') cobaMasuk(); });
+
+  async function buka(){
+    await muat();
+    $('gerbang').hidden = true;
+    $('isi').hidden = false;
+  }
+
+  if(sesi && sesi.akses){
+    buka().catch(function(e){
+      $('pesanMasuk').className='pesan err';
+      $('pesanMasuk').textContent=e.message;
+      simpanSesi(null);
+    });
+  }else{
+    $('inEmail').focus();
+  }
+})();
+</script>
+</body>
+</html>
