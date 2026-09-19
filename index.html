@@ -74,7 +74,10 @@
 
 <!-- ====== PEMBUKA ====== -->
 <section id="mulai">
-  <div class="wrap">
+  <!-- data-parallax: isi pembuka bergerak lebih lambat dari gulirannya.
+       Yang digeser wadahnya, bukan tiap paragraf, supaya cuma ada satu
+       lapisan yang dipindahkan. -->
+  <div class="wrap" data-parallax data-runtun>
     <p class="arabic hero-arabic reveal">وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا</p>
     <p class="hero-salam reveal">Assalamu'alaikum Warahmatullahi Wabarakatuh</p>
     <p class="hero-verse reveal">Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu pasangan hidup dari jenismu sendiri, supaya kamu merasa tenteram di sisinya, dan dijadikan-Nya di antaramu rasa kasih dan sayang.</p>
@@ -92,7 +95,7 @@
     <p class="lead reveal">Dengan memohon rahmat dan ridha Allah Subhanahu wa Ta'ala, kami bermaksud menyelenggarakan pernikahan putra-putri kami.</p>
 
     <!-- Urutan kartu mengikuti pihak tamu; isi di bawah adalah cadangan tanpa JS. -->
-    <div class="pair" id="pasangan">
+    <div class="pair" id="pasangan" data-runtun>
       <div class="reveal">
         <p class="person-role">Mempelai Pria</p>
         <h3 class="person-name">RIAN ADI SAPUTRO</h3>
@@ -128,7 +131,7 @@
     <h2 class="title reveal" id="hitungJudul">Selasa, 15 September 2026</h2>
     <p class="lead reveal">Semoga Allah memudahkan langkah kami sampai pada hari itu.</p>
 
-    <div class="count-grid reveal" id="countGrid">
+    <div class="count-grid reveal" id="countGrid" data-runtun>
       <div class="count-box"><div class="count-num" id="cd-d">—</div><div class="count-lbl">Hari</div></div>
       <div class="count-box"><div class="count-num" id="cd-h">—</div><div class="count-lbl">Jam</div></div>
       <div class="count-box"><div class="count-num" id="cd-m">—</div><div class="count-lbl">Menit</div></div>
@@ -147,7 +150,7 @@
     <div class="gap"></div>
 
     <!-- Rangkaian acara dan alamat mengikuti sisi keluarga pengundang. -->
-    <div id="daftarAcara">
+    <div id="daftarAcara" data-runtun>
       <div class="event reveal">
         <p class="event-name">Akad Nikah</p>
         <div class="event-line"></div>
@@ -185,7 +188,7 @@
     <p class="lead reveal">Doa restu Anda sudah lebih dari cukup bagi kami. Namun bila berkenan memberi tanda kasih, dapat dikirim melalui:</p>
 
     <!-- Urutan dompet digital mengikuti pihak tamu. -->
-    <div class="rek-grid" id="dompet">
+    <div class="rek-grid" id="dompet" data-runtun>
       <div class="rek reveal">
         <p class="rek-bank">DANA</p>
         <p class="rek-no">085727641452</p>
@@ -255,6 +258,7 @@
 </section>
 
 <script src="/assets/varian.js"></script>
+<script src="/assets/motion.js"></script>
 <script>
 (function(){
   'use strict';
@@ -455,13 +459,30 @@
     if(diff <= 0){ grid.hidden = true; done.hidden = false; return; }
     grid.hidden = false; done.hidden = true;
     var s = Math.floor(diff/1000);
-    eD.textContent = Math.floor(s/86400);
-    eH.textContent = pad(Math.floor(s%86400/3600));
-    eM.textContent = pad(Math.floor(s%3600/60));
-    eS.textContent = pad(s%60);
+    /* Motion.angka tidak mengerjakan apa pun bila nilainya tidak berubah,
+       jadi detik yang berjalan tetap murah: satu gulir pendek per detik,
+       dan itu pun berhenti begitu bagiannya keluar layar. */
+    Motion.angka(eD, Math.floor(s/86400));
+    Motion.angka(eH, pad(Math.floor(s%86400/3600)));
+    Motion.angka(eM, pad(Math.floor(s%3600/60)));
+    Motion.angka(eS, pad(s%60));
   }
   tick();
-  setInterval(tick, 1000);
+
+  /* Hitung mundur berhenti berdetak begitu keluar layar. Tanpa ini,
+     empat angka tetap bergulir tiap detik sepanjang tamu membaca bagian
+     lain — kerja yang tidak pernah dilihat siapa pun. */
+  var detak = null;
+  function mulaiDetak(){ if(!detak) detak = setInterval(tick, 1000); }
+  function henti(){ if(detak){ clearInterval(detak); detak = null; } }
+
+  if(window.IntersectionObserver){
+    new IntersectionObserver(function(masuk){
+      if(masuk[0].isIntersecting){ tick(); mulaiDetak(); } else henti();
+    }, {threshold:0}).observe(document.getElementById('hitung'));
+  }else{
+    mulaiDetak();
+  }
 
   /* ---------- Salin nomor rekening ---------- */
   function copyText(txt){
@@ -601,6 +622,9 @@
     target = new Date(acara.mulai).getTime();
     tick();
 
+    /* Anak yang baru digambar perlu dinomori ulang untuk runtun. */
+    Motion.runtun(document);
+
     /* elemen baru belum diamati IntersectionObserver */
     document.querySelectorAll('.reveal:not(.in), .draw:not(.in)').forEach(function(el){
       io.observe(el);
@@ -661,6 +685,7 @@
   M.muat().then(function(){
     pihakTamu = M.pihakSah(pihakMentah);
     terapkanVarian(pihakTamu);
+    Motion.pasang();
     pasangNamaTamu();
     pasangKanonik();
     return janjiTamu;

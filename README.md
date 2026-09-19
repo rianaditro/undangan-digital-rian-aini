@@ -11,10 +11,12 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 │   ├── varian.js         ← konfigurasi platform + pemuat isi + pembantu
 │   ├── vcf.js            ← pembaca berkas kontak .vcf
 │   ├── gambar.js         ← pengecil foto sebelum diunggah
+│   ├── motion.js         ← runtun, parallax, angka bergulir
 │   └── backsound.mp3
 ├── tema/
-│   └── ukir-jepara/
-│       └── gaya.css      ← SELURUH tampilan undangan ada di sini
+│   ├── ukir-jepara/
+│   │   └── gaya.css      ← SELURUH tampilan undangan ada di sini
+│   └── periksa-gerak.mjs ← penjaga: tolak animasi pemicu tata letak
 ├── supabase/
 │   ├── migrations/       ← migrasi bernomor, dijalankan berurutan
 │   └── functions/        ← edge function (jalur tulis yang dijaga)
@@ -217,6 +219,51 @@ pasangan. Nama, alamat, tanggal, nomor dompet — semuanya dari database.
 Tiap tema berdiri sendiri, tidak menumpang tema lain. Konsekuensinya
 struktur yang sama ikut tersalin, tapi itu ditukar dengan kebebasan: tema
 berikutnya tidak terkurung bentuk tema pertama.
+
+---
+
+## 1f. Gerak
+
+Tiga hal, semuanya di `assets/motion.js`: **runtun** (anak-anak satu wadah
+muncul berurutan, bukan serempak), **parallax** tipis di bagian pembuka,
+dan **angka hitung mundur** yang bergulir waktu berubah.
+
+Setelannya ada di berkas tema sebagai custom property, bukan di berkas
+konfigurasi tersendiri — temanya toh sudah dimuat, jadi tidak perlu
+permintaan jaringan tambahan, dan setelannya ikut tertukar sendiri waktu
+temanya berganti:
+
+```css
+:root{ --runtun:90ms; --parallax:.18; }
+```
+
+`--parallax:0` mematikan parallax untuk tema itu.
+
+### Batas yang mengikat semuanya
+
+Tamu kondangan membuka undangan ini dari **HP Android murah di jaringan
+desa**. Jadi yang boleh dianimasikan hanya `transform` dan `opacity` —
+keduanya dikerjakan compositor dan tidak memicu peramban menghitung ulang
+tata letak. Begitu sebuah animasi menyentuh `width`, `height`, `top`, atau
+`margin`, ponsel kelas bawah langsung tersendat.
+
+Aturan seperti itu tidak bertahan kalau cuma ditulis di komentar:
+
+```bash
+node tema/periksa-gerak.mjs
+```
+
+Ia memindai tiap tema, membaca setiap `transition` dan `@keyframes`, dan
+gagal kalau ada properti pemicu tata letak yang dianimasikan. Ia juga
+menolak tema yang tidak menghormati `prefers-reduced-motion`. Jalankan
+sebelum menambah tema baru.
+
+### Jangan bekerja waktu tidak terlihat
+
+Parallax berhenti begitu bagiannya keluar layar, dan hitung mundur
+berhenti berdetak. Tanpa itu, empat angka tetap bergulir tiap detik
+sepanjang tamu membaca bagian lain — kerja yang tidak pernah dilihat
+siapa pun tapi tetap memakan baterai.
 
 ---
 
