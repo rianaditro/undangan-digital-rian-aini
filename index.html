@@ -133,6 +133,17 @@
 </section>
 
 <!-- ====== COUNTDOWN ====== -->
+<!-- ====== SILSILAH ====== -->
+<section id="silsilah" class="on-paper center" hidden>
+  <div class="wrap">
+    <p class="eyebrow reveal">Keluarga</p>
+    <h2 class="title reveal">Silsilah</h2>
+    <p class="lead reveal">Mereka yang membesarkan dan merestui kami.</p>
+    <div id="silsilahIsi"></div>
+    <svg class="ukir divider draw reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
+  </div>
+</section>
+
 <section id="hitung">
   <div class="wrap">
     <p class="eyebrow reveal">Menghitung Hari</p>
@@ -544,6 +555,51 @@
       + '</div>';
   }
 
+  /* ---------- Silsilah ----------
+     Dua generasi per sisi, ditata sebagai grid — BUKAN pohon. Undangan
+     pernikahan menampilkan orang tua (dan kadang kakek-nenek), bukan
+     silsilah marga; pohon sungguhan justru lebih sulit dibaca di layar
+     selebar 400px dan tidak menambah apa pun yang dicari tamu.
+
+     Urutan sisinya mengikuti pihak tamu, sama seperti kartu mempelai. */
+  function kartuSilsilah(o){
+    var foto = o.kecil || o.foto;
+    var gbr = foto
+      ? '<img class="silsilah-foto" src="'+esc(M.fotoUrl(foto))+'" alt="'+esc(o.nama)+'"'
+        + ' loading="lazy" decoding="async">'
+      : '<div class="silsilah-foto silsilah-kosong" aria-hidden="true"></div>';
+    return '<figure class="silsilah-orang reveal">'
+      +   gbr
+      +   '<figcaption>'
+      +     '<span class="silsilah-peran">'+esc(o.peran)+'</span>'
+      +     '<span class="silsilah-nama">'+esc(o.nama)
+      +       (o.keterangan ? ' <span class="alm">'+esc(o.keterangan)+'</span>' : '')
+      +     '</span>'
+      +   '</figcaption>'
+      + '</figure>';
+  }
+
+  function gambarSilsilah(v){
+    var seksi = document.getElementById('silsilah');
+    var isi = document.getElementById('silsilahIsi');
+    var sumber = M.SILSILAH || {};
+
+    var blok = v.urutan.map(function(sisi){
+      var daftar = sumber[sisi];
+      if(!daftar || !daftar.length) return '';
+      var label = (M.MEMPELAI[sisi] && M.MEMPELAI[sisi].panggilan) || '';
+      return '<div class="silsilah-sisi">'
+        +   '<p class="silsilah-judul reveal">Keluarga '+esc(label)+'</p>'
+        +   '<div class="silsilah-grid" data-runtun>'+daftar.map(kartuSilsilah).join('')+'</div>'
+        + '</div>';
+    }).join('');
+
+    /* Tanpa satu pun baris, bagiannya tidak muncul sama sekali —
+       pasangan yang tidak mengisinya tidak melihat judul kosong. */
+    isi.innerHTML = blok;
+    seksi.hidden = !blok;
+  }
+
   var BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli',
                   'Agustus','September','Oktober','November','Desember'];
 
@@ -604,6 +660,8 @@
     document.getElementById('tempatNama').textContent   = tempat.nama;
     document.getElementById('tempatAlamat').textContent = tempat.alamat;
     document.getElementById('tempatMaps').href          = tempat.maps;
+
+    gambarSilsilah(v);
 
     /* judul tab dan baris penutup — keduanya ikut isi database */
     var namaPasangan = v.ttdNama[0] + " & " + v.ttdNama[1];

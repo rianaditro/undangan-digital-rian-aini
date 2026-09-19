@@ -299,6 +299,49 @@ siapa pun tapi tetap memakan baterai.
 
 ---
 
+## 1g. Silsilah keluarga
+
+Tabel `silsilah`, ditampilkan di undangan sebagai grid dua kolom per
+sisi. Urutan sisinya mengikuti pihak tamu, sama seperti kartu mempelai.
+Tanpa satu pun baris, bagiannya tidak muncul sama sekali.
+
+### Bukan pohon
+
+Undangan pernikahan menampilkan dua generasi, bukan silsilah marga. Maka
+tabelnya datar: tidak ada kolom induk, tidak ada rujukan ke diri sendiri,
+tidak ada kedalaman. Pohon sungguhan itu kerja berlipat untuk tampilan
+yang justru **lebih buruk dibaca di layar selebar 400px**.
+
+### Satu sumber, bukan dua
+
+`mempelai` dulu menyimpan `ayah` dan `ibu` sendiri. Kalau silsilah
+menyimpannya lagi, cepat atau lambat keduanya berbeda dan tidak ada yang
+tahu mana yang benar. Jadi nilainya **dipindah** ke `silsilah`, kolom
+lamanya dibuang, dan `undangan_isi()` menurunkan kembali `ayah`/`ibu`
+dari tabel itu. Bentuk jawaban untuk halaman tidak berubah sama sekali —
+yang berubah cuma dari mana nilainya berasal.
+
+Migrasi `014` menolak membuang kolom lamanya kalau ada satu saja baris
+yang belum pindah.
+
+### Foto
+
+Lewat edge function yang sama, dengan `?untuk=silsilah&id=…`. Dipisah
+jadi dua fungsi berarti dua salinan pemeriksa token dan dua salinan batas
+ukuran, dan salinan seperti itu selalu berakhir beda perilaku dari
+induknya. Foto lama dibuang waktu diganti, supaya bucket tidak menyimpan
+berkas yatim.
+
+Alamat foto dibangun `MENGUNDANG.fotoUrl()` di `assets/varian.js`, bukan
+di `assets/gambar.js`. Itu soal jalur penyimpanan, bukan soal mengecilkan
+gambar — dan halaman undangan perlu yang pertama tapi tidak perlu yang
+kedua: tamu tidak pernah mengunggah apa pun, dan mengirimi mereka 7 KB
+pustaka yang tak terpakai itu mahal di jaringan desa.
+
+Mengelolanya di kotak **5** halaman panitia.
+
+---
+
 ## 2. Deploy
 
 ```bash

@@ -10,6 +10,12 @@
 //
 // POST   → unggah sepasang berkas (penuh + thumbnail), catat barisnya
 // DELETE → hapus berkasnya sekaligus barisnya
+//
+// Dua tujuan, satu pintu. `untuk=acara` (bawaan) menaruh barisnya di
+// tabel `foto`; `untuk=silsilah&id=…` menempelkan fotonya ke satu baris
+// silsilah. Dipisah jadi dua fungsi berarti dua salinan pemeriksa token
+// dan dua salinan batas ukuran — dan salinan seperti itu selalu berakhir
+// beda perilaku dari induknya.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -60,9 +66,15 @@ Deno.serve(async (req: Request) => {
     return jawab({ pesan: salahToken?.message ?? 'Token tidak dikenal' }, 403);
   }
 
+  const url   = new URL(req.url);
+  const untuk = url.searchParams.get('untuk') ?? 'acara';
+  if (untuk !== 'acara' && untuk !== 'silsilah') {
+    return jawab({ pesan: 'Tujuan unggahan tidak dikenal' }, 400);
+  }
+
   try {
-    if (req.method === 'POST')   return await unggah(db, pasanganId, req);
-    if (req.method === 'DELETE') return await hapus(db, pasanganId, req);
+    if (req.method === 'POST')   return await unggah(db, pasanganId, req, untuk);
+    if (req.method === 'DELETE') return await hapus(db, pasanganId, req, untuk);
     return jawab({ pesan: 'Metode tidak didukung' }, 405);
   } catch (e) {
     console.error('foto-unggah gagal:', e);
@@ -70,13 +82,16 @@ Deno.serve(async (req: Request) => {
   }
 });
 
-async function unggah(db: any, pasanganId: string, req: Request) {
+async function unggah(db: any, pasanganId: string, req: Request, untuk: string) {
   const { count } = await db
     .from('foto')
     .select('id', { count: 'exact', head: true })
     .eq('pasangan_id', pasanganId);
 
-  if ((count ?? 0) >= BATAS_JUMLAH) {
+  // Batas jumlah hanya berlaku untuk galeri acara. Foto silsilah
+  // menempel pada baris yang sudah ada, jadi jumlahnya sudah dibatasi
+  // oleh banyaknya anggota keluarga yang diisi.
+  if (untuk === 'acara' && (count ?? 0) >= BATAS_JUMLAH) {
     return jawab({ pesan: `Sudah mencapai batas ${BATAS_JUMLAH} foto` }, 409);
   }
 
@@ -122,6 +137,43 @@ async function unggah(db: any, pasanganId: string, req: Request) {
     if (naikKecil.error) console.error('thumbnail gagal:', naikKecil.error);
   }
 
+  if (untuk === 'silsilah') {
+    const id = new URL(req.url).searchParams.get('id');
+    if (!id) {
+      await db.storage.from('foto').remove(jalurKecil ? [jalur, jalurKecil] : [jalur]);
+      return jawab({ pesan: 'id baris silsilah tidak disebut' }, 400);
+    }
+
+    // Foto lama dibuang supaya bucket tidak menyimpan berkas yatim tiap
+    // kali fotonya diganti.
+    const { data: lama } = await db
+      .from('silsilah').select('foto_jalur, foto_kecil')
+      .eq('id', id).eq('pasangan_id', pasanganId).maybeSingle();
+
+    const { data: barisS, error: gagalS } = await db
+      .from('silsilah')
+      .update({
+        foto_jalur: jalur,
+        foto_kecil: jalurKecil,
+        lebar:  angkaWajar(form.get('lebar')),
+        tinggi: angkaWajar(form.get('tinggi')),
+      })
+      .eq('id', id).eq('pasangan_id', pasanganId)
+      .select('id, peran, nama, foto_jalur, foto_kecil, lebar, tinggi')
+      .maybeSingle();
+
+    if (gagalS || !barisS) {
+      await db.storage.from('foto').remove(jalurKecil ? [jalur, jalurKecil] : [jalur]);
+      return jawab({ pesan: 'Baris silsilah tidak ditemukan' }, 404);
+    }
+
+    if (lama?.foto_jalur) {
+      const buang = [lama.foto_jalur, lama.foto_kecil].filter(Boolean) as string[];
+      await db.storage.from('foto').remove(buang);
+    }
+    return jawab({ silsilah: barisS }, 201);
+  }
+
   const { data: baris, error: gagalCatat } = await db
     .from('foto')
     .insert({
@@ -150,9 +202,25 @@ async function unggah(db: any, pasanganId: string, req: Request) {
   return jawab({ foto: baris, terpakai: (count ?? 0) + 1, batas: BATAS_JUMLAH }, 201);
 }
 
-async function hapus(db: any, pasanganId: string, req: Request) {
+async function hapus(db: any, pasanganId: string, req: Request, untuk: string) {
   const id = new URL(req.url).searchParams.get('id');
   if (!id) return jawab({ pesan: 'id foto tidak disebut' }, 400);
+
+  if (untuk === 'silsilah') {
+    const { data: baris } = await db
+      .from('silsilah').select('foto_jalur, foto_kecil')
+      .eq('id', id).eq('pasangan_id', pasanganId).maybeSingle();
+    if (!baris) return jawab({ pesan: 'Baris silsilah tidak ditemukan' }, 404);
+
+    const berkas = [baris.foto_jalur, baris.foto_kecil].filter(Boolean) as string[];
+    if (berkas.length) await db.storage.from('foto').remove(berkas);
+
+    // Barisnya tetap ada; yang dilepas cuma fotonya.
+    await db.from('silsilah')
+      .update({ foto_jalur: null, foto_kecil: null, lebar: null, tinggi: null })
+      .eq('id', id).eq('pasangan_id', pasanganId);
+    return jawab({ fotoDilepas: id });
+  }
 
   // Saringan pasangan_id ikut di sini, bukan cuma di id-nya — supaya
   // pemegang token satu pasangan tidak bisa menghapus foto pasangan lain

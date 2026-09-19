@@ -181,6 +181,45 @@ section{padding:clamp(64px,14vw,110px) var(--pad);position:relative;}
   [data-parallax]{will-change:auto;transform:none!important;}
 }
 
+/* ---------- SILSILAH ----------
+   Grid, bukan pohon. Di lebar HP jadi dua kolom; foto bundar dengan
+   rasio tetap supaya barisnya rata walau fotonya bermacam ukuran, dan
+   supaya ruangnya sudah dipesan sebelum gambarnya turun. */
+.silsilah-sisi + .silsilah-sisi{margin-top:clamp(34px,8vw,48px);}
+.silsilah-judul{
+  font-family:var(--display);font-size:clamp(15px,4vw,18px);
+  letter-spacing:.04em;color:var(--jati);margin-bottom:18px;
+}
+.silsilah-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));
+  gap:clamp(16px,4vw,26px);max-width:520px;margin:0 auto;
+}
+.silsilah-orang{margin:0;}
+.silsilah-foto{
+  width:clamp(76px,22vw,104px);height:clamp(76px,22vw,104px);
+  border-radius:50%;object-fit:cover;margin:0 auto 10px;
+  border:1px solid rgba(74,51,35,.28);
+  background:var(--kapur-2);
+}
+.silsilah-kosong{
+  display:grid;place-items:center;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(74,51,35,.16) 0 22%, transparent 23%),
+    radial-gradient(ellipse at 50% 96%, rgba(74,51,35,.16) 0 34%, transparent 35%),
+    var(--kapur-2);
+}
+.silsilah-peran{
+  display:block;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--kuningan-dim);margin-bottom:4px;
+}
+.silsilah-nama{
+  display:block;font-family:var(--display);font-size:14.5px;line-height:1.4;
+  color:var(--nila);
+}
+/* .divider tidak membawa jarak atas sendiri, jadi tanpa ini daun
+   ornamennya menempel ke baris nama terakhir. */
+#silsilahIsi{margin-bottom:clamp(30px,7vw,44px);}
+
 /* HERO ATAS */
 #mulai{
   min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;

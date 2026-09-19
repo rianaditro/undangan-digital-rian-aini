@@ -179,13 +179,13 @@
   }
 
   /* ---------- Alamat publik sebuah foto ----------
-     Bucket `foto` memang publik, jadi alamatnya tetap dan bisa disimpan
-     CDN maupun diteruskan orang tanpa kedaluwarsa. */
+     Sekadar penerus ke MENGUNDANG.fotoUrl(). Fungsinya pindah ke
+     assets/varian.js supaya halaman undangan bisa memakainya tanpa ikut
+     memuat pengecil gambar ini — tamu tidak pernah mengunggah apa pun.
+     Nama lamanya dipertahankan supaya pemanggil yang ada tidak berubah. */
   function url(jalur) {
-    if (!jalur) return '';
-    var sb = global.MENGUNDANG && global.MENGUNDANG.SB;
-    if (!sb) return '';
-    return sb.url + '/storage/v1/object/public/foto/' + jalur;
+    var M = global.MENGUNDANG;
+    return (M && M.fotoUrl) ? M.fotoUrl(jalur) : '';
   }
 
   global.Gambar = {

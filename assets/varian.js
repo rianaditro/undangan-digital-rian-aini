@@ -47,6 +47,7 @@
   var DOMPET   = {};
   var VARIAN   = {};
   var ACARA    = [];
+  var SILSILAH = {};
   var DARI_KODE = {};
 
   var KONF = {
@@ -132,6 +133,7 @@
     isiUlang(TEMPAT,   d.tempat);
     isiUlang(DOMPET,   d.dompet);
     isiUlang(VARIAN,   d.pihak);
+    isiUlang(SILSILAH, d.silsilah);
 
     ACARA.length = 0;
     (d.acara || []).forEach(function (a) { ACARA.push(a); });
@@ -277,6 +279,17 @@
       .trim();
   }
 
+  /* ---------- Alamat publik sebuah foto ----------
+     Ada di sini, bukan di assets/gambar.js, karena ini soal jalur
+     penyimpanan — bukan soal mengecilkan gambar. Halaman undangan perlu
+     membangun alamat foto silsilah, tapi tidak perlu pengecilnya: tamu
+     tidak pernah mengunggah apa pun, dan mengirimi mereka 7 KB pustaka
+     yang tak terpakai itu mahal di jaringan desa. */
+  function fotoUrl(jalur) {
+    if (!jalur) return '';
+    return SB.url + '/storage/v1/object/public/foto/' + jalur;
+  }
+
   function linkTamu(slug, pihak) {
     var dasar = KONF.situs.replace(/\/+$/, '');
     var v = pihakSah(pihak);
@@ -322,6 +335,7 @@
     MEMPELAI: MEMPELAI,
     TEMPAT: TEMPAT,
     ACARA: ACARA,
+    SILSILAH: SILSILAH,
     DOMPET: DOMPET,
     VARIAN: VARIAN,
     KONF: KONF,
@@ -336,6 +350,7 @@
     tempatAcara: tempatAcara,
     acaraBertempat: acaraBertempat,
     satuTempat: satuTempat,
+    fotoUrl: fotoUrl,
     siput: siput,
     nomorRapi: nomorRapi,
     kunciNama: kunciNama,
