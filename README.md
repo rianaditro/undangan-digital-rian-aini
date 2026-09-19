@@ -6,6 +6,7 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 .
 ├── index.html            ← halaman undangan
 ├── kirim/index.html      ← halaman panitia (daftar tamu & pengiriman)
+├── terimakasih/index.html ← halaman terima kasih, publik
 ├── assets/
 │   ├── varian.js         ← SEMUA konfigurasi ada di sini
 │   ├── vcf.js            ← pembaca berkas kontak .vcf
@@ -91,6 +92,44 @@ Redeploy edge function-nya:
 ```bash
 supabase functions deploy foto-unggah
 ```
+
+---
+
+## 1c. Halaman terima kasih
+
+`/terimakasih` — publik, tanpa token. Isinya foto acara, ucapan tamu, dan
+balasan dari pengantin. Seluruhnya datang dari satu panggilan,
+`terimakasih_isi(slug)`, supaya halaman publik tidak perlu diberi izin
+membaca tabel mana pun secara langsung.
+
+Fungsi itu `security definer`, jadi RLS tidak berlaku di dalamnya. Artinya
+`and f.tampil` dan `and u.tampil` di dalamnya adalah **satu-satunya** yang
+menahan foto dan ucapan yang disembunyikan. Hapus salah satunya dan justru
+halaman publik inilah yang membocorkan apa yang sengaja disembunyikan.
+
+Pasangan mana yang ditampilkan ditentukan dari nama host —
+`rian-aini.mengundang.id` → `rian-aini`. Kalau bukan subdomain, jatuh ke
+segmen path pertama (`/budi-sari/terimakasih`), lalu ke slug bawaan.
+Sementara ini ada di dalam halamannya sendiri; tahap 2 memindahkannya ke
+satu tempat bersama halaman undangan.
+
+### Jebakan routing
+
+`vercel.json` punya rewrite penangkap segalanya, `/(.*)` → `/index.html`,
+yang dipakai untuk link personal tamu. Aturan `/terimakasih` **harus**
+ditaruh sebelum baris itu — kalau tidak, yang muncul bukan halaman terima
+kasih melainkan undangan dengan nama tamu "terimakasih".
+
+Berkas statis tetap dilayani lebih dulu oleh Vercel sebelum rewrite
+diterapkan, jadi `/assets/*.js` tidak ikut tertelan.
+
+### Yang belum bisa
+
+`og:image` masih kosong. Halaman ini statis, sementara foto pertamanya baru
+diketahui sesudah JS jalan — mengisinya butuh render di server. Efeknya:
+waktu link-nya dibagikan di WhatsApp, pratinjaunya belum memunculkan foto.
+Untuk halaman yang memang dibuat sebagai bahan jualan, ini layak
+dibereskan di tahap 2.
 
 ---
 

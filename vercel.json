@@ -2,6 +2,8 @@
   "rewrites": [
     { "source": "/kirim", "destination": "/kirim/index.html" },
     { "source": "/kirim/", "destination": "/kirim/index.html" },
+    { "source": "/terimakasih", "destination": "/terimakasih/index.html" },
+    { "source": "/terimakasih/", "destination": "/terimakasih/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [

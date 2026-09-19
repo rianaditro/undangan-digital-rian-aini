@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Terima Kasih</title>
+<meta name="description" content="Terima kasih atas doa dan kehadiran Anda.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Terima Kasih">
+<meta property="og:description" content="Terima kasih atas doa dan kehadiran Anda.">
+<!-- og:image belum bisa diisi: halaman ini statis, sementara foto pertamanya
+     baru diketahui sesudah JS jalan. Perlu render di server — tahap 2. -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant:ital,wght@0,400;1,300;1,400&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --nila:#131E33; --nila-2:#1B2A46; --nila-3:#0D1626;
+  --jati:#4A3323; --kuningan:#C39A5C; --kuningan-dim:#8C6A3A;
+  --kapur:#EDE7D9; --kapur-2:#E2DAC7; --daun:#7C8B63;
+  --display:'Marcellus','Times New Roman',serif;
+  --script:'Cormorant',Georgia,serif;
+  --body:'Karla','Helvetica Neue',Arial,sans-serif;
+  --pad:clamp(20px,6vw,64px);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-text-size-adjust:100%;}
+body{
+  font-family:var(--body);background:var(--nila);color:var(--kapur);
+  line-height:1.7;font-weight:300;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+img,svg{display:block;max-width:100%;}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;}
+[hidden]{display:none!important;}
+
+section{padding:clamp(64px,14vw,110px) var(--pad);position:relative;}
+.wrap{max-width:660px;margin:0 auto;}
+.wrap-lebar{max-width:980px;margin:0 auto;}
+.center{text-align:center;}
+.eyebrow{font-size:11px;letter-spacing:.34em;text-transform:uppercase;font-weight:500;color:var(--kuningan);}
+h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25px,6.6vw,36px);letter-spacing:.05em;margin-top:12px;}
+.lead{font-size:14.5px;margin-top:14px;color:rgba(237,231,217,.7);max-width:470px;margin-inline:auto;}
+
+.on-paper{background:var(--kapur);color:var(--nila);}
+.on-paper .eyebrow{color:var(--kuningan-dim);}
+.on-paper .lead{color:rgba(19,30,51,.7);}
+.on-paper::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(94deg,transparent 0 3px,rgba(74,51,35,.028) 3px 4px);
+}
+.on-paper > *{position:relative;}
+
+/* Ornamen dipanggil lewat <use>; selektor turunan tidak menembus shadow
+   tree-nya, jadi warnanya lewat custom property. Sama seperti di undangan. */
+.ukir{--ukir-garis:var(--kuningan);--ukir-garis-dim:var(--kuningan-dim);--ukir-isi:var(--kuningan);}
+.on-paper .ukir{--ukir-garis:var(--jati);--ukir-garis-dim:var(--jati);--ukir-isi:var(--jati);}
+.divider{width:min(240px,62vw);height:40px;margin:26px auto 0;opacity:.9;}
+
+.reveal{opacity:0;transform:translateY(26px);}
+.reveal.in{opacity:1;transform:none;transition:opacity .9s ease,transform .9s cubic-bezier(.22,.8,.3,1);}
+
+/* ---------- SAMPUL ---------- */
+#atas{
+  min-height:min(100svh,760px);display:flex;flex-direction:column;
+  justify-content:center;align-items:center;text-align:center;
+  background:radial-gradient(110% 70% at 50% 100%,#22355A 0%,var(--nila) 55%,var(--nila-3) 100%);
+}
+.nama-besar{font-family:var(--display);font-size:clamp(30px,9vw,52px);letter-spacing:.04em;line-height:1.2;margin-top:18px;}
+.nama-amp{font-family:var(--script);font-style:italic;font-weight:300;color:var(--kuningan);}
+.tanggal{margin-top:18px;font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--kuningan);}
+.salam{font-family:var(--script);font-style:italic;font-size:clamp(17px,4.4vw,21px);line-height:1.75;margin:30px auto 0;max-width:520px;color:var(--kapur);}
+
+/* ---------- GALERI ----------
+   Kolom, bukan grid: foto potret dan lanskap tercampur, dan grid
+   memaksa semuanya dipotong seragam. */
+.galeri{columns:2;column-gap:12px;margin-top:38px;}
+@media (min-width:720px){ .galeri{columns:3;column-gap:16px;} }
+.galeri figure{break-inside:avoid;margin:0 0 12px;position:relative;}
+@media (min-width:720px){ .galeri figure{margin-bottom:16px;} }
+.galeri button.buka{display:block;width:100%;padding:0;border-radius:2px;overflow:hidden;background:var(--kapur-2);}
+.galeri img{width:100%;height:auto;transition:transform .5s cubic-bezier(.22,.8,.3,1);}
+.galeri button.buka:hover img,.galeri button.buka:focus-visible img{transform:scale(1.04);}
+.galeri button.buka:focus-visible{outline:2px solid var(--kuningan-dim);outline-offset:3px;}
+.galeri figcaption{font-size:12px;color:rgba(19,30,51,.62);margin-top:6px;line-height:1.5;}
+
+/* ---------- LIGHTBOX ---------- */
+#kaca{
+  position:fixed;inset:0;z-index:60;background:rgba(9,14,24,.94);
+  display:flex;align-items:center;justify-content:center;padding:clamp(12px,4vw,40px);
+}
+#kaca img{max-width:100%;max-height:82svh;width:auto;object-fit:contain;}
+#kaca .ket{position:absolute;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom));text-align:center;font-size:13px;color:rgba(237,231,217,.8);padding:0 20px;}
+#kacaTutup{position:absolute;top:max(12px,env(safe-area-inset-top));right:14px;width:44px;height:44px;font-size:26px;line-height:1;color:var(--kapur);}
+#kacaTutup:focus-visible{outline:2px solid var(--kuningan);outline-offset:2px;}
+
+/* ---------- UCAPAN ---------- */
+.ucapan-list{margin-top:36px;display:grid;gap:14px;text-align:left;}
+.kartu{background:var(--nila-2);border:1px solid rgba(195,154,92,.18);border-radius:3px;padding:18px 18px 16px;}
+.kartu-kepala{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+.kartu-nama{font-family:var(--display);font-size:16.5px;letter-spacing:.02em;}
+.lencana{font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:3px 8px;border-radius:99px;border:1px solid currentColor;opacity:.85;}
+.l-hadir{color:var(--daun);} .l-belum{color:var(--kuningan);} .l-tidak{color:rgba(237,231,217,.45);}
+.kartu-pesan{margin-top:9px;font-size:14.5px;color:rgba(237,231,217,.84);white-space:pre-wrap;overflow-wrap:anywhere;}
+.kartu-waktu{margin-top:10px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(237,231,217,.38);}
+
+.balasan{
+  margin-top:14px;padding:13px 15px;border-left:2px solid var(--kuningan-dim);
+  background:rgba(195,154,92,.07);border-radius:0 3px 3px 0;
+}
+.balasan-label{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--kuningan);}
+.balasan-teks{margin-top:6px;font-size:14px;color:rgba(237,231,217,.88);white-space:pre-wrap;overflow-wrap:anywhere;}
+
+.kabar{margin-top:30px;font-size:14px;color:rgba(237,231,217,.55);}
+.on-paper .kabar{color:rgba(19,30,51,.55);}
+
+.tutup{padding:clamp(48px,10vw,72px) var(--pad);text-align:center;border-top:1px solid rgba(195,154,92,.16);}
+.tutup a{color:var(--kuningan);text-decoration:none;border-bottom:1px solid rgba(195,154,92,.4);}
+
+@media (prefers-reduced-motion:reduce){
+  .reveal,.reveal.in{opacity:1;transform:none;transition:none;}
+  .galeri img{transition:none;}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <g id="ukir-pemisah">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke" d="M4 20 C40 20 56 8 74 8 C88 8 96 14 104 20"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke" d="M4 20 C40 20 56 32 74 32 C88 32 96 26 104 20"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke" d="M236 20 C200 20 184 8 166 8 C152 8 144 14 136 20"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke" d="M236 20 C200 20 184 32 166 32 C152 32 144 26 136 20"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke" d="M120 10 L130 20 L120 30 L110 20 Z"/>
+    <path style="fill:var(--ukir-isi);opacity:.85" d="M74 8 c6 -8 16 -8 21 -1 c-7 6 -16 6 -21 1z"/>
+    <path style="fill:var(--ukir-isi);opacity:.85" d="M166 32 c-6 8 -16 8 -21 1 c7 -6 16 -6 21 -1z"/>
+  </g>
+</defs></svg>
+
+<section id="atas">
+  <p class="eyebrow reveal">Terima Kasih</p>
+  <h1 class="nama-besar reveal" id="namaBesar">&nbsp;</h1>
+  <p class="tanggal reveal" id="tanggal"></p>
+  <p class="salam reveal">Terima kasih atas doa, restu, dan kehadiran Anda. Kebahagiaan hari itu terasa jauh lebih penuh karena ada Anda di dalamnya.</p>
+  <svg class="ukir divider reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
+</section>
+
+<section id="galeri" class="on-paper center" hidden>
+  <div class="wrap-lebar">
+    <p class="eyebrow reveal">Dokumentasi</p>
+    <h2 class="judul reveal">Momen Hari Itu</h2>
+    <div class="galeri" id="galeriGrid"></div>
+  </div>
+</section>
+
+<section id="ucapan" class="center">
+  <div class="wrap">
+    <p class="eyebrow reveal">Ucapan &amp; Doa</p>
+    <h2 class="judul reveal">Dari Para Tamu</h2>
+    <p class="lead reveal">Kami membacanya satu per satu.</p>
+    <div class="ucapan-list" id="ucapanList"></div>
+    <p class="kabar" id="kabar">Memuat…</p>
+  </div>
+</section>
+
+<footer class="tutup">
+  <p class="eyebrow">Undangan digital oleh</p>
+  <p style="margin-top:8px"><a href="https://mengundang.id">mengundang.id</a></p>
+</footer>
+
+<div id="kaca" hidden role="dialog" aria-modal="true" aria-label="Foto diperbesar">
+  <button id="kacaTutup" aria-label="Tutup">&times;</button>
+  <img id="kacaImg" alt="">
+  <p class="ket" id="kacaKet"></p>
+</div>
+
+<script src="/assets/varian.js"></script>
+<script src="/assets/gambar.js"></script>
+<script>
+(function(){
+  'use strict';
+  var M = window.MENGUNDANG;
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  /* ---------- Pasangan mana ini? ----------
+     Sementara dari nama host: rian-aini.mengundang.id → rian-aini.
+     Kalau bukan subdomain (localhost, *.vercel.app, apex), jatuh ke
+     segmen path pertama, lalu ke slug bawaan.
+     Tahap 2 memindahkan ini ke satu tempat bersama halaman undangan. */
+  var SLUG_CADANGAN = 'rian-aini';
+
+  function slugPasangan(){
+    var host = location.hostname;
+    /* Alamat IP jangan diperlakukan sebagai subdomain — 127.0.0.1 akan
+       terbaca sebagai slug "127" dan halamannya diam-diam kosong waktu
+       dites lokal. */
+    var sepertiIP = /^[0-9.]+$/.test(host) || host.indexOf(':') !== -1;
+    var h = host.split('.');
+    var lompati = { www:1, mengundang:1, localhost:1 };
+
+    if (!sepertiIP && h.length >= 3 && !lompati[h[0]]) return h[0];
+
+    var seg = location.pathname.split('/').filter(Boolean);
+    if (seg.length >= 2) return seg[0];          // /budi-sari/terimakasih
+
+    return SLUG_CADANGAN;
+  }
+
+  var BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli',
+               'Agustus','September','Oktober','November','Desember'];
+
+  function tanggalPanjang(iso){
+    if (!iso) return '';
+    var p = String(iso).slice(0,10).split('-');
+    if (p.length !== 3) return '';
+    return Number(p[2]) + ' ' + BULAN[Number(p[1]) - 1] + ' ' + p[0];
+  }
+
+  function waktuSingkat(iso){
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    return d.getDate() + ' ' + BULAN[d.getMonth()].slice(0,3) + ' ' + d.getFullYear();
+  }
+
+  function kelasHadir(h){
+    if (h === 'Hadir') return 'l-hadir';
+    if (h === 'Tidak hadir') return 'l-tidak';
+    return 'l-belum';
+  }
+
+  /* ---------- Menggambar ---------- */
+  function gambarAtas(d){
+    var pria   = (d.mempelai && d.mempelai.pria   && d.mempelai.pria.panggilan)   || '';
+    var wanita = (d.mempelai && d.mempelai.wanita && d.mempelai.wanita.panggilan) || '';
+    if (pria || wanita){
+      document.getElementById('namaBesar').innerHTML =
+        esc(pria) + ' <span class="nama-amp">&amp;</span> ' + esc(wanita);
+      document.title = 'Terima Kasih — ' + pria + ' & ' + wanita;
+    }
+    document.getElementById('tanggal').textContent = tanggalPanjang(d.tanggal_acara);
+  }
+
+  function gambarGaleri(foto){
+    if (!foto || !foto.length) return;            // tanpa foto, bagiannya tidak muncul
+    document.getElementById('galeriGrid').innerHTML = foto.map(function(f, i){
+      /* lebar/tinggi dipakai supaya ruangnya dipesan sebelum gambarnya
+         turun — tanpa itu galeri melompat-lompat di jaringan pelan. */
+      var rasio = (f.lebar && f.tinggi) ? ' style="aspect-ratio:' + f.lebar + '/' + f.tinggi + '"' : '';
+      var src   = window.Gambar.url(f.kecil || f.jalur);
+      var ket   = f.keterangan ? '<figcaption>' + esc(f.keterangan) + '</figcaption>' : '';
+      return '<figure class="reveal">'
+        +   '<button class="buka" type="button" data-i="' + i + '" aria-label="Perbesar foto ' + (i+1) + '">'
+        +     '<img src="' + esc(src) + '" alt="' + esc(f.keterangan || 'Foto acara') + '"'
+        +          ' loading="lazy" decoding="async"' + rasio + '>'
+        +   '</button>' + ket
+        + '</figure>';
+    }).join('');
+    document.getElementById('galeri').hidden = false;
+  }
+
+  function gambarUcapan(daftar){
+    var kabar = document.getElementById('kabar');
+    if (!daftar || !daftar.length){
+      kabar.textContent = 'Belum ada ucapan yang ditampilkan.';
+      return;
+    }
+    kabar.hidden = true;
+    document.getElementById('ucapanList').innerHTML = daftar.map(function(u){
+      var balasan = u.balasan
+        ? '<div class="balasan">'
+          +   '<p class="balasan-label">Balasan dari kami</p>'
+          +   '<p class="balasan-teks">' + esc(u.balasan) + '</p>'
+          + '</div>'
+        : '';
+      return '<article class="kartu reveal">'
+        +   '<div class="kartu-kepala">'
+        +     '<h3 class="kartu-nama">' + esc(u.nama) + '</h3>'
+        +     '<span class="lencana ' + kelasHadir(u.hadir) + '">' + esc(u.hadir) + '</span>'
+        +   '</div>'
+        +   '<p class="kartu-pesan">' + esc(u.pesan) + '</p>'
+        +   '<p class="kartu-waktu">' + esc(waktuSingkat(u.waktu)) + '</p>'
+        +   balasan
+        + '</article>';
+    }).join('');
+  }
+
+  /* ---------- Lightbox ---------- */
+  var fotoAktif = [];
+  var kaca = document.getElementById('kaca');
+  var kacaImg = document.getElementById('kacaImg');
+  var kacaKet = document.getElementById('kacaKet');
+  var pemanggil = null;
+
+  function bukaKaca(i){
+    var f = fotoAktif[i];
+    if (!f) return;
+    pemanggil = document.activeElement;
+    kacaImg.src = window.Gambar.url(f.jalur);     // versi penuh, bukan thumbnail
+    kacaImg.alt = f.keterangan || 'Foto acara';
+    kacaKet.textContent = f.keterangan || '';
+    kaca.hidden = false;
+    document.body.style.overflow = 'hidden';
+    document.getElementById('kacaTutup').focus();
+  }
+
+  function tutupKaca(){
+    kaca.hidden = true;
+    kacaImg.removeAttribute('src');
+    document.body.style.overflow = '';
+    if (pemanggil && pemanggil.focus) pemanggil.focus();
+  }
+
+  document.getElementById('galeriGrid').addEventListener('click', function(e){
+    var b = e.target.closest('button.buka');
+    if (b) bukaKaca(Number(b.dataset.i));
+  });
+  document.getElementById('kacaTutup').addEventListener('click', tutupKaca);
+  kaca.addEventListener('click', function(e){ if (e.target === kaca) tutupKaca(); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && !kaca.hidden) tutupKaca();
+  });
+
+  /* ---------- Reveal ---------- */
+  function hidupkanReveal(){
+    var kurangi = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var item = document.querySelectorAll('.reveal');
+    if (kurangi || !('IntersectionObserver' in window)){
+      item.forEach(function(el){ el.classList.add('in'); });
+      return;
+    }
+    var pengamat = new IntersectionObserver(function(masuk){
+      masuk.forEach(function(x){
+        if (x.isIntersecting){ x.target.classList.add('in'); pengamat.unobserve(x.target); }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+    item.forEach(function(el){ pengamat.observe(el); });
+  }
+
+  /* ---------- Muat ---------- */
+  fetch(M.SB.url + '/rest/v1/rpc/terimakasih_isi', {
+    method: 'POST',
+    headers: { apikey: M.SB.key, Authorization: 'Bearer ' + M.SB.key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_slug: slugPasangan() })
+  })
+  .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(function(d){
+    if (!d || d.aktif !== true){
+      document.getElementById('kabar').textContent = 'Halaman ini belum tersedia.';
+      hidupkanReveal();
+      return;
+    }
+    fotoAktif = d.foto || [];
+    gambarAtas(d);
+    gambarGaleri(fotoAktif);
+    gambarUcapan(d.ucapan);
+    hidupkanReveal();
+  })
+  .catch(function(){
+    document.getElementById('kabar').textContent = 'Belum bisa dimuat. Coba muat ulang halaman.';
+    hidupkanReveal();
+  });
+})();
+</script>
+</body>
+</html>
