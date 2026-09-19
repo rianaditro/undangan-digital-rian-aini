@@ -243,5 +243,36 @@ Peta: sisi wanita `maps.app.goo.gl/xSdwqbrQoHadeU2A6`, sisi pria
 
 ## Memantau ucapan
 
-Supabase → **Table Editor → ucapan**. Baris bisa dihapus dari sana bila ada
-yang tidak pantas.
+Sejak migrasi `010` ucapan punya tiga kolom tambahan: `balasan`,
+`dibalas_pada`, dan `tampil`.
+
+**Membalas.** RPC `ucapan_balas(token, id, teks)`, memakai token bercakupan
+penuh. Balasan muncul di halaman terima kasih sebagai tulisan pengantin.
+Mengirim teks kosong berarti menarik balasannya kembali, bukan menyimpan
+balasan kosong.
+
+**Menyembunyikan.** RPC `ucapan_tampil(token, id, false)`. Ini lebih baik
+daripada menghapus: barisnya tetap ada, dan bisa ditampilkan lagi.
+Saringannya mengikat di policy, bukan di halaman — ucapan yang
+disembunyikan hilang dari buku tamu maupun dari REST, jadi
+menyembunyikannya benar-benar menyembunyikan. Pengelola tetap melihat
+semuanya lewat `ucapan_daftar(token)`.
+
+Dua hal yang sengaja dikunci di migrasi itu, keduanya baru berbahaya
+setelah kolom `balasan` ada:
+
+- Policy INSERT lama cuma memeriksa panjang tulisan, tidak membatasi kolom.
+  Artinya siapa pun bisa POST ke `/rest/v1/ucapan` sambil menyertakan
+  `balasan`, dan halaman akan menayangkannya seolah-olah itu tulisan
+  pengantin. Sekarang `balasan` dan `dibalas_pada` wajib kosong pada tulisan
+  tamu.
+- Policy SELECT lama `using (true)`. Kalau `tampil` cuma disaring di
+  halaman, ucapan yang disembunyikan tetap terbaca lewat REST — padahal
+  alasan menyembunyikannya biasanya justru karena isinya tidak pantas.
+
+Masih terbuka: `pasangan_id` belum dikunci di policy INSERT, jadi secara
+teori sebuah tulisan bisa dititipkan ke pasangan lain. Belum berakibat
+apa-apa selama baru ada satu pasangan, dan menutupnya butuh halaman tahu ia
+sedang menulis untuk siapa — itu resolusi penyewa di tahap 2.
+
+Untuk melihat mentahnya: Supabase → **Table Editor → ucapan**.
