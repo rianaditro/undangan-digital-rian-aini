@@ -30,6 +30,11 @@
 
   var BACKSOUND_URL = '/assets/backsound.mp3';
 
+  /* Tema yang sudah tertaut di HTML. Halaman memuatnya sebagai <link>
+     biasa supaya tidak ada kedipan; kalau database menyebut tema lain,
+     yang tertaut ditukar lewat gantiTema() di bawah. */
+  var TEMA_BAWAAN = 'ukir-jepara';
+
   /* Dipakai kalau database tidak menyebut canonical_host. */
   var SITUS_CADANGAN = 'https://rian-aini.mengundang.id';
   var SLUG_CADANGAN  = 'rian-aini';
@@ -111,7 +116,7 @@
         throw e;
       }
       pasang(d);
-      return d;
+      return gantiTema(KONF.tema).then(function () { return d; });
     });
 
     return janji;
@@ -148,6 +153,44 @@
     KONF.tanggalRingkas = ACARA.length ? ACARA[0].tanggal : '';
     KONF.mulai          = ACARA.length ? ACARA[0].mulai   : '';
     KONF.siap = true;
+  }
+
+  /* Menukar berkas tema, lalu MENUNGGU sampai berkas penggantinya benar-
+     benar termuat. Tanpa menunggu, halaman sempat digambar dengan tema
+     lama sementara tema barunya menyusul — dan itu persis kedipan yang
+     ingin dihindari.
+
+     Kalau gagal termuat, tema lama dibiarkan berdiri. Undangan dengan
+     tampilan yang bukan pilihannya masih jauh lebih baik daripada
+     undangan tanpa tampilan sama sekali. */
+  function gantiTema(nama) {
+    if (!nama || nama === TEMA_BAWAAN) return Promise.resolve(false);
+
+    var tautan = global.document && document.getElementById('temaGaya');
+    if (!tautan) return Promise.resolve(false);
+
+    return new Promise(function (selesai) {
+      var baru = document.createElement('link');
+      baru.rel = 'stylesheet';
+      baru.href = '/tema/' + nama + '/gaya.css';
+
+      var sudah = false;
+      function tuntas(berhasil) {
+        if (sudah) return;
+        sudah = true;
+        if (berhasil) tautan.parentNode.removeChild(tautan);
+        else if (baru.parentNode) baru.parentNode.removeChild(baru);
+        selesai(berhasil);
+      }
+
+      baru.onload  = function () { tuntas(true); };
+      baru.onerror = function () { tuntas(false); };
+      /* Jaring pengaman: onload css tidak selalu menyala di semua
+         peramban lama. */
+      setTimeout(function () { tuntas(true); }, 3000);
+
+      tautan.parentNode.insertBefore(baru, tautan.nextSibling);
+    });
   }
 
   function pastikanSiap() {
@@ -284,6 +327,7 @@
     KONF: KONF,
 
     muat: muat,
+    TEMA_BAWAAN: TEMA_BAWAAN,
     slugPasangan: slugPasangan,
     pihakSah: pihakSah,
     varian: varian,

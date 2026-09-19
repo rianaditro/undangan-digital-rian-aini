@@ -12,6 +12,9 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 │   ├── vcf.js            ← pembaca berkas kontak .vcf
 │   ├── gambar.js         ← pengecil foto sebelum diunggah
 │   └── backsound.mp3
+├── tema/
+│   └── ukir-jepara/
+│       └── gaya.css      ← SELURUH tampilan undangan ada di sini
 ├── supabase/
 │   ├── migrations/       ← migrasi bernomor, dijalankan berurutan
 │   └── functions/        ← edge function (jalur tulis yang dijaga)
@@ -187,6 +190,33 @@ policy INSERT-nya dicabut sama sekali. Satu-satunya jalan masuk adalah
 Sebabnya: kalau peramban yang menentukan pasangan_id, sebuah tulisan bisa
 dititipkan ke undangan pasangan lain. Ini utang dari migrasi `010` yang
 baru bisa dilunasi setelah ada resolusi penyewa.
+
+---
+
+## 1e. Tema
+
+`index.html` tidak lagi memuat satu pun aturan tampilan. Semuanya ada di
+`tema/{nama}/gaya.css`, dipilih lewat kolom `pasangan.tema`. Struktur HTML
+dan isinya dipakai bersama; yang berbeda antar tema cuma berkas itu.
+
+Menambah tema berarti menyalin foldernya, bukan menyalin halaman.
+
+Berkasnya dimuat sebagai `<link>` biasa di HTML dengan nama tema bawaan,
+jadi tidak ada kedipan pada kasus yang paling lazim. Kalau database
+menyebut tema lain, `gantiTema()` menukar tautannya dan **menunggu sampai
+berkas penggantinya benar-benar termuat** sebelum sampul dibuka — tanpa
+menunggu, halaman sempat digambar dengan tema lama.
+
+Kalau berkas tema penggantinya tidak ada, tema lama dibiarkan berdiri dan
+sampul tetap dibuka. Undangan dengan tampilan yang bukan pilihannya masih
+jauh lebih baik daripada undangan tanpa tampilan sama sekali.
+
+Yang **tidak boleh** masuk ke berkas tema: apa pun yang khas satu
+pasangan. Nama, alamat, tanggal, nomor dompet — semuanya dari database.
+
+Tiap tema berdiri sendiri, tidak menumpang tema lain. Konsekuensinya
+struktur yang sama ikut tersalin, tapi itu ditukar dengan kebebasan: tema
+berikutnya tidak terkurung bentuk tema pertama.
 
 ---
 
