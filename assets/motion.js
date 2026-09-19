@@ -140,6 +140,130 @@
     );
   }
 
+  /* ---------- 4. Gulir otomatis ----------
+     Undangan bergulir pelan seperti cerita, lalu berhenti sendiri di
+     ujung.
+
+     Yang bikin fitur semacam ini sering terasa rusak: ia berebut dengan
+     jari penggunanya. Jadi aturannya satu dan keras — begitu ada tanda
+     pengguna ingin menggulir sendiri, guliran otomatis MENYERAH SEKETIKA
+     dan tidak mencoba melanjutkan.
+
+     Tandanya ditangkap dua lapis. Lapis pertama peristiwa langsung:
+     wheel, touchstart, keydown, pointerdown, dan focusin (tamu mengetik
+     ucapan). Lapis kedua perbandingan: tiap bingkai, posisi yang
+     sebenarnya dibandingkan dengan posisi yang kita setel. Kalau
+     berbeda, berarti ada yang menggeser di luar kita — dan itu menangkap
+     seretan bilah gulir serta luncuran sisa di HP yang tidak
+     memunculkan satu pun peristiwa di atas.
+
+     Satu jebakan: berkas tema memasang `html{scroll-behavior:smooth}`.
+     Kalau dibiarkan, tiap langkah kecil kita ikut dianimasikan halus,
+     dan hasilnya tersendat melawan dirinya sendiri. Jadi selama gulir
+     berjalan, perilaku itu dimatikan sementara lalu dikembalikan. */
+  function bikinGulir() {
+    var laju = 0, y = 0, yDisetel = 0, jalan = false, rafId = 0, waktu = 0;
+    var tenangSampai = 0;
+    var adaKabar = null;
+    var akar = doc ? doc.documentElement : null;
+    var simpanPerilaku = '';
+
+    var PERISTIWA = ['wheel', 'touchstart', 'keydown', 'pointerdown', 'focusin'];
+
+    function bisa() {
+      return !!akar && !kurangi && !!global.requestAnimationFrame;
+    }
+
+    function ujung() {
+      return Math.max(0, akar.scrollHeight - global.innerHeight);
+    }
+
+    function kabar() { if (adaKabar) adaKabar(jalan); }
+
+    function mulai() {
+      if (!bisa() || jalan) return;
+      if (global.scrollY >= ujung() - 1) return;   // sudah di ujung
+
+      jalan = true;
+      y = yDisetel = global.scrollY;
+      waktu = 0;
+
+      /* Jendela tenang. Waktu tombol ditekan, halaman bisa saja masih
+         melayang karena guliran halus yang dimulai hal lain — halaman ini
+         sendiri menjalankan scrollIntoView({behavior:'smooth'}) tepat
+         sesudah undangan dibuka. Tanpa jendela ini, pergerakan sisa itu
+         terbaca sebagai jari pengguna dan guliran otomatis mati seketika:
+         tamu menekan tombolnya, lalu tidak terjadi apa-apa.
+
+         Selama jendela ini, pergeseran di luar kita TIDAK dianggap
+         perlawanan — posisinya diikuti saja. Niat pengguna tetap
+         tertangkap utuh lewat peristiwa langsung di bawah, dan itu
+         memang tanda yang bisa dipercaya. */
+      tenangSampai = (global.performance ? performance.now() : Date.now()) + 350;
+
+      simpanPerilaku = akar.style.scrollBehavior;
+      akar.style.scrollBehavior = 'auto';
+
+      PERISTIWA.forEach(function (n) {
+        global.addEventListener(n, henti, { passive: true });
+      });
+      doc.addEventListener('visibilitychange', sembunyi);
+
+      rafId = requestAnimationFrame(langkah);
+      kabar();
+    }
+
+    function henti() {
+      if (!jalan) return;
+      jalan = false;
+      cancelAnimationFrame(rafId);
+
+      akar.style.scrollBehavior = simpanPerilaku;
+      PERISTIWA.forEach(function (n) { global.removeEventListener(n, henti); });
+      doc.removeEventListener('visibilitychange', sembunyi);
+      kabar();
+    }
+
+    function sembunyi() { if (doc.hidden) henti(); }
+
+    function langkah(t) {
+      if (!jalan) return;
+
+      /* Pengguna menggeser sendiri: yang terbaca tidak sama dengan yang
+         kita setel bingkai lalu. Di dalam jendela tenang, posisinya
+         diikuti — bukan dianggap perlawanan. */
+      if (Math.abs(global.scrollY - yDisetel) > 2) {
+        if (t > tenangSampai) { henti(); return; }
+        y = global.scrollY;
+      }
+
+      if (!waktu) waktu = t;
+      var detik = Math.min(0.05, (t - waktu) / 1000);   // lompatan besar dijepit
+      waktu = t;
+
+      y += laju * detik;
+      var batas = ujung();
+      if (y >= batas) { global.scrollTo(0, batas); henti(); return; }
+
+      global.scrollTo(0, y);
+      yDisetel = global.scrollY;
+      rafId = requestAnimationFrame(langkah);
+    }
+
+    return {
+      pasang: function (opsi) {
+        laju = angkaSetelan('--gulir-laju', 46);
+        adaKabar = (opsi && opsi.kabar) || null;
+        return bisa() && laju > 0;
+      },
+      mulai: mulai,
+      henti: henti,
+      alih: function () { jalan ? henti() : mulai(); },
+      jalan: function () { return jalan; },
+      bisa: bisa
+    };
+  }
+
   /* ---------- Pemasangan ---------- */
   function pasang(opsi) {
     opsi = opsi || {};
@@ -151,6 +275,7 @@
   }
 
   global.Motion = {
+    gulir: bikinGulir(),
     pasang: pasang,
     runtun: runtun,
     parallax: parallax,

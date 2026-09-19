@@ -224,9 +224,10 @@ berikutnya tidak terkurung bentuk tema pertama.
 
 ## 1f. Gerak
 
-Tiga hal, semuanya di `assets/motion.js`: **runtun** (anak-anak satu wadah
-muncul berurutan, bukan serempak), **parallax** tipis di bagian pembuka,
-dan **angka hitung mundur** yang bergulir waktu berubah.
+Empat hal, semuanya di `assets/motion.js`: **runtun** (anak-anak satu
+wadah muncul berurutan, bukan serempak), **parallax** tipis di bagian
+pembuka, **angka hitung mundur** yang bergulir waktu berubah, dan **gulir
+otomatis**.
 
 Setelannya ada di berkas tema sebagai custom property, bukan di berkas
 konfigurasi tersendiri — temanya toh sudah dimuat, jadi tidak perlu
@@ -234,10 +235,41 @@ permintaan jaringan tambahan, dan setelannya ikut tertukar sendiri waktu
 temanya berganti:
 
 ```css
-:root{ --runtun:90ms; --parallax:.18; }
+:root{ --runtun:90ms; --parallax:.18; --gulir-laju:46px; }
 ```
 
-`--parallax:0` mematikan parallax untuk tema itu.
+`--parallax:0` mematikan parallax, `--gulir-laju:0` mematikan gulir
+otomatis untuk tema itu.
+
+### Gulir otomatis
+
+Tombol di atas tombol musik, muncul waktu undangan dibuka. Halaman
+bergulir pelan seperti cerita lalu berhenti sendiri tepat di ujung.
+
+Yang bikin fitur semacam ini sering terasa rusak: ia berebut dengan jari
+penggunanya. Aturannya di sini satu dan keras — **begitu ada tanda
+pengguna ingin menggulir sendiri, guliran otomatis menyerah seketika**
+dan tidak mencoba melanjutkan. Tandanya ditangkap dua lapis: peristiwa
+langsung (`wheel`, `touchstart`, `keydown`, `pointerdown`, `focusin`) dan
+perbandingan posisi tiap bingkai, yang menangkap seretan bilah gulir
+serta luncuran sisa di HP yang tidak memunculkan peristiwa apa pun.
+
+Dua jebakan yang sudah ditangani:
+
+- Berkas tema memasang `html{scroll-behavior:smooth}`. Kalau dibiarkan,
+  tiap langkah kecil ikut dianimasikan halus dan hasilnya tersendat
+  melawan dirinya sendiri. Selama gulir berjalan, perilaku itu dimatikan
+  sementara lalu dikembalikan.
+- Ada **jendela tenang 350 ms** sesudah tombol ditekan. Waktu itu halaman
+  bisa saja masih melayang karena guliran halus yang dimulai hal lain —
+  halaman ini sendiri menjalankan `scrollIntoView({behavior:'smooth'})`
+  tepat sesudah undangan dibuka. Tanpa jendela ini, pergerakan sisa itu
+  terbaca sebagai jari pengguna dan guliran mati seketika: tamu menekan
+  tombolnya, lalu tidak terjadi apa-apa.
+
+Kalau pengguna minta gerak dikurangi, tombolnya **tidak ditawarkan sama
+sekali** — menawarkan lalu tidak menjalankan lebih membingungkan daripada
+tidak ada tombolnya.
 
 ### Batas yang mengikat semuanya
 

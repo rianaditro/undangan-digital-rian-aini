@@ -60,6 +60,14 @@
 </div>
 
 <!-- ====== TOMBOL MUSIK ====== -->
+<!-- ====== TOMBOL GULIR OTOMATIS ====== -->
+<button id="btnGulir" aria-label="Gulir otomatis" aria-pressed="false" title="Gulir otomatis">
+  <svg viewBox="0 0 32 32" aria-hidden="true">
+    <g class="ikon-main"><path d="M13 10.5 L22 16 L13 21.5 Z"/></g>
+    <g class="ikon-jeda"><rect x="12" y="10.5" width="3" height="11" rx="1"/><rect x="17" y="10.5" width="3" height="11" rx="1"/></g>
+  </svg>
+</button>
+
 <button id="btnMusik" class="off" aria-label="Nyalakan musik latar" title="Musik latar">
   <svg viewBox="0 0 32 32" aria-hidden="true">
     <g class="spin">
@@ -428,6 +436,7 @@
   document.getElementById('btnOpen').addEventListener('click', function(){
     Musik.tampilkan();
     Musik.mulai();
+    tampilkanGulir();
     cover.classList.add('gone');
     document.body.classList.remove('locked');
     window.scrollTo(0,0);
@@ -686,6 +695,7 @@
     pihakTamu = M.pihakSah(pihakMentah);
     terapkanVarian(pihakTamu);
     Motion.pasang();
+    siapkanGulir();
     pasangNamaTamu();
     pasangKanonik();
     return janjiTamu;
@@ -717,6 +727,45 @@
       document.head.appendChild(el);
     }
     el.href = 'https://' + M.KONF.canonicalHost + location.pathname + location.search;
+  }
+
+  /* Tombol gulir otomatis. Tombolnya baru dimunculkan kalau fiturnya
+     memang bisa jalan — kalau pengguna minta gerak dikurangi, tombolnya
+     tidak ditawarkan sama sekali. Menawarkan lalu tidak menjalankan
+     lebih membingungkan daripada tidak ada tombolnya. */
+  function siapkanGulir(){
+    var btn = document.getElementById('btnGulir');
+    if(!btn) return;
+
+    var bisa = Motion.gulir.pasang({
+      kabar: function(jalan){
+        btn.setAttribute('aria-pressed', jalan ? 'true' : 'false');
+        btn.setAttribute('aria-label', jalan ? 'Hentikan gulir otomatis' : 'Gulir otomatis');
+      }
+    });
+    if(!bisa) return;
+
+    btn.addEventListener('click', function(){ Motion.gulir.alih(); });
+
+    /* Klik pada tombolnya sendiri jangan dihitung sebagai "pengguna
+       ingin menggulir sendiri" — pointerdown-nya menyala lebih dulu
+       daripada click, jadi tanpa ini tombolnya mematikan dirinya
+       sendiri seketika setelah dinyalakan. */
+    btn.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
+    btn.addEventListener('keydown', function(e){ e.stopPropagation(); });
+
+    /* Muncul bersamaan dengan tombol musik, yaitu waktu undangannya
+       benar-benar dibuka — bukan waktu sampulnya siap. Sampul yang siap
+       masih menutupi halaman, dan tombol gulir yang melayang di atasnya
+       tidak ada gunanya. */
+    gulirSiap = btn;
+    if(sudahDibuka) btn.classList.add('show');
+  }
+  var gulirSiap = null, sudahDibuka = false;
+
+  function tampilkanGulir(){
+    sudahDibuka = true;
+    if(gulirSiap) gulirSiap.classList.add('show');
   }
 
   function gagalMuat(e){

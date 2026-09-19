@@ -36,6 +36,7 @@
      setelannya ikut tertukar sendiri waktu temanya berganti. */
   --runtun:90ms;     /* jeda antar anak dalam satu wadah */
   --parallax:.18;    /* 0 mematikan parallax */
+  --gulir-laju:46px; /* piksel per detik; 0 mematikan gulir otomatis */
 }
 
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -321,6 +322,34 @@ section{padding:clamp(64px,14vw,110px) var(--pad);position:relative;}
 .credit{margin-top:44px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(237,231,217,.32);}
 
 /* ============ MUSIK LATAR ============ */
+/* Tombol gulir otomatis — sebaris dengan tombol musik, duduk di atasnya. */
+#btnGulir{
+  position:fixed;right:clamp(14px,4vw,26px);
+  bottom:calc(clamp(14px,4vw,26px) + 62px);z-index:50;
+  width:52px;height:52px;border-radius:50%;
+  background:var(--nila-3);border:1px solid rgba(195,154,92,.55);
+  display:none;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;
+  box-shadow:0 8px 24px -8px rgba(0,0,0,.6);
+  transition:transform .3s, border-color .3s, opacity .5s;
+}
+#btnGulir.show{display:flex;}
+#btnGulir:hover{transform:scale(1.06);border-color:var(--kuningan);}
+#btnGulir:focus-visible{outline:2px solid var(--kuningan);outline-offset:3px;}
+#btnGulir svg{width:24px;height:24px;}
+#btnGulir path,#btnGulir rect{fill:var(--kuningan);}
+#btnGulir .ikon-jeda{display:none;}
+#btnGulir[aria-pressed="true"] .ikon-main{display:none;}
+#btnGulir[aria-pressed="true"] .ikon-jeda{display:block;}
+#btnGulir[aria-pressed="true"]{border-color:var(--kuningan);}
+
+/* Gulir otomatis tidak ditawarkan sama sekali kalau pengguna minta
+   gerak dikurangi — menawarkannya lalu tidak menjalankannya lebih
+   membingungkan daripada tidak ada tombolnya. */
+@media (prefers-reduced-motion:reduce){
+  #btnGulir,#btnGulir.show{display:none;}
+}
+
 #btnMusik{
   position:fixed;right:clamp(14px,4vw,26px);bottom:clamp(14px,4vw,26px);z-index:50;
   width:52px;height:52px;border-radius:50%;
