@@ -283,6 +283,10 @@ dua keadaan (dijatah / diberikan), serta alamat, relasi, dan kelompok
 keluarga supaya satu keluarga yang datang terpencar bisa dilihat
 sekaligus.
 
+Migrasi `019` menambahkan unduhan Excel untuk daftar sumbangan — `.xlsx`
+sungguhan yang ditulis sendiri tanpa pustaka, supaya angka uang sampai ke
+spreadsheet sebagai angka dan bisa langsung dijumlahkan.
+
 ### Yang ditemukan sambil jalan
 
 Migrasi `017` menutup lubang lintas penyewa di seluruh keluarga

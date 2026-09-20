@@ -540,6 +540,65 @@ ke dalamnya langsung jadi milik publik. Perlakukan sama seperti saringan
 
 ---
 
+## 1j. Unduh Excel
+
+`assets/xlsx.js`, migrasi `019`. Berkasnya **.xlsx sungguhan**, bukan CSV
+berganti nama.
+
+### Kenapa bukan CSV
+
+CSV di Excel Indonesia hampir selalu berantakan. Pemisahnya ikut setelan
+Windows — koma atau titik koma, dan halaman ini tidak punya cara menebak
+yang mana. Lebih buruk lagi, `250.000` terbaca sebagai teks, sehingga
+kolom yang justru ingin dijumlahkan tidak bisa dijumlahkan. Untuk berkas
+yang isinya angka uang, itu bukan kegagalan kecil.
+
+Di `.xlsx` angka disimpan sebagai angka dan tanggal sebagai tanggal.
+Itu seluruh alasan berkas ini ada.
+
+### Kenapa bukan SheetJS
+
+Halaman panitia tidak punya langkah build dan tidak memuat pustaka apa
+pun. Menambahkan berkas 400 KB untuk sebuah tombol unduh akan jadi hal
+terberat di seluruh situs, dan ikut terunduh tiap kali halaman dibuka.
+
+Jadi ditulis sendiri, sekitar 200 baris. `.xlsx` sebenarnya cuma berkas
+ZIP berisi XML, dan yang dipakai sengaja sesedikit mungkin:
+
+- ZIP tanpa kompresi (metode *stored*), jadi tidak perlu deflate
+- teks inline (`t="inlineStr"`), jadi tidak perlu `sharedStrings.xml`
+- satu `styles.xml` kecil: judul tebal, format ribuan, format tanggal
+
+Yang tetap harus ditulis walau tidak dipakai: dua `fill`, satu `border`,
+satu `cellStyleXfs`. Excel menolak `styles.xml` yang kekurangan bagian
+bawaannya.
+
+### Yang dijaga
+
+- **Karakter kendali dibuang** dari tiap teks. Nama tamu diketik orang,
+  dan sekali ada karakter kendali nyasar, seluruh berkas ditolak Excel
+  tanpa penjelasan.
+- **Nomor telepon ditulis sebagai teks.** `08123…` yang jadi angka
+  kehilangan nol di depannya, dan nomor tanpa nol depan tidak bisa
+  dihubungi.
+- **Baris judul dibekukan.** Menggulir ke baris 200 tanpa itu berarti
+  menebak kolom mana yang mana.
+- Anchor unduhannya dimasukkan ke dokumen sebentar sebelum ditekan.
+  Chromium mengunduh juga kalau dibiarkan lepas — sudah diuji — tapi
+  tidak semua peramban begitu, dan yang tidak begitu diam saja tanpa
+  galat.
+
+### Diuji, bukan dikira
+
+Berkas hasilnya dibuka kembali dengan `openpyxl` di pipa uji: angka
+memang angka, tanggal memang tanggal, `&`/`<`/`>`/kutip tidak merusak
+apa pun, apostrof pada `Nurul Zakiyatul 'AINI` utuh, kolom ke-27 jadi
+`AA`, dan kolom nominal bisa dijumlahkan. Satu uji lagi memastikan
+unduhan memuat 240 baris sementara layar cuma memuat 200 — kalau tombolnya
+diam-diam memakai daftar layar, uji itu yang gagal.
+
+---
+
 ## 2. Deploy
 
 ```bash
@@ -717,6 +776,18 @@ Saringan **Urut kelompok** menaruh anggota satu keluarga berdampingan
 dengan judul di atasnya. Judul itu tidak muncul di urutan nama: di sana
 anggota satu keluarga berserak dan judulnya akan muncul berulang-ulang
 tanpa arti.
+
+**Unduh Excel** mengambil *seluruh* sumbangan lewat `rekap_unduh()`
+(migrasi `019`) — bukan yang terlihat di layar. Ini penting: daftar di
+layar sudah disaring dan dipagari 200 baris, dan unduhan yang diam-diam
+terpotong di baris ke-200 lebih buruk daripada tidak ada unduhan sama
+sekali, karena tidak ada yang tahu. Kalau belum ada sumbangan sama
+sekali, tombolnya berkata begitu dan tidak mengunduh berkas kosong.
+
+Dua lembar: **Sumbangan** (satu baris per pemberian, diurutkan per
+kelompok keluarga, lengkap dengan alamat, relasi, kehadiran, dan status
+berkat) dan **Ringkasan** (angka kehadiran, total amplop, dan rincian
+barang per satuan). Rinciannya di bagian 1j.
 
 Angka di atas kotak dihitung ulang tiap kali ada yang berubah — tidak ada
 kolom total yang disimpan, karena total yang disimpan adalah sumber

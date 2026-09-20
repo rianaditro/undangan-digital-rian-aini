@@ -492,6 +492,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
       <option value="">Urut nama</option>
       <option value="kelompok">Urut kelompok</option>
     </select>
+    <button class="btn ghost kecil" id="btnRkUnduh">Unduh Excel</button>
     <button class="btn ghost kecil" id="btnRkSegarkan">Muat Ulang</button>
   </div>
 
@@ -499,6 +500,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   <div id="rkDaftar"><p class="memuat">Memuat rekap…</p></div>
   <datalist id="dlKelompok"></datalist>
   <p class="hint" id="rkLagi" hidden>Baru 200 teratas yang ditampilkan. Ketik namanya di kotak cari untuk mempersempit.</p>
+  <p class="hint" style="margin-top:12px"><strong>Unduh Excel</strong> mengambil <em>seluruh</em> sumbangan — tidak ikut pencarian, saringan, atau batas 200 baris di layar. Satu baris per pemberian, diurutkan per kelompok keluarga, plus satu lembar ringkasan.</p>
 </div>
 
 <p class="catatan">
@@ -514,6 +516,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
 <script src="/assets/varian.js"></script>
 <script src="/assets/vcf.js"></script>
 <script src="/assets/gambar.js"></script>
+<script src="/assets/xlsx.js"></script>
 <script>
 (function(){
   'use strict';
@@ -2053,6 +2056,98 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     clearTimeout(jedaCari);
     jedaCari = setTimeout(muatRekap, 280);
   });
+  /* ---------- unduh Excel ----------
+     Datanya diambil ulang dari server lewat rekap_unduh(), BUKAN dari
+     rekapBaris yang ada di layar: yang di layar sudah disaring dan
+     dipagari 200 baris. Unduhan yang diam-diam terpotong lebih buruk
+     daripada tidak ada unduhan sama sekali, karena tidak ada yang tahu. */
+  function ya(b){ return b === true ? 'Ya' : b === false ? 'Tidak' : ''; }
+
+  function lembarSumbangan(baris){
+    var judul = ['Nama','Pihak','Telepon','Alamat','Kelompok','Relasi','Hadir',
+                 'Berkat','Jenis','Nominal','Jumlah','Satuan','Rincian',
+                 'Catatan','Dicatat'];
+    var isi = [judul.map(function(t){ return { v:t, j:'judul' }; })];
+
+    baris.forEach(function(r){
+      var j = JENIS[r.jenis] || {};
+      isi.push([
+        { v: r.nama },
+        { v: (M.VARIAN[r.pihak] && M.VARIAN[r.pihak].label) || r.pihak },
+        /* Nomor telepon ditulis sebagai TEKS, bukan angka — "08123..."
+           yang jadi angka kehilangan nol di depannya, dan nomor tanpa
+           nol depan tidak bisa dihubungi. */
+        { v: r.telepon ? '+' + r.telepon : '' },
+        { v: r.alamat },
+        { v: r.kelompok },
+        { v: r.relasi },
+        { v: ya(r.datang) },
+        { v: BERKAT[berkatSah(r.berkat)].judul },
+        { v: j.label || r.jenis },
+        { v: r.nominal, j:'uang' },
+        { v: r.jumlah,  j:'angka' },
+        { v: r.satuan },
+        { v: r.barang },
+        { v: r.catatan },
+        { v: r.dicatat, j:'tanggal' }
+      ]);
+    });
+
+    return { nama:'Sumbangan', lebar:[26,18,15,30,24,14,8,20,14,14,9,10,24,24,18], baris:isi };
+  }
+
+  function lembarRingkasan(r){
+    var isi = [
+      [{v:'Keterangan',j:'judul'}, {v:'Nilai',j:'judul'}, {v:'Satuan',j:'judul'}],
+      [{v:'Tamu diundang'},      {v:r.tamu    || 0, j:'angka'}],
+      [{v:'Tercatat hadir'},     {v:r.datang  || 0, j:'angka'}],
+      [{v:'Tercatat tidak hadir'},{v:r.tidak  || 0, j:'angka'}],
+      [{v:'Belum ditandai'},     {v:r.belum   || 0, j:'angka'}],
+      [{v:'Kelompok keluarga'},  {v:r.kelompok|| 0, j:'angka'}],
+      [{v:'Tamu yang memberi'},  {v:r.pemberi || 0, j:'angka'}],
+      [{v:'Total amplop'},       {v:r.uang    || 0, j:'uang'}, {v:'Rupiah'}],
+      [{v:'Berkat dijatah'},     {v:r.berkat_dijatah   || 0, j:'angka'}],
+      [{v:'Berkat sudah diberikan'}, {v:r.berkat_diberikan || 0, j:'angka'}],
+      []
+    ];
+    if((r.rinci || []).length){
+      isi.push([{v:'Rincian barang',j:'judul'}, {v:'Jumlah',j:'judul'}, {v:'Satuan',j:'judul'}, {v:'Catatan',j:'judul'}]);
+      r.rinci.forEach(function(x){
+        isi.push([
+          { v: (JENIS[x.jenis] || {}).label || x.jenis },
+          { v: x.jumlah, j:'angka' },
+          { v: x.satuan },
+          { v: x.baris,  j:'angka' }
+        ]);
+      });
+    }
+    return { nama:'Ringkasan', lebar:[26,14,12,12], baris:isi };
+  }
+
+  $('btnRkUnduh').addEventListener('click', async function(){
+    var tbl = this;
+    tbl.disabled = true;
+    var semula = tbl.textContent;
+    tbl.textContent = 'Menyiapkan…';
+    try{
+      var hasil = await Promise.all([
+        rpcKelola('rekap_unduh'),
+        rpcKelola('rekap_ringkas')
+      ]);
+      var baris = hasil[0] || [];
+      if(!baris.length){
+        toast('Belum ada sumbangan yang dicatat', true);
+        return;
+      }
+      var hari = new Date().toISOString().slice(0,10);
+      window.XLSX.unduh(
+        'rekap-sumbangan-' + (M.KONF.slug || 'undangan') + '-' + hari + '.xlsx',
+        [ lembarSumbangan(baris), lembarRingkasan(hasil[1] || {}) ]);
+      toast(baris.length + ' baris sumbangan diunduh');
+    }catch(e){ toast(e.message, true); }
+    finally{ tbl.disabled = false; tbl.textContent = semula; }
+  });
+
   $('rkSaring').addEventListener('change', muatRekap);
   $('rkUrut').addEventListener('change', muatRekap);
   $('btnRkSegarkan').addEventListener('click', muatRekap);
