@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>mengundang.id — Undangan pernikahan digital</title>
+<meta name="description" content="Undangan pernikahan digital yang bisa Anda isi sendiri, sebar lewat WhatsApp, dan rekap amplopnya sesudah acara. Coba dulu, tanpa daftar.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="mengundang.id">
+<meta property="og:description" content="Coba dulu: isi nama Anda berdua, langsung lihat undangannya jadi.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant:ital,wght@0,400;1,300;1,400&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --nila:#131E33; --nila-2:#1B2A46; --nila-3:#0D1626;
+  --jati:#4A3323; --kuningan:#C39A5C; --kuningan-dim:#8C6A3A;
+  --kapur:#EDE7D9; --kapur-2:#E2DAC7; --daun:#7C8B63; --merah:#B4573F;
+  --garis:rgba(237,231,217,.14);
+  --display:'Marcellus','Times New Roman',serif;
+  --script:'Cormorant',Georgia,serif;
+  --body:'Karla','Helvetica Neue',Arial,sans-serif;
+  --pad:clamp(20px,6vw,64px);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
+body{
+  font-family:var(--body);background:var(--nila);color:var(--kapur);
+  line-height:1.7;font-weight:300;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+img,svg{display:block;max-width:100%;}
+button,input{font:inherit;color:inherit;}
+[hidden]{display:none!important;}
+a{color:var(--kuningan);}
+
+section{padding:clamp(58px,12vw,100px) var(--pad);position:relative;}
+.wrap{max-width:660px;margin:0 auto;}
+.wrap-lebar{max-width:960px;margin:0 auto;}
+.center{text-align:center;}
+.eyebrow{font-size:11px;letter-spacing:.34em;text-transform:uppercase;font-weight:500;color:var(--kuningan);}
+h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(24px,6.2vw,34px);letter-spacing:.04em;margin-top:12px;}
+.lead{font-size:15px;margin-top:14px;color:rgba(237,231,217,.72);max-width:520px;margin-inline:auto;}
+
+.on-paper{background:var(--kapur);color:var(--nila);}
+.on-paper .eyebrow{color:var(--kuningan-dim);}
+.on-paper .lead{color:rgba(19,30,51,.72);}
+.on-paper::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(94deg,transparent 0 3px,rgba(74,51,35,.028) 3px 4px);
+}
+.on-paper > *{position:relative;}
+
+.ukir{--ukir-garis:var(--kuningan);--ukir-isi:var(--kuningan);}
+.on-paper .ukir{--ukir-garis:var(--jati);--ukir-isi:var(--jati);}
+.divider{width:min(240px,62vw);height:40px;margin:26px auto 0;opacity:.9;}
+
+.reveal{opacity:0;transform:translateY(24px);}
+.reveal.in{opacity:1;transform:none;transition:opacity .8s ease,transform .8s cubic-bezier(.22,.8,.3,1);}
+@media (prefers-reduced-motion:reduce){ .reveal,.reveal.in{opacity:1;transform:none;transition:none;} }
+
+/* ---------- SAMPUL ---------- */
+#atas{
+  min-height:min(100svh,780px);display:flex;flex-direction:column;
+  justify-content:center;align-items:center;text-align:center;
+  background:radial-gradient(110% 70% at 50% 100%,#22355A 0%,var(--nila) 55%,var(--nila-3) 100%);
+}
+.merek{font-family:var(--display);font-size:clamp(30px,8.5vw,50px);letter-spacing:.04em;line-height:1.15;margin-top:16px;}
+.merek i{font-family:var(--script);font-style:italic;font-weight:300;color:var(--kuningan);}
+.slogan{font-family:var(--script);font-style:italic;font-size:clamp(17px,4.4vw,22px);line-height:1.7;margin:22px auto 0;max-width:500px;}
+.turun{margin-top:34px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+
+.btn{
+  display:inline-block;border:1px solid var(--kuningan-dim);background:transparent;color:var(--kuningan);
+  border-radius:2px;padding:13px 26px;cursor:pointer;text-decoration:none;
+  font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+  transition:background .2s,color .2s,opacity .2s;
+}
+.btn:hover{background:var(--kuningan);color:var(--nila-3);}
+.btn.solid{background:var(--kuningan);color:var(--nila-3);border-color:var(--kuningan);}
+.btn.solid:hover{background:#D9AF6E;}
+.btn:disabled{opacity:.45;cursor:default;}
+.on-paper .btn{border-color:var(--kuningan-dim);color:var(--jati);}
+.on-paper .btn:hover{background:var(--jati);color:var(--kapur);}
+.on-paper .btn.solid{background:var(--jati);color:var(--kapur);border-color:var(--jati);}
+
+/* ---------- COBA ---------- */
+.kotak{
+  border:1px solid rgba(74,51,35,.22);background:rgba(255,255,255,.5);
+  padding:clamp(18px,4.5vw,28px);margin-top:30px;text-align:left;border-radius:3px;
+}
+.kotak label{display:block;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--kuningan-dim);margin:16px 0 6px;}
+.kotak label:first-of-type{margin-top:0;}
+.kotak input{
+  width:100%;background:rgba(255,255,255,.85);border:1px solid rgba(74,51,35,.25);
+  border-radius:2px;padding:12px 13px;font-size:15px;color:var(--nila);
+}
+.kotak input:focus{outline:none;border-color:var(--kuningan-dim);}
+.dua{display:grid;gap:0 14px;}
+@media (min-width:560px){ .dua{grid-template-columns:1fr 1fr;} }
+.kotak .aksi{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px;align-items:center;}
+.kotak .catatan{font-size:12.5px;color:rgba(19,30,51,.6);margin-top:14px;line-height:1.65;}
+.salah{color:var(--merah);font-size:13px;margin-top:10px;min-height:18px;}
+
+.hasil{border-top:1px solid rgba(74,51,35,.2);margin-top:22px;padding-top:20px;}
+.hasil p.judul-kecil{font-family:var(--display);font-size:18px;}
+.tautan{
+  display:block;margin-top:10px;padding:11px 13px;border-radius:2px;
+  background:rgba(19,30,51,.06);border:1px solid rgba(74,51,35,.18);
+  font-family:var(--script);font-size:15px;color:var(--jati);
+  overflow-wrap:anywhere;text-decoration:none;
+}
+.langkah{counter-reset:l;display:grid;gap:14px;margin-top:20px;text-align:left;}
+.langkah li{list-style:none;display:flex;gap:12px;align-items:flex-start;font-size:14.5px;}
+.langkah li::before{
+  counter-increment:l;content:counter(l);
+  font-family:var(--display);font-size:13px;color:var(--kuningan);
+  border:1px solid var(--kuningan-dim);border-radius:50%;
+  width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;margin-top:1px;
+}
+.on-paper .langkah li::before{color:var(--jati);border-color:rgba(74,51,35,.4);}
+
+/* ---------- FITUR ---------- */
+.fitur{display:grid;gap:14px;margin-top:34px;text-align:left;}
+@media (min-width:720px){ .fitur{grid-template-columns:1fr 1fr;} }
+.kartu{border:1px solid var(--garis);background:rgba(195,154,92,.04);padding:18px 20px;border-radius:2px;}
+.kartu h3{font-family:var(--display);font-weight:400;font-size:17.5px;letter-spacing:.02em;}
+.kartu p{font-size:13.5px;color:rgba(237,231,217,.65);margin-top:7px;}
+.kartu .tanda{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--kuningan);}
+
+.tutup{padding:clamp(48px,10vw,76px) var(--pad);text-align:center;border-top:1px solid rgba(195,154,92,.16);}
+.tutup a.btn{margin-top:18px;}
+.kaki{font-size:12px;color:rgba(237,231,217,.4);margin-top:26px;}
+:focus-visible{outline:2px solid var(--kuningan);outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <g id="ukir-pemisah">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke" d="M4 20 C40 20 56 8 74 8 C88 8 96 14 104 20"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke" d="M4 20 C40 20 56 32 74 32 C88 32 96 26 104 20"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke" d="M236 20 C200 20 184 8 166 8 C152 8 144 14 136 20"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke" d="M236 20 C200 20 184 32 166 32 C152 32 144 26 136 20"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke" d="M120 10 L130 20 L120 30 L110 20 Z"/>
+    <path style="fill:var(--ukir-isi);opacity:.85" d="M74 8 c6 -8 16 -8 21 -1 c-7 6 -16 6 -21 1z"/>
+    <path style="fill:var(--ukir-isi);opacity:.85" d="M166 32 c-6 8 -16 8 -21 1 c7 -6 16 -6 21 -1z"/>
+  </g>
+</defs></svg>
+
+<!-- ====== SAMPUL ====== -->
+<section id="atas">
+  <p class="eyebrow reveal">Undangan Pernikahan Digital</p>
+  <h1 class="merek reveal">mengundang<i>.</i>id</h1>
+  <p class="slogan reveal">Isi sendiri, sebar lewat WhatsApp, rekap amplopnya sesudah acara.</p>
+  <div class="turun reveal">
+    <a class="btn solid" href="#coba">Coba Sekarang</a>
+    <a class="btn" href="#fitur">Lihat Isinya</a>
+  </div>
+  <svg class="ukir divider reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
+  <p class="lead reveal" style="margin-top:22px;font-size:13px">Tanpa daftar. Tanpa nomor Anda disimpan.</p>
+</section>
+
+<!-- ====== COBA ====== -->
+<section id="coba" class="on-paper center">
+  <div class="wrap">
+    <p class="eyebrow reveal">Coba Dulu</p>
+    <h2 class="judul reveal">Undangan Anda, dalam sepuluh detik</h2>
+    <p class="lead reveal">Isi nama Anda berdua. Undangannya langsung jadi — dengan nama Anda di dalamnya — dan bisa langsung Anda kirimkan ke calon pasangan Anda lewat WhatsApp.</p>
+
+    <div class="kotak reveal">
+      <div class="dua">
+        <div>
+          <label for="inPria">Nama panggilan mempelai pria</label>
+          <input id="inPria" maxlength="30" autocomplete="off" placeholder="Budi">
+        </div>
+        <div>
+          <label for="inWanita">Nama panggilan mempelai wanita</label>
+          <input id="inWanita" maxlength="30" autocomplete="off" placeholder="Sari">
+        </div>
+        <div>
+          <label for="inTgl">Rencana tanggal <span style="text-transform:none;letter-spacing:0">(boleh kosong)</span></label>
+          <input id="inTgl" type="date">
+        </div>
+        <div>
+          <label for="inKota">Kota <span style="text-transform:none;letter-spacing:0">(boleh kosong)</span></label>
+          <input id="inKota" maxlength="30" autocomplete="off" placeholder="Jepara">
+        </div>
+      </div>
+
+      <label for="inWa">Nomor WhatsApp yang mau dikirimi <span style="text-transform:none;letter-spacing:0">(boleh kosong)</span></label>
+      <input id="inWa" type="tel" inputmode="tel" autocomplete="off" placeholder="0812xxxxxxxx">
+
+      <p class="salah" id="salah"></p>
+
+      <div class="aksi">
+        <button class="btn solid" id="btnBuat">Buat Undangannya</button>
+      </div>
+
+      <p class="catatan">
+        Nomor itu cuma dipakai peramban Anda untuk menyusun tautan WhatsApp,
+        dan berhenti di situ — tidak dikirim ke server kami, tidak disimpan
+        di mana pun. Undangan percobaannya pun tidak tersimpan: isinya ada di
+        dalam tautannya sendiri.
+      </p>
+
+      <div class="hasil" id="hasil" hidden>
+        <p class="judul-kecil" id="hasilJudul"></p>
+        <a class="tautan" id="tautan" target="_blank" rel="noopener"></a>
+        <div class="aksi">
+          <a class="btn solid" id="btnBuka" target="_blank" rel="noopener">Buka Undangannya</a>
+          <button class="btn" id="btnWa" hidden>Kirim ke WhatsApp</button>
+          <button class="btn" id="btnSalin">Salin Tautan</button>
+        </div>
+        <ol class="langkah">
+          <li>Buka undangannya — itu persis halaman yang nanti diterima tamu Anda.</li>
+          <li>Gulir sampai bawah, coba tulis ucapan di buku tamunya.</li>
+          <li>Kirimkan ke calon pasangan Anda, lihat reaksinya.</li>
+          <li>Kalau cocok, kabari kami — undangan sungguhannya diisi sendiri lewat halaman dasbor.</li>
+        </ol>
+      </div>
+    </div>
+
+    <svg class="ukir divider reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
+  </div>
+</section>
+
+<!-- ====== FITUR ====== -->
+<section id="fitur">
+  <div class="wrap-lebar center">
+    <p class="eyebrow reveal">Yang Anda Dapat</p>
+    <h2 class="judul reveal">Bukan cuma halaman undangan</h2>
+    <p class="lead reveal">Yang paling melelahkan dari hajatan bukan undangannya — tapi menyebarnya, dan merekapnya sesudah selesai.</p>
+
+    <div class="fitur">
+      <div class="kartu reveal">
+        <p class="tanda">Sebelum acara</p>
+        <h3>Undangan yang menyapa namanya</h3>
+        <p>Tiap tamu punya tautannya sendiri, dan namanya muncul di sampul. Isi undangan menyesuaikan siapa yang mengundang — alamat acara, urutan nama, sampai nomor dompet digitalnya.</p>
+      </div>
+      <div class="kartu reveal">
+        <p class="tanda">Sebelum acara</p>
+        <h3>Sebar lewat WhatsApp, terlacak</h3>
+        <p>Tempel daftar tamu, atau ambil langsung dari kontak HP. Sekali tekan, WhatsApp terbuka dengan pesan yang sudah disesuaikan — dan tercatat siapa yang sudah dikirimi.</p>
+      </div>
+      <div class="kartu reveal">
+        <p class="tanda">Sebelum acara</p>
+        <h3>Bapak, ibu, dan mertua punya tautannya sendiri</h3>
+        <p>Tiap pihak dapat halaman sendiri berisi tamunya sendiri. Tanpa login, tanpa bisa melihat atau mengubah daftar pihak lain.</p>
+      </div>
+      <div class="kartu reveal">
+        <p class="tanda">Hari acara</p>
+        <h3>Buku tamu dan RSVP</h3>
+        <p>Tamu menulis ucapan dan mengabari hadir atau tidak, langsung dari undangannya. Anda bisa membalas satu per satu.</p>
+      </div>
+      <div class="kartu reveal">
+        <p class="tanda">Sesudah acara</p>
+        <h3>Rekap amplop dan barang</h3>
+        <p>Tandai siapa yang datang, catat amplop, rokok, gula, parsel, sampai sumbangan jasa. Satu keluarga yang datang terpencar bisa dikelompokkan supaya tidak bolak-balik.</p>
+      </div>
+      <div class="kartu reveal">
+        <p class="tanda">Sesudah acara</p>
+        <h3>Unduh Excel, dan halaman terima kasih</h3>
+        <p>Seluruh sumbangan diunduh jadi berkas Excel sungguhan — angkanya angka, langsung bisa dijumlahkan. Plus satu halaman berisi foto acara dan ucapan tamu berikut balasan Anda.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== CARA ====== -->
+<section class="on-paper center">
+  <div class="wrap">
+    <p class="eyebrow reveal">Cara Kerjanya</p>
+    <h2 class="judul reveal">Empat langkah, dari awal sampai selesai</h2>
+    <ol class="langkah reveal" style="margin-top:26px">
+      <li><strong>Isi sendiri.</strong> Kami buatkan akunnya, Anda mengisi nama, tempat, jadwal, dompet, dan silsilah lewat halaman dasbor. Bisa dilihat hasilnya sebelum diterbitkan.</li>
+      <li><strong>Sebar.</strong> Masukkan daftar tamu, bagikan tautan personal lewat WhatsApp. Bagi tugas dengan keluarga kalau perlu.</li>
+      <li><strong>Terima tamu.</strong> Ucapan dan RSVP masuk sendiri. Berkat ditandai: sudah dijatah, sudah diberikan.</li>
+      <li><strong>Rekap.</strong> Catat siapa datang dan siapa memberi apa, unduh Excel-nya, lalu terbitkan halaman terima kasih.</li>
+    </ol>
+    <svg class="ukir divider reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
+  </div>
+</section>
+
+<!-- ====== TUTUP ====== -->
+<footer class="tutup">
+  <p class="eyebrow">Siap?</p>
+  <h2 class="judul" style="margin-bottom:6px">Coba dulu, gratis</h2>
+  <p class="lead">Buat undangan percobaan dengan nama Anda berdua, kirimkan ke calon pasangan Anda, baru putuskan.</p>
+  <p><a class="btn solid" href="#coba">Coba Sekarang</a></p>
+  <p class="kaki">mengundang.id</p>
+</footer>
+
+<script src="/assets/varian.js"></script>
+<script>
+(function(){
+  'use strict';
+  var M = window.MENGUNDANG;
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* Aturan nama dan tanggal tidak disalin ke sini. Halaman ini cuma
+     menyusun alamatnya; yang membaca dan membersihkannya tetap
+     MENGUNDANG.isiCoba() di assets/varian.js — satu tempat, supaya
+     yang terlihat di /coba selalu sama dengan yang dijanjikan di sini. */
+  function alamatCoba(){
+    var q = new URLSearchParams();
+    ['pria','wanita','kota'].forEach(function(k){
+      var v = $('in' + k.charAt(0).toUpperCase() + k.slice(1)).value.trim();
+      if(v) q.set(k, v);
+    });
+    if($('inTgl').value) q.set('tgl', $('inTgl').value);
+    var s = q.toString();
+    return location.origin + '/coba' + (s ? '?' + s : '');
+  }
+
+  function pesanWA(tautan, pria, wanita){
+    return 'Aku iseng bikin undangan percobaan buat kita berdua 😄\n\n'
+         + pria + ' & ' + wanita + '\n' + tautan
+         + '\n\nBuka ya, terus bilang menurutmu gimana.';
+  }
+
+  $('btnBuat').addEventListener('click', function(){
+    var pria   = $('inPria').value.trim();
+    var wanita = $('inWanita').value.trim();
+    var salah  = $('salah');
+    salah.textContent = '';
+
+    if(!pria || !wanita){
+      salah.textContent = 'Isi dulu kedua namanya.';
+      (pria ? $('inWanita') : $('inPria')).focus();
+      return;
+    }
+
+    var tautan = alamatCoba();
+    /* Yang DITAMPILKAN dibaca manusia, jadi %27 dan %20 dikembalikan
+       jadi huruf. Yang DIPAKAI tetap bentuk tersandi — keduanya beda
+       keperluan, dan menyamakannya berarti salah satu jadi rusak. */
+    try{ $('tautan').textContent = decodeURIComponent(tautan); }
+    catch(e){ $('tautan').textContent = tautan; }
+    $('tautan').href = tautan;
+    $('btnBuka').href = tautan;
+    $('hasilJudul').textContent = 'Undangan ' + pria + ' & ' + wanita + ' sudah jadi.';
+
+    /* nomorRapi() dipakai bersama halaman panitia: 08…, 62…, +62…,
+       spasi, dan tanda hubung semuanya diterima */
+    var wa = M.nomorRapi ? M.nomorRapi($('inWa').value) : '';
+    $('btnWa').hidden = !wa;
+    $('btnWa').onclick = function(){
+      window.open('https://wa.me/' + wa + '?text='
+        + encodeURIComponent(pesanWA(tautan, pria, wanita)), '_blank');
+    };
+
+    $('hasil').hidden = false;
+    $('hasil').scrollIntoView({ block:'nearest', behavior:'smooth' });
+  });
+
+  $('btnSalin').addEventListener('click', async function(){
+    /* href, bukan textContent: yang ditampilkan sudah didekode supaya
+       enak dibaca, dan yang didekode itu bukan tautan yang sah untuk
+       ditempel ke mana-mana. */
+    var t = $('tautan').href, b = this, semula = b.textContent;
+    try{
+      if(navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(t);
+      else {
+        var ta = document.createElement('textarea');
+        ta.value = t; ta.style.position='fixed'; ta.style.opacity='0';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+      }
+      b.textContent = 'Tersalin';
+    }catch(e){ b.textContent = 'Gagal menyalin'; }
+    setTimeout(function(){ b.textContent = semula; }, 1600);
+  });
+
+  ['inPria','inWanita','inWa','inKota'].forEach(function(id){
+    $(id).addEventListener('keydown', function(e){ if(e.key === 'Enter') $('btnBuat').click(); });
+  });
+
+  /* Reveal, sepola dengan undangannya */
+  (function(){
+    var kurangi = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var item = document.querySelectorAll('.reveal');
+    if(kurangi || !('IntersectionObserver' in window)){
+      item.forEach(function(el){ el.classList.add('in'); });
+      return;
+    }
+    var p = new IntersectionObserver(function(masuk){
+      masuk.forEach(function(x){
+        if(x.isIntersecting){ x.target.classList.add('in'); p.unobserve(x.target); }
+      });
+    }, { rootMargin:'0px 0px -8% 0px', threshold:0.06 });
+    item.forEach(function(el){ p.observe(el); });
+  })();
+})();
+</script>
+</body>
+</html>

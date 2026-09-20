@@ -52,6 +52,7 @@
 
   var KONF = {
     siap: false,
+    demo: false,
     slug: '',
     tema: '',
     status: '',
@@ -73,16 +74,23 @@
      dites lokal. */
   var LOMPATI_HOST = { www: 1, mengundang: 1, localhost: 1 };
 
+  /* Apakah host ini subdomain milik satu pasangan. Dipakai bersama oleh
+     slugPasangan() dan jalurCoba(); disalin jadi dua, keduanya cepat
+     atau lambat beda perilaku. */
+  function subdomainPasangan(host) {
+    var sepertiIP = /^[0-9.]+$/.test(host) || host.indexOf(':') !== -1;
+    if (sepertiIP) return null;
+    var bagian = host.split('.');
+    if (bagian.length >= 3 && !LOMPATI_HOST[bagian[0]]) return bagian[0];
+    return null;
+  }
+
   function slugPasangan(host, jalur) {
     host  = host  != null ? host  : (global.location ? location.hostname : '');
     jalur = jalur != null ? jalur : (global.location ? location.pathname : '');
 
-    var sepertiIP = /^[0-9.]+$/.test(host) || host.indexOf(':') !== -1;
-    var bagian = host.split('.');
-
-    if (!sepertiIP && bagian.length >= 3 && !LOMPATI_HOST[bagian[0]]) {
-      return bagian[0];
-    }
+    var sub = subdomainPasangan(host);
+    if (sub) return sub;
 
     /* Bentuk path hanya berlaku bila ada segmen sesudahnya — satu segmen
        saja adalah slug tamu di undangan, bukan slug pasangan. */
@@ -93,11 +101,171 @@
   }
 
   /* ---------- Memuat ---------- */
+  /* ============================================================
+     Mode coba — undangan contoh tanpa database sama sekali
+
+     Dipakai halaman /coba, dan halamannya BUKAN tiruan: yang dibuka
+     calon klien adalah index.html yang sama persis, dengan tema yang
+     sama, gerak yang sama, dan gulir otomatis yang sama. Yang berbeda
+     cuma dari mana isinya datang — dari alamat, bukan dari database.
+
+     Tidak ada baris yang disimpan. Tidak ada pendaftaran, tidak ada
+     nomor telepon yang mendarat di server kami, dan tidak ada barisan
+     pasangan percobaan yang harus dibersihkan belakangan. Nomor calon
+     pasangannya cuma dipakai peramban untuk menyusun link wa.me, dan
+     berhenti di situ.
+     ============================================================ */
+  var SLUG_COBA = 'coba';
+
+  var HARI  = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  var BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli',
+               'Agustus','September','Oktober','November','Desember'];
+
+  function bersihNama(t, bawaan) {
+    var x = String(t == null ? '' : t).replace(/\s+/g, ' ').trim().slice(0, 30);
+    /* Nama ini masuk ke halaman yang bisa dibagikan lewat tautan, jadi
+       yang boleh lewat dibatasi huruf — bukan disandikan belakangan.
+       Menyandikan masih menyisakan tautan yang isinya apa pun mau
+       pengirimnya, dan tautan seperti itu bukan demo lagi. */
+    x = x.replace(/[^\p{L}\p{M}0-9 .'’-]/gu, '');
+    return x || bawaan;
+  }
+
+  function tanggalCoba(iso) {
+    var d = iso ? new Date(iso + 'T00:00:00') : null;
+    if (!d || isNaN(d)) {
+      d = new Date();
+      d.setDate(d.getDate() + 180);      /* kira-kira setengah tahun lagi */
+    }
+    return d;
+  }
+
+  function panjangnya(d) {
+    return HARI[d.getDay()] + ', ' + d.getDate() + ' ' + BULAN[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  function isoTanggal(d) {
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  }
+
+  function jamISO(d, jam) {
+    var x = new Date(d.getTime());
+    x.setHours(jam, 0, 0, 0);
+    return x.toISOString();
+  }
+
+  function isiCoba(cari) {
+    var q = new URLSearchParams(cari != null ? cari
+                                             : (global.location ? location.search : ''));
+    var pria   = bersihNama(q.get('pria'),   'Budi');
+    var wanita = bersihNama(q.get('wanita'), 'Sari');
+    var kota   = bersihNama(q.get('kota'),   'Jepara');
+    var d      = tanggalCoba(q.get('tgl'));
+    var tgl    = panjangnya(d);
+
+    function pihak(kode, sisi, label, ttdLabel) {
+      var urutan = sisi === 'pria' ? ['pria', 'wanita'] : ['wanita', 'pria'];
+      return {
+        kode: kode, sisi: sisi, label: label,
+        dompet: urutan.slice(),
+        urutan: urutan,
+        ttdNama: urutan.map(function (u) { return u === 'pria' ? pria : wanita; }),
+        ttdLabel: ttdLabel,
+        ttdSub: 'Beserta Keluarga'
+      };
+    }
+
+    function tempat(nama) {
+      return {
+        nama: nama,
+        alamat: 'Alamat lengkapnya diisi sendiri nanti, ' + kota,
+        ringkas: 'Diisi sendiri nanti, ' + kota,
+        maps: 'https://www.google.com/maps/search/' + encodeURIComponent(kota)
+      };
+    }
+
+    function mempelai(panggilan, peran, anak) {
+      return {
+        panggilan: panggilan, lengkap: panggilan,
+        peran: peran, anak: anak,
+        ayah: 'Bapak —', ibu: 'Ibu —', ayahKet: null, ibuKet: null
+      };
+    }
+
+    return {
+      slug: SLUG_COBA,
+      aktif: true,
+      status: 'aktif',
+      terbit: true,
+      tema: TEMA_BAWAAN,
+      kota: kota,
+      tanggal_acara: isoTanggal(d),
+      canonical_host: null,
+      pihak_bawaan: 'keluarga-wanita',
+      mempelai: {
+        pria:   mempelai(pria,   'Mempelai Pria',   'Putra dari'),
+        wanita: mempelai(wanita, 'Mempelai Wanita', 'Putri dari')
+      },
+      tempat: { pria: tempat('Kediaman Mempelai Putra'),
+                wanita: tempat('Kediaman Mempelai Putri') },
+      acara: [
+        { nama:'Akad Nikah', tanggal:tgl, jam:'Pukul 08.00 WIB',
+          ringkas:'Akad 08.00 WIB', mulai:jamISO(d, 8),  tempat:'wanita' },
+        { nama:'Resepsi',    tanggal:tgl, jam:'Pukul 11.00 WIB — selesai',
+          ringkas:'Resepsi 11.00 WIB', mulai:jamISO(d, 11), tempat:null }
+      ],
+      dompet: {
+        pria:   { bank:'Contoh', nomor:'0000 0000 0000', an:'a.n. diisi sendiri di dasbor' },
+        wanita: { bank:'Contoh', nomor:'1111 1111 1111', an:'a.n. diisi sendiri di dasbor' }
+      },
+      pihak: {
+        'pria':            pihak('p',  'pria',   'Pengantin Pria',      'Kami yang berbahagia'),
+        'wanita':          pihak('w',  'wanita', 'Pengantin Wanita',    'Kami yang berbahagia'),
+        'keluarga-pria':   pihak('kp', 'pria',   'Keluarga Pihak Pria', 'Hormat kami'),
+        'keluarga-wanita': pihak('kw', 'wanita', 'Keluarga Pihak Wanita','Hormat kami')
+      },
+      /* Kosong, jadi bagian silsilah tidak muncul sama sekali. Isinya
+         foto keluarga sungguhan; menaruh nama karangan di sana justru
+         membuat demonya terasa belum jadi. */
+      silsilah: {}
+    };
+  }
+
+  /* /coba adalah jalur PLATFORM, sebaris dengan /kirim dan /dasbor —
+     bukan slug pasangan. Karena itu ia dikenali dari pathname, bukan
+     dari slugPasangan(): di sana satu segmen justru berarti nama tamu,
+     jadi /coba akan terbaca sebagai tamu bernama "coba" dan jatuh ke
+     pasangan bawaan.
+
+     Satu pengecualian, aturan yang sama: di subdomain milik pasangan,
+     segmen pertama memang nama tamu. `rian-aini.mengundang.id/coba`
+     tetap undangan untuk tamu itu, bukan demo. */
+  function jalurCoba(host, jalur) {
+    host  = host  != null ? host  : (global.location ? location.hostname : '');
+    jalur = jalur != null ? jalur : (global.location ? location.pathname : '');
+    if (subdomainPasangan(host)) return false;
+    return jalur.split('/').filter(Boolean)[0] === SLUG_COBA;
+  }
+
   var janji = null;
 
   function muat(slug) {
     if (janji) return janji;
     var s = slug || slugPasangan();
+
+    /* Demo tidak menyentuh jaringan sama sekali — bukan sekadar lebih
+       cepat, tapi supaya tidak ada satu pun jejak calon klien yang
+       mendarat di server kami sebelum ia memutuskan apa pun. */
+    if (jalurCoba()) {
+      janji = Promise.resolve().then(function () {
+        var d = isiCoba();
+        pasang(d);
+        KONF.demo  = true;
+        KONF.situs = global.location ? location.origin : SITUS_CADANGAN;
+        return gantiTema(KONF.tema).then(function () { return d; });
+      });
+      return janji;
+    }
 
     janji = fetch(SB.url + '/rest/v1/rpc/undangan_isi', {
       method: 'POST',
@@ -141,6 +309,7 @@
     isiUlang(DARI_KODE, {});
     Object.keys(VARIAN).forEach(function (k) { DARI_KODE[VARIAN[k].kode] = k; });
 
+    KONF.demo          = false;
     KONF.slug          = d.slug || '';
     KONF.tema          = d.tema || '';
     KONF.status        = d.status || '';
@@ -343,6 +512,9 @@
     muat: muat,
     TEMA_BAWAAN: TEMA_BAWAAN,
     slugPasangan: slugPasangan,
+    SLUG_COBA: SLUG_COBA,
+    isiCoba: isiCoba,
+    jalurCoba: jalurCoba,
     pihakSah: pihakSah,
     varian: varian,
     tempatVarian: tempatVarian,

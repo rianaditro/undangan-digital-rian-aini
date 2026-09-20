@@ -300,6 +300,12 @@
      selalu menjawab null — dan seluruh tamu jatuh ke varian bawaan. */
   var pihakMentah = null;
 
+  /* Ditanyakan dari ALAMAT, bukan dari M.KONF.demo: yang ini sudah
+     pasti benar sejak baris pertama, sementara KONF.demo baru terisi
+     sesudah M.muat() selesai — dan beberapa hal di bawah berjalan lebih
+     dulu dari itu. */
+  var DEMO = M.jalurCoba();
+
   try{
     var q = new URLSearchParams(window.location.search);
     pihakMentah = q.get('p');
@@ -307,7 +313,9 @@
     var to = q.get('to');
     var jalur = decodeURIComponent(window.location.pathname)
                   .replace(/^\/+|\/+$/g,'').replace(/\.html$/i,'');
-    if(jalur && jalur.toLowerCase() !== 'index') slugTamu = M.siput(jalur);
+    /* Di /coba tidak ada tamu — "coba" itu nama jalur, bukan nama orang.
+       Tanpa ini halaman menanyakan tamu bernama "coba" ke database. */
+    if(!DEMO && jalur && jalur.toLowerCase() !== 'index') slugTamu = M.siput(jalur);
 
     if(to && to.trim())      namaTamu = to.trim().slice(0,60);
     else if(slugTamu)        namaTamu = slugTamu.replace(/-/g,' ');
@@ -876,7 +884,16 @@
     }).join('');
   }
 
+  /* Di /coba tidak ada pasangan, jadi tidak ada yang bisa dibaca dan
+     tidak ada tempat menyimpan. Buku tamunya dijalankan di peramban
+     saja: yang diketik langsung muncul, lalu hilang begitu halaman
+     ditutup. Calon klien tetap merasakan alurnya sampai ujung —
+     mengetik, menekan kirim, melihat ucapannya muncul — tanpa satu pun
+     barisnya mendarat di server kami. */
+  var ucapanCoba = [];
+
   async function muat(){
+    if(DEMO){ render(ucapanCoba.slice()); return; }
     try{
       /* Lewat RPC, bukan SELECT langsung ke tabel — sepola dengan cara
          menulisnya. Sebabnya sama: pasangan_id. Pembacaan langsung dulu
@@ -912,6 +929,19 @@
     btnKirim.disabled = true;
     var label = btnKirim.textContent;
     btnKirim.textContent = 'Mengirim…';
+
+    if(DEMO){
+      ucapanCoba.unshift({ nama:nama.slice(0,60), hadir:hadir,
+                           pesan:pesan.slice(0,800), ts:Date.now() });
+      msgEl.classList.add('ok');
+      msgEl.textContent = 'Terkirim — di undangan sungguhan, ini tersimpan dan bisa Anda balas.';
+      document.getElementById('inPesan').value = '';
+      render(ucapanCoba.slice());
+      btnKirim.disabled = false;
+      btnKirim.textContent = label;
+      return;
+    }
+
     try{
       /* Ditulis lewat RPC, bukan POST langsung ke tabel. Sebabnya
          pasangan_id: kalau peramban yang menentukannya, sebuah tulisan

@@ -669,6 +669,73 @@ diam-diam memakai daftar layar, uji itu yang gagal.
 
 ---
 
+## 1l. Landing dan halaman coba
+
+`/mulai` (landing) dan `/coba` (undangan percobaan), plus `MENGUNDANG.isiCoba()`
+di `assets/varian.js`.
+
+### Demonya adalah produknya
+
+`/coba` **bukan tiruan**. Yang terbuka adalah `index.html` yang sama
+persis — tema yang sama, gerak yang sama, gulir otomatis yang sama, buku
+tamu yang sama. Yang berbeda cuma dari mana isinya datang: dari alamat,
+bukan dari database.
+
+```
+/coba?pria=Rian&wanita=Aini&kota=Jepara&tgl=2027-06-12
+```
+
+Tidak ada baris yang disimpan. Tidak ada pendaftaran. Tidak ada barisan
+pasangan percobaan yang harus dibersihkan belakangan. Dan nomor WhatsApp
+calon pasangan yang diketik di landing cuma dipakai peramban untuk
+menyusun tautan `wa.me` — tidak pernah sampai ke server kami. Diuji:
+`/coba` **tidak memanggil Supabase sekali pun**.
+
+### Buku tamu demo berjalan di peramban
+
+Di `/coba` tidak ada pasangan, jadi tidak ada yang bisa dibaca dan tidak
+ada tempat menyimpan. Ucapan yang diketik langsung muncul lalu hilang
+saat halaman ditutup. Calon klien tetap merasakan alurnya sampai ujung —
+mengetik, menekan kirim, melihat ucapannya muncul.
+
+### `/coba` adalah jalur platform, bukan slug
+
+Ia dikenali dari **pathname**, bukan dari `slugPasangan()`. Di sana satu
+segmen justru berarti nama tamu, jadi `/coba` akan terbaca sebagai tamu
+bernama "coba" dan jatuh ke pasangan bawaan — persis yang terjadi waktu
+pertama dicoba.
+
+Satu pengecualian, memakai aturan yang sama lewat `subdomainPasangan()`:
+di subdomain milik pasangan, segmen pertama memang nama tamu, jadi
+`rian-aini.mengundang.id/coba` tetap undangan untuk tamu itu. Slug `coba`
+juga sudah masuk `slug_terlarang` sejak migrasi `021`.
+
+### Akar domain: redirect, bukan rewrite
+
+`mengundang.id/` harus menampilkan landing, sementara
+`rian-aini.mengundang.id/` tetap menampilkan undangan. Yang **tidak**
+bekerja: rewrite `/` dengan `has: host` — karena `index.html` ada di akar
+dan Vercel memeriksa berkas **sebelum** menerapkan rewrite, jadi rewrite
+itu tidak akan pernah jalan.
+
+Yang bekerja: `redirects`, yang dijalankan **sebelum** berkas diperiksa.
+
+```json
+{ "source": "/", "has": [{ "type": "host", "value": "mengundang.id" }],
+  "destination": "/mulai", "permanent": false }
+```
+
+Subdomain pasangan tidak cocok dengan `has`-nya, jadi tidak ikut
+dialihkan. Harness ujinya ikut menirukan urutan Vercel — redirect,
+berkas, rewrite — supaya jebakan yang sama ketahuan di sini, bukan di
+produksi.
+
+Kalau redirectnya ternyata tidak jalan, yang terjadi cuma apex kembali
+menampilkan undangan seperti sekarang. Landing tetap bisa dibuka di
+`/mulai`; tidak ada yang rusak.
+
+---
+
 ## 2. Deploy
 
 ```bash
