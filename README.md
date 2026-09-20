@@ -645,9 +645,13 @@ terlihat:
 
 | Cara masuk | Untuk siapa | Yang terlihat |
 |---|---|---|
-| `/kirim?t=…` cakupan penuh | Rian &amp; 'Aini | seluruh tamu, semua pihak |
-| `/kirim?t=…` cakupan pihak | tiap pihak | hanya tamu pihaknya sendiri |
-| Login email | — | tidak dipakai; lihat bagian 1 |
+| `/kirim?t=…` cakupan penuh | Rian &amp; 'Aini | seluruh tamu semua pihak, plus kotak 4, 5, dan 6 |
+| `/kirim?t=…` cakupan pihak | tiap pihak | hanya tamu pihaknya sendiri; kotak 4, 5, 6 tidak muncul |
+| Login email | pemilik (klien) | seluruh tamu semua pihak, plus kotak 6; kotak 4 dan 5 tidak muncul karena butuh token — lihat bagian 1i |
+
+Baris terakhir dulu tertulis "tidak dipakai". Itu benar sampai migrasi
+`015`: sejak `/dasbor` ada, jalur login email adalah jalur utama klien,
+dan sejak `016` ia juga membuka kotak 6.
 
 Link bertoken tidak perlu login sama sekali — cocok untuk bapak, ibu,
 dan mertua. **Pembatasannya mengikat di server, bukan di tampilan.**
