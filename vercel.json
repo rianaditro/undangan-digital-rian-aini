@@ -25,6 +25,14 @@
       "destination": "/dasbor/index.html"
     },
     {
+      "source": "/admin",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/admin/",
+      "destination": "/admin/index.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -41,6 +49,15 @@
     },
     {
       "source": "/dasbor(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/admin(.*)",
       "headers": [
         {
           "key": "X-Robots-Tag",

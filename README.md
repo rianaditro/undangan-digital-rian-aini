@@ -540,6 +540,76 @@ ke dalamnya langsung jadi milik publik. Perlakukan sama seperti saringan
 
 ---
 
+## 1k. Meja admin
+
+`/admin`, migrasi `020`, edge function `admin-pasangan`. Ini yang dulu
+berarti membuka SQL Editor Supabase tiap kali ada klien baru.
+
+**Satu tombol menggantikan tujuh tabel:** pasangan, dua mempelai, dua
+tempat, keempat baris pihak, lima link panitia, akun klien di Supabase
+Auth, dan sambungannya ke tabel `pemilik`. Yang mengerjakannya tetap
+`pasangan_siapkan()` dari migrasi `015` — halaman ini cuma memberinya
+pintu.
+
+### Pembagian yang sengaja
+
+Hanya **membuat pengguna Auth** yang menuntut `service_role`, dan itu
+saja yang lewat edge function. Sisanya — daftar pasangan, link panitia,
+ganti status, hapus yang masih kosong — RPC biasa dengan `is_admin()` di
+depannya. Menyalurkan semuanya ke edge function berarti menaruh lebih
+banyak kuasa di belakang satu pintu daripada yang diperlukan.
+
+### Kenapa tabel admin, bukan satu kata sandi
+
+Kata sandi bersama harus ditaruh di suatu tempat yang bisa dibaca
+halaman, dan begitu ia bocor tidak ada cara tahu siapa yang memakainya.
+Keanggotaan lewat baris tabel memakai akun yang sudah ada: yang
+menentukan bukan rahasia yang beredar, tapi siapa yang sedang masuk.
+Mencabutnya satu `DELETE`.
+
+### Admin pertama, sekali saja
+
+Tidak bisa dari halaman ini — pintu yang bisa menambah pemegang kuncinya
+sendiri adalah pintu yang paling mahal kalau salah.
+
+```sql
+-- 1. Supabase → Authentication → Users → Add user
+-- 2. SQL Editor:
+insert into public.admin (user_id, nama)
+select id, 'Rian' from auth.users where email = 'anda@contoh.com';
+```
+
+### verify_jwt sengaja dimatikan
+
+Bukan pelonggaran — pemeriksa di dalam fungsinya lebih ketat. `verify_jwt`
+hanya memastikan tokennya JWT yang sah, dan **anon key itu sendiri adalah
+JWT yang sah**, jadi gerbangnya akan meloloskan siapa pun yang pernah
+membuka halaman mana pun di situs ini. Yang di dalam menukar token jadi
+pengguna lewat `auth.getUser()`, lalu mencarinya di tabel `admin`; anon
+key gagal di langkah pertama. Ditambah lagi, halaman admin ada di asal
+berbeda dari Supabase, jadi POST ber-JSON selalu didahului preflight
+OPTIONS yang tidak membawa token sama sekali.
+
+### Yang dijaga
+
+- **Slug diperiksa sebelum akun dibuat.** Kalau tidak, akun klien
+  terlanjur jadi lalu `pasangan_siapkan()` gagal — dan yang tersisa
+  adalah akun yatim yang tidak akan pernah ada yang tahu harus diapakan.
+  Kalau `pasangan_siapkan()` tetap gagal, akun yang **baru saja** dibuat
+  dibatalkan lagi; akun yang sudah ada sebelumnya tidak disentuh, karena
+  ia mungkin memegang pasangan lain.
+- **Hapus hanya yang masih kosong.** Begitu ada tamu, ucapan, atau foto,
+  pasangan itu memuat pekerjaan orang dan tulisan tamunya. Yang sudah
+  berisi diarsipkan, bukan dihapus.
+- **Sandi acak tanpa huruf yang mudah tertukar** — tidak ada `O 0 I l 1`.
+  Sandi ini akan dibacakan lewat telepon atau disalin tangan, dan satu
+  huruf salah berarti satu telepon lagi.
+- **Teks serah terima** siap disalin ke WhatsApp: alamat undangan, link
+  `/dasbor`, email, sandi, dan kelima link panitia. Sandinya hanya muncul
+  sekali di layar; sesudah itu satu-satunya jalan adalah menggantinya.
+
+---
+
 ## 1j. Unduh Excel
 
 `assets/xlsx.js`, migrasi `019`. Berkasnya **.xlsx sungguhan**, bukan CSV
