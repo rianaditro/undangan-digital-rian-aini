@@ -71,6 +71,8 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
 .nama-amp{font-family:var(--script);font-style:italic;font-weight:300;color:var(--kuningan);}
 .tanggal{margin-top:18px;font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--kuningan);}
 .salam{font-family:var(--script);font-style:italic;font-size:clamp(17px,4.4vw,21px);line-height:1.75;margin:30px auto 0;max-width:520px;color:var(--kapur);}
+.hadir-baris{margin-top:22px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(237,231,217,.5);}
+.hadir-baris b{font-family:var(--display);font-weight:400;font-size:19px;letter-spacing:.06em;color:var(--kuningan);}
 
 /* ---------- GALERI ----------
    Kolom, bukan grid: foto potret dan lanskap tercampur, dan grid
@@ -143,6 +145,7 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
   <h1 class="nama-besar reveal" id="namaBesar">&nbsp;</h1>
   <p class="tanggal reveal" id="tanggal"></p>
   <p class="salam reveal">Terima kasih atas doa, restu, dan kehadiran Anda. Kebahagiaan hari itu terasa jauh lebih penuh karena ada Anda di dalamnya.</p>
+  <p class="hadir-baris reveal" id="hadirBaris" hidden></p>
   <svg class="ukir divider reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
 </section>
 
@@ -227,6 +230,15 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
       document.title = 'Terima Kasih — ' + pria + ' & ' + wanita;
     }
     document.getElementById('tanggal').textContent = tanggalPanjang(d.tanggal_acara);
+
+    /* Satu angka saja, dan hanya kalau pengantin sudah merekap. Server
+       mengirim null selama belum ada yang ditandai hadir, supaya halaman
+       pasangan yang belum sempat merekap tidak memajang "0 tamu hadir". */
+    if (d.hadir > 0){
+      var b = document.getElementById('hadirBaris');
+      b.innerHTML = 'Dihadiri <b>' + Number(d.hadir).toLocaleString('id-ID') + '</b> tamu undangan';
+      b.hidden = false;
+    }
   }
 
   function gambarGaleri(foto){

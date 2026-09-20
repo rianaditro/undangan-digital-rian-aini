@@ -112,6 +112,52 @@ label.btn.berkas:hover{color:var(--kapur);}
 .sil-kartu .alat{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
 .sil-kartu .alat .btn{padding:5px 7px;font-size:9px;letter-spacing:.06em;flex:1 1 66px;min-width:66px;}
 
+/* ---------- 6 · rekap sesudah acara ---------- */
+.rk-baris{
+  display:grid;grid-template-columns:minmax(190px,1fr) auto;gap:10px 14px;
+  align-items:start;padding:14px 0;border-bottom:1px solid var(--garis);
+}
+.rk-kanan{display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+.rk-tambah{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center;}
+.rk-tambah select{
+  width:auto;min-width:106px;padding:7px 28px 7px 10px;font-size:12.5px;
+  background-position:calc(100% - 13px) 15px,calc(100% - 9px) 15px;
+}
+.rk-tambah input{width:136px;padding:7px 10px;font-size:12.5px;}
+.rk-beri{list-style:none;margin-top:9px;display:grid;gap:5px;}
+.rk-beri li{display:flex;gap:8px;align-items:baseline;font-size:12.5px;color:rgba(237,231,217,.78);}
+.rk-beri .nilai{font-family:var(--mono);font-size:12px;color:var(--kuningan);}
+.rk-beri .catat{color:rgba(237,231,217,.42);font-size:11.5px;}
+/* Tombol buang menempel pada catatan yang dihapusnya, bukan didorong ke
+   tepi kolom — di layar lebar tepi itu jauh dari tulisannya. */
+.rk-beri .buang{
+  border:0;background:none;color:var(--merah);cursor:pointer;
+  font-size:16px;line-height:1;padding:0 6px;
+}
+/* Hijau = hadir, abu = tidak. Yang belum ditandai tidak menyala sama
+   sekali, supaya "belum sempat dicek" tidak terbaca sebagai "tidak datang". */
+.lampu.hadir.on{background:var(--daun);border-color:var(--daun);color:var(--nila-3);}
+.lampu.absen.on{background:rgba(237,231,217,.62);border-color:rgba(237,231,217,.62);color:var(--nila-3);}
+/* Lima angka dalam satu baris flex jadi berserak di layar sempit. Dua
+   kolom tetap membuat pasangan angka-dan-labelnya terbaca berdampingan. */
+@media (max-width:620px){
+  #panelRekap .stat{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;}
+  /* Angka di atas, keterangannya di bawah. Berdampingan, "belum ditandai"
+     tidak muat di setengah lebar dan patah jadi dua baris. */
+  #panelRekap .stat > div{display:flex;flex-direction:column;align-items:flex-start;}
+  #panelRekap .stat span{margin-left:0;margin-top:1px;}
+  #panelRekap .stat b{white-space:nowrap;line-height:1.15;}
+  /* Angka rupiah jauh lebih panjang dari yang lain; dipaksa muat di
+     setengah lebar ia patah di tengah "Rp 1.250.000". */
+  #panelRekap .stat-uang{grid-column:1 / -1;}
+}
+@media (max-width:720px){
+  .rk-baris{grid-template-columns:1fr;}
+  .rk-kanan{align-items:flex-start;}
+  .rk-tambah{justify-content:flex-start;}
+  .rk-tambah input{flex:1 1 130px;width:auto;}
+}
+
 .tk-ucapan{display:grid;gap:12px;margin-top:16px;}
 .tk-u{border:1px solid var(--garis);padding:13px 14px;background:rgba(0,0,0,.2);}
 .tk-u.samar{opacity:.45;}
@@ -362,6 +408,35 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
 
   <div id="silDaftar"><p class="memuat">Memuat silsilah…</p></div>
   <input id="berkasSilsilah" type="file" accept="image/*" hidden>
+</div>
+
+<!-- 6. REKAP SESUDAH ACARA -->
+<div class="panel" id="panelRekap" hidden>
+  <h2>6 · Rekap sesudah acara</h2>
+  <p class="hint">Tandai siapa yang datang, lalu catat amplop atau barangnya. Jumlah tamu yang ditandai hadir ikut tampil di halaman terima kasih sebagai satu angka — nominal amplop dan daftar barang tidak pernah keluar dari halaman ini.</p>
+
+  <div class="stat">
+    <div><b id="rkDatang">0</b><span>Hadir</span></div>
+    <div><b id="rkBelum">0</b><span>Belum ditandai</span></div>
+    <div><b id="rkPemberi">0</b><span>Memberi</span></div>
+    <div class="stat-uang"><b id="rkUang">Rp 0</b><span>Amplop</span></div>
+    <div><b id="rkBarang">0</b><span>Barang</span></div>
+  </div>
+
+  <div class="alat">
+    <input id="rkCari" type="search" placeholder="Cari nama tamu…">
+    <select id="rkSaring">
+      <option value="">Semua tamu</option>
+      <option value="belum">Belum ditandai</option>
+      <option value="datang">Ditandai hadir</option>
+      <option value="tidak">Ditandai tidak hadir</option>
+      <option value="memberi">Sudah ada pemberian</option>
+    </select>
+    <button class="btn ghost kecil" id="btnRkSegarkan">Muat Ulang</button>
+  </div>
+
+  <div id="rkDaftar"><p class="memuat">Memuat rekap…</p></div>
+  <p class="hint" id="rkLagi" hidden>Baru 200 teratas yang ditampilkan. Ketik namanya di kotak cari untuk mempersempit.</p>
 </div>
 
 <p class="catatan">
@@ -1394,6 +1469,231 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     }
   }
 
+  /* ============================================================
+     6 · Rekap sesudah acara
+
+     Pengetikan pasca-acara oleh pengantin: siapa yang datang, dan siapa
+     memberi apa. Bukan aplikasi meja penerima tamu — tidak ada mode
+     offline, tidak ada antrean sinkronisasi, tidak ada peran petugas
+     baru. Yang ada cuma daftar tamu yang sudah ada, dicari per nama.
+
+     Hidup di KEDUA jalur masuk: link bercakupan penuh dan login email.
+     Beda dengan panel 4 dan 5 yang butuh edge function (dan karenanya
+     butuh token), rekap tidak menyentuh berkas sama sekali — jadi tidak
+     ada alasan menutupnya untuk pengantin yang masuk lewat email.
+
+     Token per-pihak ditolak server: rekap memuat jumlah amplop, dan itu
+     bukan angka yang pantas dipegang pemegang link keluarga.
+     ============================================================ */
+  var rekapBaris = [];
+
+  function rekapAktif(){ return cakupanPenuh(); }
+
+  /* Satu pintu untuk kedua jalur. Dengan token, RPC dipanggil memakai
+     anon key dan tokennya yang jadi bukti; tanpa token, lewat api()
+     supaya JWT-nya ikut dan 401 masih bisa disegarkan. */
+  async function rpcKelola(nama, arg){
+    var isi = Object.assign({ p_token: TOKEN || null }, arg || {});
+    if(TOKEN) return rpc(nama, isi);
+    return api('rpc/' + nama, { method:'POST', body: JSON.stringify(isi) });
+  }
+
+  function rupiah(n){ return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
+  function angkaSaja(t){ return String(t == null ? '' : t).replace(/\D+/g, ''); }
+
+  var JENIS = {
+    uang:     'Amplop',
+    transfer: 'Transfer',
+    barang:   'Barang',
+    tenaga:   'Bantuan tenaga'
+  };
+
+  function barisPemberian(g){
+    var nilai = (g.jenis === 'uang' || g.jenis === 'transfer')
+      ? '<span class="nilai">' + esc(rupiah(g.nominal)) + '</span>'
+      : '<span>' + esc(g.barang || '—') + '</span>';
+    return '<li>'
+      +   '<span>' + esc(JENIS[g.jenis] || g.jenis) + '</span>'
+      +   nilai
+      +   (g.catatan ? '<span class="catat">' + esc(g.catatan) + '</span>' : '')
+      +   '<button class="buang" data-aksi="buang" data-gid="' + esc(g.id) + '"'
+      +           ' aria-label="Hapus catatan ini" title="Hapus">&times;</button>'
+      + '</li>';
+  }
+
+  function gambarRekap(){
+    var wadah = $('rkDaftar');
+    if(!rekapBaris.length){
+      wadah.innerHTML = '<p class="kosongstate">Tidak ada tamu yang cocok.</p>';
+      return;
+    }
+    wadah.innerHTML = rekapBaris.map(function(t){
+      var beri = (t.pemberian || []).map(barisPemberian).join('');
+      var label = (M.VARIAN[t.pihak] && M.VARIAN[t.pihak].label) || t.pihak;
+      return '<div class="rk-baris" data-id="' + esc(t.id) + '">'
+        +   '<div>'
+        +     '<p class="nama">' + esc(t.nama) + '</p>'
+        +     '<div class="meta"><span class="tag">' + esc(label) + '</span></div>'
+        +     (beri ? '<ul class="rk-beri">' + beri + '</ul>' : '')
+        +   '</div>'
+        +   '<div class="rk-kanan">'
+        +     '<div class="jalur">'
+        +       '<button class="lampu hadir' + (t.datang === true  ? ' on' : '') + '"'
+        +               ' data-aksi="datang" data-nilai="ya">Hadir</button>'
+        +       '<button class="lampu absen' + (t.datang === false ? ' on' : '') + '"'
+        +               ' data-aksi="datang" data-nilai="tidak">Tidak</button>'
+        +     '</div>'
+        +     '<div class="rk-tambah">'
+        +       '<select data-f="jenis" aria-label="Jenis pemberian">'
+        +         '<option value="uang">Amplop</option>'
+        +         '<option value="transfer">Transfer</option>'
+        +         '<option value="barang">Barang</option>'
+        +         '<option value="tenaga">Tenaga</option>'
+        +       '</select>'
+        +       '<input data-f="nominal" inputmode="numeric" autocomplete="off"'
+        +              ' placeholder="Nominal amplop" aria-label="Nominal amplop">'
+        +       '<input data-f="barang" maxlength="120" autocomplete="off"'
+        +              ' placeholder="Gula, rokok…" aria-label="Barang" hidden>'
+        +       '<button class="btn kecil" data-aksi="catat">Catat</button>'
+        +     '</div>'
+        +   '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function gambarRingkas(r){
+    $('rkDatang').textContent  = r.datang  || 0;
+    $('rkBelum').textContent   = r.belum   || 0;
+    $('rkPemberi').textContent = r.pemberi || 0;
+    $('rkUang').textContent    = rupiah(r.uang);
+    $('rkBarang').textContent  = r.barang  || 0;
+  }
+
+  async function muatRingkas(){
+    gambarRingkas((await rpcKelola('rekap_ringkas')) || {});
+  }
+
+  var BATAS_REKAP = 200;
+
+  async function muatRekap(){
+    if(!rekapAktif()) return;
+    try{
+      var hasil = await Promise.all([
+        rpcKelola('rekap_ringkas'),
+        rpcKelola('rekap_daftar', {
+          p_cari:   $('rkCari').value.trim() || null,
+          p_saring: $('rkSaring').value || null,
+          p_batas:  BATAS_REKAP
+        })
+      ]);
+      gambarRingkas(hasil[0] || {});
+      rekapBaris = hasil[1] || [];
+      gambarRekap();
+      $('rkLagi').hidden = rekapBaris.length < BATAS_REKAP;
+    }catch(e){
+      $('rkDaftar').innerHTML = '<p class="kosongstate">Gagal memuat rekap: ' + esc(e.message) + '</p>';
+    }
+  }
+
+  /* ---------- pendengar panel 6 ---------- */
+
+  /* Jenis menentukan kotak mana yang masuk akal. Nominal untuk barang
+     tidak disediakan sama sekali: begitu harga taksiran boleh diketik,
+     total amplop berubah jadi campuran uang dan tebakan. */
+  $('rkDaftar').addEventListener('change', function(e){
+    var sel = e.target.closest('select[data-f="jenis"]');
+    if(!sel) return;
+    var kotak = sel.parentNode;
+    var uang  = sel.value === 'uang' || sel.value === 'transfer';
+    kotak.querySelector('[data-f="nominal"]').hidden = !uang;
+    kotak.querySelector('[data-f="barang"]').hidden  = uang;
+  });
+
+  /* Angka dirapikan sambil diketik. 250000 dan 250.000 sama-sama sah,
+     dan yang terlihat selalu bentuk yang dibaca orang. */
+  $('rkDaftar').addEventListener('input', function(e){
+    var inp = e.target.closest('input[data-f="nominal"]');
+    if(!inp) return;
+    var d = angkaSaja(inp.value);
+    inp.value = d ? Number(d).toLocaleString('id-ID') : '';
+  });
+
+  $('rkDaftar').addEventListener('click', async function(e){
+    var tbl = e.target.closest('button[data-aksi]');
+    if(!tbl) return;
+    var baris = tbl.closest('.rk-baris');
+    var id    = baris && baris.dataset.id;
+    if(!id) return;
+    var t = rekapBaris.filter(function(x){ return x.id === id; })[0];
+
+    /* ---- hadir / tidak ---- */
+    if(tbl.dataset.aksi === 'datang'){
+      var mau = tbl.dataset.nilai === 'ya';
+      /* menekan tombol yang sudah menyala = menariknya kembali ke
+         "belum ditandai", bukan membalik ke lawannya */
+      var nilai = (t && t.datang === mau) ? null : mau;
+      tbl.disabled = true;
+      try{
+        await rpcKelola('tamu_datang', { p_tamu_id: id, p_datang: nilai });
+        if(t) t.datang = nilai;
+        baris.querySelector('.lampu.hadir').classList.toggle('on', nilai === true);
+        baris.querySelector('.lampu.absen').classList.toggle('on', nilai === false);
+        await muatRingkas();
+      }catch(err){ toast(err.message, true); }
+      finally{ tbl.disabled = false; }
+      return;
+    }
+
+    /* ---- catat pemberian ---- */
+    if(tbl.dataset.aksi === 'catat'){
+      var kotak   = tbl.parentNode;
+      var jenis   = kotak.querySelector('[data-f="jenis"]').value;
+      var inNom   = kotak.querySelector('[data-f="nominal"]');
+      var inBrg   = kotak.querySelector('[data-f="barang"]');
+      var uang    = jenis === 'uang' || jenis === 'transfer';
+      var nominal = uang ? angkaSaja(inNom.value) : '';
+
+      if(uang && !nominal){ toast('Isi dulu nominalnya', true); inNom.focus(); return; }
+      if(jenis === 'barang' && !inBrg.value.trim()){
+        toast('Sebutkan barangnya', true); inBrg.focus(); return;
+      }
+
+      tbl.disabled = true;
+      try{
+        await rpcKelola('pemberian_simpan', {
+          p_tamu_id: id,
+          p_jenis:   jenis,
+          p_nominal: uang ? Number(nominal) : null,
+          p_barang:  uang ? null : (inBrg.value.trim() || null),
+          p_catatan: null
+        });
+        inNom.value = ''; inBrg.value = '';
+        toast('Tercatat');
+        await muatRekap();
+      }catch(err){ toast(err.message, true); }
+      finally{ tbl.disabled = false; }
+      return;
+    }
+
+    /* ---- hapus satu catatan ---- */
+    if(tbl.dataset.aksi === 'buang'){
+      if(!confirm('Hapus catatan pemberian ini?')) return;
+      tbl.disabled = true;
+      try{
+        await rpcKelola('pemberian_hapus', { p_id: tbl.dataset.gid });
+        await muatRekap();
+      }catch(err){ toast(err.message, true); tbl.disabled = false; }
+    }
+  });
+
+  var jedaCari = null;
+  $('rkCari').addEventListener('input', function(){
+    clearTimeout(jedaCari);
+    jedaCari = setTimeout(muatRekap, 280);
+  });
+  $('rkSaring').addEventListener('change', muatRekap);
+  $('btnRkSegarkan').addEventListener('click', muatRekap);
+
   function sesuaikanCakupan(){
     var penuh = cakupanPenuh();
 
@@ -1404,6 +1704,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     $('btnKeluar').hidden      = Sumber.lewatToken;
     $('panelTk').hidden        = !tkAktif();
     $('panelSilsilah').hidden  = !tkAktif();
+    $('panelRekap').hidden     = !rekapAktif();
     $('tkAlamat').textContent  = M.SITUS + '/terimakasih';
 
     if(pemegang){
@@ -1424,6 +1725,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     try{ await muatTamu(); }
     catch(e){ $('daftar').innerHTML = '<p class="kosongstate">Gagal memuat daftar tamu: '+esc(e.message)+'</p>'; }
     muatTk();
+    muatRekap();
   }
 
   async function cobaMasuk(){

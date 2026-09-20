@@ -404,10 +404,68 @@ tanpa itu jam yang muncul meleset sebesar selisih zona. Diuji di
 
 ### Belum ada di sini
 
-Rekap sesudah acara — menandai siapa yang datang dan mencatat amplop —
-belum dibangun. Tabel `pemberian` dan kolom `tamu.datang` sudah ada sejak
-migrasi `004` tapi masih kosong, dan selama itu angka kehadiran di
-`/terimakasih` memang tidak ditampilkan.
+Rekap sesudah acara tidak ada di `/dasbor`, melainkan di `/kirim` kotak 6
+— tempat daftar tamunya memang sudah ada. Lihat bagian 1i.
+
+---
+
+## 1i. Rekap sesudah acara
+
+Migrasi `016`. Tabel `pemberian` dan kolom `tamu.datang` sudah disiapkan
+sejak migrasi `004`; yang baru ditambahkan sekarang cuma jalan masuknya.
+
+Bentuknya **pengetikan pasca-acara oleh pengantin**, bukan aplikasi meja
+penerima tamu: tidak ada mode offline, tidak ada antrean sinkronisasi,
+tidak ada peran petugas baru. Yang ada cuma daftar tamu yang sudah ada,
+dicari per nama, dengan dua hal yang ditempelkan padanya.
+
+**Kehadiran punya tiga keadaan, bukan dua.** `null` berarti belum
+ditanyakan. Tanpa keadaan ketiga, "belum sempat dicek" dan "tidak datang"
+jadi satu angka, dan rekap setengah jadi terlihat seperti rekap yang sudah
+selesai. Menekan tombol yang sudah menyala mengembalikannya ke `null`,
+bukan membalik ke lawannya.
+
+**Uang dan barang tidak pernah bercampur dalam satu baris.** Untuk
+`uang`/`transfer` kolom `barang` dikosongkan server; untuk
+`barang`/`tenaga` kolom `nominal` dikosongkan. Amplop yang datang bersama
+gula dicatat dua baris. Alasannya satu: begitu taksiran harga barang boleh
+diketik ke `nominal`, angka "total amplop" berubah jadi campuran uang dan
+tebakan. Ada juga batas waras 1 miliar per baris — yang dijaga bukan
+kecurangan, tapi jari yang kelebihan nol.
+
+### Siapa boleh melihatnya
+
+| Jalur masuk | Rekap |
+|---|---|
+| Login email (pemilik) | ya |
+| Link panitia bercakupan penuh | ya |
+| Link panitia per-pihak | **tidak** |
+
+Ditolak di server, bukan cuma disembunyikan di halaman. Rekap memuat
+jumlah amplop, dan itu bukan angka yang pantas dipegang pemegang link
+keluarga sekalipun ia hanya melihat tamu dari pihaknya sendiri.
+
+Berbeda dari kotak 4 dan 5 yang butuh token karena menyentuh edge
+function `foto-unggah`, rekap tidak menyentuh berkas sama sekali — jadi
+tidak ada alasan menutupnya untuk pengantin yang masuk lewat email.
+Resolusi penyewanya dijadikan satu helper, `_pasangan_pengelola(token)`:
+ada token → ditukar lewat `_panitia_penuh`; tanpa token → `pasangan_saya()`
+dari JWT. Satu tempat, jadi tidak ada salinan yang bisa tertinggal waktu
+aturannya berubah.
+
+### Yang sampai ke halaman publik
+
+Satu angka: berapa orang yang tercatat hadir. `terimakasih_isi()`
+mengirim `hadir`, dan halaman menampilkannya sebagai satu baris di bawah
+salam. Nominal amplop, nama pemberi, dan daftar barang tidak pernah keluar
+dari balik token.
+
+Angkanya `null` selama belum ada yang ditandai hadir, jadi pasangan yang
+belum sempat merekap tidak memajang "0 tamu hadir".
+
+Fungsi itu `security definer` dan dipanggil anon — apa pun yang ditambahkan
+ke dalamnya langsung jadi milik publik. Perlakukan sama seperti saringan
+`tampil` di bagian 1c.
 
 ---
 
@@ -524,6 +582,26 @@ Mengosongkan kotaknya lalu menyimpan berarti menarik balasan itu kembali.
 Tombol *Sembunyikan* memakai `ucapan_tampil` — ucapannya hilang dari halaman
 terima kasih dan dari buku tamu undangan, tapi barisnya tetap ada dan bisa
 ditampilkan lagi.
+
+### Kotak 6 · Rekap sesudah acara
+
+Muncul untuk pemegang link bercakupan penuh **dan** untuk pengantin yang
+masuk lewat email — beda dari kotak 4 dan 5. Rinciannya di bagian 1i.
+
+Cari nama tamunya, tandai *Hadir* atau *Tidak*, lalu catat amplop atau
+barangnya. Pencarian dikerjakan server dan hasilnya dipagari 200 baris:
+menurunkan 436 tamu berikut pemberiannya sekali jalan berarti HP murah
+memegang seluruh daftar untuk menyaring satu nama.
+
+Angka di atas kotak dihitung ulang tiap kali ada yang berubah — tidak ada
+kolom total yang disimpan, karena total yang disimpan adalah sumber
+kebenaran kedua dan sumber kebenaran kedua selalu berakhir berbeda dari
+yang pertama.
+
+Dari angka *Hadir* itulah baris kehadiran di `/terimakasih` muncul. Yang
+lain — nominal, nama pemberi, daftar barang — berhenti di halaman ini.
+
+---
 
 Link personal tamu berbentuk:
 

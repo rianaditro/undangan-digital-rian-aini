@@ -263,6 +263,24 @@ situ baru angka di `/terimakasih` bisa ditampilkan.
 **Selesai bila** Anda bisa membuatkan akun untuk pasangan kedua, lalu
 mereka mengisi sendiri sampai terbit tanpa Anda sentuh lagi.
 
+### Sudah jalan
+
+`/dasbor` (migrasi `015`) dan rekap sesudah acara (migrasi `016`).
+
+Rekapnya berakhir bukan di `/dasbor` melainkan di `/kirim` kotak 6 —
+daftar tamunya sudah ada di sana, dan memindahkan 436 baris ke halaman
+lain cuma menyalin masalah yang sudah selesai. Ia hidup di kedua jalur
+masuk, login email maupun link bercakupan penuh; link per-pihak ditolak
+server karena rekap memuat jumlah amplop.
+
+Yang sampai ke `/terimakasih` cuma satu angka: berapa orang tercatat
+hadir. Rinciannya di `README.md` bagian 1i.
+
+Yang tersisa dari tahap ini: membuatkan akun untuk pasangan kedua dan
+membiarkan mereka mengisi sendiri sampai terbit. Tabel `pemilik` masih
+kosong — jalur login email sudah diuji terhadap database sungguhan, tapi
+belum pernah dipakai orang.
+
 ---
 
 ## 7. Tahap 5 — siap jual
