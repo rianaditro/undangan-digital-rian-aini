@@ -276,6 +276,22 @@ server karena rekap memuat jumlah amplop.
 Yang sampai ke `/terimakasih` cuma satu angka: berapa orang tercatat
 hadir. Rinciannya di `README.md` bagian 1i.
 
+Rekapnya diperluas di migrasi `018` sesudah dipakai: sepuluh kategori
+pemberian (rokok berikut mereknya, parsel, seserahan, jasa vendor,
+transfer bagi yang tidak bisa hadir), takaran per satuan, berkat dengan
+dua keadaan (dijatah / diberikan), serta alamat, relasi, dan kelompok
+keluarga supaya satu keluarga yang datang terpencar bisa dilihat
+sekaligus.
+
+### Yang ditemukan sambil jalan
+
+Migrasi `017` menutup lubang lintas penyewa di seluruh keluarga
+`panitia_*`: token pasangan A bisa melihat, mengganti nama, bahkan
+**menghapus** tamu pasangan B, dan tamu yang ditambahkan pasangan B
+mendarat di daftar pasangan A. Belum ada yang bocor karena baru ada satu
+pasangan — dan itu justru sebabnya ini harus beres sebelum pasangan kedua
+dibuat, bukan sesudah. Rinciannya di `README.md` bagian 3.
+
 Yang tersisa dari tahap ini: membuatkan akun untuk pasangan kedua dan
 membiarkan mereka mengisi sendiri sampai terbit. Tabel `pemilik` masih
 kosong — jalur login email sudah diuji terhadap database sungguhan, tapi

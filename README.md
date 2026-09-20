@@ -426,12 +426,83 @@ selesai. Menekan tombol yang sudah menyala mengembalikannya ke `null`,
 bukan membalik ke lawannya.
 
 **Uang dan barang tidak pernah bercampur dalam satu baris.** Untuk
-`uang`/`transfer` kolom `barang` dikosongkan server; untuk
-`barang`/`tenaga` kolom `nominal` dikosongkan. Amplop yang datang bersama
-gula dicatat dua baris. Alasannya satu: begitu taksiran harga barang boleh
-diketik ke `nominal`, angka "total amplop" berubah jadi campuran uang dan
-tebakan. Ada juga batas waras 1 miliar per baris — yang dijaga bukan
-kecurangan, tapi jari yang kelebihan nol.
+`uang`/`transfer` kolom `barang`, `jumlah` dan `satuan` dikosongkan
+server; untuk kategori barang kolom `nominal` dikosongkan. Amplop yang
+datang bersama gula dicatat dua baris. Alasannya satu: begitu taksiran
+harga barang boleh diketik ke `nominal`, angka "total amplop" berubah jadi
+campuran uang dan tebakan. Ada juga batas waras 1 miliar per baris — yang
+dijaga bukan kecurangan, tapi jari yang kelebihan nol.
+
+### Kategori pemberian
+
+Migrasi `018`. Sepuluh kategori, karena "uang atau barang" saja tidak
+cukup menggambarkan apa yang sungguh datang ke meja:
+
+| | Dihitung sebagai |
+|---|---|
+| `uang`, `transfer` | rupiah — masuk total amplop |
+| `rokok`, `gula`, `sembako`, `parsel`, `seserahan`, `barang` | takaran per satuan |
+| `jasa`, `tenaga` | jumlah catatan |
+
+`transfer` sengaja dipisah dari `uang`: yang mengirim lewat rekening
+biasanya justru yang tidak bisa hadir, dan menyatukannya membuat
+"siapa yang datang membawa amplop" tidak bisa dijawab lagi.
+
+Merek dan rinciannya — "Djarum Super", "Vendor fotografer" — masuk kolom
+`barang`. Takarannya masuk `jumlah` + `satuan`, dan keduanya **datang
+berpasangan atau tidak sama sekali**: angka tanpa satuan tidak berarti
+apa-apa, dan satuan tanpa angka juga tidak. Di halaman panitia keduanya
+satu kotak, "2 slop", dipecah di peramban; mengetik angkanya saja memakai
+satuan bawaan kategori. Rekapnya menjumlahkan **per satuan**, karena
+"14 slop" dan "3 bungkus" adalah dua angka dan menjadikannya 17 akan
+salah.
+
+### Berkat punya dua keadaan
+
+`pengiriman` menyimpan dua hal yang sebenarnya berbeda: pengiriman
+undangan (`belum` → `terkirim`) dan penyerahan berkat (`belum` →
+`dijatah` → `diberikan`). Sampai migrasi `018` keduanya dipaksa memakai
+daftar status yang sama, jadi "sudah dijatah tapi belum diambil" — yang
+justru pekerjaan yang belum selesai — tidak punya tempat.
+
+`CHECK`-nya sekarang bercabang per `jenis`. Digabung jadi satu daftar,
+"undangan dijatah" dan "berkat gagal" ikut lolos: dua keadaan yang tidak
+punya arti apa pun tapi tetap bisa tersimpan dan muncul di rekap.
+
+Tombolnya berputar `belum → dijatah → diberikan → belum`, dan **tulisannya
+ikut berganti**, bukan cuma warnanya.
+
+### Kelompok keluarga
+
+Pak Budi menyumbang rokok dan tercatat di baris 10; anaknya datang
+belakangan dan tercatat di baris 40. Tanpa cara menyatakan "ini satu
+keluarga", merekapnya berarti bolak-balik sepanjang daftar.
+
+Caranya: **isi dulu, kelompokkan belakangan**. Waktu tamu diketik sebelum
+acara belum ketahuan siapa datang bareng siapa, dan waktu merekap urutan
+yang ada adalah urutan amplop di tumpukan. Jadi pengelompokan adalah
+tindakan terpisah yang bisa dilakukan kapan saja, bukan syarat waktu
+menyimpan.
+
+Bentuknya satu tulisan bebas di `tamu.kelompok` — pilihan pemiliknya —
+plus `tamu.relasi` ("Anak", "Menantu") dan `tamu.alamat`. Kelemahannya
+nyata dan pasti terjadi: `Kel. Budi` dan `Keluarga Budi` jadi dua
+kelompok berbeda. Tiga penambal:
+
+1. Spasi dirapikan sebelum disimpan.
+2. Label yang **secara huruf besar-kecil sama** dengan yang sudah ada
+   dipaksa memakai ejaan yang sudah ada. `keluarga budi` yang diketik
+   belakangan menempel ke `Keluarga Budi`, bukan bikin kelompok kedua.
+3. `kelompok_ganti_nama()` membetulkan seluruh anggota sekaligus kalau
+   terlanjur bercabang — satu tindakan, bukan mengedit satu per satu.
+   Nama baru yang dikosongkan membubarkan kelompoknya.
+
+Yang **tidak** dikerjakan: menebak bahwa `Kel.` sama dengan `Keluarga`.
+Tebakan seperti itu benar sembilan dari sepuluh kali, dan yang kesepuluh
+menggabungkan dua keluarga yang memang berbeda tanpa ada yang sadar.
+
+Label kelompok ikut jadi bahan pencarian, jadi mengetik "Budi"
+memunculkan seluruh keluarganya — bukan cuma orang yang namanya Budi.
 
 ### Siapa boleh melihatnya
 
@@ -457,8 +528,8 @@ aturannya berubah.
 
 Satu angka: berapa orang yang tercatat hadir. `terimakasih_isi()`
 mengirim `hadir`, dan halaman menampilkannya sebagai satu baris di bawah
-salam. Nominal amplop, nama pemberi, dan daftar barang tidak pernah keluar
-dari balik token.
+salam. Nominal amplop, nama pemberi, daftar barang, alamat, dan kelompok
+keluarga tidak pernah keluar dari balik token.
 
 Angkanya `null` selama belum ada yang ditandai hadir, jadi pasangan yang
 belum sempat merekap tidak memajang "0 tamu hadir".
@@ -534,6 +605,38 @@ ganti tokennya lewat perintah di bagian bawah
 `supabase/migrations/001_awal_satu_pasangan.sql` —
 link lama langsung mati tanpa mengganggu yang lain.
 
+### Lubang yang ditutup migrasi 017
+
+Seluruh keluarga fungsi `panitia_*` lahir di migrasi `002`, waktu tabel
+`tamu` belum punya `pasangan_id` sama sekali. Waktu kolom itu ditambahkan
+di migrasi `004`, kebijakan RLS ikut diperbarui — tapi fungsi-fungsi itu
+`security definer`, dan security definer berarti RLS tidak berlaku di
+dalamnya. Saringannya tetap seperti dulu: cuma `pihak`, tanpa
+`pasangan_id`.
+
+Dibuktikan lewat pasangan kedua sungguhan di transaksi yang di-rollback,
+memakai token pasangan pertama:
+
+| Fungsi | Yang terjadi sebelum 017 |
+|---|---|
+| `panitia_daftar` | tamu pasangan lain ikut terdaftar |
+| `panitia_ubah_nama` | nama tamu pasangan lain berhasil diganti |
+| `panitia_hapus` | tamu pasangan lain **terhapus** |
+| `panitia_ubah_pihak` | tanpa saringan sama sekali |
+| `panitia_tambah` | tamu baru memakai `pasangan_bawaan()`, bukan pasangan pemilik token — jadi tamu pasangan kedua mendarat di daftar pasangan pertama |
+
+Hari ini belum ada yang bocor karena barisnya memang cuma satu pasangan.
+Itu bukan pengaman, itu kebetulan — dan kebetulan itu berakhir pada hari
+pasangan kedua dibuat. Migrasi `017` menambahkan satu hal di tiap fungsi:
+`pasangan_id` ikut disaring. Tidak ada perubahan perilaku untuk pemakai
+yang sah.
+
+Sekalian dibetulkan: keunikan slug tamu sekarang diperiksa **dalam**
+pasangan, sepadan dengan indeks `tamu_slug_pasangan_idx` dari migrasi
+`004`. Yang lama memeriksa seluruh tabel, jadi `bapak-ahmad` milik
+pasangan lain memaksa tamu ini jadi `bapak-ahmad-2` — link tamunya jadi
+lebih jelek untuk masalah yang tidak ada.
+
 ## 4. Sebar undangan
 
 Buka `/kirim` lewat link pihak Anda.
@@ -554,7 +657,11 @@ Buka `/kirim` lewat link pihak Anda.
 2. **Kirim.** Tombol *Kirim* membuka WhatsApp dengan pesan yang sudah
    disesuaikan pihak tamu, lalu menandai undangannya terkirim.
 3. **Berkat** ditandai terpisah dari undangan — dua jalur yang statusnya
-   tidak saling memengaruhi.
+   tidak saling memengaruhi. Tombolnya berputar tiga keadaan:
+   *Berkat* (belum dijatah) → *Dijatah* → *Diberikan* → kembali ke awal.
+   Tulisannya ikut berganti, bukan cuma warnanya. Angka di kotak 2 dan
+   rekap per pihak menghitung yang **diberikan**; yang baru dijatah
+   sengaja belum dihitung, karena itu pekerjaan yang belum selesai.
 4. **Rekap per pihak** di kotak nomor 2 memperlihatkan berapa tamu dan
    berapa yang sudah dikirimi undangan serta berkat, dipecah per pihak.
    Angka besar di atasnya mengikuti saringan yang sedang aktif, jadi
@@ -589,9 +696,27 @@ Muncul untuk pemegang link bercakupan penuh **dan** untuk pengantin yang
 masuk lewat email — beda dari kotak 4 dan 5. Rinciannya di bagian 1i.
 
 Cari nama tamunya, tandai *Hadir* atau *Tidak*, lalu catat amplop atau
-barangnya. Pencarian dikerjakan server dan hasilnya dipagari 200 baris:
-menurunkan 436 tamu berikut pemberiannya sekali jalan berarti HP murah
-memegang seluruh daftar untuk menyaring satu nama.
+barangnya. Pencarian dikerjakan server — nama, nomor, alamat, dan nama
+kelompok sekaligus — dan hasilnya dipagari 200 baris: menurunkan 436 tamu
+berikut pemberiannya sekali jalan berarti HP murah memegang seluruh daftar
+untuk menyaring satu nama.
+
+Alamat, kelompok, dan relasi ada di balik *Alamat & kelompok* pada tiap
+baris. Ditaruh di sana karena biasanya cuma diisi untuk yang memberi
+sesuatu, dan 200 baris yang masing-masing memajang tiga kotak kosong
+membuat sisanya sulit dibaca.
+
+Blok **Kelompok keluarga** di atas daftar memperlihatkan tiap keluarga
+berikut jumlah anggota, yang hadir, total amplop, dan jumlah barangnya.
+*Lihat* menyaring daftar ke keluarga itu saja; *Ganti Nama* membetulkan
+ejaannya untuk semua anggota sekaligus. Bloknya terbuka sendiri saat
+kelompok pertama lahir — dibiarkan tertutup, seluruh guna pengelompokan
+bersembunyi di balik satu klik yang tidak ada petunjuknya.
+
+Saringan **Urut kelompok** menaruh anggota satu keluarga berdampingan
+dengan judul di atasnya. Judul itu tidak muncul di urutan nama: di sana
+anggota satu keluarga berserak dan judulnya akan muncul berulang-ulang
+tanpa arti.
 
 Angka di atas kotak dihitung ulang tiap kali ada yang berubah — tidak ada
 kolom total yang disimpan, karena total yang disimpan adalah sumber
