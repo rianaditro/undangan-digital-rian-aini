@@ -160,6 +160,14 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
       <p class="hint" id="hintSlug" style="margin:6px 0 0"></p>
     </div>
     <div>
+      <label for="inPaket">Paket</label>
+      <select id="inPaket">
+        <option value="standar" selected>Standar — jalur di domain bersama</option>
+        <option value="premium">Premium — subdomain sendiri</option>
+      </select>
+      <p class="hint" id="hintPaket" style="margin:6px 0 0"></p>
+    </div>
+    <div>
       <label for="inTanggal">Tanggal acara <span style="text-transform:none;letter-spacing:0">(boleh kosong)</span></label>
       <input id="inTanggal" type="date">
     </div>
@@ -369,6 +377,24 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     periksaSlug();
   }
 
+  /* Alamat yang akan didapat pasangan ini, memakai pembantu yang sama
+     dengan halaman undangan — supaya yang tertulis di sini persis yang
+     nanti benar-benar dipakai. */
+  function alamatCalon(slug){
+    var premium = $('inPaket').value === 'premium';
+    return M.alamatUndangan({
+      slug: slug,
+      canonical_host: premium ? slug + '.mengundang.id' : ''
+    }).replace(/^https?:\/\//, '');
+  }
+
+  function kabarPaket(){
+    $('hintPaket').textContent = $('inPaket').value === 'premium'
+      ? 'Subdomain sendiri. Perlu DNS wildcard aktif untuk *.mengundang.id.'
+      : 'Menumpang di domain bersama — tanpa DNS tambahan.';
+    periksaSlug();
+  }
+
   var jedaSlug = null;
   function periksaSlug(){
     clearTimeout(jedaSlug);
@@ -379,7 +405,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
       h.textContent = 'Hanya huruf kecil, angka, dan tanda hubung — minimal 3 huruf.';
       return;
     }
-    h.textContent = 'Alamatnya nanti: ' + s + '.mengundang.id';
+    h.textContent = 'Alamatnya nanti: ' + alamatCalon(s);
     jedaSlug = setTimeout(async function(){
       try{
         if(await rpc('admin_slug_dipakai', { p_slug: s }))
@@ -392,7 +418,11 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
      Buat pasangan
      ============================================================ */
   function tulisSerah(d, sandi){
-    var pangkal = 'https://' + d.slug + '.mengundang.id';
+    /* Bukan lagi '<slug>.mengundang.id' mati-matian: paket standar
+       tidak punya subdomain, dan alamat yang ditulis di sini yang
+       disalin klien ke undangannya. */
+    var pas     = { slug: d.slug, canonical_host: d.canonical_host || '' };
+    var pangkal = M.alamatUndangan(pas);
     var baris = [
       'Undangan digital ' + $('inPria').value + ' & ' + $('inWanita').value,
       '',
@@ -407,7 +437,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     ];
     (d.token || []).forEach(function(t){
       baris.push('- ' + t.nama + ':');
-      baris.push('  ' + location.origin + '/kirim?t=' + t.token);
+      baris.push('  ' + M.alamatPlatform(pas, '/kirim', 't=' + t.token));
     });
     baris.push('');
     baris.push('Link yang pertama bercakupan penuh — itu untuk pengantin.');
@@ -418,6 +448,8 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   $('btnAcak').addEventListener('click', function(){ $('inSandiKlien').value = sandiAcak(); });
   $('btnAcak2').addEventListener('click', function(){ $('inSandiGanti').value = sandiAcak(); });
   ['inPria','inWanita'].forEach(function(id){ $(id).addEventListener('input', usulkanSlug); });
+  $('inPaket').addEventListener('change', kabarPaket);
+  kabarPaket();
   $('inSlug').addEventListener('input', function(){ slugDisentuh = true; periksaSlug(); });
 
   $('btnBuat').addEventListener('click', async function(){
@@ -433,7 +465,8 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
         pria:    $('inPria').value,
         wanita:  $('inWanita').value,
         tanggal: $('inTanggal').value || null,
-        kota:    $('inKota').value || null
+        kota:    $('inKota').value || null,
+        paket:   $('inPaket').value
       });
       $('serahTeks').value = tulisSerah(d, sandi);
       $('serah').hidden = false;
@@ -485,10 +518,13 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
       var opsi = ['draf','aktif','lewat','arsip'].map(function(s){
         return '<option value="'+s+'"'+(p.status===s?' selected':'')+'>'+s+'</option>';
       }).join('');
+      var opsiPaket = [['standar','standar'],['premium','premium']].map(function(x){
+        return '<option value="'+x[0]+'"'+(p.paket===x[0]?' selected':'')+'>'+x[1]+'</option>';
+      }).join('');
       return '<div class="ps" data-id="'+esc(p.id)+'">'
         + '<div>'
         +   '<div class="ps-nama">'+esc(nama)+'</div>'
-        +   '<div class="ps-slug">'+esc(p.slug)+'.mengundang.id</div>'
+        +   '<div class="ps-slug">'+esc(M.alamatUndangan(p).replace(/^https?:\/\//, ''))+'</div>'
         +   '<div class="ps-meta">'
         +     '<span class="cap '+(p.terbit?'terbit':'draf')+'">'+(p.terbit?'terbit':'belum terbit')+'</span>'
         +     '<span class="cap">'+esc(p.status)+'</span>'
@@ -501,6 +537,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
         + '</div>'
         + '<div class="ps-alat">'
         +   '<select data-aksi="status" aria-label="Status">'+opsi+'</select>'
+        +   '<select data-aksi="paket" aria-label="Paket">'+opsiPaket+'</select>'
         +   '<button class="btn kecil ghost" data-aksi="lihat">Undangan</button>'
         +   '<button class="btn kecil ghost" data-aksi="token">Link Panitia</button>'
         +   '<button class="btn kecil bahaya" data-aksi="hapus">Hapus</button>'
@@ -509,11 +546,19 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     }).join('');
   }
 
-  function gambarToken(wadah, daftar){
+  /* Link panitia ikut bentuk alamat pasangannya: premium memakai
+     subdomainnya sendiri, standar menyebut pasangan lewat ?pasangan=.
+     Tanpa itu /kirim di domain bersama tidak tahu undangan siapa yang
+     harus dimuatnya. */
+  function linkPanitia(p, token){
+    return M.alamatPlatform(p, '/kirim', 't=' + token);
+  }
+
+  function gambarToken(wadah, daftar, p){
     wadah.innerHTML = daftar.map(function(t){
       return '<div>'
         + '<span class="cap">'+esc(t.pihak || 'semua pihak')+'</span>'
-        + '<code>'+esc(location.origin + '/kirim?t=' + t.token)+'</code>'
+        + '<code>'+esc(linkPanitia(p, t.token))+'</code>'
         + '<span class="alat">'
         +   '<button class="btn kecil ghost" data-aksi="salinToken" data-token="'+esc(t.token)+'">Salin</button>'
         +   '<button class="btn kecil ghost" data-aksi="gantiToken" data-tid="'+esc(t.id)+'">Ganti</button>'
@@ -524,9 +569,27 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   }
 
   $('daftar').addEventListener('change', async function(e){
-    var sel = e.target.closest('select[data-aksi="status"]');
+    var sel = e.target.closest('select[data-aksi]');
     if(!sel) return;
     var id = sel.closest('.ps').dataset.id;
+
+    if(sel.dataset.aksi === 'paket'){
+      /* Ganti paket = ganti alamat undangan. Semua tautan yang sudah
+         disebar ke tamu berhenti bekerja, jadi ini harus disengaja. */
+      if(!confirm('Pindahkan ke paket ' + sel.value + '?\n\n'
+                + 'Alamat undangannya berubah, dan SEMUA link tamu yang '
+                + 'sudah terlanjur disebar akan mati.')){
+        await muat();
+        return;
+      }
+      try{
+        await rpc('admin_paket', { p_pasangan_id: id, p_paket: sel.value });
+        toast('Paket jadi ' + sel.value + ' — link tamu harus dikirim ulang');
+        await muat();
+      }catch(err){ toast(err.message, true); await muat(); }
+      return;
+    }
+
     try{
       await rpc('admin_status', { p_pasangan_id: id, p_status: sel.value });
       toast('Status jadi ' + sel.value);
@@ -543,18 +606,18 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     var aksi = tbl.dataset.aksi;
 
     if(aksi === 'lihat'){
-      window.open('https://' + p.slug + '.mengundang.id', '_blank');
+      window.open(M.alamatUndangan(p), '_blank');
       return;
     }
     if(aksi === 'token'){
       var wadah = kartu.querySelector('[data-token]');
       if(!wadah.hidden){ wadah.hidden = true; return; }
-      try{ gambarToken(wadah, (await rpc('admin_token', { p_pasangan_id: id })) || []); }
+      try{ gambarToken(wadah, (await rpc('admin_token', { p_pasangan_id: id })) || [], p); }
       catch(err){ toast(err.message, true); }
       return;
     }
     if(aksi === 'salinToken'){
-      await salin(location.origin + '/kirim?t=' + tbl.dataset.token);
+      await salin(linkPanitia(p, tbl.dataset.token));
       toast('Link tersalin');
       return;
     }
@@ -563,7 +626,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
       try{
         await rpc('admin_token_ganti', { p_id: tbl.dataset.tid });
         gambarToken(kartu.querySelector('[data-token]'),
-                    (await rpc('admin_token', { p_pasangan_id: id })) || []);
+                    (await rpc('admin_token', { p_pasangan_id: id })) || [], p);
         toast('Token diganti');
       }catch(err){ toast(err.message, true); }
       return;

@@ -121,3 +121,8 @@ alter table public.pihak
 --            date '2027-03-20', 'Semarang');
 --
 -- Sesudah itu pengantin masuk sendiri ke /dasbor dan mengisi sisanya.
+--
+-- CATATAN: badan fungsinya TIDAK ada di berkas ini — dulu hanya
+-- diterapkan langsung ke database, jadi yang tersisa di repo cuma
+-- dokumentasi ini. SQL-nya yang utuh ada di migrasi 023, berikut
+-- argumen p_paket yang menentukan bentuk alamat undangannya.

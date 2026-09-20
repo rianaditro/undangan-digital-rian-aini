@@ -9,7 +9,7 @@
 //
 // service_role tidak pernah keluar dari sini.
 //
-// POST { aksi: 'buat',  slug, email, sandi, pria, wanita, tanggal, kota }
+// POST { aksi: 'buat',  slug, email, sandi, pria, wanita, tanggal, kota, paket }
 // POST { aksi: 'sandi', email, sandi }
 //
 // PENJAGANYA ADA DI DALAM, bukan di gerbang. Fungsi ini sengaja
@@ -106,6 +106,7 @@ async function buat(db: any, b: any) {
   const wanita  = rapi(b.wanita);
   const tanggal = rapi(b.tanggal) || null;
   const kota    = rapi(b.kota) || null;
+  const paket   = (rapi(b.paket) || 'standar').toLowerCase();
 
   if (!SLUG.test(slug) || slug.length < 3 || slug.length > 40)
     return jawab({ pesan: 'Slug hanya huruf kecil, angka, dan tanda hubung (3–40 huruf)' }, 400);
@@ -115,6 +116,11 @@ async function buat(db: any, b: any) {
     return jawab({ pesan: 'Nama panggilan kedua mempelai harus diisi' }, 400);
   if (tanggal && !/^\d{4}-\d{2}-\d{2}$/.test(tanggal))
     return jawab({ pesan: 'Tanggal acara harus berbentuk YYYY-MM-DD' }, 400);
+  // Paket menentukan bentuk alamat undangan (migrasi 023). Diperiksa di
+  // sini juga supaya akun klien tidak terlanjur dibuat untuk sesuatu
+  // yang sudah pasti ditolak database.
+  if (paket !== 'premium' && paket !== 'standar')
+    return jawab({ pesan: 'Paket harus "premium" atau "standar"' }, 400);
 
   // Slug diperiksa DULU, keduanya. Kalau tidak, akun klien terlanjur
   // dibuat lalu penyimpanannya gagal — dan yang tersisa adalah akun yatim
@@ -123,7 +129,7 @@ async function buat(db: any, b: any) {
     .from('pasangan').select('id').eq('slug', slug).maybeSingle();
   if (sudahAda) return jawab({ pesan: `Slug "${slug}" sudah dipakai pasangan lain` }, 409);
 
-  // Trigger di migrasi 021 juga menolaknya, dan itu penjaga yang
+  // Pemicu pasangan_sah juga menolaknya, dan itu penjaga yang
   // sebenarnya. Yang di sini semata-mata supaya akunnya tidak sempat
   // dibuat lebih dulu untuk sesuatu yang sudah pasti ditolak.
   const { data: terlarang } = await db
@@ -148,7 +154,7 @@ async function buat(db: any, b: any) {
 
   const { data: pasanganId, error: gagal } = await db.rpc('pasangan_siapkan', {
     p_slug: slug, p_email: email, p_pria: pria, p_wanita: wanita,
-    p_tanggal: tanggal, p_kota: kota,
+    p_tanggal: tanggal, p_kota: kota, p_paket: paket,
   });
 
   if (gagal) {
@@ -165,7 +171,18 @@ async function buat(db: any, b: any) {
     .eq('pasangan_id', pasanganId)
     .order('pihak', { nullsFirst: true });
 
-  return jawab({ pasangan_id: pasanganId, slug, email, akun_baru: akunBaru, token: token ?? [] }, 201);
+  // canonical_host dibaca BALIK dari database, bukan disusun lagi di
+  // sini: pemicu pasangan_sah yang menentukannya, dan teks serah-terima
+  // harus memuat alamat yang benar-benar berlaku — bukan tebakan kedua.
+  const { data: pas } = await db
+    .from('pasangan').select('canonical_host, paket').eq('id', pasanganId).maybeSingle();
+
+  return jawab({
+    pasangan_id: pasanganId, slug, email, akun_baru: akunBaru,
+    paket: pas?.paket ?? paket,
+    canonical_host: pas?.canonical_host ?? null,
+    token: token ?? [],
+  }, 201);
 }
 
 async function gantiSandi(db: any, b: any) {

@@ -1122,7 +1122,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   $('tkGaleri').addEventListener('change', simpanKeterangan);
   $('tkUcapan').addEventListener('click', aksiUcapan);
   $('btnBukaTk').addEventListener('click', function(){
-    window.open(M.SITUS + '/terimakasih', '_blank', 'noopener');
+    window.open(M.linkPlatform('/terimakasih'), '_blank', 'noopener');
   });
   $('btnSilTambah').addEventListener('click', tambahSil);
   $('silDaftar').addEventListener('click', aksiSil);
@@ -2163,7 +2163,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     $('panelTk').hidden        = !tkAktif();
     $('panelSilsilah').hidden  = !tkAktif();
     $('panelRekap').hidden     = !rekapAktif();
-    $('tkAlamat').textContent  = M.SITUS + '/terimakasih';
+    $('tkAlamat').textContent  = M.linkPlatform('/terimakasih');
 
     if(pemegang){
       $('siapa').textContent = pemegang.nama;

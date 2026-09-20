@@ -271,7 +271,9 @@ select{appearance:none;cursor:pointer;}
 
   function gambar(){
     $('judulPasangan').textContent = data.mempelai.map(function(m){return m.panggilan;}).join(' & ') || pasangan.slug;
-    $('alamatUndangan').textContent = (pasangan.canonical_host || (pasangan.slug+'.mengundang.id'));
+    /* Paket standar tidak punya subdomain. Menuliskannya seolah punya
+       berarti klien menyalin alamat yang sertifikatnya tidak ada. */
+    $('alamatUndangan').textContent = M.alamatUndangan(pasangan).replace(/^https?:\/\//, '');
     kabarStatus();
 
     $('formMempelai').innerHTML = data.mempelai.map(function(m,i){
@@ -501,8 +503,7 @@ select{appearance:none;cursor:pointer;}
   $('btnAcaraBaru').addEventListener('click', tambahAcara);
   $('btnDompetBaru').addEventListener('click', tambahDompet);
   $('btnPratinjau').addEventListener('click', function(){
-    var host = pasangan.canonical_host || (pasangan.slug + '.mengundang.id');
-    window.open('https://'+host, '_blank', 'noopener');
+    window.open(M.alamatUndangan(pasangan), '_blank', 'noopener');
   });
   $('btnKeluar').addEventListener('click', function(){ simpanSesi(null); location.reload(); });
 

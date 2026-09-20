@@ -35,8 +35,10 @@
      yang tertaut ditukar lewat gantiTema() di bawah. */
   var TEMA_BAWAAN = 'ukir-jepara';
 
-  /* Dipakai kalau database tidak menyebut canonical_host. */
-  var SITUS_CADANGAN = 'https://rian-aini.mengundang.id';
+  /* Dipakai cuma kalau tidak ada location sama sekali (di luar
+     peramban). Dulu isinya subdomain Rian & 'Aini — sisa zaman satu
+     pasangan, dan salah untuk setiap pasangan lain. */
+  var SITUS_CADANGAN = 'https://mengundang.id';
   var SLUG_CADANGAN  = 'rian-aini';
 
   /* ---------- Wadah isi undangan ----------
@@ -109,9 +111,10 @@
     });
   }
 
-  function slugPasangan(host, jalur) {
+  function slugPasangan(host, jalur, cari) {
     host  = host  != null ? host  : (global.location ? location.hostname : '');
     jalur = jalur != null ? jalur : (global.location ? location.pathname : '');
+    cari  = cari  != null ? cari  : (global.location ? location.search   : '');
 
     var sub = subdomainPasangan(host);
     if (sub) return sub;
@@ -125,11 +128,17 @@
     var seg = segmen(jalur);
     if (seg.length && !JALUR_PLATFORM[seg[0].toLowerCase()]) return siput(seg[0]);
 
-    /* Akar domain bersama, dan jalur milik platform seperti
-       /terimakasih — keduanya tidak menyebut pasangan sama sekali.
-       Selama masih satu pasangan, cadangan ini yang menjawab; begitu
-       ada pasangan kedua di domain bersama, halaman-halaman itu harus
-       menyebut pasangannya sendiri di alamat. */
+    /* Jalur milik platform — /terimakasih, /kirim — tidak punya tempat
+       untuk slug pasangan di jalurnya sendiri, jadi di domain bersama
+       pasangannya disebut lewat ?pasangan=. Sengaja DI BAWAH jalur:
+       kalau jalurnya sudah menyebut pasangan, query tidak boleh
+       menimpanya. */
+    var dariCari = '';
+    try { dariCari = new URLSearchParams(cari || '').get('pasangan') || ''; } catch (e) { dariCari = ''; }
+    if (dariCari) return siput(dariCari);
+
+    /* Akar domain bersama, tanpa petunjuk apa pun. Selama masih satu
+       pasangan, cadangan ini yang menjawab. */
     return SLUG_CADANGAN;
   }
 
@@ -376,7 +385,9 @@
     KONF.canonicalHost = d.canonical_host || '';
     KONF.kota          = d.kota || '';
     KONF.tanggalAcara  = d.tanggal_acara || '';
-    KONF.situs         = d.canonical_host ? 'https://' + d.canonical_host : SITUS_CADANGAN;
+    /* Dihitung SESUDAH slug dan canonicalHost terpasang: inilah alamat
+       pangkal undangan pasangan ini, dan bentuknya ikut paket. */
+    KONF.situs         = alamatUndangan({ slug: KONF.slug, canonical_host: KONF.canonicalHost });
     KONF.pihakBawaan   = d.pihak_bawaan || Object.keys(VARIAN)[0] || '';
 
     /* Dulu dua nilai ini disimpan sendiri di ACARA[sisi]. Keduanya selalu
@@ -519,24 +530,64 @@
     return SB.url + '/storage/v1/object/public/foto/' + jalur;
   }
 
+  /* ---------- Alamat, dua bentuk ----------
+     Bentuknya ditentukan paket, dan paket sudah diterjemahkan jadi
+     canonical_host di database (migrasi 023):
+
+       premium : https://rian-aini.mengundang.id
+       standar : https://mengundang.id/rian-aini
+
+     Keduanya pure function yang menerima pasangannya sebagai argumen,
+     bukan membaca KONF — halaman admin membangun alamat untuk pasangan
+     LAIN, dan versi keduanya yang disalin ke sana cepat atau lambat
+     beda perilaku dari yang ini. */
+  function asalSekarang() {
+    return (global.location ? location.origin : SITUS_CADANGAN).replace(/\/+$/, '');
+  }
+
+  function alamatUndangan(pas) {
+    var host = (pas && (pas.canonical_host || pas.canonicalHost)) || '';
+    if (host) return 'https://' + String(host).replace(/^https?:\/\//, '').replace(/\/+$/, '');
+
+    /* Sedang dibuka DI subdomain pasangan padahal canonical_host belum
+       terisi: alamat tamu tetap langsung di akar. Mengulang slug di
+       jalur akan menghasilkan rian-aini.mengundang.id/rian-aini/…. */
+    if (subdomainPasangan(global.location ? location.hostname : '')) return asalSekarang();
+
+    return asalSekarang() + '/' + ((pas && pas.slug) || '');
+  }
+
+  /* Halaman milik platform — /terimakasih, /kirim — tidak bisa ikut
+     bentuk jalur. mengundang.id/rian-aini/terimakasih akan terbaca
+     sebagai undangan untuk tamu bernama "terimakasih", dan memang
+     begitulah rewrite Vercel menyajikannya. Di domain bersama
+     pasangannya disebut lewat ?pasangan=. */
+  function alamatPlatform(pas, jalur, cari) {
+    jalur = '/' + String(jalur || '').replace(/^\/+/, '');
+    cari  = String(cari || '').replace(/^[?&]+/, '');
+
+    var host = (pas && (pas.canonical_host || pas.canonicalHost)) || '';
+    var pakaiJalurSendiri = !!host || !!subdomainPasangan(global.location ? location.hostname : '');
+    var pangkal = host ? 'https://' + String(host).replace(/^https?:\/\//, '').replace(/\/+$/, '')
+                       : asalSekarang();
+
+    if (pakaiJalurSendiri) return pangkal + jalur + (cari ? '?' + cari : '');
+
+    return pangkal + jalur + '?' + (cari ? cari + '&' : '')
+         + 'pasangan=' + encodeURIComponent((pas && pas.slug) || '');
+  }
+
+  function pasanganIni() {
+    return { slug: KONF.slug, canonical_host: KONF.canonicalHost };
+  }
+
   function linkTamu(slug, pihak) {
-    var v    = pihakSah(pihak);
-    var ekor = '/' + slug + (v ? '?p=' + VARIAN[v].kode : '');
+    var v = pihakSah(pihak);
+    return alamatUndangan(pasanganIni()) + '/' + slug + (v ? '?p=' + VARIAN[v].kode : '');
+  }
 
-    /* canonical_host, kalau pasangan ini punya subdomain sendiri, selalu
-       menang: itulah alamat yang sudah diumumkan. */
-    if (KONF.canonicalHost) {
-      return 'https://' + KONF.canonicalHost.replace(/\/+$/, '') + ekor;
-    }
-
-    var host = global.location ? location.hostname : '';
-    var asal = (global.location ? location.origin : KONF.situs).replace(/\/+$/, '');
-
-    /* Di subdomain pasangan, alamat tamu langsung di akar. Di domain
-       bersama, slug pasangan HARUS ikut — tanpa itu yang terbuka
-       undangan pasangan bawaan, bukan undangan pasangan ini. */
-    if (subdomainPasangan(host)) return asal + ekor;
-    return asal + '/' + KONF.slug + ekor;
+  function linkPlatform(jalur, cari) {
+    return alamatPlatform(pasanganIni(), jalur, cari);
   }
 
   function pesanWA(nama, slug, pihak) {
@@ -602,6 +653,9 @@
     nomorRapi: nomorRapi,
     kunciNama: kunciNama,
     linkTamu: linkTamu,
+    linkPlatform: linkPlatform,
+    alamatUndangan: alamatUndangan,
+    alamatPlatform: alamatPlatform,
     pesanWA: pesanWA
   };
 
