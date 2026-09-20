@@ -738,6 +738,45 @@ ganti tokennya lewat perintah di bagian bawah
 `supabase/migrations/001_awal_satu_pasangan.sql` —
 link lama langsung mati tanpa mengganggu yang lain.
 
+### Lubang yang ditutup migrasi 021 — buku tamu
+
+Lebih serius dari yang di bawah. Kebijakan `ucapan baca publik` berbunyi
+`using (tampil)` saja, tanpa `pasangan_id`, dan halaman undangan pun
+membacanya tanpa saringan:
+
+```
+/rest/v1/ucapan?select=nama,hadir,pesan,created_at&order=…
+```
+
+Tidak ada saringan pasangan di kedua sisi. **Buku tamu pasangan A memuat
+ucapan pasangan B.** Dibuktikan dengan pasangan kedua sungguhan di
+transaksi yang di-rollback: anon membaca 30 baris padahal pasangan
+pertama cuma punya 29, dan baris ke-30 itu tulisan tamu pasangan kedua.
+
+Beda kelas dari lubang panitia di bawah: yang itu butuh token pasangan
+lain, yang ini terbuka dari halaman undangan mana pun, oleh siapa pun,
+tanpa modal apa-apa. Dan yang bocor adalah tulisan tamu — orang yang
+tidak pernah menyetujui apa pun kepada platform ini.
+
+Obatnya sepola dengan menulisnya: `ucapan_publik(slug)` menyaring lewat
+slug, dan jalan baca langsung untuk anon ditutup sama sekali — persis
+cara migrasi `012` menutup jalan menulis ke tabel yang sama. Pemilik
+tetap bisa membaca miliknya lewat REST, termasuk yang disembunyikan.
+
+### slug_terlarang akhirnya ditegakkan
+
+Tabelnya ada sejak migrasi `002` dengan dua puluh baris, dan **tidak ada
+satu pun yang pernah melihatnya** — tanpa foreign key, tanpa check, dan
+`pasangan_siapkan()` tidak memeriksanya. Sebuah pasangan bisa mengambil
+slug `admin` atau `kirim`, dan undangannya lalu tertimpa halaman
+platform.
+
+Migrasi `021` menambahkan empat yang jelas kurang (`dasbor`,
+`terimakasih`, `coba`, `mulai`) dan menaruh penjaganya di **trigger**,
+bukan di halaman admin: halaman bisa bertambah besok — skrip impor,
+pendaftaran mandiri — dan tiap tempat baru adalah satu tempat lagi yang
+bisa lupa memeriksa.
+
 ### Lubang yang ditutup migrasi 017
 
 Seluruh keluarga fungsi `panitia_*` lahir di migrasi `002`, waktu tabel

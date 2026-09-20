@@ -116,12 +116,19 @@ async function buat(db: any, b: any) {
   if (tanggal && !/^\d{4}-\d{2}-\d{2}$/.test(tanggal))
     return jawab({ pesan: 'Tanggal acara harus berbentuk YYYY-MM-DD' }, 400);
 
-  // Slug diperiksa DULU. Kalau tidak, akun klien terlanjur dibuat lalu
-  // pasangan_siapkan() gagal — dan yang tersisa adalah akun yatim yang
-  // tidak akan pernah ada yang tahu harus diapakan.
+  // Slug diperiksa DULU, keduanya. Kalau tidak, akun klien terlanjur
+  // dibuat lalu penyimpanannya gagal — dan yang tersisa adalah akun yatim
+  // yang tidak akan pernah ada yang tahu harus diapakan.
   const { data: sudahAda } = await db
     .from('pasangan').select('id').eq('slug', slug).maybeSingle();
   if (sudahAda) return jawab({ pesan: `Slug "${slug}" sudah dipakai pasangan lain` }, 409);
+
+  // Trigger di migrasi 021 juga menolaknya, dan itu penjaga yang
+  // sebenarnya. Yang di sini semata-mata supaya akunnya tidak sempat
+  // dibuat lebih dulu untuk sesuatu yang sudah pasti ditolak.
+  const { data: terlarang } = await db
+    .from('slug_terlarang').select('slug').eq('slug', slug).maybeSingle();
+  if (terlarang) return jawab({ pesan: `Slug "${slug}" dipakai halaman platform, pilih yang lain` }, 409);
 
   let akunBaru = false;
   let pengguna = await cariEmail(db, email);

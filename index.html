@@ -845,7 +845,6 @@
   /* Konfigurasi Supabase ada di assets/varian.js */
   var SB_URL   = M.SB.url;
   var SB_KEY   = M.SB.key;
-  var SB_TABEL = 'ucapan';
   var sbHead   = {
     'apikey': SB_KEY,
     'Authorization': 'Bearer ' + SB_KEY,
@@ -879,9 +878,18 @@
 
   async function muat(){
     try{
-      var url = SB_URL + '/rest/v1/' + SB_TABEL
-              + '?select=nama,hadir,pesan,created_at&order=created_at.desc&limit=100';
-      var r = await fetch(url, { headers: sbHead });
+      /* Lewat RPC, bukan SELECT langsung ke tabel — sepola dengan cara
+         menulisnya. Sebabnya sama: pasangan_id. Pembacaan langsung dulu
+         berbunyi `?select=nama,hadir,pesan,created_at` TANPA saringan
+         pasangan sama sekali, dan kebijakan RLS-nya pun cuma
+         `using (tampil)` — jadi buku tamu pasangan A memuat ucapan
+         pasangan B. Sejak migrasi 021 jalan itu ditutup: ucapan_publik()
+         menyaring lewat slug, dan anon tidak bisa menyentuh tabelnya. */
+      var r = await fetch(SB_URL + '/rest/v1/rpc/ucapan_publik', {
+        method: 'POST',
+        headers: sbHead,
+        body: JSON.stringify({ p_slug: M.KONF.slug })
+      });
       if(!r.ok) throw new Error('HTTP ' + r.status);
       var data = await r.json();
       render(data.map(function(d){
