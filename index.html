@@ -311,11 +311,11 @@
     pihakMentah = q.get('p');
 
     var to = q.get('to');
-    var jalur = decodeURIComponent(window.location.pathname)
-                  .replace(/^\/+|\/+$/g,'').replace(/\.html$/i,'');
-    /* Di /coba tidak ada tamu — "coba" itu nama jalur, bukan nama orang.
-       Tanpa ini halaman menanyakan tamu bernama "coba" ke database. */
-    if(!DEMO && jalur && jalur.toLowerCase() !== 'index') slugTamu = M.siput(jalur);
+    /* Aturannya di assets/varian.js, bersama slugPasangan() — dua bentuk
+       alamat menaruh nama tamu di segmen yang berbeda, dan menyalin
+       aturannya ke sini berarti cepat atau lambat keduanya beda.
+       Di /coba tidak ada tamu sama sekali. */
+    if(!DEMO) slugTamu = M.slugTamuDari();
 
     if(to && to.trim())      namaTamu = to.trim().slice(0,60);
     else if(slugTamu)        namaTamu = slugTamu.replace(/-/g,' ');
@@ -750,7 +750,15 @@
           'Authorization': 'Bearer ' + M.SB.key,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ p_slug: slugTamu })
+        /* Slug pasangan ikut disebut. Slug tamu TIDAK unik secara
+           global — indeksnya (pasangan_id, slug) sejak migrasi 004 —
+           jadi tanpa ini "bapak-ahmad" bisa menjawab tamu pasangan
+           lain, berikut pihaknya. Dan pihak menentukan alamat acara
+           serta nomor dompet yang ditampilkan.
+
+           Tidak ada perjalanan bolak-balik tambahan: slugPasangan()
+           dihitung dari alamat, bukan ditanyakan. */
+        body: JSON.stringify({ p_slug: slugTamu, p_pasangan: M.slugPasangan() })
       }).then(function(r){
         if(!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();

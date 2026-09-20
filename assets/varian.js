@@ -67,22 +67,46 @@
 
   /* ---------- Pasangan mana yang sedang dibuka ----------
      rian-aini.mengundang.id  → rian-aini        (subdomain)
-     mengundang.id/budi-sari/ → budi-sari        (segmen path pertama)
+     mengundang.id/budi-sari/ → budi-sari        (segmen path pertama)  */
 
-     Alamat IP tidak diperlakukan sebagai subdomain: 127.0.0.1 akan
-     terbaca sebagai slug "127" dan halamannya diam-diam kosong waktu
-     dites lokal. */
-  var LOMPATI_HOST = { www: 1, mengundang: 1, localhost: 1 };
+  /* Hanya di bawah domain ini label pertama berarti nama pasangan.
+     Dulu syaratnya cuma "host punya tiga bagian", dan itu salah di
+     tempat yang justru paling sering dibuka waktu membangun:
+     undangan-digital-rian-aini.vercel.app terbaca sebagai pasangan
+     bernama "undangan-digital-rian-aini" — tidak ada di database, jadi
+     seluruh situs pratinjaunya berhenti di "Undangan belum tersedia".
+
+     Kalau nanti ada pasangan dengan domain sendiri (bukan cuma
+     subdomain di sini), daftar ini tidak bisa menampungnya: pasangannya
+     harus dikenali dari host lewat database, bukan dari daftar tetap. */
+  var DOMAIN_PLATFORM = { 'mengundang.id': 1 };
+
+  var LOMPATI_HOST = { www: 1 };
+
+  /* Nama-nama ini milik platform, bukan milik pasangan mana pun — semua
+     terdaftar di tabel slug_terlarang, jadi tidak akan pernah jadi slug
+     pasangan. Itu yang membuat daftar di sini aman: bukan tebakan, tapi
+     cermin dari aturan yang dijaga database. */
+  var JALUR_PLATFORM = {
+    kirim: 1, dasbor: 1, terimakasih: 1, admin: 1, mulai: 1, coba: 1,
+    assets: 1, tema: 1
+  };
 
   /* Apakah host ini subdomain milik satu pasangan. Dipakai bersama oleh
      slugPasangan() dan jalurCoba(); disalin jadi dua, keduanya cepat
      atau lambat beda perilaku. */
   function subdomainPasangan(host) {
-    var sepertiIP = /^[0-9.]+$/.test(host) || host.indexOf(':') !== -1;
-    if (sepertiIP) return null;
-    var bagian = host.split('.');
-    if (bagian.length >= 3 && !LOMPATI_HOST[bagian[0]]) return bagian[0];
-    return null;
+    var bagian = String(host || '').toLowerCase().split(':')[0].split('.');
+    if (bagian.length < 3) return null;
+    if (!DOMAIN_PLATFORM[bagian.slice(1).join('.')]) return null;
+    if (LOMPATI_HOST[bagian[0]]) return null;
+    return bagian[0];
+  }
+
+  function segmen(jalur) {
+    return jalur.split('/').filter(Boolean).map(function (x) {
+      try { return decodeURIComponent(x); } catch (e) { return x; }
+    });
   }
 
   function slugPasangan(host, jalur) {
@@ -92,12 +116,48 @@
     var sub = subdomainPasangan(host);
     if (sub) return sub;
 
-    /* Bentuk path hanya berlaku bila ada segmen sesudahnya — satu segmen
-       saja adalah slug tamu di undangan, bukan slug pasangan. */
-    var seg = jalur.split('/').filter(Boolean);
-    if (seg.length >= 2) return seg[0];
+    /* Di domain bersama, segmen pertama SELALU nama pasangan.
+       Sebelum ini satu segmen dianggap nama tamu dan pasangannya jatuh
+       ke cadangan — artinya mengundang.id/budi-sari, link polos milik
+       Budi & Sari sendiri, membuka undangan Rian & 'Aini. Sekeluarga
+       dengan lubang di panitia_*, buku tamu, dan undangan_tamu: data
+       pasangan lain muncul di tempat pasangan ini. */
+    var seg = segmen(jalur);
+    if (seg.length && !JALUR_PLATFORM[seg[0].toLowerCase()]) return siput(seg[0]);
 
+    /* Akar domain bersama, dan jalur milik platform seperti
+       /terimakasih — keduanya tidak menyebut pasangan sama sekali.
+       Selama masih satu pasangan, cadangan ini yang menjawab; begitu
+       ada pasangan kedua di domain bersama, halaman-halaman itu harus
+       menyebut pasangannya sendiri di alamat. */
     return SLUG_CADANGAN;
+  }
+
+  /* Slug TAMU dari alamat. Aturannya cermin slugPasangan(), dan memang
+     harus di sebelahnya: dua bentuk alamat menaruh nama tamu di tempat
+     yang berbeda.
+
+       rian-aini.mengundang.id/bapak-ahmad   → segmen pertama
+       mengundang.id/rian-aini/bapak-ahmad   → segmen KEDUA
+
+     Sebelum ini halaman memakai seluruh pathname apa adanya, jadi bentuk
+     path menghasilkan slug tamu "rian-aini-bapak-ahmad" — tidak pernah
+     ketemu, dan sampulnya mencetak "Rian Aini Bapak Ahmad". */
+  function slugTamuDari(host, jalur) {
+    host  = host  != null ? host  : (global.location ? location.hostname : '');
+    jalur = jalur != null ? jalur : (global.location ? location.pathname : '');
+
+    var seg = segmen(jalur).map(function (x) { return x.replace(/\.html$/i, ''); })
+                           .filter(function (x) { return x && x.toLowerCase() !== 'index'; });
+    if (!seg.length) return '';
+
+    /* Di domain bersama, segmen pertama itu slug pasangan — kecuali
+       kalau itu jalur platform, dan di sana tidak ada tamu sama sekali. */
+    var ambil;
+    if (subdomainPasangan(host))                    ambil = seg[0];
+    else if (JALUR_PLATFORM[seg[0].toLowerCase()])  ambil = '';
+    else                                            ambil = seg.length >= 2 ? seg[1] : '';
+    return ambil ? siput(ambil) : '';
   }
 
   /* ---------- Memuat ---------- */
@@ -460,9 +520,23 @@
   }
 
   function linkTamu(slug, pihak) {
-    var dasar = KONF.situs.replace(/\/+$/, '');
-    var v = pihakSah(pihak);
-    return dasar + '/' + slug + (v ? '?p=' + VARIAN[v].kode : '');
+    var v    = pihakSah(pihak);
+    var ekor = '/' + slug + (v ? '?p=' + VARIAN[v].kode : '');
+
+    /* canonical_host, kalau pasangan ini punya subdomain sendiri, selalu
+       menang: itulah alamat yang sudah diumumkan. */
+    if (KONF.canonicalHost) {
+      return 'https://' + KONF.canonicalHost.replace(/\/+$/, '') + ekor;
+    }
+
+    var host = global.location ? location.hostname : '';
+    var asal = (global.location ? location.origin : KONF.situs).replace(/\/+$/, '');
+
+    /* Di subdomain pasangan, alamat tamu langsung di akar. Di domain
+       bersama, slug pasangan HARUS ikut — tanpa itu yang terbuka
+       undangan pasangan bawaan, bukan undangan pasangan ini. */
+    if (subdomainPasangan(host)) return asal + ekor;
+    return asal + '/' + KONF.slug + ekor;
   }
 
   function pesanWA(nama, slug, pihak) {
@@ -512,6 +586,7 @@
     muat: muat,
     TEMA_BAWAAN: TEMA_BAWAAN,
     slugPasangan: slugPasangan,
+    slugTamuDari: slugTamuDari,
     SLUG_COBA: SLUG_COBA,
     isiCoba: isiCoba,
     jalurCoba: jalurCoba,
