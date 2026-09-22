@@ -74,8 +74,8 @@
   /* Hanya di bawah domain ini label pertama berarti nama pasangan.
      Dulu syaratnya cuma "host punya tiga bagian", dan itu salah di
      tempat yang justru paling sering dibuka waktu membangun:
-     undangan-digital-rian-aini.vercel.app terbaca sebagai pasangan
-     bernama "undangan-digital-rian-aini" — tidak ada di database, jadi
+     undangan-rian-aini.vercel.app terbaca sebagai pasangan
+     bernama "undangan-rian-aini" — tidak ada di database, jadi
      seluruh situs pratinjaunya berhenti di "Undangan belum tersedia".
 
      Kalau nanti ada pasangan dengan domain sendiri (bukan cuma
