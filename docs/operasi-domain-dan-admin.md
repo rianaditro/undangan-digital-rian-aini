@@ -38,7 +38,7 @@ yang paling mungkin salah cuma sandinya.
 
 ---
 
-## 2. Domain — sisi Vercel **selesai**, sisi DNS menunggu Hostinger
+## 2. Domain — sisi Vercel **selesai**, DNS-nya belum
 
 Proyek `undangan-digital-rian-aini` (`prj_v2pjgv1UlJV0NLeAt4BZlE7NhDG5`)
 sekarang memegang:
@@ -67,60 +67,98 @@ CAA                      —      tidak ada
 Artinya zona ini praktis kosong: tidak ada email yang bisa rusak, dan tidak
 ada CAA yang menghalangi penerbitan sertifikat.
 
-### Yang perlu ditambahkan di Hostinger
+Rekaman yang kurang TIDAK ditambahkan di Hostinger, karena zonanya
+sekaligus dipindah — lihat bagian 3.
 
-Untuk **paket standar** (`mengundang.id/rian-aini/bapak-ahmad`) cukup dua:
+## 3. Pindah nameserver ke Vercel — urutannya menentukan
 
-| Tipe | Nama | Nilai |
-|---|---|---|
-| A | `@` | `76.76.21.21` |
-| CNAME | `www` | `cname.vercel-dns.com` |
+Keputusannya sudah diambil: nameserver `mengundang.id` pindah ke Vercel,
+supaya sertifikat wildcard bisa terbit sendiri dan seluruh DNS diurus di
+satu tempat.
 
-Keduanya nilai yang disebut dokumentasi Vercel. Kalau dasbor Vercel
-menampilkan nilai lain untuk domain ini, yang di dasbor yang dipakai —
-Vercel memberi sebagian domain CNAME khusus per-domain, seperti yang sudah
-terjadi pada `rian-aini` (`db6d4fd625182504.vercel-dns-017.com`).
+**Yang tidak bisa dikerjakan dari sisi ini.** Token MCP Vercel yang
+dipakai boleh mengatur domain milik proyek, tapi TIDAK boleh menyentuh
+zona DNS — endpoint DNS-nya menjawab 401 di scope pribadi dan 403 di
+scope tim `rianaditros-projects`. Jadi pengisian zona dan penggantian
+nameserver dua-duanya lewat tangan.
 
-Sesudah itu `mengundang.id` akan dialihkan ke `/mulai` oleh `vercel.json`.
+### Kenapa urutannya tidak boleh dibalik
 
-### Untuk paket premium: wildcard
+Delegasi NS `mengundang.id` punya **TTL 21600 detik — 6 jam**. Begitu
+nameserver diganti di Hostinger, selama sampai 6 jam sebagian resolver
+masih bertanya ke Hostinger dan sebagian sudah bertanya ke Vercel.
 
-Ini yang belum bisa diselesaikan tanpa satu keputusan lagi.
+Selama **kedua sisi menjawab hal yang sama**, tidak ada yang terasa.
+Kalau sisi Vercel masih kosong, sebagian pengunjung dapat SERVFAIL —
+dan yang paling mahal bukan halaman depan, melainkan
+`rian-aini.mengundang.id`: undangan sungguhan yang tautannya sudah
+dipegang 415 tamu.
 
-Menambahkan `CNAME *` ke Vercel membuat `budi-sari.mengundang.id`
-*terjangkau*. Yang tidak otomatis adalah **sertifikatnya**: sertifikat
-wildcard hanya bisa diterbitkan lewat tantangan DNS-01, yaitu rekaman TXT
-`_acme-challenge` yang harus ditulis Vercel sendiri. Selama nameserver
-masih di Hostinger, Vercel tidak bisa menulisnya — dokumentasi Vercel
-menyediakan jalur manual untuk ini
-(`vercel certs issue "*.mengundang.id" --challenge-only`), tapi jalur itu
-harus diulang tangan setiap perpanjangan.
+Jadi: **isi zona di Vercel dulu, buktikan jawabannya sama, baru pindah.**
 
-Dua pilihan:
+### Rekaman yang harus ada di zona Vercel sebelum pindah
 
-1. **Pindahkan nameserver `mengundang.id` ke Vercel.** Zona ini hampir
-   kosong — tidak ada MX, tidak ada TXT — jadi risikonya kecil, dan
-   sesudahnya seluruh DNS bisa diurus dari satu tempat, termasuk wildcard
-   dan perpanjangan sertifikatnya. Ini yang saya sarankan kalau premium
-   memang mau dijual.
-2. **Tetap di Hostinger, jual paket standar dulu.** Bentuk jalur tidak
-   perlu wildcard sama sekali, dan kodenya sudah siap. Premium menyusul
-   kalau ada yang membelinya.
+Cerminan zona yang sekarang, plus dua yang baru:
 
-Satu hal lagi yang perlu dipastikan sendiri: akun Vercel ini **paket
-hobby**. API-nya menerima `*.mengundang.id` tanpa menolak, tapi halaman
-harga Vercel menyebut wildcard sebagai fitur berbayar. Apakah sertifikatnya
-benar-benar terbit di paket hobby baru ketahuan sesudah rekaman DNS-nya ada
-— jadi jangan menjual premium sebelum satu subdomain pasangan sungguhan
-terbukti terbuka lewat HTTPS.
+| Tipe | Nama | Nilai | Kenapa |
+|---|---|---|---|
+| CNAME | `rian-aini` | `db6d4fd625182504.vercel-dns-017.com` | **wajib** — undangan yang sudah tersebar |
+| A | `@` | `76.76.21.21` | apex, supaya `mengundang.id` → `/mulai` |
+| CNAME | `www` | `cname.vercel-dns.com` | www ikut ke aplikasi |
+| CNAME | `*` | `cname.vercel-dns.com` | yang baru — subdomain per pasangan |
 
----
+Tidak ada MX, TXT, maupun CAA yang perlu dibawa; zona lamanya memang
+kosong selain yang di atas.
+
+Kalau dasbor Vercel menawarkan nilai lain untuk apex atau www, pakai yang
+dari dasbor — Vercel memberi sebagian domain target khusus per-domain,
+persis seperti yang sudah terjadi pada `rian-aini`.
+
+### Langkahnya
+
+1. **Vercel → Domains → `mengundang.id` → pakai Vercel DNS.** Ini yang
+   membuat zonanya ada. Catat nameserver yang diberikan (biasanya
+   `ns1.vercel-dns.com` dan `ns2.vercel-dns.com`).
+2. **Isi keempat rekaman di atas** di zona itu, masih di Vercel.
+3. **Periksa**: `python3 alat/periksa-dns.py` — dari komputermu sendiri,
+   bukan dari sesi Claude (alasannya di bawah). Jangan lanjut sebelum
+   tulisannya `SIAP`.
+4. **Hostinger → ganti nameserver** ke yang dicatat di langkah 1.
+5. **Periksa lagi**, sesekali selama 6 jam berikutnya. Kolom kiri dan
+   kanan harus sama-sama terisi sepanjang masa itu.
+6. Sesudah delegasi benar-benar pindah, buka `https://mengundang.id`
+   dan `https://rian-aini.mengundang.id`. Lalu tunggu sertifikat
+   wildcard terbit, dan uji satu subdomain pasangan sungguhan lewat
+   HTTPS sebelum menjual paket premium.
+
+### Soal `alat/periksa-dns.py`
+
+Berkas itu membandingkan apa yang dilihat dunia sekarang dengan apa yang
+akan dijawab nameserver Vercel, dengan bertanya langsung ke keduanya.
+
+Ia **menolak menjawab** kalau kueri ke nameserver otoritatif ternyata
+tidak sampai. Itu bukan kehati-hatian berlebihan: sandbox tempat berkas
+ini ditulis membelokkan semua UDP/53 ke resolvernya sendiri, dan
+gejalanya halus — jawabannya terlihat masuk akal, cuma datang dari
+tempat yang salah. Saya sempat tertipu olehnya dan melaporkan "zona
+Vercel masih kosong" sebagai fakta, padahal yang terbaca cuma resolver
+lokal yang gagal. Pemeriksaannya sekarang: nameserver otoritatif harus
+menjawab `vercel.com` dengan bendera `aa=1`; kalau tidak, jalurnya
+tersadap dan kolom Vercel tidak boleh dipercaya.
+
+Karena itu langkah 3 dan 5 dijalankan dari komputermu, bukan dari sini.
+
+**Jadi yang sampai detik ini BELUM diketahui:** apakah Vercel sudah
+memegang zona untuk `mengundang.id`. Yang pasti cuma bahwa delegasinya
+masih di Hostinger.
 
 ## Urutan yang disarankan
 
 1. Masuk ke `/admin`, pastikan akunnya bekerja, ganti sandinya.
-2. Tambahkan A `@` dan CNAME `www` di Hostinger. Tunggu propagasi, lalu
-   buka `https://mengundang.id` — harusnya mendarat di `/mulai`.
-3. Buat pasangan kedua lewat `/admin` dengan paket **standar**, buka
+2. Pindah nameserver mengikuti enam langkah di bagian 3 — zona dulu,
+   periksa, baru nameserver.
+3. Sesudah delegasinya pindah dan `https://mengundang.id` terbuka, buat
+   pasangan kedua lewat `/admin` dengan paket **standar**, buka
    undangannya, kirim satu link tamu ke diri sendiri.
-4. Baru sesudah itu putuskan soal wildcard dan nameserver.
+4. Terakhir, uji satu subdomain pasangan sungguhan lewat HTTPS. Sebelum
+   itu terbukti, jangan menjual paket premium.
