@@ -43,6 +43,12 @@ select{appearance:none;cursor:pointer;}
 .duo{display:grid;gap:12px;}
 @media(min-width:640px){.duo{grid-template-columns:1fr 1fr;}}
 .trio{display:grid;gap:12px;}
+/* Centang mewarisi input{width:100%} kalau tidak ditahan di sini —
+   kotaknya melar selebar panel dan barisnya jadi tidak terbaca. */
+.centang{display:flex;gap:20px;flex-wrap:wrap;margin-top:15px;padding-top:13px;border-top:1px solid var(--garis);}
+.centang label{display:flex;align-items:center;gap:8px;margin:0;font-size:12.5px;letter-spacing:.02em;
+  text-transform:none;color:rgba(237,231,217,.72);cursor:pointer;}
+.centang input{width:16px;height:16px;flex:none;padding:0;accent-color:var(--kuningan);cursor:pointer;}
 @media(min-width:640px){.trio{grid-template-columns:1fr 1fr 1fr;}}
 
 .btn{border:1px solid var(--kuningan-dim);background:transparent;color:var(--kuningan);border-radius:2px;
@@ -129,6 +135,7 @@ select{appearance:none;cursor:pointer;}
   <div class="panel">
     <h2>3 · Rangkaian acara</h2>
     <p class="hint">Acara yang <strong>dikunci</strong> ke satu tempat ditampilkan sama untuk semua tamu. Yang dibiarkan <em>mengikuti pihak tamu</em> berpindah alamat sesuai undangan yang dibuka.</p>
+    <p class="hint">Daftar ini dipakai dua halaman. Undangan memakainya untuk memberi tahu acaranya; halaman kenangan memakainya sebagai urutan babak sesudah acara selesai. Dua centang di tiap baris menentukan di mana ia muncul — jadi <em>salam-salaman</em> boleh ada di kenangan tanpa ikut di undangan, dan acara yang batal bisa dimatikan tanpa dihapus.</p>
     <div id="formAcara"></div>
     <div class="aksi"><button class="btn ghost kecil" id="btnAcaraBaru">Tambah Acara</button></div>
   </div>
@@ -315,6 +322,10 @@ select{appearance:none;cursor:pointer;}
         + '</div>'
         + '<label>Ringkas (untuk pesan WhatsApp)</label><input data-k="ringkas" maxlength="60" value="'+esc(a.ringkas||'')+'" placeholder="Akad 13.00 WIB">'
         + '<label>Tempat</label><select data-k="tempat_id">'+opsi+'</select>'
+        + '<div class="centang">'
+        +   '<label><input type="checkbox" data-k="di_undangan"'+(a.di_undangan!==false?' checked':'')+'> Tampil di undangan</label>'
+        +   '<label><input type="checkbox" data-k="di_terimakasih"'+(a.di_terimakasih!==false?' checked':'')+'> Jadi babak di halaman kenangan</label>'
+        + '</div>'
         + '</div>';
     }).join('') : '<p class="kosongstate">Belum ada acara.</p>';
 
@@ -383,7 +394,10 @@ select{appearance:none;cursor:pointer;}
       if(!baris) return;
       blok.querySelectorAll('[data-k]').forEach(function(el){
         var k = el.dataset.k;
-        baris[k] = (k === 'mulai') ? dariLokal(el.value)
+        /* Centang menyimpan jawabannya di .checked; .value-nya selalu
+           "on" — dibaca seperti input biasa, semuanya jadi true. */
+        baris[k] = (el.type === 'checkbox') ? el.checked
+                 : (k === 'mulai') ? dariLokal(el.value)
                  : (k === 'tempat_id') ? (el.value || null)
                  : el.value;
       });
@@ -422,7 +436,8 @@ select{appearance:none;cursor:pointer;}
       data.acara.forEach(function(a,i){
         a.urutan = i+1;
         tugas.push(api('acara?id=eq.'+a.id,{method:'PATCH',prefer:'return=minimal',
-          body:JSON.stringify(bersih(a,['nama','tanggal','jam','ringkas','mulai','tempat_id','urutan']))}));
+          body:JSON.stringify(bersih(a,['nama','tanggal','jam','ringkas','mulai','tempat_id','urutan',
+                                        'di_undangan','di_terimakasih']))}));
       });
       data.dompet.forEach(function(d){
         tugas.push(api('dompet?id=eq.'+d.id,{method:'PATCH',prefer:'return=minimal',
