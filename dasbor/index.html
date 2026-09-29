@@ -79,6 +79,25 @@ select{appearance:none;cursor:pointer;}
 .baris-kepala{display:flex;justify-content:space-between;align-items:center;gap:10px;}
 .baris-judul{font-family:var(--display);font-size:15px;}
 .kosongstate{font-size:13px;color:rgba(237,231,217,.45);padding:12px 0;}
+.berkas{display:inline-block;cursor:pointer;}
+.kuota{font-size:12px;color:rgba(237,231,217,.45);margin-top:10px;}
+.maju{height:3px;background:rgba(195,154,92,.15);margin-top:12px;overflow:hidden;}
+.maju i{display:block;height:100%;width:0;background:var(--kuningan);transition:width .25s;}
+.pustaka{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;margin-top:16px;}
+.ubin{border:1px solid var(--garis);background:rgba(0,0,0,.2);padding:8px;}
+.ubin.samar{opacity:.45;}
+.ubin img{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--nila-2);display:block;}
+.ubin select,.ubin input{font-size:12px;padding:6px 8px;margin-top:6px;}
+.ubin .alat{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
+/* Empat tombol dalam satu kolom sempit: panah dikunci kecil, dua tombol
+   teks diberi lebar minimum supaya MELIPAT ke baris berikutnya, bukan
+   diperas sampai tulisannya saling tindih. Aturan ini pindah dari
+   /kirim, tempat lebarnya dulu diukur — bukan dikira. */
+.ubin .alat .btn{padding:5px 7px;font-size:9px;letter-spacing:.06em;}
+.ubin .alat .btn[data-aksi="naik"],
+.ubin .alat .btn[data-aksi="turun"]{flex:0 0 auto;width:30px;}
+.ubin .alat .btn[data-aksi="tampil"],
+.ubin .alat .btn[data-aksi="hapus"]{flex:1 1 90px;min-width:90px;}
 
 .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);z-index:80;
   background:var(--nila-2);border:1px solid var(--garis);padding:11px 18px;font-size:13px;
@@ -177,11 +196,26 @@ select{appearance:none;cursor:pointer;}
       <button class="btn" id="btnTerbit">Terbitkan</button>
     </div>
   </div>
+
+  <!-- 8 -->
+  <div class="panel">
+    <h2>8 · Foto acara</h2>
+    <p class="hint" id="hintFoto"></p>
+    <div class="aksi" style="margin-top:0">
+      <label class="btn ghost berkas" for="inBerkasFoto">Pilih Foto</label>
+      <input id="inBerkasFoto" type="file" accept="image/*" multiple hidden>
+    </div>
+    <p class="hint" style="margin:10px 0 0">Foto dikecilkan dulu di perangkat ini sebelum dikirim, jadi tidak perlu diperkecil sendiri. Bisa pilih banyak sekaligus.</p>
+    <div class="maju" id="majuFoto" hidden><i></i></div>
+    <p class="kuota" id="kuotaFoto"></p>
+    <div class="pustaka" id="pustakaFoto"></div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script src="/assets/varian.js"></script>
+<script src="/assets/gambar.js"></script>
 <script>
 (function(){
   'use strict';
@@ -213,7 +247,7 @@ select{appearance:none;cursor:pointer;}
      sekalipun ia berhasil mendaftar sendiri.
      ============================================================ */
   var KUNCI='dasbor-sesi', sesi=null, pasangan=null;
-  var data = { mempelai:[], tempat:[], acara:[], dompet:[], pihak:[] };
+  var data = { mempelai:[], tempat:[], acara:[], dompet:[], pihak:[], foto:[] };
 
   try{ sesi = JSON.parse(localStorage.getItem(KUNCI)||'null'); }catch(e){}
 
@@ -266,11 +300,14 @@ select{appearance:none;cursor:pointer;}
       api('tempat?select=*&pasangan_id=eq.'+pasangan.id+'&order=kode'),
       api('acara?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan'),
       api('dompet?select=*&pasangan_id=eq.'+pasangan.id+'&order=kode'),
-      api('pihak?select=*&pasangan_id=eq.'+pasangan.id+'&order=kode')
+      api('pihak?select=*&pasangan_id=eq.'+pasangan.id+'&order=kode'),
+      api('foto?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,diunggah')
     ]);
     data.mempelai=hasil[0]; data.tempat=hasil[1]; data.acara=hasil[2];
     data.dompet=hasil[3];   data.pihak=hasil[4];
+    data.foto = hasil[5];
     gambar();
+    gambarFoto();
   }
 
   /* ---------- menggambar ---------- */
@@ -521,6 +558,198 @@ select{appearance:none;cursor:pointer;}
     window.open(M.alamatUndangan(pasangan), '_blank', 'noopener');
   });
   $('btnKeluar').addEventListener('click', function(){ simpanSesi(null); location.reload(); });
+
+  /* ============================================================
+     8 · Foto acara
+
+     Dulu unggahan foto cuma ada di /kirim, lewat token panitia, karena
+     foto-unggah memang cuma memeriksa token itu. Sekarang fungsinya
+     menerima JWT pemilik juga, jadi seluruh penyiapan — data diri,
+     acara, foto — duduk di satu halaman. Panelnya dihapus dari /kirim:
+     dua tempat unggah berarti dua perilaku yang cepat atau lambat beda.
+
+     Metadatanya (keterangan, babak, urutan, tampil) ditulis langsung
+     lewat PostgREST — RLS `foto panitia` sudah mengizinkan pemilik, jadi
+     tidak perlu RPC sendiri. Yang lewat edge function cuma yang menuntut
+     service_role: menulis dan menghapus berkas di bucket.
+     ============================================================ */
+  var BATAS_FOTO = 100;
+
+  function acaraLewat(){
+    if(!pasangan || !pasangan.tanggal_acara) return false;
+    /* Dibandingkan sebagai tanggal, bukan waktu: acara pagi tidak boleh
+       dianggap "belum" sepanjang sisa harinya. */
+    return pasangan.tanggal_acara < new Date().toISOString().slice(0,10);
+  }
+
+  function gambarFoto(){
+    var daftar = data.foto || [];
+
+    /* Panelnya tetap terlihat sebelum hari-H — supaya pasangan tahu sejak
+       awal halaman kenangan itu ada dan termasuk yang mereka beli — tapi
+       keterangannya berbeda, karena sebelum acara memang belum ada yang
+       bisa diunggah. */
+    $('hintFoto').textContent = acaraLewat()
+      ? 'Foto hari itu. Yang diunggah di sini muncul di halaman kenangan, dan yang diberi babak jadi wajah babaknya.'
+      : 'Belum perlu diisi sekarang — kotak ini untuk foto SESUDAH acara. Yang masuk ke sini nanti menyusun halaman kenangan, dikelompokkan menurut rangkaian acara di kotak 3.';
+
+    $('kuotaFoto').textContent = daftar.length
+      ? daftar.length + ' dari ' + BATAS_FOTO + ' foto · '
+        + (daftar.reduce(function(j,f){ return j + (f.bita||0); }, 0) / 1048576).toFixed(1) + ' MB'
+      : '';
+
+    if(!daftar.length){
+      $('pustakaFoto').innerHTML = '<p class="kosongstate">'
+        + (acaraLewat() ? 'Belum ada foto.' : 'Belum ada foto — wajar, acaranya belum berlangsung.')
+        + '</p>';
+      return;
+    }
+
+    var opsiBabak = '<option value="">Tanpa babak</option>'
+      + (data.acara || []).map(function(a){
+          return '<option value="'+esc(a.id)+'">'+esc(a.nama||'Acara')+'</option>';
+        }).join('');
+
+    $('pustakaFoto').innerHTML = daftar.map(function(f, i){
+      var src = window.Gambar.url(f.jalur_kecil || f.jalur);
+      return '<div class="ubin'+(f.tampil ? '' : ' samar')+'" data-foto="'+esc(f.id)+'">'
+        + '<img src="'+esc(src)+'" alt="" loading="lazy">'
+        + '<select data-f="acara_id" aria-label="Babak">'+opsiBabak+'</select>'
+        + '<input data-f="keterangan" type="text" maxlength="280" placeholder="Keterangan" value="'+esc(f.keterangan||'')+'">'
+        + '<div class="alat">'
+        +   '<button class="btn ghost" data-aksi="naik" '+(i===0?'disabled':'')+' title="Naikkan">&uarr;</button>'
+        +   '<button class="btn ghost" data-aksi="turun" '+(i===daftar.length-1?'disabled':'')+' title="Turunkan">&darr;</button>'
+        +   '<button class="btn ghost" data-aksi="tampil">'+(f.tampil?'Sembunyi':'Tampil')+'</button>'
+        +   '<button class="btn bahaya" data-aksi="hapus">Hapus</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    /* Nilai select dipasang sesudah HTML-nya ada, bukan lewat atribut
+       selected: acara_id bisa null, dan menaruh null di atribut
+       menghasilkan tulisan "null" sebagai nilai yang tampak sah. */
+    daftar.forEach(function(f){
+      var ubin = $('pustakaFoto').querySelector('[data-foto="'+f.id+'"]');
+      if(ubin) ubin.querySelector('[data-f="acara_id"]').value = f.acara_id || '';
+    });
+  }
+
+  async function unggahSatuFoto(berkas){
+    var kecilan = await window.Gambar.siapkan(berkas);
+    var form = new FormData();
+    form.append('berkas', kecilan.penuh.blob, 'foto.webp');
+    form.append('kecil',  kecilan.kecil.blob, 'kecil.webp');
+    form.append('lebar',  kecilan.penuh.lebar);
+    form.append('tinggi', kecilan.penuh.tinggi);
+
+    var r = await fetch(M.SB.url + '/functions/v1/foto-unggah', {
+      method: 'POST',
+      /* JWT pemilik, bukan anon key — itu yang ditukar foto-unggah jadi
+         pasangan lewat tabel pemilik. */
+      headers: { 'Authorization': 'Bearer ' + (sesi && sesi.akses), 'apikey': M.SB.key },
+      body: form
+    });
+    var jawab = null;
+    try{ jawab = await r.json(); }catch(e){}
+    if(!r.ok) throw new Error((jawab && jawab.pesan) || ('Gagal mengunggah (HTTP ' + r.status + ')'));
+    return jawab;
+  }
+
+  async function pilihFoto(e){
+    var berkas = Array.prototype.slice.call(e.target.files || []);
+    e.target.value = '';
+    if(!berkas.length) return;
+
+    var maju = $('majuFoto'), batang = maju.querySelector('i');
+    maju.hidden = false;
+    var sukses = 0, gagal = [];
+
+    for(var i = 0; i < berkas.length; i++){
+      batang.style.width = Math.round(i / berkas.length * 100) + '%';
+      toast('Mengunggah ' + (i+1) + ' dari ' + berkas.length + '…');
+      try{ await unggahSatuFoto(berkas[i]); sukses++; }
+      /* Satu berkas rusak tidak boleh menghentikan sisanya — orang
+         memilih 80 foto sekaligus, dan satu HEIC di tengah tidak layak
+         membatalkan 79 lainnya. */
+      catch(err){ gagal.push(berkas[i].name + ': ' + err.message); }
+    }
+    batang.style.width = '100%';
+    setTimeout(function(){ maju.hidden = true; batang.style.width = '0'; }, 600);
+
+    if(gagal.length){
+      console.warn('Foto yang gagal:', gagal);
+      toast(sukses + ' foto masuk, ' + gagal.length + ' gagal — lihat console', true);
+    }else{
+      toast(sukses + ' foto tersimpan');
+    }
+    await muatFoto();
+  }
+
+  async function muatFoto(){
+    data.foto = await api('foto?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,diunggah');
+    gambarFoto();
+  }
+
+  $('inBerkasFoto').addEventListener('change', pilihFoto);
+
+  $('pustakaFoto').addEventListener('change', async function(e){
+    var el = e.target.closest('[data-f]');
+    if(!el) return;
+    var id = el.closest('[data-foto]').dataset.foto;
+    var badan = {};
+    badan[el.dataset.f] = el.dataset.f === 'acara_id' ? (el.value || null) : el.value;
+    try{
+      await api('foto?id=eq.'+id, { method:'PATCH', prefer:'return=minimal',
+                                    body: JSON.stringify(badan) });
+      var f = (data.foto||[]).find(function(x){ return x.id === id; });
+      if(f) Object.assign(f, badan);
+      toast('Tersimpan');
+    }catch(err){ toast(err.message, true); }
+  });
+
+  $('pustakaFoto').addEventListener('click', async function(e){
+    var tombol = e.target.closest('button[data-aksi]');
+    if(!tombol) return;
+    var id = tombol.closest('[data-foto]').dataset.foto;
+    var i  = (data.foto||[]).findIndex(function(x){ return x.id === id; });
+    if(i < 0) return;
+    var f = data.foto[i], aksi = tombol.dataset.aksi;
+
+    tombol.disabled = true;
+    try{
+      if(aksi === 'hapus'){
+        if(!confirm('Hapus foto ini? Berkasnya ikut dihapus dan tidak bisa dikembalikan.')){
+          tombol.disabled = false; return;
+        }
+        var r = await fetch(M.SB.url + '/functions/v1/foto-unggah?id=' + encodeURIComponent(id), {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + (sesi && sesi.akses), 'apikey': M.SB.key }
+        });
+        if(!r.ok) throw new Error('Gagal menghapus');
+        toast('Foto dihapus');
+
+      }else if(aksi === 'tampil'){
+        await api('foto?id=eq.'+id, { method:'PATCH', prefer:'return=minimal',
+                                      body: JSON.stringify({ tampil: !f.tampil }) });
+        toast(f.tampil ? 'Foto disembunyikan' : 'Foto ditampilkan');
+
+      }else{
+        /* Naik/turun cukup menukar nilai urutan dengan tetangganya.
+           Nilainya berurutan sejak diunggah, jadi tidak perlu menomori
+           ulang seluruh daftar. */
+        var j = aksi === 'naik' ? i - 1 : i + 1;
+        var g = data.foto[j];
+        if(!g){ tombol.disabled = false; return; }
+        await Promise.all([
+          api('foto?id=eq.'+f.id, { method:'PATCH', prefer:'return=minimal',
+                                    body: JSON.stringify({ urutan: g.urutan }) }),
+          api('foto?id=eq.'+g.id, { method:'PATCH', prefer:'return=minimal',
+                                    body: JSON.stringify({ urutan: f.urutan }) })
+        ]);
+      }
+      await muatFoto();
+    }catch(err){ toast(err.message, true); tombol.disabled = false; }
+  });
 
   async function cobaMasuk(){
     var email=$('inEmail').value.trim(), sandi=$('inSandi').value;

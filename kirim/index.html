@@ -74,26 +74,7 @@ label.btn.berkas{
 label.btn.berkas:hover{color:var(--kapur);}
 .aksi{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center;}
 
-/* ---------- 4 · halaman terima kasih ---------- */
-.tk-galeri{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:16px;}
-.tk-foto{border:1px solid var(--garis);background:rgba(0,0,0,.25);padding:6px;}
-.tk-foto .gbr{width:100%;aspect-ratio:4/3;object-fit:cover;background:rgba(237,231,217,.06);border-radius:2px;}
-.tk-foto.samar .gbr{opacity:.32;}
-.tk-foto input.ket{margin-top:6px;padding:6px 8px;font-size:12px;}
-.tk-foto .alat-foto{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;}
-/* Empat tombol dalam satu kolom sempit: panah dikunci kecil, dua tombol
-   teks diberi lebar minimum supaya MELIPAT ke baris berikutnya, bukan
-   diperas sampai tulisannya saling tindih. */
-.tk-foto .alat-foto .btn{padding:5px 7px;font-size:9px;letter-spacing:.06em;}
-.tk-foto .alat-foto .btn[data-aksi="naik"],
-.tk-foto .alat-foto .btn[data-aksi="turun"]{flex:0 0 auto;width:30px;}
-/* 90px itu lebar yang benar-benar dibutuhkan "Sembunyikan" pada ukuran
-   huruf ini — diukur, bukan dikira. */
-.tk-foto .alat-foto .btn[data-aksi="tampil"],
-.tk-foto .alat-foto .btn[data-aksi="hapus"]{flex:1 1 90px;min-width:90px;}
-.tk-kuota{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(237,231,217,.42);margin-top:14px;}
-.tk-maju{height:3px;background:rgba(237,231,217,.1);overflow:hidden;margin-top:12px;}
-.tk-maju i{display:block;height:100%;background:var(--kuningan);width:0;transition:width .3s ease;}
+/* ---------- 4 · balasan ucapan ---------- */
 
 /* ---------- 5 · silsilah ---------- */
 .sil-tambah{display:grid;gap:8px;margin-top:14px;}
@@ -416,20 +397,14 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
 
 <!-- 4. HALAMAN TERIMA KASIH -->
 <div class="panel" id="panelTk" hidden>
-  <h2>4 · Halaman terima kasih</h2>
-  <p class="hint">Foto acara dan balasan untuk ucapan tamu. Yang tersimpan di sini langsung tampil di <span id="tkAlamat"></span>.</p>
+  <h2>4 · Balasan ucapan</h2>
+  <p class="hint">Balasan untuk ucapan tamu, tampil di <span id="tkAlamat"></span>.</p>
+  <p class="hint">Unggahan foto acara <strong>pindah ke halaman dasbor</strong>, kotak 8 — supaya seluruh penyiapan duduk di satu tempat. Masuknya pakai email dan sandi, bukan link ini.</p>
 
   <div class="aksi" style="margin-top:0">
-    <label class="btn ghost berkas" for="berkasFoto">Pilih Foto</label>
-    <input id="berkasFoto" type="file" accept="image/*" multiple hidden>
     <button class="btn ghost kecil" id="btnBukaTk">Buka Halamannya</button>
     <button class="btn ghost kecil" id="btnSegarkanTk">Muat Ulang</button>
   </div>
-  <p class="hint" style="margin:10px 0 0">Foto dikecilkan dulu di HP ini sebelum dikirim, jadi tidak perlu diperkecil sendiri. Bisa pilih banyak sekaligus.</p>
-  <div class="tk-maju" id="tkMaju" hidden><i></i></div>
-  <p class="tk-kuota" id="tkKuota"></p>
-
-  <div class="tk-galeri" id="tkGaleri"></div>
 
   <label style="margin-top:22px">Ucapan tamu</label>
   <p class="hint" style="margin-bottom:0">Balasan tampil di bawah ucapannya sebagai tulisan Anda berdua. Mengosongkan kotaknya lalu menyimpan berarti menarik balasan itu kembali.</p>
@@ -1117,9 +1092,6 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   });
 
   /* ---------- pendengar panel 4 ---------- */
-  $('berkasFoto').addEventListener('change', pilihFoto);
-  $('tkGaleri').addEventListener('click', aksiFoto);
-  $('tkGaleri').addEventListener('change', simpanKeterangan);
   $('tkUcapan').addEventListener('click', aksiUcapan);
   $('btnBukaTk').addEventListener('click', function(){
     window.open(M.linkPlatform('/terimakasih'), '_blank', 'noopener');
@@ -1227,150 +1199,14 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
      itu — jadi panelnya disembunyikan di sana, bukan ditampilkan lalu
      gagal waktu ditekan.
      ============================================================ */
-  var fotoku  = [];
   var ucapanku = [];
 
   function tkAktif(){ return !!TOKEN && cakupanPenuh(); }
 
-  async function unggahSatu(berkas){
-    var kecilan = await window.Gambar.siapkan(berkas);
-    var form = new FormData();
-    form.append('berkas', kecilan.penuh.blob, 'foto.webp');
-    form.append('kecil',  kecilan.kecil.blob, 'kecil.webp');
-    form.append('lebar',  kecilan.penuh.lebar);
-    form.append('tinggi', kecilan.penuh.tinggi);
+  /* Galeri foto acara dulu ada di sini. Sekarang di /dasbor kotak 8,
+     bersama penyiapan yang lain — satu tempat unggah, bukan dua. Yang
+     tersisa di panel ini cuma balasan ucapan. */
 
-    var r = await fetch(M.SB.url + '/functions/v1/foto-unggah', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + M.SB.key,
-        'apikey': M.SB.key,
-        'x-panitia-token': TOKEN
-      },
-      body: form
-    });
-    var jawab = null;
-    try{ jawab = await r.json(); }catch(e){}
-    if(!r.ok) throw new Error((jawab && jawab.pesan) || ('Gagal mengunggah (HTTP ' + r.status + ')'));
-    return jawab;
-  }
-
-  async function pilihFoto(e){
-    var berkas = Array.prototype.slice.call(e.target.files || []);
-    e.target.value = '';
-    if(!berkas.length) return;
-
-    var maju = $('tkMaju');
-    maju.hidden = false;
-    var batang = maju.querySelector('i');
-    var sukses = 0, gagal = [];
-
-    for(var i = 0; i < berkas.length; i++){
-      batang.style.width = Math.round(i / berkas.length * 100) + '%';
-      toast('Mengunggah ' + (i + 1) + ' dari ' + berkas.length + '…');
-      try{
-        await unggahSatu(berkas[i]);
-        sukses++;
-      }catch(err){
-        /* satu berkas rusak tidak boleh menghentikan sisanya */
-        gagal.push(berkas[i].name + ': ' + err.message);
-      }
-    }
-    batang.style.width = '100%';
-    setTimeout(function(){ maju.hidden = true; batang.style.width = '0'; }, 600);
-
-    if(gagal.length){
-      console.warn('Foto yang gagal:', gagal);
-      toast(sukses + ' foto masuk, ' + gagal.length + ' gagal — lihat console', true);
-    }else{
-      toast(sukses + ' foto tersimpan');
-    }
-    await muatFoto();
-  }
-
-  async function muatFoto(){
-    fotoku = (await rpc('foto_daftar', { p_token: TOKEN })) || [];
-    gambarFoto();
-  }
-
-  function gambarFoto(){
-    $('tkKuota').textContent = fotoku.length
-      ? fotoku.length + ' foto terpasang'
-      : 'Belum ada foto.';
-
-    $('tkGaleri').innerHTML = fotoku.map(function(f, i){
-      var src = window.Gambar.url(f.jalur_kecil || f.jalur);
-      return '<div class="tk-foto' + (f.tampil ? '' : ' samar') + '" data-id="' + esc(f.id) + '">'
-        +   '<img class="gbr" src="' + esc(src) + '" alt="" loading="lazy">'
-        +   '<input class="ket" type="text" maxlength="280" placeholder="Keterangan (opsional)" value="' + esc(f.keterangan || '') + '">'
-        +   '<div class="alat-foto">'
-        +     '<button class="btn ghost" data-aksi="naik"   ' + (i === 0 ? 'disabled' : '') + ' title="Naikkan">&uarr;</button>'
-        +     '<button class="btn ghost" data-aksi="turun"  ' + (i === fotoku.length - 1 ? 'disabled' : '') + ' title="Turunkan">&darr;</button>'
-        +     '<button class="btn ghost" data-aksi="tampil">' + (f.tampil ? 'Sembunyikan' : 'Tampilkan') + '</button>'
-        +     '<button class="btn bahaya" data-aksi="hapus">Hapus</button>'
-        +   '</div>'
-        + '</div>';
-    }).join('');
-  }
-
-  async function aksiFoto(e){
-    var tombol = e.target.closest('button[data-aksi]');
-    if(!tombol) return;
-    var kotak = tombol.closest('.tk-foto');
-    var id = kotak.dataset.id;
-    var i = fotoku.findIndex(function(f){ return f.id === id; });
-    if(i < 0) return;
-    var f = fotoku[i];
-
-    tombol.disabled = true;
-    try{
-      if(tombol.dataset.aksi === 'hapus'){
-        if(!confirm('Hapus foto ini dari halaman terima kasih?')){ tombol.disabled = false; return; }
-        var r = await fetch(M.SB.url + '/functions/v1/foto-unggah?id=' + encodeURIComponent(id), {
-          method: 'DELETE',
-          headers: { 'Authorization': 'Bearer ' + M.SB.key, 'apikey': M.SB.key, 'x-panitia-token': TOKEN }
-        });
-        if(!r.ok) throw new Error('Gagal menghapus');
-        toast('Foto dihapus');
-
-      }else if(tombol.dataset.aksi === 'tampil'){
-        await rpc('foto_ubah', { p_token: TOKEN, p_id: id, p_tampil: !f.tampil });
-        toast(f.tampil ? 'Foto disembunyikan' : 'Foto ditampilkan');
-
-      }else{
-        /* Naik/turun cukup menukar nilai urutan dengan tetangganya.
-           Nilainya berurutan sejak diunggah, jadi tidak perlu menomori
-           ulang seluruh daftar. */
-        var j = tombol.dataset.aksi === 'naik' ? i - 1 : i + 1;
-        var g = fotoku[j];
-        if(!g){ tombol.disabled = false; return; }
-        await rpc('foto_ubah', { p_token: TOKEN, p_id: f.id, p_urutan: g.urutan });
-        await rpc('foto_ubah', { p_token: TOKEN, p_id: g.id, p_urutan: f.urutan });
-      }
-      await muatFoto();
-    }catch(err){
-      toast(err.message, true);
-      tombol.disabled = false;
-    }
-  }
-
-  async function simpanKeterangan(e){
-    var kotak = e.target.closest('.tk-foto');
-    if(!kotak || !e.target.classList.contains('ket')) return;
-    var id = kotak.dataset.id;
-    var f = fotoku.find(function(x){ return x.id === id; });
-    var nilai = e.target.value.trim();
-    if(!f || nilai === (f.keterangan || '')) return;
-    try{
-      /* null berarti "jangan diubah" di sisi RPC, jadi keterangan yang
-         dikosongkan dikirim sebagai string kosong. */
-      await rpc('foto_ubah', { p_token: TOKEN, p_id: id, p_keterangan: nilai });
-      f.keterangan = nilai;
-      toast('Keterangan tersimpan');
-    }catch(err){ toast(err.message, true); }
-  }
-
-  /* ---------- ucapan ---------- */
   async function muatUcapan(){
     ucapanku = (await rpc('ucapan_daftar', { p_token: TOKEN })) || [];
     gambarUcapan();
@@ -1554,7 +1390,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   async function muatTk(){
     if(!tkAktif()) return;
     try{
-      await Promise.all([muatFoto(), muatUcapan(), muatSilsilah()]);
+      await Promise.all([muatUcapan(), muatSilsilah()]);
     }catch(e){
       $('tkUcapan').innerHTML = '<p class="kosongstate">Gagal memuat: ' + esc(e.message) + '</p>';
     }
