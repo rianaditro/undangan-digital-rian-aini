@@ -1,0 +1,12 @@
+{
+  "name": "mengundang-uji",
+  "private": true,
+  "description": "Uji peramban untuk mengundang.id. Sengaja di folder ini, bukan di akar repo: package.json di akar membuat Vercel memperlakukan situs statis ini sebagai proyek Node dan memasang Playwright di setiap deploy.",
+  "type": "module",
+  "scripts": {
+    "test": "node semua.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}
