@@ -542,9 +542,14 @@ select{appearance:none;cursor:pointer;}
 
   /* ---------- pendengar ---------- */
   document.addEventListener('click', function(e){
-    var t = e.target.closest('[data-aksi]');
+    /* Pendengar ini cuma mengurus dua aksi baris di kotak 3 dan 4. Kotak
+       lain — pustaka foto, misalnya — juga memakai data-aksi tapi tidak
+       duduk di dalam [data-blok]; tanpa saringan ini, setiap klik di sana
+       melempar galat null.dataset. */
+    var t = e.target.closest('[data-aksi="hapus-acara"],[data-aksi="hapus-dompet"]');
     if(!t) return;
     var blok = t.closest('[data-blok]');
+    if(!blok) return;
     var i = Number(blok.dataset.i);
     if(t.dataset.aksi==='hapus-acara')  hapusBaris('acara', data.acara[i], data.acara);
     if(t.dataset.aksi==='hapus-dompet') hapusBaris('dompet', data.dompet[i], data.dompet);
