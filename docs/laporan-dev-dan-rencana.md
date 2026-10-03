@@ -149,7 +149,16 @@ Fase 5  Siap jual                             3–4 sesi
 Fase 6  Gabung ke main, rilis                 1 sesi
 ```
 
-### Fase 0 — hentikan kerusakan produksi
+### Fase 0 — hentikan kerusakan produksi — **SELESAI 3 Oktober**
+
+Jalan A dipilih. `main` @ `5dacdd1`, deploy produksi READY. Diuji di
+database sungguhan sebagai anon (8/8) dan di peramban (18/18); uji
+peramban yang sama merah di kode sebelum tambalan. Yang belum: satu
+kali dibuka mata manusia di produksi — sandbox dan konektor Vercel
+sama-sama tidak bisa membaca halaman yang tersaji.
+
+Uraian pilihan yang dipertimbangkan, untuk catatan:
+
 
 Dua jalan, dan **ini keputusan Anda**, karena menyentuh produksi:
 
@@ -203,9 +212,9 @@ memang cuma menambah kolom dan tidak bisa merusak `main`, tapi justru
 - Kerangka statis `index.html` dikosongkan: nama netral atau kerangka
   kosong, bukan data Rian & 'Aini.
 - Judul `/kirim` dari database.
-- Editor silsilah masih di `/kirim`. Pindah ke `/dasbor` juga, atau
-  tidak, perlu diputuskan — fotonya juga unggahan, dan "satu dasbor"
-  sudah jadi prinsip.
+- Editor silsilah pindah dari `/kirim` ke `/dasbor` — diputuskan 3
+  Oktober. Fotonya juga unggahan, dan "satu dasbor" sudah jadi prinsip.
+  Sesudahnya `foto-unggah` tidak lagi butuh jalur token sama sekali.
 - Cabut hak anon dari `admin_*`, nyalakan perlindungan sandi bocor.
 
 ### Fase 4 — domain dan DNS
@@ -251,7 +260,7 @@ yang menunggu hanya tangan Anda di Hostinger.
 
 ## 5. Yang perlu Anda putuskan
 
-1. **Fase 0: tambal `main` sekarang?** Disarankan ya.
+1. ~~Fase 0: tambal `main` sekarang?~~ **Ya, selesai** (3 Okt).
 2. **Paket Supabase berbayar sekarang, atau di Fase 5?** Saran: sekarang
    — staging di Fase 1 butuh itu, dan Fase 5 mewajibkannya juga.
-3. **Editor silsilah ikut pindah ke `/dasbor`?**
+3. ~~Editor silsilah ikut pindah ke `/dasbor`?~~ **Ya** (3 Okt) — masuk Fase 3.
