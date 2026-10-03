@@ -439,10 +439,25 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     return teks ? JSON.parse(teks) : null;
   }
 
+  /* Sejak migrasi 018, status berkat di database punya tiga keadaan:
+     belum, dijatah, diberikan. Halaman ini masih berpikir dua —
+     terkirim atau belum. Terjemahannya cuma di dua titik ini, tepat di
+     batas database, supaya sisa halaman tidak perlu tahu: dibaca,
+     'diberikan' jadi 'terkirim'; ditulis, 'terkirim' jadi 'diberikan'.
+     'dijatah' dibaca sebagai belum — memang belum diberikan. */
+  function dariDb(jenis, status){
+    if(jenis === 'berkat') return status === 'diberikan' ? 'terkirim' : 'belum';
+    return status || 'belum';
+  }
+  function keDb(jenis, status){
+    if(jenis === 'berkat') return status === 'terkirim' ? 'diberikan' : 'belum';
+    return status;
+  }
+
   /* pengiriman datang sebagai baris terpisah; dirapikan jadi peta */
   function rapikan(baris){
     var kirim = { undangan:'belum', berkat:'belum' };
-    (baris.pengiriman || []).forEach(function(p){ kirim[p.jenis] = p.status; });
+    (baris.pengiriman || []).forEach(function(p){ kirim[p.jenis] = dariDb(p.jenis, p.status); });
     return {
       id: baris.id, nama: baris.nama, slug: baris.slug,
       telepon: baris.telepon || '', pihak: baris.pihak,
@@ -455,7 +470,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     return {
       id: baris.id, nama: baris.nama, slug: baris.slug,
       telepon: baris.telepon || '', pihak: baris.pihak,
-      kirim: { undangan: baris.undangan, berkat: baris.berkat }
+      kirim: { undangan: dariDb('undangan', baris.undangan), berkat: dariDb('berkat', baris.berkat) }
     };
   }
 
@@ -474,7 +489,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
 
     async tandai(t, jenis, status){
       await rpc('panitia_tandai', {
-        p_token: TOKEN, p_tamu_id: t.id, p_jenis: jenis, p_status: status
+        p_token: TOKEN, p_tamu_id: t.id, p_jenis: jenis, p_status: keDb(jenis, status)
       });
     },
 
@@ -520,7 +535,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
         method:'POST',
         headers:{ 'Prefer':'resolution=merge-duplicates,return=minimal' },
         body: JSON.stringify({
-          tamu_id: t.id, jenis: jenis, status: status,
+          tamu_id: t.id, jenis: jenis, status: keDb(jenis, status),
           waktu: status === 'terkirim' ? new Date().toISOString() : null
         })
       });

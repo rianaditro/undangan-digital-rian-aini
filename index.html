@@ -936,6 +936,7 @@ h2.title{
   if(pihakTamu) bukaSampul();
 
   /* ---------- Tanya database: nama asli dan pihak tamu ---------- */
+  var SLUG_PASANGAN = 'rian-aini';
   (function(){
     if(!slugTamu) { bukaSampul(); return; }
     fetch(M.SB.url + '/rest/v1/rpc/undangan_tamu', {
@@ -945,7 +946,9 @@ h2.title{
         'Authorization': 'Bearer ' + M.SB.key,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ p_slug: slugTamu })
+      /* Slug pasangan wajib disebut sejak migrasi 022 — slug tamu tidak
+         unik antar pasangan. Halaman ini memang cuma milik satu pasangan. */
+      body: JSON.stringify({ p_slug: slugTamu, p_pasangan: SLUG_PASANGAN })
     }).then(function(r){
       if(!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
@@ -969,7 +972,6 @@ h2.title{
   /* Konfigurasi Supabase ada di assets/varian.js */
   var SB_URL   = M.SB.url;
   var SB_KEY   = M.SB.key;
-  var SB_TABEL = 'ucapan';
   var sbHead   = {
     'apikey': SB_KEY,
     'Authorization': 'Bearer ' + SB_KEY,
@@ -1003,9 +1005,13 @@ h2.title{
 
   async function muat(){
     try{
-      var url = SB_URL + '/rest/v1/' + SB_TABEL
-              + '?select=nama,hadir,pesan,created_at&order=created_at.desc&limit=100';
-      var r = await fetch(url, { headers: sbHead });
+      /* Tabel ucapan tidak lagi boleh dibaca anon (migrasi 021) — dulu
+         policy-nya membuka ucapan SEMUA pasangan. Bacanya lewat RPC
+         yang menyaring pasangan dan menahan ucapan yang disembunyikan. */
+      var r = await fetch(SB_URL + '/rest/v1/rpc/ucapan_publik', {
+        method:'POST', headers: sbHead,
+        body: JSON.stringify({ p_slug: SLUG_PASANGAN })
+      });
       if(!r.ok) throw new Error('HTTP ' + r.status);
       var data = await r.json();
       render(data.map(function(d){
@@ -1029,26 +1035,19 @@ h2.title{
     var label = btnKirim.textContent;
     btnKirim.textContent = 'Mengirim…';
     try{
-      var kirim = Object.assign({ 'Prefer':'return=minimal' }, sbHead);
-      var isi = {
-        nama:  nama.slice(0,40),
-        hadir: hadir,
-        pesan: pesan.slice(0,500),
-        pihak: pihakTamu || null
-      };
-      async function kirimUcapan(muatan){
-        return fetch(SB_URL + '/rest/v1/' + SB_TABEL, {
-          method:'POST', headers: kirim, body: JSON.stringify(muatan)
-        });
-      }
-
-      var r = await kirimUcapan(isi);
-      /* Kolom pihak baru ada setelah supabase/schema.sql dijalankan.
-         Bila belum, ucapan tetap harus bisa masuk. */
-      if(r.status === 400){
-        delete isi.pihak;
-        r = await kirimUcapan(isi);
-      }
+      /* Tulis juga lewat RPC: tabel ucapan tidak lagi menerima INSERT
+         anon. ucapan_tulis memeriksa panjang dan nilai kehadiran
+         sendiri, dan mencocokkan pihak dengan pihak milik pasangan. */
+      var r = await fetch(SB_URL + '/rest/v1/rpc/ucapan_tulis', {
+        method:'POST', headers: sbHead,
+        body: JSON.stringify({
+          p_slug:  SLUG_PASANGAN,
+          p_nama:  nama.slice(0,40),
+          p_hadir: hadir,
+          p_pesan: pesan.slice(0,500),
+          p_pihak: pihakTamu || null
+        })
+      });
       if(!r.ok) throw new Error('HTTP ' + r.status);
       msgEl.classList.add('ok');
       msgEl.textContent = 'Terima kasih, ucapan Anda sudah terkirim.';
