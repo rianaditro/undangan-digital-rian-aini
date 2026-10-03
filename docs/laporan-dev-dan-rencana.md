@@ -37,7 +37,7 @@ sampai 025 dari branch platform.
 | | Kerusakan | Bukti | Sejak |
 |---|---|---|---|
 | 1 | **Buku tamu tampil kosong.** 29 ucapan ada, tidak satu pun terlihat | kode produksi membaca `ucapan` langsung sebagai anon; migrasi 021 mencabut policy baca anon. RLS aktif, jadi bacaannya diam-diam kosong — bukan galat | 20 Sep |
-| 2 | **Ucapan baru tidak bisa dikirim** | kode produksi `INSERT` langsung ke `ucapan`; tidak ada lagi policy tulis anon | 20 Sep |
+| 2 | **Ucapan baru tidak bisa dikirim** | kode produksi `INSERT` langsung ke `ucapan`; tidak ada lagi policy tulis anon. Policy itu dicabut migrasi **012**, bukan 021 — ditemukan 3 Okt oleh pemeriksa kompatibilitas (Fase 1). Ucapan terakhir masuk 15 Sep, jadi tidak ada tamu yang tertolak di antara keduanya | 19 Sep |
 | 3 | **Nama tamu tidak lagi diambil dari database** | kode produksi memanggil `undangan_tamu` dengan satu argumen; migrasi 022 membuang tanda tangan itu. Halaman jatuh ke nama dari alamat — huruf kecil — dan pihaknya ke `?p=` atau bawaan | 20 Sep |
 | 4 | **Tombol Berkat di `/kirim` gagal** | produksi mengirim berkat `terkirim`; migrasi 018 membatasi berkat jadi `belum / dijatah / diberikan` | 20 Sep |
 
@@ -100,13 +100,36 @@ tidak akan pernah menangkapnya.
 | Situs statis menerbitkan seluruh repo | tanpa `.vercelignore`, begitu branch ini digabung `docs/operasi-domain-dan-admin.md` — berisi email dan user_id admin — jadi berkas publik |
 | `main` punya commit yang tidak dikenal branch | digabungkan. Konfliknya cuma konstanta dompet yang di branch sudah pindah ke database, dengan nomor yang sama |
 
-### Belum diperbaiki
+### Diperbaiki di Fase 1 (3 Oktober, sore)
 
-**Badan fungsi di repo vs di database.** Dari 49 fungsi, 44 cocok
-persis. Empat cuma beda komentar. **`silsilah_hapus` tidak ada di repo
-sama sekali** — hidup cuma di database. Ini kejadian ketiga sesudah
-`pasangan_siapkan` (023) dan `undangan_isi` (025). Database belum bisa
-dibangun ulang dari berkas migrasi.
+| | |
+|---|---|
+| Repo tidak sama dengan produksi | migrasi **027 garis dasar**: `silsilah_hapus` dipulihkan, empat fungsi yang beda komentar disamakan dengan produksi, dan bentuk asli tabel `ucapan` dicatat (lihat di bawah). Database sekarang bisa dibangun ulang dari berkas migrasi, dan hasilnya identik dengan produksi — diperiksa per fungsi, kolom, batasan, indeks, kebijakan, dan pemicu. Satu-satunya selisih: 026, yang memang belum dipasang |
+| Tidak ada staging | `uji/db/`: Postgres biasa + tiruan Supabase, dibangun dari nol dalam ±1 detik |
+| Tidak ada yang mencegah migrasi mematahkan `main` | `uji/db/kompat.mjs` — lihat Fase 1 |
+| Galat halaman lolos di sepuluh suite | runner menghitung setiap `[pageerror]` sebagai gagal |
+| Belum ada CI | `.github/workflows/uji.yml`: database dan peramban di tiap push |
+| Uji SQL hidup di riwayat percakapan | `uji/sql/`: 022 (nama tamu per pasangan), hak fungsi, 026 (satu latar per babak). Masing-masing dibuktikan merah terhadap kode yang dirusak sengaja |
+
+**Temuan baru dari garis dasar.**
+- Tabel `ucapan` di produksi lebih tua dari migrasi pertama, dan 001
+  membuatnya dengan `create table if not exists` — jadi di produksi baris
+  itu tidak pernah berbuat apa-apa, dan bentuk aslinya tidak pernah
+  tercatat. Repo membangun `id uuid`; produksi `id bigint`. Database yang
+  dibangun dari repo akan membuat `ucapan_balas(p_id bigint)` tidak bisa
+  dipakai. 027 memperbaikinya hanya di database baru.
+- `ucapan_tulis` menerima nama sampai 60 huruf dan ucapan sampai 800,
+  tapi tabelnya membatasi 40 dan 500. Tamu tidak pernah kena — formulirnya
+  juga 40/500 — tapi pemanggil lain akan mendapat galat batasan mentah,
+  bukan pesan yang rapi. Kecil; dicatat untuk Fase 3.
+
+**027 belum tercatat di riwayat migrasi produksi.** Konektor Supabase
+habis waktu dua kali saat memasangnya. Sudah diperiksa: tidak ada yang
+berubah dan tidak ada yang menggantung. Karena 027 tidak mengubah apa pun
+di produksi, yang tertunda hanya catatannya — dipasang lagi begitu
+konektornya pulih, atau tempel isi berkasnya di SQL editor.
+
+### Belum diperbaiki
 
 **Data Rian & 'Aini di kerangka halaman.** `index.html` masih memuat
 alamat rumah, nama lengkap, dan nomor DANA kalian sebagai markup statis.
@@ -123,11 +146,6 @@ sumber halaman, dan kalau JS gagal. `/kirim` juga masih berjudul
 - 32 fungsi lain yang bisa dipanggil anon memang disengaja: anon key itu
   publik, dan penjaganya token atau slug di dalam fungsi.
 
-**Galat halaman di suite lain.** Baru suite dasbor yang menghitung
-`pageerror`. Sepuluh suite lain masih cuma mencetaknya.
-
-**Belum ada CI.** Uji ada, tapi tidak ada yang menjalankannya otomatis.
-
 **Belum pernah ada uji HTTP sungguhan.** Semua uji menstub Supabase, dan
 sandbox tempat platform ini dibangun tidak bisa menjangkau `supabase.co`.
 Satu-satunya bukti jalur nyata adalah uji SQL di dalam transaksi.
@@ -140,8 +158,8 @@ Satuan: **sesi kerja**, kasar, bukan janji. Urutannya disengaja —
 penjelasannya di bawah tabel.
 
 ```
-Fase 0  Hentikan kerusakan produksi           ½ sesi   ← keputusan Anda
-Fase 1  Fondasi: staging, CI, drift           2 sesi
+Fase 0  Hentikan kerusakan produksi           selesai
+Fase 1  Fondasi: staging, CI, drift           selesai (versi gratis)
 Fase 2  Halaman kenangan, langkah 2–5         4–5 sesi
 Fase 3  Bersihkan sisa satu-pasangan          1–2 sesi
 Fase 4  Domain dan DNS                        ½ sesi   ← tangan Anda
@@ -174,22 +192,52 @@ tetap rusak sampai Fase 6 — berminggu-minggu.
 Yang tidak boleh: mencabut migrasi 021/022. Keduanya menambal lubang
 lintas-pasangan sungguhan.
 
-### Fase 1 — fondasi
+### Fase 1 — fondasi — **SELESAI 3 Oktober, versi gratis**
 
 Supaya Fase 0 tidak terulang.
 
-- **Database staging.** Organisasi Supabase-nya di paket gratis dan
-  sudah memegang dua proyek — batas paket gratis. Staging terpisah atau
-  Supabase Branching menuntut paket berbayar, yang toh diwajibkan Fase 5.
-  **Dua fase ini sebaiknya diputuskan bersamaan.**
-- **Garis dasar skema.** Dump skema yang berlaku jadi satu berkas,
-  pulihkan `silsilah_hapus`, samakan empat fungsi yang beda komentar.
-  Sesudahnya: alat yang membandingkan md5 badan fungsi repo dengan
-  database, dijalankan sebelum tiap migrasi — pemeriksaan yang hari ini
-  dikerjakan tangan.
-- **CI.** GitHub Actions menjalankan `uji/` di tiap push.
-- **Semua suite menghitung galat halaman.**
-- **Uji SQL jadi berkas** di `uji/sql/`, bukan riwayat percakapan.
+Supabase berbayar **ditunda sampai ada klien yang cukup untuk membayar
+servernya** (keputusan 3 Okt). Tanpa itu tidak ada proyek kedua dan tidak
+ada Branching, jadi staging diganti dua hal yang gratis dan, untuk jenis
+kerusakan September, sama kuatnya:
+
+1. **Bangun ulang lokal** (`uji/db/bangun.sh`). Setiap migrasi dijalankan
+   di Postgres kosong sebelum menyentuh produksi. Yang ditangkap: migrasi
+   yang gagal, hak yang bocor (tiruan meniru default privileges Supabase
+   persis — tanpa itu, uji lokal lebih aman daripada produksi), dan
+   semua uji SQL.
+2. **Aturan kompatibilitas** (`uji/db/kompat.mjs`). Staging pun tidak
+   akan menangkap 021/022, karena yang patah bukan migrasinya — migrasinya
+   benar — melainkan halaman di `main` yang masih memanggil bentuk lama.
+   Pemeriksa ini membaca setiap panggilan Supabase di halaman `main`
+   dan memastikan skema baru masih melayaninya. Terhadap kode `main`
+   sebelum tambalan, ia menemukan tepat tiga dari empat kerusakan
+   September, dan menunjuk migrasi yang benar untuk masing-masing.
+   Yang keempat (nilai status berkat) adalah nilai data saat berjalan
+   dan tidak terbaca dari kode.
+
+   Aturannya sendiri: **tambah dulu, buang belakangan.** Fungsi atau
+   kolom yang masih dipanggil `main` tidak boleh hilang atau berganti
+   tanda tangan sampai `main` berhenti memakainya.
+
+Ditambah: **pemeriksa selisih** repo vs produksi (`uji/db/banding.sh`),
+dijalankan tangan sebelum memasang migrasi; **CI** di tiap push; semua
+suite menghitung galat halaman; uji SQL jadi berkas.
+
+**Yang hilang dibanding staging sungguhan:** edge function dan Auth tidak
+ikut teruji (masih distub), dan data produksi tidak pernah dicoba
+terhadap migrasi baru — batasan baru yang ditolak baris lama hanya
+ketahuan di produksi. Untuk yang kedua, kebiasaannya: sebelum memasang
+migrasi yang menambah batasan, hitung dulu baris yang melanggar dengan
+`select` di produksi.
+
+**Risiko paket gratis yang tetap ada:** proyek gratis ditidurkan Supabase
+sesudah sepekan tanpa aktivitas — proyek ini pernah ditemukan tertidur.
+Selama Rian & 'Aini masih dikunjungi, itu tidak terjadi. Kalau sepi,
+undangan klien pertama bisa mati diam-diam sampai dibangunkan tangan dari
+dasbor Supabase. Jalan murahnya nanti: workflow terjadwal yang membaca
+satu RPC publik tiap beberapa hari. Belum dipasang — keputusan Anda,
+karena ia menyentuh produksi tiap minggu.
 
 ### Fase 2 — halaman kenangan
 
@@ -203,9 +251,10 @@ Lanjutan `docs/kenangan.md`:
 | 4 | saklar terbit kenangan | belum |
 | 5 | klip video | belum. Paling rapuh — `MediaRecorder` di HP sungguhan |
 
-Langkah 2 sebaiknya diterapkan **sesudah** staging ada. Migrasi 026
-memang cuma menambah kolom dan tidak bisa merusak `main`, tapi justru
-"yang ini pasti aman" itulah yang dulu diyakini tentang 021.
+Langkah 2 menunggu Fase 1, dan Fase 1 sudah ada: 026 lulus bangun ulang,
+uji SQL-nya (7/7, merah bila pemicunya dicabut), dan aturan
+kompatibilitas terhadap `main`. Tinggal dipasang — terhalang konektor
+yang sama dengan 027.
 
 ### Fase 3 — sisa satu pasangan
 
@@ -216,6 +265,7 @@ memang cuma menambah kolom dan tidak bisa merusak `main`, tapi justru
   Oktober. Fotonya juga unggahan, dan "satu dasbor" sudah jadi prinsip.
   Sesudahnya `foto-unggah` tidak lagi butuh jalur token sama sekali.
 - Cabut hak anon dari `admin_*`, nyalakan perlindungan sandi bocor.
+- Samakan batas `ucapan_tulis` (60/800) dengan tabel dan formulir (40/500).
 
 ### Fase 4 — domain dan DNS
 
@@ -251,7 +301,7 @@ setengah sesi.
 Fase 1 sebelum fitur apa pun karena **setiap** fitur di Fase 2 dan 3
 berarti migrasi, dan tanpa staging setiap migrasi adalah perubahan
 produksi yang ujinya tidak bisa menangkap. Itu persis yang terjadi
-dengan 018, 021, dan 022.
+dengan 012, 018, 021, dan 022.
 
 Fase 4 bisa dikerjakan kapan saja dan tidak bergantung pada yang lain —
 yang menunggu hanya tangan Anda di Hostinger.
@@ -261,6 +311,8 @@ yang menunggu hanya tangan Anda di Hostinger.
 ## 5. Yang perlu Anda putuskan
 
 1. ~~Fase 0: tambal `main` sekarang?~~ **Ya, selesai** (3 Okt).
-2. **Paket Supabase berbayar sekarang, atau di Fase 5?** Saran: sekarang
-   — staging di Fase 1 butuh itu, dan Fase 5 mewajibkannya juga.
+2. ~~Paket Supabase berbayar sekarang?~~ **Ditunda** sampai ada klien
+   yang membayarnya (3 Okt). Fase 1 dikerjakan versi gratis.
+4. **Penjaga agar proyek gratis tidak tertidur** — pasang sekarang, atau
+   tunggu klien pertama? Lihat Fase 1.
 3. ~~Editor silsilah ikut pindah ke `/dasbor`?~~ **Ya** (3 Okt) — masuk Fase 3.

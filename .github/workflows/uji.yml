@@ -1,0 +1,50 @@
+# Uji di setiap push dan pull request — pengganti database staging selama
+# proyek masih di paket gratis Supabase.
+#
+# Tidak ada satu pun langkah di sini yang menyentuh produksi: database-nya
+# Postgres kosong yang dibangun ulang dari migrasi, Supabase-nya distub.
+name: uji
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  database:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: uji
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # pemeriksa kompatibilitas membaca origin/main dan satu commit lama
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: bangun ulang skema, uji SQL, aturan kompatibilitas
+        env:
+          PGURL: postgres://postgres:uji@localhost:5432/postgres
+        run: uji/db/uji.sh
+
+  peramban:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: uji
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - name: semua suite
+        run: npm test

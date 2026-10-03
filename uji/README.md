@@ -28,20 +28,69 @@ Playwright butuh Chromium. Kalau `npm install` tidak memasangnya sendiri:
 | `uji-lihat` | halaman terima kasih |
 | `uji-xlsx`, `uji-unduh` | menghasilkan berkas `.xlsx`; isinya diperiksa terpisah (lihat di bawah) |
 
+Galat JavaScript di halaman (`[pageerror]`) dihitung gagal oleh `semua.mjs`,
+walaupun semua cek suite-nya lulus.
+
 `server.mjs` meniru urutan routing Vercel — redirect, lalu berkas, lalu
 rewrite — karena urutan itulah yang dulu membuat redirect akar domain
 bekerja sementara rewrite tidak. `stub.mjs` dan `undangan-isi.json`
 memegang data tiruan.
+
+## Database
+
+Supabase di paket gratis tidak punya database staging, jadi penggantinya
+ada di `db/`: skema dibangun ulang dari nol di Postgres biasa, lalu diuji.
+Tidak ada yang menyentuh produksi.
+
+```
+PGURL=postgres://postgres@localhost:5432/postgres db/uji.sh
+```
+
+| Berkas | Gunanya |
+|---|---|
+| `db/supabase-tiruan.sql` | peran, default privileges, `auth.*`, `storage.*`, pgcrypto — sekecil yang dibutuhkan migrasi |
+| `db/bangun.sh` | tiruan + semua migrasi ke database `bangun`. `SAMPAI=020` berhenti di migrasi itu |
+| `sql/*.sql` | uji SQL. Masing-masing satu blok `do` yang diakhiri `raise` berisi `LULUS n GAGAL m`, jadi transaksinya selalu dibatalkan — aman juga dijalankan di produksi |
+| `db/kompat.mjs` | **aturan kompatibilitas**: membaca setiap panggilan Supabase di halaman pada satu ref git (bawaan `origin/main`) dan memastikan skema hasil bangun masih melayaninya — fungsi dan nama argumennya, argumen wajib, hak anon, kolom tabel, kebijakan RLS per peran |
+| `db/sidik.sql`, `db/banding.sh` | **pemeriksa selisih** repo vs produksi (di bawah) |
+| `db/uji.sh` | semua di atas, berurutan. Ini yang dijalankan CI |
+
+`kompat.mjs` membaca commit, bukan berkas yang belum di-commit.
+
+### Aturan kompatibilitas, dan kenapa
+
+Produksi dan pengembangan memakai satu database, dan halaman di `main`
+tayang terus. Maka migrasi dari cabang mana pun harus **menambah dulu,
+membuang belakangan**: fungsi atau kolom yang masih dipanggil `main` tidak
+boleh hilang atau berubah tanda tangan sampai `main` berhenti memakainya.
+
+Pemeriksanya diuji terhadap kejadian sungguhan: kode `main` sebelum
+tambalan `5dacdd1` sah terhadap skema sampai migrasi 011, dan patah di tiga
+tempat terhadap skema sekarang — buku tamu baca (021), buku tamu tulis
+(012), nama tamu (022). Yang keempat dari September, nilai status berkat,
+adalah nilai data saat program berjalan dan tidak terlihat dari membaca
+kode.
+
+### Repo vs produksi
+
+```
+PGURL=... db/banding.sh > /tmp/banding.sql
+```
+
+lalu jalankan isi `/tmp/banding.sql` di produksi (SQL editor Supabase).
+Hash setiap fungsi, kolom, batasan, indeks, kebijakan, dan pemicu hasil
+bangun ditanam ke dalam kueri; produksi hanya mengembalikan yang berbeda.
+Kosong berarti repo dan produksi identik. Migrasi yang sengaja belum
+dipasang di produksi muncul sebagai "hanya di repo".
 
 ## Yang belum otomatis
 
 - **Isi berkas `.xlsx`.** `uji-xlsx` dan `uji-unduh` cuma memastikan
   berkasnya terbentuk. Isinya — sel, gaya, lembar — dulu diperiksa dengan
   openpyxl dari Python, dan pemeriksaan itu belum ikut dipindahkan ke sini.
-- **Uji SQL.** Fungsi dan pemicu database diuji di dalam transaksi yang
-  dibatalkan terhadap database sungguhan, lewat konektor Supabase. Baru
-  satu yang tersimpan sebagai berkas (`sql/022-undangan-tamu.sql`); yang
-  lain hidup di riwayat percakapan tempat ia dijalankan.
 - **Jalur HTTP sungguhan.** Karena Supabase distub, tidak ada uji di sini
   yang membuktikan edge function atau RPC benar-benar menjawab seperti
-  yang ditiru stub-nya.
+  yang ditiru stub-nya. `db/kompat.mjs` menutup sebagian: ia memastikan
+  yang dipanggil halaman memang ada di skema, dengan hak yang benar.
+- **Selisih dengan produksi** dijalankan tangan, karena CI tidak memegang
+  kunci produksi — dan sebaiknya memang tidak.

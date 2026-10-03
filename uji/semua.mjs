@@ -50,14 +50,22 @@ for (const f of semua) {
   } else {
     baris = 'TIDAK SELESAI (kode ' + kode + ')';
   }
-  if (kode !== 0) rusak.push({ f, keluar });
+  // Galat JavaScript di halaman adalah kegagalan, walaupun semua cek
+  // suite-nya lulus: galat yang cuma dicetak pernah menyembunyikan panel
+  // dasbor yang mati separuh. Tiap suite mencetaknya sebagai [pageerror].
+  const galatHalaman = (keluar.match(/\[pageerror\]/g) || []).length;
+  if (galatHalaman) {
+    total += galatHalaman; gagalTotal += galatHalaman;
+    baris += ` + ${galatHalaman} galat halaman`;
+  }
+  if (kode !== 0 || galatHalaman) rusak.push({ f, keluar });
   console.log(`${f.padEnd(20)} ${baris.padEnd(42)} ${dt}`);
 }
 
 for (const { f, keluar } of rusak) {
   console.log(`\n===== ${f} =====`);
-  console.log(keluar.split('\n').filter(b => /GAGAL|Error|galat/i.test(b)).slice(0, 25).join('\n'));
+  console.log(keluar.split('\n').filter(b => /GAGAL|Error|galat|pageerror/i.test(b)).slice(0, 25).join('\n'));
 }
 
 console.log(`\n${total - gagalTotal} dari ${total} lulus` + (rusak.length ? ` · ${rusak.length} suite bermasalah` : ''));
-process.exit(rusak.length ? 1 : 0);
+process.exit(rusak.length || gagalTotal ? 1 : 0);
