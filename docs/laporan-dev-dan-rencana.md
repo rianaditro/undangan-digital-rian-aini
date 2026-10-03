@@ -123,11 +123,11 @@ tidak akan pernah menangkapnya.
   juga 40/500 — tapi pemanggil lain akan mendapat galat batasan mentah,
   bukan pesan yang rapi. Kecil; dicatat untuk Fase 3.
 
-**027 belum tercatat di riwayat migrasi produksi.** Konektor Supabase
-habis waktu dua kali saat memasangnya. Sudah diperiksa: tidak ada yang
-berubah dan tidak ada yang menggantung. Karena 027 tidak mengubah apa pun
-di produksi, yang tertunda hanya catatannya — dipasang lagi begitu
-konektornya pulih, atau tempel isi berkasnya di SQL editor.
+**027 belum tercatat di riwayat migrasi produksi.** Pemasangannya
+menunggu persetujuan Anda (dua kali habis waktu, sekali dibatalkan).
+Sudah diperiksa sesudahnya: tidak ada yang berubah dan tidak ada yang
+menggantung. Karena 027 tidak mengubah apa pun di produksi, yang tertunda
+hanya catatannya.
 
 ### Belum diperbaiki
 
@@ -253,8 +253,8 @@ Lanjutan `docs/kenangan.md`:
 
 Langkah 2 menunggu Fase 1, dan Fase 1 sudah ada: 026 lulus bangun ulang,
 uji SQL-nya (7/7, merah bila pemicunya dicabut), dan aturan
-kompatibilitas terhadap `main`. Tinggal dipasang — terhalang konektor
-yang sama dengan 027.
+kompatibilitas terhadap `main`. Tinggal dipasang — bersama 027, begitu
+Anda menyetujui pemasangan ke produksi.
 
 ### Fase 3 — sisa satu pasangan
 
