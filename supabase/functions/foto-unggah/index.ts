@@ -29,9 +29,12 @@ const BATAS_KECIL  = 512 * 1024;        // 512 KB, thumbnail tidak mungkin sebes
 const BATAS_JUMLAH = 100;               // per pasangan; penjaga kuota free tier
 const MIME_BOLEH   = ['image/webp', 'image/jpeg'];
 
+// x-panitia-token tetap diizinkan di preflight walau jalannya sudah
+// ditutup: tanpa itu peramban yang masih memuat /kirim lama gagal di CORS
+// dan tidak pernah membaca penolakan yang menjelaskan ke mana harus pergi.
 const cors = {
   'Access-Control-Allow-Origin':  '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-panitia-token',
   'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
 };
 
