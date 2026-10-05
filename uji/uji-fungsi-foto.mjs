@@ -3,9 +3,9 @@
 // lain. Yang diuji kodenya sendiri: siapa yang boleh masuk, ke pasangan
 // mana barisnya jatuh, dan apa yang dibereskan kalau gagal di tengah.
 //
-// Bentuk permintaannya disalin dari halaman yang memanggilnya:
-//   /kirim   silsilah, x-panitia-token + anon key
-//   /dasbor  foto acara, JWT pemilik
+// Bentuk permintaannya disalin dari halaman yang memanggilnya: /dasbor,
+// JWT pemilik, untuk foto acara (kotak 8) dan foto silsilah (kotak 1).
+// Jalan token panitia (dulu /kirim) sudah ditutup sejak Fase 3.
 //
 // Butuh Deno: `deno` di PATH, atau DENO=/jalur/ke/deno.
 import http from 'node:http';
@@ -133,25 +133,30 @@ const unggahan = () => jejak.filter(j => j.m === 'POST' && j.p.startsWith('/stor
 const buangan  = () => jejak.filter(j => j.m === 'DELETE' && j.p.startsWith('/storage/')).map(j => JSON.parse(j.badan).prefixes).flat();
 
 try {
-  // ---------- /kirim: silsilah lewat token panitia ----------
+  // ---------- jalan token panitia sudah ditutup ----------
   let r = await minta('/?untuk=silsilah&id=S1', { method: 'POST', headers: kirim({ 'x-panitia-token': 'tok-penuh' }), body: formulir() });
-  const s1 = data.silsilah.find(b => b.id === 'S1');
-  cek(r.s === 201 && r.isi?.silsilah?.id === 'S1', `kirim: unggah foto silsilah → ${r.s}`);
-  cek(s1.foto_jalur.startsWith('PAS1/') && s1.foto_jalur !== 'PAS1/lama.webp', 'kirim: baris silsilah menunjuk berkas baru di folder pasangannya');
-  cek(unggahan().length === 2, 'kirim: berkas penuh dan thumbnail sama-sama naik');
-  cek(buangan().includes('PAS1/lama.webp') && buangan().includes('PAS1/lama-kecil.webp'), 'kirim: foto lama dibuang dari bucket');
-  cek(!jejak.some(j => j.p === '/auth/v1/user'), 'kirim: jalur token tidak menyentuh Auth');
-
-  r = await minta('/?untuk=silsilah&id=S2', { method: 'POST', headers: kirim({ 'x-panitia-token': 'tok-penuh' }), body: formulir() });
-  cek(r.s === 404, `kirim: baris silsilah pasangan lain ditolak → ${r.s}`);
-  cek(data.silsilah.find(b => b.id === 'S2').foto_jalur === null, 'kirim: baris pasangan lain tidak tersentuh');
-  cek(buangan().length === 2, 'kirim: berkas yang terlanjur naik dibereskan');
-
-  r = await minta('/?untuk=silsilah&id=S1', { method: 'POST', headers: kirim({ 'x-panitia-token': 'tok-pihak' }), body: formulir() });
-  cek(r.s === 403 && unggahan().length === 0, `kirim: link per-pihak ditolak sebelum apa pun naik → ${r.s}`);
-
+  cek(r.s === 403 && /dasbor/.test(r.isi?.pesan || '') && unggahan().length === 0,
+      `token panitia ditolak dengan arahan ke dasbor, tanpa apa pun naik → ${r.s}`);
+  cek(!jejak.some(j => j.p.includes('panitia_pasangan_penuh')), 'token tidak lagi ditukar lewat panitia_pasangan_penuh');
   r = await minta('/?untuk=silsilah&id=S1', { method: 'DELETE', headers: kirim({ 'x-panitia-token': 'tok-penuh' }) });
-  cek(r.s === 200 && data.silsilah.find(b => b.id === 'S1').foto_jalur === null, `kirim: lepas foto silsilah → ${r.s}`);
+  cek(r.s === 403 && data.silsilah.find(b => b.id === 'S1').foto_jalur === 'PAS1/lama.webp',
+      `token panitia juga tidak bisa melepas foto → ${r.s}`);
+
+  // ---------- /dasbor kotak 1: silsilah lewat JWT pemilik ----------
+  r = await minta('/?untuk=silsilah&id=S1', { method: 'POST', headers: dasbor('jwt-u1'), body: formulir() });
+  const s1 = data.silsilah.find(b => b.id === 'S1');
+  cek(r.s === 201 && r.isi?.silsilah?.id === 'S1', `silsilah: pemilik mengunggah foto → ${r.s}`);
+  cek(s1.foto_jalur.startsWith('PAS1/') && s1.foto_jalur !== 'PAS1/lama.webp', 'silsilah: baris menunjuk berkas baru di folder pasangannya');
+  cek(unggahan().length === 2, 'silsilah: berkas penuh dan thumbnail sama-sama naik');
+  cek(buangan().includes('PAS1/lama.webp') && buangan().includes('PAS1/lama-kecil.webp'), 'silsilah: foto lama dibuang dari bucket');
+
+  r = await minta('/?untuk=silsilah&id=S2', { method: 'POST', headers: dasbor('jwt-u1'), body: formulir() });
+  cek(r.s === 404, `silsilah: baris pasangan lain ditolak → ${r.s}`);
+  cek(data.silsilah.find(b => b.id === 'S2').foto_jalur === null, 'silsilah: baris pasangan lain tidak tersentuh');
+  cek(buangan().length === 2, 'silsilah: berkas yang terlanjur naik dibereskan');
+
+  r = await minta('/?untuk=silsilah&id=S1', { method: 'DELETE', headers: dasbor('jwt-u1') });
+  cek(r.s === 200 && data.silsilah.find(b => b.id === 'S1').foto_jalur === null, `silsilah: lepas foto → ${r.s}`);
 
   // ---------- /dasbor: foto acara lewat JWT pemilik ----------
   r = await minta('/', { method: 'POST', headers: dasbor(ANON), body: formulir() });

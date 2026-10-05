@@ -45,6 +45,13 @@ function bikinModel() {
     ],
     fn: [],
     kenangan_blok: [],
+    silsilah: [
+      { id: 's-1', pasangan_id: 'p-1', sisi: 'pria', urutan: 1, peran: 'Ayah', nama: 'Bapak Contoh',
+        keterangan: '(Alm)', foto_jalur: 'p-1/sil-a.webp', foto_kecil: 'p-1/sil-a-kecil.webp', tampil: true },
+      { id: 's-2', pasangan_id: 'p-1', sisi: 'wanita', urutan: 1, peran: 'Ibu', nama: 'Ibu Contoh',
+        keterangan: null, foto_jalur: null, foto_kecil: null, tampil: true }
+    ],
+    hapus: [],         // { tabel, id } — urutan DELETE yang terkirim
     post: [],          // { tabel, cari, prefer, badan }
     dompet: [{ id: 'd-1', pasangan_id: 'p-1', kode: 'dana', bank: 'DANA', nomor: '0812', atas_nama: 'Rian', sisi: 'pria' }],
     pihak: [{ id: 'ph-1', pasangan_id: 'p-1', kode: 'keluarga-wanita', kode_pendek: 'kw',
@@ -72,6 +79,13 @@ async function pasang(page, model) {
     if (jalur === '/functions/v1/foto-unggah') {
       model.fn.push({ metode: req.method(), auth: req.headers()['authorization'] || '',
                       panitia: req.headers()['x-panitia-token'] || null, cari: u.search });
+      if (u.searchParams.get('untuk') === 'silsilah') {
+        const s = model.silsilah.find(x => x.id === u.searchParams.get('id'));
+        model.hapus.push({ tabel: 'foto-silsilah', id: u.searchParams.get('id'), metode: req.method() });
+        if (req.method() === 'DELETE') { if (s) { s.foto_jalur = null; s.foto_kecil = null; } return kirim({ fotoDilepas: s && s.id }); }
+        if (s) { s.foto_jalur = 'p-1/sil-baru.webp'; s.foto_kecil = 'p-1/sil-baru-kecil.webp'; }
+        return kirim({ silsilah: s }, 201);
+      }
       if (req.method() === 'DELETE') {
         const id = u.searchParams.get('id');
         model.foto = model.foto.filter(f => f.id !== id);
@@ -102,6 +116,12 @@ async function pasang(page, model) {
         if (tabel === 'foto' && baris && badan.latar === true) {
           model.foto.forEach(f => { if (f !== baris && f.acara_id === baris.acara_id) f.latar = false; });
         }
+        return kirim(null);
+      }
+      if (req.method() === 'DELETE') {
+        const id = (u.searchParams.get('id') || '').replace(/^eq\./, '');
+        model.hapus.push({ tabel, id, metode: 'DELETE' });
+        model[tabel] = (model[tabel] || []).filter(x => x.id !== id);
         return kirim(null);
       }
       if (req.method() === 'POST' && u.searchParams.get('on_conflict')) {
@@ -468,13 +488,62 @@ const browser = await chromium.launch();
   await ctx.close();
 }
 
+/* ---------- kotak 1: silsilah keluarga (pindah dari /kirim) ---------- */
+{
+  const model = bikinModel();
+  const { ctx, page } = await masuk(browser, model);
+  const kartu = page.locator('#silDaftar [data-sil]');
+  cek('19a silsilah tergambar per sisi', (await kartu.count()) === 2
+      && (await page.locator('#silDaftar h4').allTextContents()).join('|') === 'Keluarga pihak pria|Keluarga pihak wanita');
+
+  /* --- tambah --- */
+  await page.locator('#silSisi').selectOption('pria');
+  await page.locator('#btnSilTambah').click();
+  await page.waitForTimeout(300);
+  cek('19b peran/nama kosong: ditolak sebelum dikirim', model.post.length === 0
+      && !(model.silsilah.length > 2));
+  await page.locator('#silPeran').fill('Ibu');
+  await page.locator('#silNama').fill('Ibu Kedua');
+  await page.locator('#btnSilTambah').click();
+  await page.waitForFunction(() => document.querySelectorAll('#silDaftar [data-sil]').length === 3, null, { timeout: 5000 });
+  const baru = model.silsilah.at(-1);
+  cek('19c baris baru: langsung ke tabel lewat REST, urutan paling belakang di sisinya, keterangan kosong = null',
+      baru.pasangan_id === 'p-1' && baru.sisi === 'pria' && baru.peran === 'Ibu' && baru.nama === 'Ibu Kedua'
+      && baru.urutan === 2 && baru.keterangan === null, JSON.stringify(baru));
+
+  /* --- foto lewat foto-unggah, JWT pemilik --- */
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAEElEQVR4nGP4z8DAwMDAAAAMAAH5TKPOAAAAAElFTkSuQmCC', 'base64');
+  const pemilih = page.waitForEvent('filechooser');
+  await page.locator('#silDaftar [data-sil="s-2"] [data-sil-aksi="foto"]').click();
+  await (await pemilih).setFiles({ name: 'ibu.png', mimeType: 'image/png', buffer: png });
+  await page.waitForFunction(() => !!document.querySelector('#silDaftar [data-sil="s-2"] img.gbr'), null, { timeout: 8000 });
+  const unggah = model.fn.filter(f => f.metode === 'POST' && /untuk=silsilah/.test(f.cari)).at(-1);
+  cek('19d foto silsilah: foto-unggah ?untuk=silsilah dengan JWT pemilik, tanpa token panitia',
+      unggah && /id=s-2/.test(unggah.cari) && unggah.auth === 'Bearer JWT-pemilik' && unggah.panitia === null,
+      JSON.stringify(unggah));
+
+  /* --- hapus baris berfoto: fotonya dibuang dulu --- */
+  model.hapus.length = 0;
+  page.once('dialog', d => d.accept());
+  await page.locator('#silDaftar [data-sil="s-1"] [data-sil-aksi="hapus"]').click();
+  await page.waitForFunction(() => !document.querySelector('#silDaftar [data-sil="s-1"]'), null, { timeout: 5000 });
+  cek('19e hapus baris berfoto: berkasnya dibuang lewat foto-unggah DULU, baru barisnya',
+      model.hapus.length === 2 && model.hapus[0].tabel === 'foto-silsilah' && model.hapus[0].metode === 'DELETE'
+      && model.hapus[1].tabel === 'silsilah' && model.hapus[1].id === 's-1', JSON.stringify(model.hapus));
+  await ctx.close();
+}
+{
+  const sumber = await (await fetch(ASAL + '/kirim')).text();
+  cek('19f /kirim tidak lagi punya editor silsilah', !/panelSilsilah|silsilah_simpan|silsilah_hapus|silsilah_daftar/.test(sumber));
+}
+
 /* ---------- tata letak HP ---------- */
 {
   const model = bikinModel();
   const { ctx, page } = await masuk(browser, model, 400);
   const buruk = await page.evaluate(() => {
     const keluar = [];
-    document.querySelectorAll('#formAcara .centang label, .panel h2, #pustakaFoto .ubin .btn').forEach(el => {
+    document.querySelectorAll('#formAcara .centang label, .panel h2, #pustakaFoto .ubin .btn, .sil-tambah > *, .sil-kartu .btn').forEach(el => {
       if (!el.checkVisibility({ checkVisibilityCSS: true, contentVisibilityAuto: true })) return;
       const r = el.getBoundingClientRect();
       if (r.right > window.innerWidth + 1 || r.left < -1) {

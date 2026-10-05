@@ -1,15 +1,15 @@
 // foto-unggah — satu-satunya jalan menulis ke bucket `foto`.
 //
-// Kenapa perlu fungsi ini sama sekali: peramban cuma memegang anon key,
-// token panitia, atau JWT pemilik. RLS storage hanya bisa melihat
-// auth.role(), ia tidak punya cara memeriksa token kita. Jadi pilihannya
-// cuma dua — mengizinkan anon menulis (artinya siapa pun di internet boleh
-// menitipkan berkas di bucket ini), atau menaruh satu pemeriksa di depan.
-// Ini pemeriksanya.
+// Kenapa perlu fungsi ini sama sekali: RLS storage hanya bisa melihat
+// auth.role(), bukan tabel `pemilik`. Pilihannya cuma dua — mengizinkan
+// setiap pengguna yang login menulis ke seluruh bucket, atau menaruh satu
+// pemeriksa di depan yang tahu pasangan mana milik siapa. Ini
+// pemeriksanya.
 //
-// Dua jalan masuk: link panitia bercakupan penuh (dipakai /kirim untuk
-// foto silsilah) dan JWT pemilik (dipakai /dasbor untuk foto acara).
-// Lihat siapa() di bawah.
+// Satu jalan masuk: JWT pemilik, dari /dasbor. Dulu ada jalan kedua —
+// token link panitia, dipakai /kirim untuk foto silsilah. Sejak Fase 3
+// editor silsilah pindah ke dasbor, dan jalan itu ditutup: link panitia
+// bisa diteruskan siapa saja, pemilik undangan tidak.
 //
 // service_role tidak pernah keluar dari sini.
 //
@@ -31,7 +31,7 @@ const MIME_BOLEH   = ['image/webp', 'image/jpeg'];
 
 const cors = {
   'Access-Control-Allow-Origin':  '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-panitia-token',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
 };
 
@@ -50,24 +50,14 @@ function angkaWajar(nilai: unknown): number | null {
   return Math.round(n);
 }
 
-// Dua jalan masuk, karena dua orang berbeda memakai pintu yang sama:
-//
-//   · link panitia bercakupan penuh  → halaman /kirim, untuk foto silsilah
-//   · pengantin yang login email     → halaman /dasbor, untuk foto acara
-//
-// Keduanya berakhir di satu pasangan_id, dan sisa fungsi ini tidak perlu
-// tahu yang mana. Menaruh pemeriksa kedua di fungsi terpisah berarti dua
-// salinan batas ukuran dan dua salinan pemeriksa tipe — dan salinan
-// seperti itu selalu berakhir beda perilaku dari induknya.
+// Pemilik, dan pasangan mana yang sedang diurusnya.
 async function siapa(db: any, req: Request): Promise<[string | null, Response | null]> {
-  const token = req.headers.get('x-panitia-token');
-
-  if (token) {
-    // Fungsinya menolak token per-pihak, jadi pemegang link keluarga
-    // berhenti di sini.
-    const { data: pid, error } = await db.rpc('panitia_pasangan_penuh', { p_token: token });
-    if (error || !pid) return [null, jawab({ pesan: error?.message ?? 'Token tidak dikenal' }, 403)];
-    return [pid, null];
+  // Halaman /kirim lama masih mengirim token panitia. Ditolak terang-
+  // terangan, bukan diabaikan: tanpa ini ia jatuh ke pemeriksaan JWT,
+  // anon key-nya gagal di sana, dan pesannya "Sesi tidak sah" — benar,
+  // tapi tidak memberi tahu ke mana harus pergi.
+  if (req.headers.get('x-panitia-token')) {
+    return [null, jawab({ pesan: 'Foto sekarang diunggah dari dasbor pengantin, bukan dari link panitia.' }, 403)];
   }
 
   // anon key ITU SENDIRI JWT yang sah, jadi keberadaan header Authorization
@@ -162,7 +152,7 @@ async function unggah(db: any, pasanganId: string, req: Request, untuk: string) 
 
   // Tipe dan ukuran diperiksa lagi di sini. Yang dikirim peramban tidak
   // pernah jadi dasar keputusan, sekalipun assets/gambar.js sudah
-  // mengecilkannya — jalur ini terbuka untuk siapa saja yang punya token.
+  // mengecilkannya — pemilik yang login pun bisa mengirim apa saja.
   if (!MIME_BOLEH.includes(penuh.type)) {
     return jawab({ pesan: `Jenis berkas ${penuh.type || 'tidak dikenal'} tidak diterima` }, 415);
   }
@@ -249,7 +239,7 @@ async function unggah(db: any, pasanganId: string, req: Request, untuk: string) 
       keterangan: (form.get('keterangan') as string | null)?.slice(0, 280) || null,
       // Babaknya boleh disebut sejak awal — panel 8 mengunggah per babak
       // kalau salah satu sedang dipilih. Yang disebut tetap diperiksa
-      // milik pasangan ini; tanpa itu, pemegang token satu pasangan bisa
+      // milik pasangan ini; tanpa itu, pemilik satu pasangan bisa
       // menempelkan fotonya ke acara pasangan lain.
       acara_id: await acaraSah(db, pasanganId, form.get('acara_id')),
     })
@@ -287,7 +277,7 @@ async function hapus(db: any, pasanganId: string, req: Request, untuk: string) {
   }
 
   // Saringan pasangan_id ikut di sini, bukan cuma di id-nya — supaya
-  // pemegang token satu pasangan tidak bisa menghapus foto pasangan lain
+  // pemilik satu pasangan tidak bisa menghapus foto pasangan lain
   // sekalipun ia menebak id yang benar.
   const { data: baris, error } = await db
     .from('foto')

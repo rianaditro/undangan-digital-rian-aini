@@ -76,24 +76,7 @@ label.btn.berkas:hover{color:var(--kapur);}
 
 /* ---------- 4 · balasan ucapan ---------- */
 
-/* ---------- 5 · silsilah ---------- */
-.sil-tambah{display:grid;gap:8px;margin-top:14px;}
-@media (min-width:720px){
-  .sil-tambah{grid-template-columns:1.1fr 1fr 1.4fr .9fr auto;align-items:center;}
-}
-.sil-tambah .btn{white-space:nowrap;}
-.sil-sisi{margin-top:20px;}
-.sil-sisi h3{font-family:var(--display);font-weight:400;font-size:15px;letter-spacing:.04em;margin-bottom:10px;color:var(--kuningan);}
-.sil-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
-.sil-kartu{border:1px solid var(--garis);background:rgba(0,0,0,.22);padding:8px;}
-.sil-kartu .gbr{width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;background:rgba(237,231,217,.06);max-width:96px;margin:0 auto 8px;display:block;}
-.sil-kartu .kosong{display:grid;place-items:center;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(237,231,217,.3);}
-.sil-kartu .peran{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--kuningan-dim);text-align:center;}
-.sil-kartu .nama{font-family:var(--display);font-size:13.5px;text-align:center;margin-top:3px;line-height:1.35;}
-.sil-kartu .alat{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
-.sil-kartu .alat .btn{padding:5px 7px;font-size:9px;letter-spacing:.06em;flex:1 1 66px;min-width:66px;}
-
-/* ---------- 6 · rekap sesudah acara ---------- */
+/* ---------- 5 · rekap sesudah acara ---------- */
 .rk-baris{
   display:grid;grid-template-columns:minmax(190px,1fr) auto;gap:10px 14px;
   align-items:start;padding:14px 0;border-bottom:1px solid var(--garis);
@@ -414,29 +397,9 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   <div class="tk-ucapan" id="tkUcapan"><p class="memuat">Memuat ucapan…</p></div>
 </div>
 
-<!-- 5. SILSILAH -->
-<div class="panel" id="panelSilsilah" hidden>
-  <h2>5 · Silsilah keluarga</h2>
-  <p class="hint">Dua generasi per sisi — orang tua, dan kalau perlu kakek-nenek. Ditampilkan di undangan sebagai grid, bukan pohon: yang dicari tamu cuma nama dan wajahnya.</p>
-
-  <div class="sil-tambah">
-    <select id="silSisi" aria-label="Sisi keluarga">
-      <option value="pria">Keluarga pihak pria</option>
-      <option value="wanita">Keluarga pihak wanita</option>
-    </select>
-    <input id="silPeran" type="text" maxlength="40" placeholder="Peran — Ayah, Ibu, Kakek…">
-    <input id="silNama"  type="text" maxlength="80" placeholder="Nama lengkap">
-    <input id="silKet"   type="text" maxlength="20" placeholder="(Alm) / (Almh), boleh kosong">
-    <button class="btn solid" id="btnSilTambah">Tambah</button>
-  </div>
-
-  <div id="silDaftar"><p class="memuat">Memuat silsilah…</p></div>
-  <input id="berkasSilsilah" type="file" accept="image/*" hidden>
-</div>
-
-<!-- 6. REKAP SESUDAH ACARA -->
+<!-- 5. REKAP SESUDAH ACARA -->
 <div class="panel" id="panelRekap" hidden>
-  <h2>6 · Rekap sesudah acara</h2>
+  <h2>5 · Rekap sesudah acara</h2>
   <p class="hint">Tandai siapa yang datang, lalu catat amplop atau barangnya. Jumlah tamu yang ditandai hadir ikut tampil di halaman terima kasih sebagai satu angka — nominal amplop dan daftar barang tidak pernah keluar dari halaman ini.</p>
 
   <div class="stat">
@@ -902,7 +865,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     });
   }
 
-  /* Satu tempat untuk keadaan berkat, dipakai kotak 3 dan kotak 6.
+  /* Satu tempat untuk keadaan berkat, dipakai kotak 3 dan kotak 5.
      Disalin jadi dua akan berakhir beda perilaku dari induknya. */
   var BERKAT = {
     belum:     { label:'Berkat',    judul:'belum dijatah',            lanjut:'dijatah'   },
@@ -1099,9 +1062,6 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   $('btnBukaTk').addEventListener('click', function(){
     window.open(M.linkPlatform('/terimakasih'), '_blank', 'noopener');
   });
-  $('btnSilTambah').addEventListener('click', tambahSil);
-  $('silDaftar').addEventListener('click', aksiSil);
-  $('berkasSilsilah').addEventListener('change', pilihFotoSil);
 
   $('btnSegarkanTk').addEventListener('click', async function(){
     try{ await muatTk(); toast('Halaman terima kasih dimuat ulang'); }
@@ -1269,138 +1229,20 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     }
   }
 
-  /* ---------- 5 · silsilah ---------- */
-  var silsilahku = [], silSasaranFoto = null;
-
-  async function muatSilsilah(){
-    silsilahku = (await rpc('silsilah_daftar', { p_token: TOKEN })) || [];
-    gambarSilsilah();
-  }
-
-  function gambarSilsilah(){
-    var wadah = $('silDaftar');
-    if(!silsilahku.length){
-      wadah.innerHTML = '<p class="kosongstate">Belum ada yang diisi.</p>';
-      return;
-    }
-    var label = { pria:'Keluarga pihak pria', wanita:'Keluarga pihak wanita' };
-    wadah.innerHTML = ['pria','wanita'].map(function(sisi){
-      var isi = silsilahku.filter(function(o){ return o.sisi === sisi; });
-      if(!isi.length) return '';
-      return '<div class="sil-sisi"><h3>' + esc(label[sisi]) + '</h3><div class="sil-grid">'
-        + isi.map(kartuSil).join('')
-        + '</div></div>';
-    }).join('');
-  }
-
-  function kartuSil(o){
-    var foto = o.foto_kecil || o.foto_jalur;
-    var gbr = foto
-      ? '<img class="gbr" src="' + esc(window.Gambar.url(foto)) + '" alt="" loading="lazy">'
-      : '<div class="gbr kosong">tanpa foto</div>';
-    return '<div class="sil-kartu" data-id="' + esc(o.id) + '">'
-      +   gbr
-      +   '<p class="peran">' + esc(o.peran) + '</p>'
-      +   '<p class="nama">' + esc(o.nama)
-      +     (o.keterangan ? ' <span style="opacity:.6">' + esc(o.keterangan) + '</span>' : '')
-      +   '</p>'
-      +   '<div class="alat">'
-      +     '<button class="btn ghost" data-aksi="foto">' + (foto ? 'Ganti Foto' : 'Foto') + '</button>'
-      +     (foto ? '<button class="btn ghost" data-aksi="lepas">Lepas Foto</button>' : '')
-      +     '<button class="btn bahaya" data-aksi="hapus">Hapus</button>'
-      +   '</div>'
-      + '</div>';
-  }
-
-  async function tambahSil(){
-    var peran = $('silPeran').value.trim();
-    var nama  = $('silNama').value.trim();
-    if(!peran || !nama){ toast('Peran dan nama harus diisi', true); return; }
-    var btn = $('btnSilTambah');
-    btn.disabled = true;
-    try{
-      await rpc('silsilah_simpan', {
-        p_token: TOKEN, p_id: null,
-        p_sisi: $('silSisi').value, p_peran: peran, p_nama: nama,
-        p_keterangan: $('silKet').value.trim() || null
-      });
-      $('silPeran').value = ''; $('silNama').value = ''; $('silKet').value = '';
-      toast('Ditambahkan');
-      await muatSilsilah();
-    }catch(e){ toast(e.message, true); }
-    finally{ btn.disabled = false; }
-  }
-
-  async function aksiSil(e){
-    var tombol = e.target.closest('button[data-aksi]');
-    if(!tombol) return;
-    var id = tombol.closest('.sil-kartu').dataset.id;
-    var aksi = tombol.dataset.aksi;
-
-    if(aksi === 'foto'){
-      /* Berkasnya dipilih lewat satu input yang dipakai bersama; yang
-         menentukan tujuannya adalah id yang disimpan di sini. */
-      silSasaranFoto = id;
-      $('berkasSilsilah').click();
-      return;
-    }
-
-    tombol.disabled = true;
-    try{
-      if(aksi === 'hapus'){
-        if(!confirm('Hapus baris ini dari silsilah?')){ tombol.disabled = false; return; }
-        await rpc('silsilah_hapus', { p_token: TOKEN, p_id: id });
-        toast('Dihapus');
-      }else if(aksi === 'lepas'){
-        var r = await fetch(M.SB.url + '/functions/v1/foto-unggah?untuk=silsilah&id=' + encodeURIComponent(id), {
-          method: 'DELETE',
-          headers: { 'Authorization':'Bearer ' + M.SB.key, 'apikey': M.SB.key, 'x-panitia-token': TOKEN }
-        });
-        if(!r.ok) throw new Error('Gagal melepas foto');
-        toast('Foto dilepas');
-      }
-      await muatSilsilah();
-    }catch(err){ toast(err.message, true); tombol.disabled = false; }
-  }
-
-  async function pilihFotoSil(e){
-    var berkas = (e.target.files || [])[0];
-    e.target.value = '';
-    if(!berkas || !silSasaranFoto) return;
-    var id = silSasaranFoto; silSasaranFoto = null;
-
-    toast('Mengecilkan foto…');
-    try{
-      var kecilan = await window.Gambar.siapkan(berkas);
-      var form = new FormData();
-      form.append('berkas', kecilan.penuh.blob, 'foto.webp');
-      form.append('kecil',  kecilan.kecil.blob, 'kecil.webp');
-      form.append('lebar',  kecilan.penuh.lebar);
-      form.append('tinggi', kecilan.penuh.tinggi);
-
-      var r = await fetch(M.SB.url + '/functions/v1/foto-unggah?untuk=silsilah&id=' + encodeURIComponent(id), {
-        method: 'POST',
-        headers: { 'Authorization':'Bearer ' + M.SB.key, 'apikey': M.SB.key, 'x-panitia-token': TOKEN },
-        body: form
-      });
-      var jawab = null; try{ jawab = await r.json(); }catch(x){}
-      if(!r.ok) throw new Error((jawab && jawab.pesan) || ('Gagal mengunggah (HTTP ' + r.status + ')'));
-      toast('Foto tersimpan');
-      await muatSilsilah();
-    }catch(err){ toast(err.message, true); }
-  }
+  /* Silsilah keluarga pindah ke /dasbor kotak 1 (Fase 3): fotonya
+     unggahan, dan seluruh penyiapan isi undangan duduk di satu dasbor. */
 
   async function muatTk(){
     if(!tkAktif()) return;
     try{
-      await Promise.all([muatUcapan(), muatSilsilah()]);
+      await muatUcapan();
     }catch(e){
       $('tkUcapan').innerHTML = '<p class="kosongstate">Gagal memuat: ' + esc(e.message) + '</p>';
     }
   }
 
   /* ============================================================
-     6 · Rekap sesudah acara
+     5 · Rekap sesudah acara
 
      Pengetikan pasca-acara oleh pengantin: siapa yang datang, siapa
      memberi apa, siapa sekeluarga dengan siapa. Bukan aplikasi meja
@@ -1696,7 +1538,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     gambarRingkas((await rpcKelola('rekap_ringkas')) || {});
   }
 
-  /* ---------- pendengar kotak 6 ---------- */
+  /* ---------- pendengar kotak 5 ---------- */
 
   /* Jenis menentukan kotak mana yang masuk akal. Nominal untuk barang
      tidak disediakan sama sekali: begitu harga taksiran boleh diketik,
@@ -2000,7 +1842,6 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     $('filterPihak').hidden    = !penuh;
     $('btnKeluar').hidden      = Sumber.lewatToken;
     $('panelTk').hidden        = !tkAktif();
-    $('panelSilsilah').hidden  = !tkAktif();
     $('panelRekap').hidden     = !rekapAktif();
     $('tkAlamat').textContent  = M.linkPlatform('/terimakasih');
 

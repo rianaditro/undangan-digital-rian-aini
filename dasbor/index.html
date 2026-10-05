@@ -115,6 +115,25 @@ select{appearance:none;cursor:pointer;}
 .blok-kepala .centang{margin:0;padding:0;border:0;}
 .wajib{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(237,231,217,.4);}
 .baris.mati input:not([type=checkbox]),.baris.mati textarea{opacity:.45;}
+/* ---------- silsilah (kotak 1) ----------
+   Pindah dari /kirim. Aturan lebar tombolnya ikut dibawa: empat tombol
+   di kartu sempit dikunci lebar minimumnya supaya MELIPAT, bukan
+   diperas sampai tulisannya bertindih. */
+.sil-tambah{display:grid;gap:8px;margin-top:10px;}
+@media (min-width:720px){
+  .sil-tambah{grid-template-columns:1.1fr 1fr 1.4fr .9fr auto;align-items:center;}
+}
+.sil-tambah .btn{white-space:nowrap;}
+.sil-sisi{margin-top:18px;}
+.sil-sisi h4{font-family:var(--display);font-weight:400;font-size:14px;letter-spacing:.04em;margin-bottom:10px;color:var(--kuningan);}
+.sil-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+.sil-kartu{border:1px solid var(--garis);background:rgba(0,0,0,.22);padding:8px;}
+.sil-kartu .gbr{width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;background:rgba(237,231,217,.06);max-width:96px;margin:0 auto 8px;display:block;}
+.sil-kartu .kosong{display:grid;place-items:center;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(237,231,217,.3);}
+.sil-kartu .peran{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--kuningan-dim);text-align:center;}
+.sil-kartu .nama{font-family:var(--display);font-size:13.5px;text-align:center;margin-top:3px;line-height:1.35;}
+.sil-kartu .alat{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
+.sil-kartu .alat .btn{padding:5px 7px;font-size:9px;letter-spacing:.06em;flex:1 1 66px;min-width:66px;}
 .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);z-index:80;
   background:var(--nila-2);border:1px solid var(--garis);padding:11px 18px;font-size:13px;
   opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:92vw;}
@@ -157,6 +176,21 @@ select{appearance:none;cursor:pointer;}
     <h2>1 · Mempelai</h2>
     <p class="hint">Nama panggilan dipakai di sampul dan tanda tangan. Nama lengkap dipakai di kartu mempelai.</p>
     <div id="formMempelai" class="duo"></div>
+
+    <h3 class="subjudul">Silsilah keluarga</h3>
+    <p class="hint">Dua generasi per sisi — orang tua, dan kalau perlu kakek-nenek. Ditampilkan di undangan sebagai grid, bukan pohon: yang dicari tamu cuma nama dan wajahnya.</p>
+    <div class="sil-tambah">
+      <select id="silSisi" aria-label="Sisi keluarga">
+        <option value="pria">Keluarga pihak pria</option>
+        <option value="wanita">Keluarga pihak wanita</option>
+      </select>
+      <input id="silPeran" type="text" maxlength="40" placeholder="Peran — Ayah, Ibu, Kakek…" aria-label="Peran">
+      <input id="silNama"  type="text" maxlength="80" placeholder="Nama lengkap" aria-label="Nama lengkap">
+      <input id="silKet"   type="text" maxlength="20" placeholder="(Alm) / (Almh), boleh kosong" aria-label="Keterangan">
+      <button class="btn solid kecil" id="btnSilTambah">Tambah</button>
+    </div>
+    <div id="silDaftar"></div>
+    <input id="berkasSilsilah" type="file" accept="image/*" hidden>
   </div>
 
   <!-- 2 -->
@@ -297,7 +331,7 @@ select{appearance:none;cursor:pointer;}
      sekalipun ia berhasil mendaftar sendiri.
      ============================================================ */
   var KUNCI='dasbor-sesi', sesi=null, pasangan=null;
-  var data = { mempelai:[], tempat:[], acara:[], dompet:[], pihak:[], foto:[], kenangan_blok:[] };
+  var data = { mempelai:[], tempat:[], acara:[], dompet:[], pihak:[], foto:[], kenangan_blok:[], silsilah:[] };
 
   try{ sesi = JSON.parse(localStorage.getItem(KUNCI)||'null'); }catch(e){}
 
@@ -352,13 +386,16 @@ select{appearance:none;cursor:pointer;}
       api('dompet?select=*&pasangan_id=eq.'+pasangan.id+'&order=kode'),
       api('pihak?select=*&pasangan_id=eq.'+pasangan.id+'&order=kode'),
       api('foto?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,diunggah'),
-      api('kenangan_blok?select=*&pasangan_id=eq.'+pasangan.id)
+      api('kenangan_blok?select=*&pasangan_id=eq.'+pasangan.id),
+      api('silsilah?select=*&pasangan_id=eq.'+pasangan.id+'&order=sisi,urutan')
     ]);
     data.mempelai=hasil[0]; data.tempat=hasil[1]; data.acara=hasil[2];
     data.dompet=hasil[3];   data.pihak=hasil[4];
     data.foto = hasil[5];
     data.kenangan_blok = hasil[6] || [];
+    data.silsilah = hasil[7] || [];
     gambar();
+    gambarSilsilah();
     gambarFoto();
     gambarKenangan();
     kabarKenangan();
@@ -620,6 +657,144 @@ select{appearance:none;cursor:pointer;}
     window.open(M.alamatUndangan(pasangan), '_blank', 'noopener');
   });
   $('btnKeluar').addEventListener('click', function(){ simpanSesi(null); location.reload(); });
+
+  /* ============================================================
+     1 · Silsilah keluarga
+
+     Pindah dari /kirim (Fase 3). Di sana ia lewat RPC bertoken
+     panitia; di sini pemilik menulis langsung ke tabel lewat REST —
+     RLS `silsilah panitia` sudah menyaring dengan pasangan_saya() sejak
+     014. Fotonya lewat foto-unggah dengan JWT pemilik (?untuk=silsilah),
+     pintu yang sama dengan foto acara di kotak 8.
+     ============================================================ */
+  var silSasaranFoto = null;
+  var LABEL_SISI = { pria:'Keluarga pihak pria', wanita:'Keluarga pihak wanita' };
+
+  async function muatSilsilah(){
+    data.silsilah = await api('silsilah?select=*&pasangan_id=eq.'+pasangan.id+'&order=sisi,urutan') || [];
+    gambarSilsilah();
+  }
+
+  function gambarSilsilah(){
+    var daftar = data.silsilah || [];
+    if(!daftar.length){
+      $('silDaftar').innerHTML = '<p class="kosongstate">Belum ada yang diisi. Tanpa isi, bagian silsilah tidak muncul di undangan.</p>';
+      return;
+    }
+    $('silDaftar').innerHTML = ['pria','wanita'].map(function(sisi){
+      var isi = daftar.filter(function(o){ return o.sisi === sisi; });
+      if(!isi.length) return '';
+      return '<div class="sil-sisi"><h4>' + esc(LABEL_SISI[sisi]) + '</h4><div class="sil-grid">'
+        + isi.map(kartuSil).join('') + '</div></div>';
+    }).join('');
+  }
+
+  function kartuSil(o){
+    var foto = o.foto_kecil || o.foto_jalur;
+    var gbr = foto
+      ? '<img class="gbr" src="' + esc(window.Gambar.url(foto)) + '" alt="" loading="lazy">'
+      : '<div class="gbr kosong">tanpa foto</div>';
+    return '<div class="sil-kartu" data-sil="' + esc(o.id) + '">'
+      +   gbr
+      +   '<p class="peran">' + esc(o.peran) + '</p>'
+      +   '<p class="nama">' + esc(o.nama)
+      +     (o.keterangan ? ' <span style="opacity:.6">' + esc(o.keterangan) + '</span>' : '')
+      +   '</p>'
+      +   '<div class="alat">'
+      +     '<button class="btn ghost" data-sil-aksi="foto">' + (foto ? 'Ganti Foto' : 'Foto') + '</button>'
+      +     (foto ? '<button class="btn ghost" data-sil-aksi="lepas">Lepas Foto</button>' : '')
+      +     '<button class="btn bahaya" data-sil-aksi="hapus">Hapus</button>'
+      +   '</div>'
+      + '</div>';
+  }
+
+  async function tambahSil(){
+    var peran = $('silPeran').value.trim();
+    var nama  = $('silNama').value.trim();
+    var sisi  = $('silSisi').value;
+    if(!peran || !nama){ toast('Peran dan nama harus diisi', true); return; }
+    var btn = $('btnSilTambah');
+    btn.disabled = true;
+    try{
+      /* Urutan: paling belakang di sisinya, seperti silsilah_simpan dulu. */
+      var urutan = (data.silsilah || []).filter(function(o){ return o.sisi === sisi; })
+        .reduce(function(m, o){ return Math.max(m, o.urutan || 0); }, 0) + 1;
+      await api('silsilah', { method:'POST', prefer:'return=minimal', body: JSON.stringify({
+        pasangan_id: pasangan.id, sisi: sisi, peran: peran, nama: nama,
+        keterangan: $('silKet').value.trim() || null, urutan: urutan
+      }) });
+      $('silPeran').value = ''; $('silNama').value = ''; $('silKet').value = '';
+      toast('Ditambahkan');
+      await muatSilsilah();
+    }catch(e){ toast(e.message, true); }
+    finally{ btn.disabled = false; }
+  }
+
+  function fotoSilsilah(metode, id, badan){
+    return fetch(M.SB.url + '/functions/v1/foto-unggah?untuk=silsilah&id=' + encodeURIComponent(id), {
+      method: metode,
+      headers: { 'Authorization': 'Bearer ' + (sesi && sesi.akses), 'apikey': M.SB.key },
+      body: badan
+    });
+  }
+
+  $('silDaftar').addEventListener('click', async function(e){
+    var tombol = e.target.closest('button[data-sil-aksi]');
+    if(!tombol) return;
+    var id = tombol.closest('[data-sil]').dataset.sil;
+    var aksi = tombol.dataset.silAksi;
+    var o = (data.silsilah || []).find(function(x){ return x.id === id; });
+
+    if(aksi === 'foto'){
+      silSasaranFoto = id;
+      $('berkasSilsilah').click();
+      return;
+    }
+
+    tombol.disabled = true;
+    try{
+      if(aksi === 'hapus'){
+        if(!confirm('Hapus baris ini dari silsilah?')){ tombol.disabled = false; return; }
+        /* Berkas fotonya dibuang dulu. silsilah_hapus di /kirim dulu cuma
+           menghapus baris, dan fotonya tertinggal di bucket tanpa pemilik. */
+        if(o && o.foto_jalur){
+          var rf = await fotoSilsilah('DELETE', id);
+          if(!rf.ok) throw new Error('Gagal membuang fotonya');
+        }
+        await api('silsilah?id=eq.'+id, { method:'DELETE', prefer:'return=minimal' });
+        toast('Dihapus');
+      }else if(aksi === 'lepas'){
+        var r = await fotoSilsilah('DELETE', id);
+        if(!r.ok) throw new Error('Gagal melepas foto');
+        toast('Foto dilepas');
+      }
+      await muatSilsilah();
+    }catch(err){ toast(err.message, true); tombol.disabled = false; }
+  });
+
+  $('berkasSilsilah').addEventListener('change', async function(e){
+    var berkas = (e.target.files || [])[0];
+    e.target.value = '';
+    if(!berkas || !silSasaranFoto) return;
+    var id = silSasaranFoto; silSasaranFoto = null;
+
+    toast('Mengecilkan foto…');
+    try{
+      var kecilan = await window.Gambar.siapkan(berkas);
+      var form = new FormData();
+      form.append('berkas', kecilan.penuh.blob, 'foto.webp');
+      form.append('kecil',  kecilan.kecil.blob, 'kecil.webp');
+      form.append('lebar',  kecilan.penuh.lebar);
+      form.append('tinggi', kecilan.penuh.tinggi);
+      var r = await fotoSilsilah('POST', id, form);
+      var jawab = null; try{ jawab = await r.json(); }catch(x){}
+      if(!r.ok) throw new Error((jawab && jawab.pesan) || ('Gagal mengunggah (HTTP ' + r.status + ')'));
+      toast('Foto tersimpan');
+      await muatSilsilah();
+    }catch(err){ toast(err.message, true); }
+  });
+
+  $('btnSilTambah').addEventListener('click', tambahSil);
 
   /* ============================================================
      8 · Foto acara
