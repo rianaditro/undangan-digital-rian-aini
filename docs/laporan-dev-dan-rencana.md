@@ -169,7 +169,7 @@ penjelasannya di bawah tabel.
 Fase 0  Hentikan kerusakan produksi           selesai
 Fase 1  Fondasi: staging, CI, drift           selesai (versi gratis)
 Fase 2  Halaman kenangan, langkah 2–5         4–5 sesi
-Fase 3  Bersihkan sisa satu-pasangan          selesai (030 menunggu ditempel)
+Fase 3  Bersihkan sisa satu-pasangan          selesai, terpasang
 Fase 4  Domain dan DNS                        ½ sesi   ← tangan Anda
 Fase 5  Siap jual                             3–4 sesi
 Fase 6  Gabung ke main, rilis                 1 sesi
@@ -272,7 +272,7 @@ aturan kompatibilitas terhadap `main`, dan uji jalan `foto-unggah`.
 | Judul `/kirim` | Dari isi undangan, juga kalimat "mintakan link baru kepada …" |
 | Editor silsilah | Pindah ke `/dasbor` kotak 1, lewat REST + RLS pemilik. Menghapus baris berfoto kini ikut membuang berkasnya — dulu tertinggal di bucket |
 | `foto-unggah` v5 | Hanya JWT pemilik. Token panitia ditolak 403 dengan arahan ke dasbor (header-nya tetap diizinkan di preflight CORS supaya pesan itu sampai) |
-| Migrasi 030 | `admin_*` tertutup untuk anon; `ucapan_tulis` 40/500 — sebelumnya nama 41 huruf jatuh di batasan tabel dengan galat mentah (23514); enam RPC bertoken yang tidak dipakai lagi dibuang |
+| Migrasi 030 (terpasang 5 Okt; sidik produksi = repo) | `admin_*` tertutup untuk anon; `ucapan_tulis` 40/500 — sebelumnya nama 41 huruf jatuh di batasan tabel dengan galat mentah (23514); enam RPC bertoken yang tidak dipakai lagi dibuang |
 | Pemeriksa kompatibilitas | Peran tiap panggilan RPC dibaca dari header yang sungguh dikirim, termasuk lewat fungsi pembantu (`rpc()` → `kepala()`) |
 
 **Tidak bisa dikerjakan di paket gratis: perlindungan sandi bocor.**
