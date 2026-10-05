@@ -67,6 +67,17 @@ function kunci(obj) {
 
 const baris = (s, i) => s.slice(0, i).split('\n').length;
 
+// Peran dari ekspresi header Authorization. Yang menyebut sesi (akses,
+// sesi, jwt) dihitung authenticated walau ada anon key sebagai cadangan
+// sebelum login — /admin menulis `sesi ? sesi.akses : M.SB.key`, dan
+// panggilan admin yang berarti selalu yang sesudah login. Tanpa
+// Authorization sendiri, atau hanya anon key, berarti anon.
+function peranDari(ekspresi) {
+  if (!ekspresi) return 'anon';
+  if (/akses|sesi|jwt/i.test(ekspresi)) return 'authenticated';
+  return 'anon';
+}
+
 function bacaRef(ref) {
   const berkas = git('ls-tree', '-r', '--name-only', ref).split('\n')
     .filter(f => /\.(html|js|mjs)$/.test(f) && !/^(uji|alat|supabase|docs)\//.test(f));
@@ -86,17 +97,33 @@ function bacaRef(ref) {
       // anon key (M.SB.key, SB_KEY, …) atau tanpa Authorization sendiri
       // → anon; selain itu (JWT sesi pemilik) → authenticated.
       const auth = /Authorization['"]?\s*:\s*([^,\n}]+)/i.exec(sisa.slice(0, b.index));
-      const peran = auth && !/key/i.test(auth[1]) ? 'authenticated' : 'anon';
+      const peran = peranDari(auth && auth[1]);
       panggilan.push({ jenis: 'rpc', nama: m[1], arg: kunci(obj), peran, di: `${f}:${baris(s, m.index)}` });
     }
 
-    // rpc('nama', {...})  — bentuk pembantu di /kirim dan /dasbor
+    // rpc('nama', {...})  — bentuk pembantu di /kirim dan /admin.
+    // Perannya dibaca dari pembantu itu sendiri: /kirim mengirim anon key
+    // (+ token panitia), /admin mengirim JWT sesi lewat kepala(). Kalau
+    // pembantunya memanggil fungsi lain untuk header, fungsi itu ikut dibaca.
+    const tubuhFungsi = (nama) => {
+      const mm = new RegExp(`function\\s+${nama}\\s*\\(`).exec(s);
+      if (!mm) return '';
+      const buka = s.indexOf('{', mm.index);
+      return buka < 0 ? '' : (ambilObjek(s, buka) || '');
+    };
+    let peranPembantu = 'anon';
+    {
+      let teks = tubuhFungsi('rpc');
+      const hdr = /headers:\s*([A-Za-z_]\w*)\(/.exec(teks);
+      if (hdr) teks += tubuhFungsi(hdr[1]);
+      const auth = /Authorization['"]?\s*:\s*([^,\n}]+)/i.exec(teks);
+      peranPembantu = peranDari(auth && auth[1]);
+    }
     const reRpc = /\brpc\(\s*'([a-z_]\w*)'\s*,\s*\{/g;
     while ((m = reRpc.exec(s))) {
       const obj = ambilObjek(s, m.index + m[0].length - 1);
       if (!obj) { gagal.push(`${f}:${baris(s, m.index)} rpc(${m[1]}) — argumen tidak terbaca`); continue; }
-      // Pembantu rpc() di /kirim selalu memakai anon key + token panitia.
-      panggilan.push({ jenis: 'rpc', nama: m[1], arg: kunci(obj), peran: 'anon', di: `${f}:${baris(s, m.index)}` });
+      panggilan.push({ jenis: 'rpc', nama: m[1], arg: kunci(obj), peran: peranPembantu, di: `${f}:${baris(s, m.index)}` });
     }
 
     // Panggilan tabel. Dua bentuk: lewat pembantu api() milik /kirim dan

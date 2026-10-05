@@ -52,7 +52,7 @@ PGURL=postgres://postgres@localhost:5432/postgres db/uji.sh
 | `db/supabase-tiruan.sql` | peran, default privileges, `auth.*`, `storage.*`, pgcrypto — sekecil yang dibutuhkan migrasi |
 | `db/bangun.sh` | tiruan + semua migrasi ke database `bangun`. `SAMPAI=020` berhenti di migrasi itu |
 | `sql/*.sql` | uji SQL. Masing-masing satu blok `do` yang diakhiri `raise` berisi `LULUS n GAGAL m`, jadi transaksinya selalu dibatalkan — aman juga dijalankan di produksi |
-| `db/kompat.mjs` | **aturan kompatibilitas**: membaca setiap panggilan Supabase di halaman pada satu ref git (bawaan `origin/main`) dan memastikan skema hasil bangun masih melayaninya — fungsi dan nama argumennya, argumen wajib, hak anon, kolom tabel, kebijakan RLS per peran |
+| `db/kompat.mjs` | **aturan kompatibilitas**: membaca setiap panggilan Supabase di halaman pada satu ref git (bawaan `origin/main`) dan memastikan skema hasil bangun masih melayaninya — fungsi dan nama argumennya, argumen wajib, hak peran pemanggilnya (anon atau authenticated, dibaca dari header Authorization yang dikirim, juga lewat fungsi pembantu), kolom tabel, kebijakan RLS per peran |
 | `db/sidik.sql`, `db/banding.sh` | **pemeriksa selisih** repo vs produksi (di bawah) |
 | `db/uji.sh` | semua di atas, berurutan. Ini yang dijalankan CI |
 

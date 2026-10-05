@@ -139,7 +139,7 @@ perubahan yang disengaja di fungsi-fungsi ini.
 
 ### Belum diperbaiki
 
-**Data Rian & 'Aini di kerangka halaman.** `index.html` masih memuat
+**~~Data Rian & 'Aini di kerangka halaman.~~** Selesai di Fase 3. `index.html` dulu memuat
 alamat rumah, nama lengkap, dan nomor DANA kalian sebagai markup statis.
 Di platform, itu tampil di undangan pasangan lain sebelum JS jalan, di
 sumber halaman, dan kalau JS gagal. `/kirim` juga masih berjudul
@@ -169,7 +169,7 @@ penjelasannya di bawah tabel.
 Fase 0  Hentikan kerusakan produksi           selesai
 Fase 1  Fondasi: staging, CI, drift           selesai (versi gratis)
 Fase 2  Halaman kenangan, langkah 2–5         4–5 sesi
-Fase 3  Bersihkan sisa satu-pasangan          1–2 sesi
+Fase 3  Bersihkan sisa satu-pasangan          selesai (030 menunggu ditempel)
 Fase 4  Domain dan DNS                        ½ sesi   ← tangan Anda
 Fase 5  Siap jual                             3–4 sesi
 Fase 6  Gabung ke main, rilis                 1 sesi
@@ -264,16 +264,28 @@ aturan kompatibilitas terhadap `main`, dan uji jalan `foto-unggah`.
 `main` sendiri tidak memanggil edge function apa pun, jadi deploy
 `foto-unggah` tidak bisa menyentuh situs yang tayang.
 
-### Fase 3 — sisa satu pasangan
+### Fase 3 — sisa satu pasangan — **SELESAI 5 Oktober**
 
-- Kerangka statis `index.html` dikosongkan: nama netral atau kerangka
-  kosong, bukan data Rian & 'Aini.
-- Judul `/kirim` dari database.
-- Editor silsilah pindah dari `/kirim` ke `/dasbor` — diputuskan 3
-  Oktober. Fotonya juga unggahan, dan "satu dasbor" sudah jadi prinsip.
-  Sesudahnya `foto-unggah` tidak lagi butuh jalur token sama sekali.
-- Cabut hak anon dari `admin_*`, nyalakan perlindungan sandi bocor.
-- Samakan batas `ucapan_tulis` (60/800) dengan tabel dan formulir (40/500).
+| | Yang dikerjakan |
+|---|---|
+| Kerangka `index.html` netral | Markup statis tidak lagi memuat nama, orang tua, alamat, atau nomor DANA pasangan mana pun. Ditemukan lebih parah dari dugaan: saat memuat gagal, tombol "Buka Undangan" tetap bisa ditekan dan di balik sampul undangan pasangan LAIN tampil data Rian & 'Aini. Sekarang tombolnya disembunyikan. Pasangan tanpa dompet tidak mendapat seksi Amplop Digital kosong |
+| Judul `/kirim` | Dari isi undangan, juga kalimat "mintakan link baru kepada …" |
+| Editor silsilah | Pindah ke `/dasbor` kotak 1, lewat REST + RLS pemilik. Menghapus baris berfoto kini ikut membuang berkasnya — dulu tertinggal di bucket |
+| `foto-unggah` v5 | Hanya JWT pemilik. Token panitia ditolak 403 dengan arahan ke dasbor (header-nya tetap diizinkan di preflight CORS supaya pesan itu sampai) |
+| Migrasi 030 | `admin_*` tertutup untuk anon; `ucapan_tulis` 40/500 — sebelumnya nama 41 huruf jatuh di batasan tabel dengan galat mentah (23514); enam RPC bertoken yang tidak dipakai lagi dibuang |
+| Pemeriksa kompatibilitas | Peran tiap panggilan RPC dibaca dari header yang sungguh dikirim, termasuk lewat fungsi pembantu (`rpc()` → `kepala()`) |
+
+**Tidak bisa dikerjakan di paket gratis: perlindungan sandi bocor.**
+Dokumentasi Supabase: *"Leaked password protection is available on the
+Pro Plan and above."* Yang tersedia gratis di pengaturan yang sama:
+panjang minimum sandi dan jenis karakter wajib — disarankan dinaikkan
+(Authentication → Providers → Email). Masuk daftar Fase 5 bersama Pro.
+
+**Sisa yang disengaja:** `SLUG_CADANGAN = 'rian-aini'` di
+`assets/varian.js` tetap. Ia pasangan cadangan untuk host yang tidak
+menyebut pasangan — terutama `undangan-rian-aini.vercel.app`, alamat
+link yang sudah tersebar ke tamu Rian & 'Aini. Mengubahnya mematikan
+link-link itu.
 
 ### Fase 4 — domain dan DNS
 
