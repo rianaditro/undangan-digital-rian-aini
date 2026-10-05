@@ -48,8 +48,13 @@
 
     <p class="cover-basmalah">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
     <p class="eyebrow cover-label">Walimatul 'Ursy</p>
-    <h1 class="cover-names" id="coverNama">RIAN<span class="amp">&amp;</span>'AINI</h1>
-    <p class="cover-date" id="coverTanggal">Selasa · 15 September 2026</p>
+    <!-- Kerangka netral. Nama, tanggal, mempelai, acara, alamat, dan
+         dompet tidak ditulis di sini untuk pasangan mana pun: halaman ini
+         melayani semua pasangan, dan isi statis akan tampil di undangan
+         orang lain sebelum JS jalan, di sumber halaman, dan saat memuat
+         gagal. Semuanya diisi terapkanVarian() dari undangan_isi. -->
+    <h1 class="cover-names" id="coverNama">&nbsp;</h1>
+    <p class="cover-date" id="coverTanggal">&nbsp;</p>
 
     <div class="cover-to">
       Kepada Bapak/Ibu/Saudara/i
@@ -102,30 +107,8 @@
     <h2 class="title reveal">Kami yang berbahagia</h2>
     <p class="lead reveal">Dengan memohon rahmat dan ridha Allah Subhanahu wa Ta'ala, kami bermaksud menyelenggarakan pernikahan putra-putri kami.</p>
 
-    <!-- Urutan kartu mengikuti pihak tamu; isi di bawah adalah cadangan tanpa JS. -->
-    <div class="pair" id="pasangan" data-runtun>
-      <div class="reveal">
-        <p class="person-role">Mempelai Pria</p>
-        <h3 class="person-name">RIAN ADI SAPUTRO</h3>
-        <p class="person-parents">
-          Putra dari<br>
-          <strong>Bapak Joko Sudarno</strong> <span class="alm">(Alm)</span><br>
-          &amp; <strong>Ibu Sri Kanah</strong> <span class="alm">(Almh)</span>
-        </p>
-      </div>
-
-      <div class="pair-amp reveal">&amp;</div>
-
-      <div class="reveal">
-        <p class="person-role">Mempelai Wanita</p>
-        <h3 class="person-name">NURUL ZAKIYATUL 'AINI</h3>
-        <p class="person-parents">
-          Putri dari<br>
-          <strong>Bapak Surahmad</strong><br>
-          &amp; <strong>Ibu Robi'atun</strong> <span class="alm">(Almh)</span>
-        </p>
-      </div>
-    </div>
+    <!-- Urutan kartu mengikuti pihak tamu; diisi terapkanVarian(). -->
+    <div class="pair" id="pasangan" data-runtun></div>
 
     <div class="gap"></div>
     <svg class="ukir divider draw reveal" viewBox="0 0 240 40"><use href="#ukir-pemisah"/></svg>
@@ -147,7 +130,7 @@
 <section id="hitung">
   <div class="wrap">
     <p class="eyebrow reveal">Menghitung Hari</p>
-    <h2 class="title reveal" id="hitungJudul">Selasa, 15 September 2026</h2>
+    <h2 class="title reveal" id="hitungJudul">&nbsp;</h2>
     <p class="lead reveal">Semoga Allah memudahkan langkah kami sampai pada hari itu.</p>
 
     <div class="count-grid reveal" id="countGrid" data-runtun>
@@ -169,29 +152,15 @@
     <div class="gap"></div>
 
     <!-- Rangkaian acara dan alamat mengikuti sisi keluarga pengundang. -->
-    <div id="daftarAcara" data-runtun>
-      <div class="event reveal">
-        <p class="event-name">Akad Nikah</p>
-        <div class="event-line"></div>
-        <p class="event-when">Selasa, 15 September 2026</p>
-        <p class="event-time">Pukul 13.00 WIB</p>
-      </div>
-
-      <div class="event reveal">
-        <p class="event-name">Resepsi</p>
-        <div class="event-line"></div>
-        <p class="event-when">Selasa, 15 September 2026</p>
-        <p class="event-time">Pukul 16.00 WIB — selesai</p>
-      </div>
-    </div>
+    <div id="daftarAcara" data-runtun></div>
 
     <!-- Blok ini dipakai bila seluruh acara di satu tempat. Bila tidak,
          blok disembunyikan dan alamat pindah ke tiap kartu acara. -->
-    <div class="place reveal" id="tempatBersama">
+    <div class="place reveal" id="tempatBersama" hidden>
       <p class="eyebrow" style="margin-bottom:12px">Bertempat di</p>
-      <p class="place-name" id="tempatNama">Kediaman Mempelai Putri</p>
-      <p class="place-addr" id="tempatAlamat">Jalan Pesajen RT 03 / RW 04, Demaan, Jepara, Jawa Tengah</p>
-      <a class="btn" id="tempatMaps" href="https://maps.app.goo.gl/xSdwqbrQoHadeU2A6" target="_blank" rel="noopener">Buka Peta Lokasi</a>
+      <p class="place-name" id="tempatNama"></p>
+      <p class="place-addr" id="tempatAlamat"></p>
+      <a class="btn" id="tempatMaps" target="_blank" rel="noopener">Buka Peta Lokasi</a>
     </div>
 
     <div class="gap"></div>
@@ -200,28 +169,14 @@
 </section>
 
 <!-- ====== HADIAH ====== -->
-<section id="hadiah" class="center">
+<section id="hadiah" class="center" hidden>
   <div class="wrap">
     <p class="eyebrow reveal">Tanda Kasih</p>
     <h2 class="title reveal">Amplop Digital</h2>
     <p class="lead reveal">Doa restu Anda sudah lebih dari cukup bagi kami. Namun bila berkenan memberi tanda kasih, dapat dikirim melalui:</p>
 
     <!-- Urutan dompet digital mengikuti pihak tamu. -->
-    <div class="rek-grid" id="dompet" data-runtun>
-      <div class="rek reveal">
-        <p class="rek-bank">DANA</p>
-        <p class="rek-no">085727641452</p>
-        <p class="rek-an">a.n. Nurul Zakiyatul 'Aini</p>
-        <button class="btn-copy" data-copy="085727641452">Salin Nomor</button>
-      </div>
-
-      <div class="rek reveal">
-        <p class="rek-bank">DANA</p>
-        <p class="rek-no">085330794639</p>
-        <p class="rek-an">a.n. Rian Adi Saputro</p>
-        <button class="btn-copy" data-copy="085330794639">Salin Nomor</button>
-      </div>
-    </div>
+    <div class="rek-grid" id="dompet" data-runtun></div>
   </div>
 </section>
 
@@ -270,7 +225,7 @@
     <p class="hero-salam reveal" style="margin-top:26px">Wassalamu'alaikum Warahmatullahi Wabarakatuh</p>
 
     <p class="eyebrow reveal" id="ttdLabel">Kami yang berbahagia</p>
-    <h2 class="close-names reveal" id="ttdNama">RIAN <span class="amp">&amp;</span> 'AINI</h2>
+    <h2 class="close-names reveal" id="ttdNama">&nbsp;</h2>
     <p class="eyebrow reveal" id="ttdSub">Beserta Keluarga</p>
     <p class="credit reveal" id="credit"></p>
   </div>
@@ -682,7 +637,9 @@
         .filter(Boolean).join(' · ');
     }
 
-    /* dompet digital */
+    /* dompet digital — pasangan tanpa dompet tidak mendapat seksi
+       "Amplop Digital" yang kosong */
+    document.getElementById('hadiah').hidden = !v.dompet.length;
     document.getElementById('dompet').innerHTML = v.dompet.map(function(k){
       var d = M.DOMPET[k];
       return '<div class="rek reveal">'
@@ -851,6 +808,10 @@
     }
     var sub = document.getElementById('coverSub');
     if(sub) sub.textContent = 'Periksa sambungan internet, lalu muat ulang halaman.';
+    /* Tanpa isi, di balik sampul cuma ada kerangka kosong. Tombolnya
+       disembunyikan supaya tamu tidak membuka halaman tanpa nama. */
+    var buka = document.getElementById('btnOpen');
+    if(buka) buka.hidden = true;
   }
 
   /* ---------- Buku ucapan (tersimpan & dibagikan) ---------- */

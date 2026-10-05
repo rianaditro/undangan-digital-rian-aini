@@ -153,6 +153,92 @@ cek('16 undangan_tamu galat → jatuh ke nama dari alamat, halaman tetap jalan',
     basi.badan.slice(0,80));
 await basi.tutup();
 
+/* ------------------------------------------------------------------
+   Kerangka netral. index.html melayani SEMUA pasangan: tidak boleh ada
+   nama, alamat, atau nomor dompet pasangan mana pun di markup statisnya
+   — dulu ada, dan ia tampil di undangan pasangan lain sebelum JS jalan,
+   di sumber halaman, dan di balik sampul saat memuat gagal.
+   ------------------------------------------------------------------ */
+const PRIBADI = [/\bRIAN\b/i, /\bAINI\b/i, /Joko/i, /Surahmad/i, /Pesajen/i, /Demaan/i, /085330/, /085727/,
+                 /Kanah/i, /Robi.atun/i, /Zakiyatul/i, /Saputro/i, /xSdwq/];
+const bocor = t => PRIBADI.filter(r => r.test(t)).map(String);
+
+{
+  const sumber = await (await fetch(ASAL + '/budi-sari/bapak-ahmad')).text();
+  // komentar HTML dan JS boleh bercerita; yang dilihat orang tidak boleh
+  const tanpaKomentar = sumber.replace(/<!--[\s\S]*?-->/g, '').replace(/\/\*[\s\S]*?\*\//g, '');
+  const b = bocor(tanpaKomentar);
+  cek('9a sumber halaman undangan tidak memuat data pasangan mana pun', b.length === 0, b.join(' '));
+}
+
+/* Pasangan lain: setiap jejak Rian & 'Aini di data tiruan diganti. */
+const ISI_LAIN = JSON.parse(JSON.stringify(ISI)
+  .replace(/RIAN ADI SAPUTRO/g, 'BUDI SANTOSO').replace(/Rian Adi Saputro/g, 'Budi Santoso')
+  .replace(/NURUL ZAKIYATUL 'AINI/g, 'SARI LESTARI').replace(/Nurul Zakiyatul 'Aini/g, 'Sari Lestari')
+  .replace(/RIAN/g, 'BUDI').replace(/'AINI/g, 'SARI').replace(/rian-aini/g, 'budi-sari')
+  .replace(/Joko Sudarno/g, 'Slamet').replace(/Sri Kanah/g, 'Tini').replace(/Surahmad/g, 'Darto')
+  .replace(/Robi'atun/g, 'Ningsih').replace(/Jalan Pesajen[^"]*/g, 'Jalan Mawar 1, Kudus')
+  .replace(/Pesajen|Demaan/g, 'Mawar').replace(/085330794639/g, '081200000001')
+  .replace(/085727641452/g, '081200000002').replace(/xSdwqbrQoHadeU2A6/g, 'contohcontoh')
+  .replace(/"rian"/g, '"budi"').replace(/"aini"/g, '"sari"'));   // kode dompet
+cek('9b data tiruan pasangan lain memang bersih (prasyarat uji)', bocor(JSON.stringify(ISI_LAIN)).length === 0,
+    bocor(JSON.stringify(ISI_LAIN)).join(' '));
+
+async function bukaLain({ gagal = false } = {}) {
+  const c = await browser.newContext({ viewport:{width:430,height:900} });
+  const pg = await c.newPage();
+  pg.on('pageerror', e => console.log('   [pageerror] ' + e.message));
+  await pg.route('**/*.supabase.co/**', async (route) => {
+    const jalur = new URL(route.request().url()).pathname;
+    const kirim = (isi, status=200) => route.fulfill({ status, contentType:'application/json',
+      headers:{'access-control-allow-origin':'*'}, body: JSON.stringify(isi) });
+    if (route.request().method() === 'OPTIONS') return route.fulfill({ status:204, body:'' });
+    if (jalur === '/rest/v1/rpc/undangan_isi') return gagal ? kirim({ message:'mati' }, 503) : kirim(ISI_LAIN);
+    if (jalur === '/rest/v1/rpc/undangan_tamu') return kirim([]);
+    if (jalur === '/rest/v1/rpc/ucapan_publik') return kirim([]);
+    return kirim(null);
+  });
+  await pg.goto(ASAL + '/budi-sari/bapak-ahmad');
+  return { c, pg };
+}
+
+{
+  const { c, pg } = await bukaLain();
+  await pg.waitForFunction(() => /BUDI/.test(document.getElementById('coverNama').textContent), null, { timeout: 8000 });
+  // Seluruh teks halaman, termasuk yang masih tertutup sampul.
+  const teks = await pg.evaluate(() => document.body.textContent + ' ' + document.title);
+  const b = bocor(teks);
+  cek('9c undangan pasangan lain: tidak ada jejak Rian & \'Aini di halaman yang tergambar', b.length === 0, b.join(' '));
+  cek('9d isinya pasangan itu sendiri', /BUDI/.test(teks) && /SARI/.test(teks) && /081200000001/.test(teks));
+  await c.close();
+}
+{
+  const { c, pg } = await bukaLain({ gagal: true });
+  await pg.waitForFunction(() => /belum bisa dimuat/i.test(document.getElementById('coverNama').textContent), null, { timeout: 8000 });
+  await pg.waitForTimeout(2800);   // lewat jaring pengaman sampul 2,5 dtk
+  const teks = await pg.evaluate(() => document.body.textContent);
+  cek('9e memuat gagal: tombol buka disembunyikan, tidak ada halaman kosong untuk dibuka',
+      await pg.locator('#btnOpen').isHidden());
+  cek('9f memuat gagal: di balik sampul tidak ada data pasangan mana pun', bocor(teks).length === 0, bocor(teks).join(' '));
+  await c.close();
+}
+{
+  const isi = JSON.parse(JSON.stringify(ISI_LAIN));
+  isi.dompet = [];
+  for (const k of Object.keys(isi.pihak || {})) if (isi.pihak[k]) isi.pihak[k].dompet = [];
+  const c = await browser.newContext({ viewport:{width:430,height:900} });
+  const pg = await c.newPage();
+  await pg.route('**/*.supabase.co/**', r => {
+    const jalur = new URL(r.request().url()).pathname;
+    return r.fulfill({ status:200, contentType:'application/json',
+      body: JSON.stringify(jalur === '/rest/v1/rpc/undangan_isi' ? isi : []) });
+  });
+  await pg.goto(ASAL + '/budi-sari/bapak-ahmad');
+  await pg.waitForFunction(() => /BUDI/.test(document.getElementById('coverNama').textContent), null, { timeout: 8000 });
+  cek('9g pasangan tanpa dompet: tidak ada seksi Amplop Digital yang kosong', await pg.locator('#hadiah').isHidden());
+  await c.close();
+}
+
 await browser.close(); srv.close();
 console.log('\n' + lulus + ' lulus, ' + gagal + ' gagal');
 process.exit(gagal ? 1 : 0);
