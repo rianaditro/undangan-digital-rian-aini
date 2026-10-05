@@ -270,6 +270,39 @@ async function jalan(){
         a2 && a2.p_slug === 'rian-aini', JSON.stringify(a2));
   }
 
+  /* ============ 9. judul halaman panitia dari database ============
+     Halaman ini dipakai semua pasangan. Judulnya dulu tertulis mati
+     "Rian & 'Aini" — dan tampil di halaman panitia pasangan lain. */
+  {
+    const sumber = await (await fetch(ASAL + '/kirim')).text();
+    const tanpaKomentar = sumber.replace(/<!--[\s\S]*?-->/g, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+    cek('J1 sumber /kirim tidak menyebut nama pasangan mana pun',
+        !/\bRian\b|'Aini|’Aini/i.test(tanpaKomentar), (tanpaKomentar.match(/.{20}(Rian|Aini).{20}/i) || [''])[0]);
+
+    const { ctx, page } = await halaman(browser, { token: T_PENUH });
+    await page.waitForSelector('#panelRekap:not([hidden])', { timeout: 8000 });
+    cek('J2 judul dari isi undangan, kapital dirapikan',
+        (await page.locator('#judulPasangan').textContent()) === "Rian & 'Aini"
+        && (await page.title()) === "Panitia — Rian & 'Aini", await page.title());
+    await ctx.close();
+  }
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1100, height: 900 } });
+    const model = bikinModel();
+    const lain = JSON.parse(JSON.stringify(ISI));
+    lain.mempelai.pria.panggilan = 'BUDI'; lain.mempelai.wanita.panggilan = 'SARI';
+    model.rpc.undangan_isi = () => lain;
+    model.rpc.panitia_masuk = () => [];          // link tidak dikenal
+    const page = await ctx.newPage();
+    await pasang(page, model);
+    await page.goto(ASAL + '/kirim?t=link-asing');
+    await page.waitForFunction(() => /tidak berlaku/i.test(document.body.textContent), null, { timeout: 8000 });
+    const t = await page.locator('#gerbang').textContent();
+    cek('J3 link tidak berlaku: diarahkan ke pengantin pasangan INI, bukan Rian & \'Aini',
+        /kepada Budi atau Sari/.test(t) && !/Rian|Aini/i.test(t), t.replace(/\s+/g, ' ').slice(0, 160));
+    await ctx.close();
+  }
+
   await browser.close();
   srv.close();
 

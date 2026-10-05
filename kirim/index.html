@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="robots" content="noindex, nofollow">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Panitia — Rian &amp; 'AINI</title>
+<title>Halaman Panitia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Karla:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -312,7 +312,10 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   <div class="baris-atas">
     <div>
       <p class="eyebrow">Daftar Tamu &amp; Pengiriman</p>
-      <h1>Rian &amp; 'Aini</h1>
+      <!-- Nama pasangan diisi sesudah M.muat(): halaman ini dipakai semua
+           pasangan, dan nama yang ditulis di sini tampil di halaman
+           panitia pasangan lain. -->
+      <h1 id="judulPasangan">&nbsp;</h1>
       <p class="sub" id="siapa" hidden></p>
       <p class="sub" id="lingkupPemegang" hidden></p>
       <p class="sub">Semua tersimpan di Supabase. Menutup browser, berganti HP, atau dibuka bergantian oleh beberapa orang — progresnya tetap sama.</p>
@@ -2056,6 +2059,26 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     $('inSandi').value = '';
   });
 
+  /* Nama panggilan kedua mempelai, dari isi undangan yang sudah turun.
+     Kapitalnya dirapikan: panggilan di database ditulis untuk sampul
+     undangan ("RIAN"), sedangkan judul ini dibaca sebagai kalimat. */
+  function namaPengantin(sambung){
+    var m = M.MEMPELAI || {};
+    return ['pria', 'wanita']
+      .map(function(k){ return m[k] && m[k].panggilan ? judulKata(String(m[k].panggilan)) : ''; })
+      .filter(Boolean).join(sambung);
+  }
+  function judulKata(t){
+    // Huruf pertama tiap kata; apostrof di AWAL kata ('Aini) dilompati,
+    // apostrof di tengah kata (Ma'ruf, Robi'atun) tidak memulai kata baru.
+    return t.toLowerCase().replace(/(^|[\s-])(['’]?)([^\s'’-])/g, function(_, a, q, b){ return a + q + b.toUpperCase(); });
+  }
+  function pasangJudul(){
+    var nama = namaPengantin(' & ');
+    $('judulPasangan').textContent = nama || 'Halaman Panitia';
+    document.title = nama ? 'Panitia — ' + nama : 'Halaman Panitia';
+  }
+
   /* ---------- Menentukan cara masuk ---------- */
   (async function mulai(){
     /* Isi undangan sekarang datang dari database, dan dropdown pihak
@@ -2071,6 +2094,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
       return;
     }
     isiPilihanPihak();
+    pasangJudul();
 
     if(TOKEN){
       /* link rahasia: tanyakan ke server siapa pemegangnya */
@@ -2087,7 +2111,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
           '<p class="eyebrow">Halaman Panitia</p>'
         + '<h1 style="font-size:24px;margin:10px 0 8px">Link tidak berlaku</h1>'
         + '<p class="sub">' + esc(e.message) + '</p>'
-        + '<p class="sub" style="margin-top:12px">Mintakan link baru kepada Rian atau ’Aini.</p>';
+        + '<p class="sub" style="margin-top:12px">Mintakan link baru kepada ' + esc(namaPengantin(' atau ') || 'pengantin') + '.</p>';
       }
       return;
     }
