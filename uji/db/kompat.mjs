@@ -82,7 +82,12 @@ function bacaRef(ref) {
       const b = /JSON\.stringify\(\s*\{/.exec(sisa);
       const obj = b && ambilObjek(sisa, b.index + b[0].length - 1);
       if (!obj) { gagal.push(`${f}:${baris(s, m.index)} rpc/${m[1]} — argumen tidak terbaca`); continue; }
-      panggilan.push({ jenis: 'rpc', nama: m[1], arg: kunci(obj), di: `${f}:${baris(s, m.index)}` });
+      // Peran ditentukan header Authorization yang benar-benar dikirim:
+      // anon key (M.SB.key, SB_KEY, …) atau tanpa Authorization sendiri
+      // → anon; selain itu (JWT sesi pemilik) → authenticated.
+      const auth = /Authorization['"]?\s*:\s*([^,\n}]+)/i.exec(sisa.slice(0, b.index));
+      const peran = auth && !/key/i.test(auth[1]) ? 'authenticated' : 'anon';
+      panggilan.push({ jenis: 'rpc', nama: m[1], arg: kunci(obj), peran, di: `${f}:${baris(s, m.index)}` });
     }
 
     // rpc('nama', {...})  — bentuk pembantu di /kirim dan /dasbor
@@ -90,7 +95,8 @@ function bacaRef(ref) {
     while ((m = reRpc.exec(s))) {
       const obj = ambilObjek(s, m.index + m[0].length - 1);
       if (!obj) { gagal.push(`${f}:${baris(s, m.index)} rpc(${m[1]}) — argumen tidak terbaca`); continue; }
-      panggilan.push({ jenis: 'rpc', nama: m[1], arg: kunci(obj), di: `${f}:${baris(s, m.index)}` });
+      // Pembantu rpc() di /kirim selalu memakai anon key + token panitia.
+      panggilan.push({ jenis: 'rpc', nama: m[1], arg: kunci(obj), peran: 'anon', di: `${f}:${baris(s, m.index)}` });
     }
 
     // Panggilan tabel. Dua bentuk: lewat pembantu api() milik /kirim dan
@@ -216,8 +222,7 @@ for (const ref of refs) {
         masalah.push(`${p.di} rpc/${p.nama} — ${cocok.length} versi cocok, PostgREST akan menolak (ambigu)`);
         continue;
       }
-      // Semua panggilan RPC di halaman memakai kunci anon.
-      if (!cocok[0].anon) masalah.push(`${p.di} rpc/${p.nama} — anon tidak lagi boleh menjalankannya`);
+      if (!cocok[0][p.peran]) masalah.push(`${p.di} rpc/${p.nama} — ${p.peran} tidak lagi boleh menjalankannya`);
     } else {
       const k = kolom.get(p.nama);
       if (!k) { masalah.push(`${p.di} tabel ${p.nama} — tabelnya tidak ada`); continue; }
