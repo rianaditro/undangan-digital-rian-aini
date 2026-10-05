@@ -26,6 +26,7 @@ Playwright butuh Chromium. Kalau `npm install` tidak memasangnya sendiri:
 | `uji-admin` | `/admin`: gerbang admin, buat pasangan, paket, link panitia |
 | `uji-rekap`, `uji-018` | rekap pasca-acara di `/kirim`: kehadiran, pemberian, berkat, kelompok |
 | `uji-lihat` | halaman terima kasih |
+| `uji-fungsi-foto` | edge function `foto-unggah` **dijalankan sungguhan di Deno** dengan Supabase ditiru di belakangnya: token panitia vs JWT pemilik, pasangan mana yang kena, pembersihan berkas saat gagal. Butuh `deno` di PATH atau `DENO=` |
 | `uji-xlsx`, `uji-unduh` | menghasilkan berkas `.xlsx`; isinya diperiksa terpisah (lihat di bawah) |
 
 Galat JavaScript di halaman (`[pageerror]`) dihitung gagal oleh `semua.mjs`,
@@ -89,8 +90,9 @@ dipasang di produksi muncul sebagai "hanya di repo".
   berkasnya terbentuk. Isinya — sel, gaya, lembar — dulu diperiksa dengan
   openpyxl dari Python, dan pemeriksaan itu belum ikut dipindahkan ke sini.
 - **Jalur HTTP sungguhan.** Karena Supabase distub, tidak ada uji di sini
-  yang membuktikan edge function atau RPC benar-benar menjawab seperti
-  yang ditiru stub-nya. `db/kompat.mjs` menutup sebagian: ia memastikan
-  yang dipanggil halaman memang ada di skema, dengan hak yang benar.
+  yang membuktikan RPC benar-benar menjawab seperti yang ditiru stub-nya.
+  `db/kompat.mjs` menutup sebagian: ia memastikan yang dipanggil halaman
+  memang ada di skema, dengan hak yang benar. `foto-unggah` sendiri
+  dijalankan sungguhan (`uji-fungsi-foto`); `admin-pasangan` belum.
 - **Selisih dengan produksi** dijalankan tangan, karena CI tidak memegang
   kunci produksi — dan sebaiknya memang tidak.

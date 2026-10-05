@@ -9,7 +9,10 @@ select jsonb_build_object(
   'fungsi', (select jsonb_object_agg(k, v) from (
       select p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')' as k,
              jsonb_build_object(
-               'isi',     md5(p.prosrc),
+               -- CR dan indentasi awal baris dibuang dulu: keduanya datang dari
+               -- menempel di SQL editor Supabase (baris \r\n, auto-indent), bukan
+               -- dari perubahan yang disengaja. Selain itu, satu huruf pun beda.
+               'isi',     md5(regexp_replace(replace(p.prosrc, E'\r', ''), E'\n[ \t]+', E'\n', 'g')),
                'hasil',   pg_get_function_result(p.oid),
                'definer', p.prosecdef,
                'atur',    coalesce(array_to_string(p.proconfig, ','), ''),

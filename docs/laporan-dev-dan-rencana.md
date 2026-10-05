@@ -123,11 +123,18 @@ tidak akan pernah menangkapnya.
   juga 40/500 — tapi pemanggil lain akan mendapat galat batasan mentah,
   bukan pesan yang rapi. Kecil; dicatat untuk Fase 3.
 
-**027 belum tercatat di riwayat migrasi produksi.** Pemasangannya
-menunggu persetujuan Anda (dua kali habis waktu, sekali dibatalkan).
-Sudah diperiksa sesudahnya: tidak ada yang berubah dan tidak ada yang
-menggantung. Karena 027 tidak mengubah apa pun di produksi, yang tertunda
-hanya catatannya.
+**027 dan 026 terpasang 5 Oktober**, ditempel tangan di SQL editor
+(`supabase/manual/2026-10-05_pasang-027-026.sql`) karena sesi ini tidak
+bisa menulis ke produksi. Sesudahnya sidik produksi dan sidik bangun
+ulang repo **identik** di setiap bagian.
+
+Menempel di SQL editor meninggalkan dua jejak di badan fungsi: akhir
+baris `\r\n`, dan indentasi tambahan di satu baris komentar (auto-indent
+editornya). Keduanya tidak mengubah perilaku, tapi membuat setiap
+tempelan tampak "berbeda". `uji/db/sidik.sql` sekarang membuang CR dan
+indentasi awal baris sebelum menghitung hash — dibuktikan: tempelan
+dengan dua jejak itu tidak dilaporkan, perubahan satu kata (`limit 200`
+→ `limit 100`) dilaporkan.
 
 ### Belum diperbaiki
 
@@ -246,15 +253,15 @@ Lanjutan `docs/kenangan.md`:
 | Langkah | | Keadaan |
 |---|---|---|
 | 1 | dua penanda di `acara` | **selesai**, diterapkan |
-| 2 | pustaka foto di dasbor | kode dan uji selesai; **tinggal diterapkan** — migrasi 026, deploy `foto-unggah`, uji SQL pemicu satu-latar |
+| 2 | pustaka foto di dasbor | **selesai, terpasang 5 Okt** — migrasi 026, `foto-unggah` v4. Fungsinya kini diuji sungguhan di Deno (`uji/uji-fungsi-foto.mjs`, 27 cek, merah bila pemeriksa babak atau saringan pasangan dicabut) |
 | 3 | `kenangan_blok`, panel 9, halaman baru (foto saja) | belum |
 | 4 | saklar terbit kenangan | belum |
 | 5 | klip video | belum. Paling rapuh — `MediaRecorder` di HP sungguhan |
 
-Langkah 2 menunggu Fase 1, dan Fase 1 sudah ada: 026 lulus bangun ulang,
-uji SQL-nya (7/7, merah bila pemicunya dicabut), dan aturan
-kompatibilitas terhadap `main`. Tinggal dipasang — bersama 027, begitu
-Anda menyetujui pemasangan ke produksi.
+Langkah 2 dipasang sesudah lulus bangun ulang, uji SQL pemicunya (7/7),
+aturan kompatibilitas terhadap `main`, dan uji jalan `foto-unggah`.
+`main` sendiri tidak memanggil edge function apa pun, jadi deploy
+`foto-unggah` tidak bisa menyentuh situs yang tayang.
 
 ### Fase 3 — sisa satu pasangan
 
