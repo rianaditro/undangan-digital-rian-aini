@@ -203,6 +203,19 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
 .tutup{padding:clamp(48px,10vw,72px) var(--pad);text-align:center;border-top:1px solid rgba(195,154,92,.16);}
 .tutup a{color:var(--kuningan);text-decoration:none;border-bottom:1px solid rgba(195,154,92,.4);}
 
+/* ---------- PITA PRATINJAU ----------
+   Hanya untuk pemilik yang membuka ?pratinjau=1 dari dasbor. Menempel di
+   atas supaya tidak pernah ada tangkapan layar pratinjau yang dikira
+   halaman yang sudah dilihat tamu. */
+#pita{
+  position:sticky;top:0;z-index:50;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;
+  padding:9px 16px;font-size:12px;letter-spacing:.04em;text-align:center;
+  background:var(--kuningan);color:var(--nila-3);
+}
+#pita b{font-weight:700;letter-spacing:.18em;text-transform:uppercase;font-size:10.5px;}
+#pita.terbit{background:var(--daun);color:var(--kapur);}
+#atas .salam a{color:var(--kuningan);}
+
 @media (prefers-reduced-motion:reduce){
   .reveal,.reveal.in{opacity:1;transform:none;transition:none;}
   .galeri img{transition:none;}
@@ -228,6 +241,8 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
      dasbor: sampul selalu pertama, penutup selalu terakhir, ucapan
      selalu sesudah momen. Yang bisa diatur pasangan: blok mana yang
      tampil, dan tulisannya. -->
+
+<div id="pita" hidden role="status"></div>
 
 <section id="atas">
   <p class="eyebrow reveal" id="atasEyebrow">Terima Kasih</p>
@@ -568,17 +583,72 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
     hidupkanGerak();
   }
 
-  fetch(M.SB.url + '/rest/v1/rpc/terimakasih_isi', {
-    method: 'POST',
-    headers: { apikey: M.SB.key, Authorization: 'Bearer ' + M.SB.key, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ p_slug: slugPasangan() })
-  })
-  .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  /* ---------- Pratinjau pemilik ----------
+     ?pratinjau=1 dibuka dari dasbor. Sesinya dibaca dari localStorage
+     yang sama dengan dasbor — karena itu dasbor selalu membuka pratinjau
+     di asalnya sendiri (M.alamatPratinjau), bukan di subdomain pasangan.
+
+     Isinya datang dari terimakasih_pratinjau, yang dibangun fungsi dalam
+     yang SAMA dengan terimakasih_isi: yang terlihat di sini persis yang
+     nanti dilihat tamu. Tanpa ?pratinjau=1 halaman ini tidak pernah
+     menyentuh sesi, sekalipun pemiliknya sedang login — tamu dan pemilik
+     yang membuka alamat tamu melihat hal yang sama. */
+  var pratinjau = new URLSearchParams(location.search).get('pratinjau') === '1';
+
+  function sesiDasbor(){
+    try { var s = JSON.parse(localStorage.getItem('dasbor-sesi') || 'null'); return s && s.akses ? s : null; }
+    catch (e) { return null; }
+  }
+
+  function pasangPita(d){
+    var pita = $('pita');
+    if (!d.undangan_terbit){
+      pita.innerHTML = '<b>Pratinjau</b> Undangan masih draf — tamu belum bisa membuka halaman ini.';
+    } else if (!d.kenangan_terbit){
+      pita.innerHTML = '<b>Pratinjau</b> Belum diterbitkan — tamu belum melihat halaman ini.';
+    } else {
+      pita.innerHTML = '<b>Pratinjau</b> Sudah terbit — beginilah yang dilihat tamu.';
+      pita.className = 'terbit';
+    }
+    pita.hidden = false;
+    document.title = 'Pratinjau · ' + document.title;
+  }
+
+  function minta(){
+    if (!pratinjau){
+      return fetch(M.SB.url + '/rest/v1/rpc/terimakasih_isi', {
+        method: 'POST',
+        headers: { apikey: M.SB.key, Authorization: 'Bearer ' + M.SB.key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_slug: slugPasangan() })
+      }).then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+    }
+    var sesi = sesiDasbor();
+    if (!sesi) return Promise.reject({ pesan: 'masuk' });
+    return fetch(M.SB.url + '/rest/v1/rpc/terimakasih_pratinjau', {
+      method: 'POST',
+      headers: { apikey: M.SB.key, Authorization: 'Bearer ' + sesi.akses, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_slug: slugPasangan() })
+    }).then(function(r){
+      if (r.status === 401) throw { pesan: 'habis' };
+      if (r.status === 403) throw { pesan: 'bukan' };
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+  }
+
+  var KABAR_PRATINJAU = {
+    masuk: 'Pratinjau hanya bisa dibuka dari dasbor. <a href="/dasbor">Masuk ke dasbor</a>, lalu tekan Pratinjau.',
+    habis: 'Sesi dasbor sudah habis. <a href="/dasbor">Masuk lagi</a>, lalu tekan Pratinjau.',
+    bukan: 'Akun yang sedang masuk bukan pemilik undangan ini.'
+  };
+
+  minta()
   .then(function(d){
     if (!d || d.aktif !== true){
       belumAda('Halaman ini belum tersedia.');
       return;
     }
+    if (d.pratinjau) pasangPita(d);
     fotoAktif = d.foto || [];
     gambarAtas(d);
     gambarPembuka(d);
@@ -589,7 +659,12 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
     gambarPenutup(d);
     hidupkanGerak();
   })
-  .catch(function(){
+  .catch(function(e){
+    if (e && KABAR_PRATINJAU[e.pesan]){
+      belumAda('');
+      $('atasSalam').innerHTML = KABAR_PRATINJAU[e.pesan];   // teks tetap milik halaman, bukan data
+      return;
+    }
     belumAda('Belum bisa dimuat. Coba muat ulang halaman.');
   });
 })();

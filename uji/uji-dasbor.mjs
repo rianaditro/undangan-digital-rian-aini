@@ -383,7 +383,10 @@ const browser = await chromium.launch();
   await page.evaluate(() => { window.__buka = []; window.open = (u) => { window.__buka.push(u); }; });
   await page.locator('#btnLihatKenangan').click();
   const dibuka = await page.evaluate(() => window.__buka[0]);
-  cek('16 Lihat Halaman = /terimakasih di alamat pasangan', dibuka === 'https://rian-aini.mengundang.id/terimakasih', dibuka);
+  /* Pratinjau di asal dasbor sendiri, BUKAN subdomain pasangan premium:
+     sesi pemilik tinggal di localStorage asal ini. */
+  cek('16 Pratinjau = /terimakasih?pratinjau=1 di asal dasbor',
+      dibuka === ASAL + '/terimakasih?pasangan=rian-aini&pratinjau=1', dibuka);
 
   await ctx.close();
 }
@@ -398,15 +401,70 @@ const browser = await chromium.launch();
       && /belum perlu diisi/i.test(await page.locator('#hintKenangan').textContent()));
   const buruk = await page.evaluate(() => {
     const keluar = [];
-    document.querySelectorAll('#panelKenangan *').forEach(el => {
+    document.querySelectorAll('#panelKenangan *, #panelTerbitKenangan *').forEach(el => {
       if (!el.checkVisibility({ checkVisibilityCSS: true })) return;
       const r = el.getBoundingClientRect();
       if (r.width && (r.right > window.innerWidth + 1 || r.left < -1)) keluar.push(el.tagName + ' @' + Math.round(r.right));
     });
     return keluar;
   });
-  cek('17b panel 9 bersih di 400px', buruk.length === 0, buruk.slice(0, 5).join(' ; '));
+  cek('17b panel 9 dan 10 bersih di 400px', buruk.length === 0, buruk.slice(0, 5).join(' ; '));
+  await page.locator('#panelTerbitKenangan').screenshot({ path: 'dasbor-terbit-kenangan-400.png' });
   await page.locator('#panelKenangan').screenshot({ path: 'dasbor-kenangan-400.png' });
+  await ctx.close();
+}
+
+/* ---------- panel 10: terbitkan halaman kenangan ---------- */
+{
+  const model = bikinModel();
+  const { ctx, page } = await masuk(browser, model);
+  cek('18a bawaan: draf, dengan ajakan memeriksa lewat pratinjau',
+      (await page.locator('#lencanaKenangan').textContent()) === 'Draf'
+      && /pratinjau/i.test(await page.locator('#hintTerbitKenangan').textContent())
+      && await page.locator('#alamatKenangan').isHidden());
+
+  await page.locator('#btnTerbitKenangan').click();
+  await page.waitForFunction(() => document.querySelector('#lencanaKenangan').textContent === 'Terbit', null, { timeout: 5000 });
+  const p1 = model.patch.filter(x => x.tabel === 'pasangan' && 'kenangan_terbit' in x.badan);
+  cek('18b terbit: satu PATCH berisi kenangan_terbit saja, tidak menyentuh terbit undangan',
+      p1.length === 1 && p1[0].badan.kenangan_terbit === true && Object.keys(p1[0].badan).length === 1,
+      JSON.stringify(p1));
+  cek('18c alamat publiknya ditunjukkan',
+      (await page.locator('#alamatKenangan').textContent()) === 'rian-aini.mengundang.id/terimakasih');
+
+  await page.locator('#btnTerbitKenangan').click();
+  await page.waitForFunction(() => document.querySelector('#lencanaKenangan').textContent === 'Draf', null, { timeout: 5000 });
+  cek('18d tarik lagi: kenangan_terbit false',
+      model.patch.filter(x => x.tabel === 'pasangan' && 'kenangan_terbit' in x.badan).at(-1).badan.kenangan_terbit === false);
+
+  await page.evaluate(() => { window.__buka = []; window.open = (u) => { window.__buka.push(u); }; });
+  await page.locator('#btnPratinjauKenangan').click();
+  cek('18e tombol pratinjau panel 10 membuka pratinjau yang sama',
+      (await page.evaluate(() => window.__buka[0])) === ASAL + '/terimakasih?pasangan=rian-aini&pratinjau=1');
+  await ctx.close();
+}
+{
+  const model = bikinModel();
+  model.pasangan[0].tanggal_acara = '2099-01-01';
+  const { ctx, page } = await masuk(browser, model);
+  let ditanya = '';
+  page.once('dialog', d => { ditanya = d.message(); d.dismiss(); });
+  await page.locator('#btnTerbitKenangan').click();
+  await page.waitForTimeout(400);
+  cek('18f sebelum acara: diminta yakin dulu; dibatalkan = tidak ada yang dikirim',
+      /belum berlangsung/i.test(ditanya)
+      && model.patch.filter(x => x.tabel === 'pasangan').length === 0
+      && (await page.locator('#lencanaKenangan').textContent()) === 'Draf', ditanya);
+  await ctx.close();
+}
+{
+  const model = bikinModel();
+  model.pasangan[0].terbit = false; model.pasangan[0].status = 'draf';
+  model.pasangan[0].kenangan_terbit = true;
+  const { ctx, page } = await masuk(browser, model);
+  cek('18g saklar menyala tapi undangan draf: dijelaskan bahwa tamu belum bisa membuka',
+      /masih draf/i.test(await page.locator('#hintTerbitKenangan').textContent())
+      && await page.locator('#alamatKenangan').isHidden());
   await ctx.close();
 }
 

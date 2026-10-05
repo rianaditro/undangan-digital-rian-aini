@@ -255,7 +255,7 @@ Lanjutan `docs/kenangan.md`:
 | 1 | dua penanda di `acara` | **selesai**, diterapkan |
 | 2 | pustaka foto di dasbor | **selesai, terpasang 5 Okt** — migrasi 026, `foto-unggah` v4. Fungsinya kini diuji sungguhan di Deno (`uji/uji-fungsi-foto.mjs`, 27 cek, merah bila pemeriksa babak atau saringan pasangan dicabut) |
 | 3 | `kenangan_blok`, panel 9, halaman baru (foto saja) | **selesai, terpasang 5 Okt** — migrasi 028 ditempel di SQL editor; sidik produksi = sidik repo |
-| 4 | saklar terbit kenangan | belum |
+| 4 | saklar terbit kenangan | **kode dan uji selesai 5 Okt**; migrasi 029 menunggu ditempel di SQL editor (`supabase/manual/2026-10-05_pasang-029.sql`) |
 | 5 | klip video | belum. Paling rapuh — `MediaRecorder` di HP sungguhan |
 
 Langkah 2 dipasang sesudah lulus bangun ulang, uji SQL pemicunya (7/7),

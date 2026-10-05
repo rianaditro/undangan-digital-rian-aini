@@ -577,6 +577,19 @@
          + 'pasangan=' + encodeURIComponent((pas && pas.slug) || '');
   }
 
+  /* Pratinjau pemilik: selalu di ASAL YANG SAMA dengan halaman yang
+     memanggilnya. Sesi dasbor tinggal di localStorage asal itu, dan
+     subdomain pasangan premium adalah asal yang lain — membuka
+     pratinjau di sana berarti membuka halaman yang tidak tahu siapa
+     pemiliknya. Di subdomain pasangan, pasangannya sudah tersirat. */
+  function alamatPratinjau(pas, jalur) {
+    jalur = '/' + String(jalur || '').replace(/^\/+/, '');
+    var diSub = !!subdomainPasangan(global.location ? location.hostname : '');
+    return asalSekarang() + jalur + '?'
+         + (diSub ? '' : 'pasangan=' + encodeURIComponent((pas && pas.slug) || '') + '&')
+         + 'pratinjau=1';
+  }
+
   function pasanganIni() {
     return { slug: KONF.slug, canonical_host: KONF.canonicalHost };
   }
@@ -656,6 +669,7 @@
     linkPlatform: linkPlatform,
     alamatUndangan: alamatUndangan,
     alamatPlatform: alamatPlatform,
+    alamatPratinjau: alamatPratinjau,
     pesanWA: pesanWA
   };
 

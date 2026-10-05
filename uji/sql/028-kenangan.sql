@@ -22,7 +22,9 @@ declare
   gagal int  := 0;
 begin
   -- ---------- data ----------
-  insert into public.pasangan (slug, status, terbit) values ('uji-kenangan-028', 'aktif', true)
+  -- kenangan_terbit (029) dinyalakan: uji ini tentang ISI halaman;
+  -- gerbangnya diuji di 029-kenangan-terbit.sql.
+  insert into public.pasangan (slug, status, terbit, kenangan_terbit) values ('uji-kenangan-028', 'aktif', true, true)
   returning id into ps;
   insert into public.pasangan (slug, status, terbit) values ('uji-kenangan-lain', 'aktif', true)
   returning id into lain;

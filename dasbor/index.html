@@ -242,7 +242,21 @@ select{appearance:none;cursor:pointer;}
 
     <div class="aksi">
       <button class="btn solid" id="btnSimpanKenangan">Simpan Halaman Kenangan</button>
-      <button class="btn ghost" id="btnLihatKenangan">Lihat Halaman</button>
+      <button class="btn ghost" id="btnLihatKenangan">Pratinjau</button>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="panel" id="panelTerbitKenangan">
+    <div class="blok-kepala">
+      <h2>10 · Terbitkan halaman kenangan</h2>
+      <span class="status draf" id="lencanaKenangan">Draf</span>
+    </div>
+    <p class="hint" id="hintTerbitKenangan"></p>
+    <p class="sub" id="alamatKenangan" hidden></p>
+    <div class="aksi">
+      <button class="btn" id="btnTerbitKenangan">Terbitkan Halaman Kenangan</button>
+      <button class="btn ghost" id="btnPratinjauKenangan">Pratinjau</button>
     </div>
   </div>
 </div>
@@ -347,6 +361,7 @@ select{appearance:none;cursor:pointer;}
     gambar();
     gambarFoto();
     gambarKenangan();
+    kabarKenangan();
   }
 
   /* ---------- menggambar ---------- */
@@ -525,6 +540,7 @@ select{appearance:none;cursor:pointer;}
       });
       await Promise.all(tugas);
       gambarBabakKenangan();
+      kabarKenangan();
       toast('Tersimpan');
     }catch(e){ toast(e.message, true); }
     finally{ btn.disabled=false; btn.textContent='Simpan Semua'; }
@@ -575,6 +591,7 @@ select{appearance:none;cursor:pointer;}
       pasangan.terbit = mau;
       pasangan.status = mau ? 'aktif' : 'draf';
       kabarStatus();
+      kabarKenangan();
       toast(mau ? 'Undangan diterbitkan' : 'Undangan ditarik dari publik');
     }catch(e){ toast(e.message, true); }
     finally{ btn.disabled=false; }
@@ -951,9 +968,64 @@ select{appearance:none;cursor:pointer;}
   });
 
   $('btnSimpanKenangan').addEventListener('click', simpanKenangan);
-  $('btnLihatKenangan').addEventListener('click', function(){
-    window.open(M.alamatPlatform(pasangan, '/terimakasih'), '_blank', 'noopener');
-  });
+  /* Pratinjau selalu di asal dasbor ini: sesinya ada di localStorage
+     asal ini, bukan di subdomain pasangan. */
+  function bukaPratinjau(){
+    window.open(M.alamatPratinjau(pasangan, '/terimakasih'), '_blank', 'noopener');
+  }
+  $('btnLihatKenangan').addEventListener('click', bukaPratinjau);
+  $('btnPratinjauKenangan').addEventListener('click', bukaPratinjau);
+
+  /* ============================================================
+     10 · Terbitkan halaman kenangan
+
+     Saklar sendiri, terpisah dari undangan. Undangan terbit berminggu-
+     minggu sebelum acara; halaman kenangan baru pantas dibuka sesudah
+     fotonya masuk. Tamu melihatnya hanya kalau KEDUANYA terbit — itu
+     dijaga terimakasih_isi, bukan halaman ini.
+     ============================================================ */
+  function kabarKenangan(){
+    if(!pasangan) return;
+    var nyala = !!pasangan.kenangan_terbit;
+    var l = $('lencanaKenangan');
+    l.textContent = nyala ? 'Terbit' : 'Draf';
+    l.className = 'status ' + (nyala ? 'terbit' : 'draf');
+    $('btnTerbitKenangan').textContent = nyala ? 'Tarik dari Publik' : 'Terbitkan Halaman Kenangan';
+
+    var hint;
+    if(nyala && !pasangan.terbit){
+      hint = 'Sudah dinyalakan, tapi undangannya masih draf — tamu baru bisa membukanya sesudah undangan diterbitkan di kotak 7.';
+    }else if(nyala){
+      hint = 'Tamu sudah bisa membuka halaman kenangan di alamat di bawah. Menariknya membuat alamat itu menjawab “belum tersedia”, tanpa menghapus apa pun.';
+    }else if(!acaraLewat()){
+      hint = 'Biarkan mati sampai acaranya lewat dan fotonya masuk. Sampai saat itu, tamu yang membuka alamatnya mendapat “belum tersedia”. Pratinjau tetap bisa dibuka kapan saja.';
+    }else{
+      hint = 'Kalau foto dan tulisannya sudah siap, terbitkan supaya tamu bisa membukanya. Lihat dulu lewat Pratinjau — yang tampil di sana persis yang nanti dilihat tamu.';
+    }
+    $('hintTerbitKenangan').textContent = hint;
+
+    var alamat = $('alamatKenangan');
+    alamat.hidden = !(nyala && pasangan.terbit);
+    alamat.textContent = M.alamatPlatform(pasangan, '/terimakasih').replace(/^https?:\/\//, '');
+  }
+
+  async function alihTerbitKenangan(){
+    var mau = !pasangan.kenangan_terbit;
+    if(mau && !acaraLewat()
+       && !confirm('Acaranya belum berlangsung. Halaman kenangan biasanya baru diterbitkan sesudah acara dan fotonya masuk. Terbitkan sekarang juga?')){
+      return;
+    }
+    var btn = $('btnTerbitKenangan'); btn.disabled = true;
+    try{
+      await api('pasangan?id=eq.'+pasangan.id, { method:'PATCH', prefer:'return=minimal',
+                                                 body: JSON.stringify({ kenangan_terbit: mau }) });
+      pasangan.kenangan_terbit = mau;
+      kabarKenangan();
+      toast(mau ? 'Halaman kenangan diterbitkan' : 'Halaman kenangan ditarik dari publik');
+    }catch(e){ toast(e.message, true); }
+    finally{ btn.disabled = false; }
+  }
+  $('btnTerbitKenangan').addEventListener('click', alihTerbitKenangan);
 
   async function cobaMasuk(){
     var email=$('inEmail').value.trim(), sandi=$('inSandi').value;

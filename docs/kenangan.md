@@ -191,7 +191,24 @@ masuk daftar Tahap 5 yang sudah ada.
   draf ia menjawab "belum tersedia"; mode draf untuk pemilik datang
   bersama saklar terbit kenangan (langkah 4).
 
-## 11. Urutan kerja
+## 11. Keputusan saat membangun langkah 4 (5 Oktober)
+
+- **Tamu melihat halaman kenangan hanya kalau undangan DAN kenangan
+  terbit.** Jawabannya sama untuk dua alasan tertutup itu, supaya
+  keadaan pasangan tidak terbaca dari luar.
+- **Isi halaman disusun satu fungsi dalam** (`_terimakasih_bangun`),
+  dipanggil pintu tamu dan pintu pratinjau. Uji 029 memastikan isi
+  pratinjau sama persis dengan isi untuk tamu.
+- **Pratinjau dibuka di asal dasbor**, bukan di subdomain pasangan:
+  sesi pemilik tinggal di localStorage asal itu. Tanpa `?pratinjau=1`
+  halaman tidak pernah menyentuh sesi, walau pemiliknya sedang login.
+- **Pita pratinjau jujur**: menyebut apakah tamu sudah bisa melihat
+  halamannya, termasuk kasus saklar menyala tapi undangan masih draf.
+- **Menerbitkan sebelum hari-H boleh, tapi ditanya dulu.**
+- **Semua pasangan mulai dengan saklar mati**, termasuk Rian & 'Aini.
+  Menerbitkan kenangan adalah pilihan pasangan, bukan migrasi.
+
+## 12. Urutan kerja
 
 1. `acara.di_undangan` / `di_terimakasih` + panel 3
 2. Panel 8 unggah foto di `/dasbor`, `foto-unggah` terima JWT pemilik,

@@ -227,6 +227,22 @@ for (const pas of [{ slug:'rian-aini', canonical_host:'rian-aini.mengundang.id' 
   cek('putar balik ' + t, M.slugPasangan(u.hostname, u.pathname, u.search), pas.slug);
 }
 
+console.log('\n--- alamatPratinjau(): selalu di asal dasbor ---');
+const premium = { slug:'rian-aini', canonical_host:'rian-aini.mengundang.id' };
+alamat('mengundang.id', '/dasbor');
+cek('dasbor di domain bersama, pasangan premium: TIDAK pindah ke subdomain (sesinya tidak ada di sana)',
+    M.alamatPratinjau(premium, '/terimakasih'),
+    'https://mengundang.id/terimakasih?pasangan=rian-aini&pratinjau=1');
+alamat('rian-aini.mengundang.id', '/dasbor');
+cek('dasbor dibuka di subdomain pasangan: tetap di subdomain, tanpa ?pasangan=',
+    M.alamatPratinjau(premium, 'terimakasih'),
+    'https://rian-aini.mengundang.id/terimakasih?pratinjau=1');
+alamat('mengundang.id', '/dasbor');
+{
+  const u = new URL(M.alamatPratinjau({ slug:'budi-sari', canonical_host:'' }, '/terimakasih'));
+  cek('putar balik pratinjau', M.slugPasangan(u.hostname, u.pathname, u.search), 'budi-sari');
+}
+
 console.log('\n--- KONF.situs ikut paket (linkTamu memakainya) ---');
 M.KONF.slug = 'budi-sari'; M.KONF.canonicalHost = '';
 alamat('mengundang.id', '/budi-sari/');

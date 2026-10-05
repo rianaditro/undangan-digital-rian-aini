@@ -247,6 +247,83 @@ const teks = (page, sel) => page.locator(sel).innerText().then(t => t.replace(/\
   await ctx.close();
 }
 
+/* ---------- pratinjau pemilik ---------- */
+async function tkPratinjau({ cari = '?pratinjau=1', sesi = true, jawab = 200, isi = {} } = {}){
+  const ctx = await browser.newContext({ viewport:{width:430,height:900} });
+  const page = await ctx.newPage();
+  const panggil = [];
+  page.on('pageerror', e => console.log('   [pageerror] ' + e.message));
+  if (sesi) await page.addInitScript(() =>
+    localStorage.setItem('dasbor-sesi', JSON.stringify({ akses:'JWT-pemilik', segar:'S' })));
+  await page.route('**/*.supabase.co/**', r => {
+    const u = new URL(r.request().url());
+    if (u.pathname.startsWith('/rest/v1/rpc/')) {
+      panggil.push({ fn: u.pathname.split('/').pop(), auth: r.request().headers()['authorization'] });
+      if (u.pathname.endsWith('/terimakasih_pratinjau')) {
+        if (jawab !== 200) return r.fulfill({ status: jawab, contentType:'application/json', body:'{"message":"x"}' });
+        return r.fulfill({ status:200, contentType:'application/json', body: JSON.stringify(Object.assign(
+          isiKenangan(), { pratinjau:true, undangan_terbit:true, kenangan_terbit:false }, isi)) });
+      }
+      return r.fulfill({ status:200, contentType:'application/json', body: JSON.stringify(isiKenangan()) });
+    }
+    const berkas = Object.keys(FOTO).find(k => u.pathname.endsWith('/' + k));
+    if (berkas) return r.fulfill({ status:200, contentType:'image/jpeg', body: FOTO[berkas] });
+    return r.fulfill({ status:200, contentType:'application/json', body:'null' });
+  });
+  await page.goto(ASAL + '/terimakasih' + cari);
+  await page.waitForFunction(() => !document.getElementById('penutup').hidden
+                                   || document.getElementById('ucapan').hidden, null, { timeout:8000 });
+  return { ctx, page, panggil };
+}
+{
+  const { ctx, page, panggil } = await tkPratinjau();
+  cek('tk-22 pratinjau memanggil terimakasih_pratinjau dengan JWT pemilik, bukan anon key',
+      panggil.length === 1 && panggil[0].fn === 'terimakasih_pratinjau' && panggil[0].auth === 'Bearer JWT-pemilik',
+      JSON.stringify(panggil));
+  const pita = await teks(page, '#pita');
+  cek('tk-23 pita pratinjau jujur: belum terbit, tamu belum melihat', /belum diterbitkan/i.test(pita), pita);
+  cek('tk-24 isi pratinjau tergambar seperti halaman tamu', await page.locator('.babak').count() === 3);
+  await page.waitForTimeout(1500);   // reveal 0,9 dtk + foto sampul turun
+  await page.screenshot({ path:'kenangan-pratinjau.png' });
+  await ctx.close();
+}
+{
+  const { ctx, page, panggil } = await tkPratinjau({ cari: '' });
+  cek('tk-25 tanpa ?pratinjau=1, sesi pemilik tidak disentuh: pintu tamu, anon key, tanpa pita',
+      panggil.length === 1 && panggil[0].fn === 'terimakasih_isi' && !/JWT-pemilik/.test(panggil[0].auth)
+      && await page.locator('#pita').isHidden(), JSON.stringify(panggil));
+  await ctx.close();
+}
+{
+  const { ctx, page, panggil } = await tkPratinjau({ sesi: false });
+  cek('tk-26 pratinjau tanpa sesi: tidak memanggil apa pun, mengarahkan ke dasbor',
+      panggil.length === 0 && await page.locator('#atasSalam a[href="/dasbor"]').count() === 1, JSON.stringify(panggil));
+  await ctx.close();
+}
+{
+  const { ctx, page } = await tkPratinjau({ jawab: 401 });
+  cek('tk-27 sesi habis: diminta masuk lagi', /sudah habis/i.test(await teks(page, '#atasSalam')));
+  await ctx.close();
+}
+{
+  const { ctx, page } = await tkPratinjau({ jawab: 403 });
+  cek('tk-28 bukan pemilik: dikatakan terus terang, tanpa isi', /bukan pemilik/i.test(await teks(page, '#atasSalam'))
+      && await page.locator('.babak').count() === 0);
+  await ctx.close();
+}
+{
+  const { ctx, page } = await tkPratinjau({ isi: { undangan_terbit:false, kenangan_terbit:true } });
+  cek('tk-29 pita: undangan masih draf disebut, walau saklar kenangan menyala',
+      /undangan masih draf/i.test(await teks(page, '#pita')));
+  await ctx.close();
+}
+{
+  const { ctx, page } = await tkPratinjau({ isi: { undangan_terbit:true, kenangan_terbit:true } });
+  cek('tk-30 pita: sudah terbit, warnanya berbeda',
+      /sudah terbit/i.test(await teks(page, '#pita')) && await page.locator('#pita.terbit').count() === 1);
+  await ctx.close();
+}
+
 /* ---------- pasangan mana yang dimuat halaman /terimakasih ----------
    Di domain bersama, /terimakasih tidak punya tempat untuk slug
    pasangan di jalurnya, jadi pasangannya disebut lewat ?pasangan=.
