@@ -128,13 +128,14 @@ tidak akan pernah menangkapnya.
 bisa menulis ke produksi. Sesudahnya sidik produksi dan sidik bangun
 ulang repo **identik** di setiap bagian.
 
-Menempel di SQL editor meninggalkan dua jejak di badan fungsi: akhir
-baris `\r\n`, dan indentasi tambahan di satu baris komentar (auto-indent
-editornya). Keduanya tidak mengubah perilaku, tapi membuat setiap
-tempelan tampak "berbeda". `uji/db/sidik.sql` sekarang membuang CR dan
-indentasi awal baris sebelum menghitung hash — dibuktikan: tempelan
-dengan dua jejak itu tidak dilaporkan, perubahan satu kata (`limit 200`
-→ `limit 100`) dilaporkan.
+Menempel di SQL editor meninggalkan jejak di badan fungsi yang tidak
+mengubah apa pun: akhir baris `\r\n` dan indentasi tambahan (027), lalu
+dua baris yang tergabung jadi satu (029). Sejak 029, `uji/db/sidik.sql`
+mengabaikan **semua** perbedaan spasi — setiap deret spasi, tab, dan
+baris baru dihitung satu spasi. Dibuktikan: baris tergabung + CRLF tidak
+dilaporkan; `limit 1` → `limit 2` dilaporkan. Yang tidak tertangkap lagi
+cuma perubahan spasi di dalam teks berkutip, yang tidak pernah jadi
+perubahan yang disengaja di fungsi-fungsi ini.
 
 ### Belum diperbaiki
 
@@ -255,7 +256,7 @@ Lanjutan `docs/kenangan.md`:
 | 1 | dua penanda di `acara` | **selesai**, diterapkan |
 | 2 | pustaka foto di dasbor | **selesai, terpasang 5 Okt** — migrasi 026, `foto-unggah` v4. Fungsinya kini diuji sungguhan di Deno (`uji/uji-fungsi-foto.mjs`, 27 cek, merah bila pemeriksa babak atau saringan pasangan dicabut) |
 | 3 | `kenangan_blok`, panel 9, halaman baru (foto saja) | **selesai, terpasang 5 Okt** — migrasi 028 ditempel di SQL editor; sidik produksi = sidik repo |
-| 4 | saklar terbit kenangan | **kode dan uji selesai 5 Okt**; migrasi 029 menunggu ditempel di SQL editor (`supabase/manual/2026-10-05_pasang-029.sql`) |
+| 4 | saklar terbit kenangan | **selesai, terpasang 5 Okt** — migrasi 029 ditempel di SQL editor; sidik produksi = sidik repo. Saklar Rian & 'Aini masih mati |
 | 5 | klip video | belum. Paling rapuh — `MediaRecorder` di HP sungguhan |
 
 Langkah 2 dipasang sesudah lulus bangun ulang, uji SQL pemicunya (7/7),

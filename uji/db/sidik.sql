@@ -9,10 +9,12 @@ select jsonb_build_object(
   'fungsi', (select jsonb_object_agg(k, v) from (
       select p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')' as k,
              jsonb_build_object(
-               -- CR dan indentasi awal baris dibuang dulu: keduanya datang dari
-               -- menempel di SQL editor Supabase (baris \r\n, auto-indent), bukan
-               -- dari perubahan yang disengaja. Selain itu, satu huruf pun beda.
-               'isi',     md5(regexp_replace(replace(p.prosrc, E'\r', ''), E'\n[ \t]+', E'\n', 'g')),
+               -- Spasi diabaikan: setiap deret spasi, tab, dan baris baru jadi
+               -- satu spasi. Menempel di SQL editor Supabase meninggalkan jejak
+               -- yang tidak mengubah apa pun — \r\n (027), auto-indent (027),
+               -- dua baris tergabung jadi satu (029). Selain spasi, satu huruf
+               -- pun beda.
+               'isi',     md5(btrim(regexp_replace(p.prosrc, E'\\s+', ' ', 'g'))),
                'hasil',   pg_get_function_result(p.oid),
                'definer', p.prosecdef,
                'atur',    coalesce(array_to_string(p.proconfig, ','), ''),
