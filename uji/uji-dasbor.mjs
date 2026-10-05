@@ -44,6 +44,8 @@ function bikinModel() {
         acara_id: 'a-1', latar: false, diunggah: '2026-09-16T02:05:00Z' }
     ],
     fn: [],
+    kenangan_blok: [],
+    post: [],          // { tabel, cari, prefer, badan }
     dompet: [{ id: 'd-1', pasangan_id: 'p-1', kode: 'dana', bank: 'DANA', nomor: '0812', atas_nama: 'Rian', sisi: 'pria' }],
     pihak: [{ id: 'ph-1', pasangan_id: 'p-1', kode: 'keluarga-wanita', kode_pendek: 'kw',
               label: 'Keluarga Pihak Wanita', sisi: 'wanita', ttd_label: 'Hormat kami', ttd_sub: 'Beserta Keluarga' }],
@@ -94,7 +96,24 @@ async function pasang(page, model) {
         model.patch.push({ tabel, id, badan });
         const baris = (model[tabel] || []).find(x => x.id === id);
         if (baris) Object.assign(baris, badan);
+        /* Tiruan pemicu foto_satu_latar (026): menyalakan latar mematikan
+           latar lain di babak yang sama. Dasbor mengandalkannya — ia cuma
+           mengirim satu PATCH. */
+        if (tabel === 'foto' && baris && badan.latar === true) {
+          model.foto.forEach(f => { if (f !== baris && f.acara_id === baris.acara_id) f.latar = false; });
+        }
         return kirim(null);
+      }
+      if (req.method() === 'POST' && u.searchParams.get('on_conflict')) {
+        /* upsert PostgREST: baris dengan kunci yang sama ditimpa */
+        model.post.push({ tabel, cari: u.search, prefer: req.headers()['prefer'] || '', badan });
+        const kunci = u.searchParams.get('on_conflict').split(',');
+        for (const b of [].concat(badan)) {
+          const daftar = (model[tabel] = model[tabel] || []);
+          const ada = daftar.find(x => kunci.every(k => x[k] === b[k]));
+          ada ? Object.assign(ada, b) : daftar.push({ ...b });
+        }
+        return kirim(null, 201);
       }
       if (req.method() === 'POST') {
         const baru = Object.assign({ id: tabel + '-baru-' + ((model[tabel] || []).length + 1) }, badan);
@@ -267,6 +286,127 @@ const browser = await chromium.launch();
   const hint = await page.locator('#hintFoto').textContent();
   cek('9c sesudah acara, keterangannya berubah',
       /foto hari itu/i.test(hint), hint.slice(0, 60));
+  await ctx.close();
+}
+
+/* ---------- panel 9: halaman kenangan ---------- */
+{
+  const model = bikinModel();
+  model.foto.push({ id: 'f-3', pasangan_id: 'p-1', jalur: 'p-1/c.webp', jalur_kecil: 'p-1/c-kecil.webp',
+                    lebar: 1600, tinggi: 1067, bita: 150000, urutan: 2, keterangan: '', tampil: true,
+                    acara_id: 'a-1', latar: false, diunggah: '2026-09-16T02:10:00Z' });
+  const { ctx, page } = await masuk(browser, model);
+  const babak = page.locator('#formBabak [data-babak]');
+
+  cek('10a panel 9 ada, satu baris per acara yang jadi babak', (await babak.count()) === 2);
+  /* Langsung sesudah masuk, sebelum aksi apa pun: dulu blok baru
+     tergambar sesudah foto dimuat ulang, dan uji yang mengganti latar
+     lebih dulu menyembunyikannya. */
+  cek('10a2 keenam blok tergambar sejak halaman dimuat',
+      (await page.locator('#formBlok [data-kblok]').count()) === 6);
+  cek('10b sesudah acara, keterangannya bercerita tentang halaman',
+      /babak demi babak/i.test(await page.locator('#hintKenangan').textContent()));
+
+  const pilihAkad = babak.nth(0).locator('.pilih-latar button');
+  cek('10c babak Akad menawarkan foto-foto Akad saja', (await pilihAkad.count()) === 2);
+  cek('10d tanpa pilihan, yang tertanda latar = foto pertama babak itu (sama dengan terimakasih_isi)',
+      (await pilihAkad.nth(0).getAttribute('data-latar')) === 'f-2'
+      && (await pilihAkad.nth(0).getAttribute('class')) === 'dipilih');
+  cek('10e babak tanpa foto menjelaskan dirinya, bukan kotak kosong',
+      /kartu teks/i.test(await babak.nth(1).textContent()) && (await babak.nth(1).locator('.pilih-latar').count()) === 0);
+
+  /* --- ganti latar: satu PATCH, pemicu yang mematikan yang lama --- */
+  await pilihAkad.nth(1).click();
+  await page.waitForFunction(() => document.querySelector('#formBabak [data-latar="f-3"]')?.classList.contains('dipilih'),
+                             null, { timeout: 5000 });
+  const latar = model.patch.filter(x => x.tabel === 'foto' && 'latar' in x.badan);
+  cek('11a ganti latar = satu PATCH latar:true, tanpa mematikan yang lama dari peramban',
+      latar.length === 1 && latar[0].id === 'f-3' && latar[0].badan.latar === true, JSON.stringify(latar));
+  cek('11b yang terpilih pindah ke foto baru',
+      (await page.locator('#formBabak [data-latar="f-2"]').getAttribute('class')) === '');
+
+  /* --- placeholder = tulisan bawaan halaman, dari satu sumber --- */
+  const ph = await page.locator('[data-kblok="sampul"] [data-kb="judul"]').getAttribute('placeholder');
+  const bawaan = await page.evaluate(() => window.Kenangan.MENURUT.sampul.judul);
+  cek('12a placeholder sama dengan bawaan halaman (assets/kenangan.js)', ph === bawaan && ph === 'Terima Kasih', ph);
+  cek('12b sampul dan penutup tidak bisa dimatikan',
+      (await page.locator('[data-kblok="sampul"] [data-kb="tampil"]').count()) === 0
+      && (await page.locator('[data-kblok="penutup"] [data-kb="tampil"]').count()) === 0
+      && (await page.locator('[data-kblok="galeri"] [data-kb="tampil"]').count()) === 1);
+
+  /* --- simpan tanpa perubahan: tidak menulis apa-apa --- */
+  model.post.length = 0; model.patch.length = 0;
+  await page.evaluate(() => { document.querySelector('#toast').textContent = ''; });
+  await page.locator('#btnSimpanKenangan').click();
+  await page.waitForFunction(() => document.querySelector('#toast').textContent !== '', null, { timeout: 5000 });
+  cek('13a tidak diubah = tidak ada baris kenangan_blok yang ditulis (bawaan tidak dibekukan)',
+      model.post.length === 0 && model.patch.length === 0, JSON.stringify({ post: model.post, patch: model.patch }));
+
+  /* --- ubah tiga hal, simpan --- */
+  await babak.nth(0).locator('[data-kk="kenangan_teks"]').fill('  Pagi yang hening.  ');
+  await page.locator('[data-kblok="galeri"] [data-kb="tampil"]').uncheck();
+  await page.locator('[data-kblok="sampul"] [data-kb="judul"]').fill('Matur Nuwun');
+  cek('13b blok yang dimatikan tampak samar', await page.locator('[data-kblok="galeri"]').evaluate(el => el.classList.contains('mati')));
+  await page.evaluate(() => { document.querySelector('#toast').textContent = ''; });
+  await page.locator('#btnSimpanKenangan').click();
+  await page.waitForFunction(() => document.querySelector('#toast').textContent !== '', null, { timeout: 5000 });
+  const teks = model.patch.filter(x => x.tabel === 'acara');
+  cek('14a kalimat babak: PATCH acara hanya untuk babak yang berubah, dirapikan',
+      teks.length === 1 && teks[0].id === 'a-1' && teks[0].badan.kenangan_teks === 'Pagi yang hening.'
+      && Object.keys(teks[0].badan).length === 1, JSON.stringify(teks));
+  const up = model.post.filter(x => x.tabel === 'kenangan_blok');
+  const kunci = up.length ? up[0].badan.map(b => b.kunci).sort().join(',') : '';
+  cek('14b blok: satu upsert berisi hanya yang berubah', up.length === 1 && kunci === 'galeri,sampul', kunci);
+  cek('14c upsert sungguhan: on_conflict + merge-duplicates',
+      up[0] && /on_conflict=pasangan_id,kunci/.test(up[0].cari) && /merge-duplicates/.test(up[0].prefer),
+      up[0] && up[0].cari + ' / ' + up[0].prefer);
+  const sampul = up[0] && up[0].badan.find(b => b.kunci === 'sampul');
+  cek('14d kolom yang tidak diisi dikirim null, bukan ""',
+      sampul && sampul.judul === 'Matur Nuwun' && sampul.teks === null && sampul.tampil === true,
+      JSON.stringify(sampul));
+
+  /* --- "Simpan Semua" di kotak 7 tidak menghapus ketikan kotak 9 --- */
+  await babak.nth(1).locator('[data-kk="kenangan_teks"]').fill('Belum disimpan');
+  await page.locator('#btnSimpan').click();
+  await page.waitForFunction(() => document.querySelector('#toast').textContent === 'Tersimpan',
+                             null, { timeout: 5000 });
+  cek('15a ketikan kotak 9 bertahan sesudah Simpan Semua',
+      (await page.locator('#formBabak [data-babak="a-2"] [data-kk="kenangan_teks"]').inputValue()) === 'Belum disimpan');
+
+  /* --- foto diberi babak di kotak 8 → pilihan latar muncul di kotak 9 --- */
+  await page.locator('#pustakaFoto [data-foto="f-1"] [data-f="acara_id"]').selectOption('a-2');
+  await page.waitForFunction(() => document.querySelectorAll('#formBabak [data-babak="a-2"] .pilih-latar button').length === 1,
+                             null, { timeout: 5000 });
+  cek('15b memberi babak di kotak 8 langsung menyusun kotak 9', true);
+
+  /* --- tombol lihat membuka alamat halaman kenangan pasangan ini --- */
+  await page.evaluate(() => { window.__buka = []; window.open = (u) => { window.__buka.push(u); }; });
+  await page.locator('#btnLihatKenangan').click();
+  const dibuka = await page.evaluate(() => window.__buka[0]);
+  cek('16 Lihat Halaman = /terimakasih di alamat pasangan', dibuka === 'https://rian-aini.mengundang.id/terimakasih', dibuka);
+
+  await ctx.close();
+}
+{
+  const model = bikinModel();
+  model.pasangan[0].tanggal_acara = '2099-01-01';
+  model.foto = [];
+  const { ctx, page } = await masuk(browser, model, 400);
+  cek('17a sebelum acara: panel 9 tetap terlihat, dengan keterangan pra-acara, blok lengkap',
+      await page.locator('#panelKenangan').isVisible()
+      && (await page.locator('#formBlok [data-kblok]').count()) === 6
+      && /belum perlu diisi/i.test(await page.locator('#hintKenangan').textContent()));
+  const buruk = await page.evaluate(() => {
+    const keluar = [];
+    document.querySelectorAll('#panelKenangan *').forEach(el => {
+      if (!el.checkVisibility({ checkVisibilityCSS: true })) return;
+      const r = el.getBoundingClientRect();
+      if (r.width && (r.right > window.innerWidth + 1 || r.left < -1)) keluar.push(el.tagName + ' @' + Math.round(r.right));
+    });
+    return keluar;
+  });
+  cek('17b panel 9 bersih di 400px', buruk.length === 0, buruk.slice(0, 5).join(' ; '));
+  await page.locator('#panelKenangan').screenshot({ path: 'dasbor-kenangan-400.png' });
   await ctx.close();
 }
 

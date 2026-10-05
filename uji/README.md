@@ -22,10 +22,10 @@ Playwright butuh Chromium. Kalau `npm install` tidak memasangnya sendiri:
 | `uji-undangan` | halaman undangan lewat kedua bentuk alamat, nama tamu dari database, buku tamu per pasangan |
 | `uji-coba` | `/coba` dan `/mulai`: demo tanpa jaringan, redirect akar domain |
 | `uji-asap` | tiap halaman dibuka tanpa stub; yang dicari cuma galat waktu memuat |
-| `uji-dasbor` | `/dasbor`: rangkaian acara, pustaka foto, keterangan pra/pasca-acara |
+| `uji-dasbor` | `/dasbor`: rangkaian acara, pustaka foto, panel 9 halaman kenangan (latar, kalimat babak, blok, upsert hanya yang berubah), keterangan pra/pasca-acara |
 | `uji-admin` | `/admin`: gerbang admin, buat pasangan, paket, link panitia |
 | `uji-rekap`, `uji-018` | rekap pasca-acara di `/kirim`: kehadiran, pemberian, berkat, kelompok |
-| `uji-lihat` | halaman terima kasih |
+| `uji-lihat` | halaman kenangan: babak berfoto vs kartu teks, latar sampul, pan hanya saat terlihat, blok dari panel 9, angka nol tidak dipajang, jawaban bentuk lama, escape, gerak dikurangi. Foto latarnya dibuat di peramban (canvas) supaya tangkapan layarnya bisa dinilai mata |
 | `uji-fungsi-foto` | edge function `foto-unggah` **dijalankan sungguhan di Deno** dengan Supabase ditiru di belakangnya: token panitia vs JWT pemilik, pasangan mana yang kena, pembersihan berkas saat gagal. Butuh `deno` di PATH atau `DENO=` |
 | `uji-xlsx`, `uji-unduh` | menghasilkan berkas `.xlsx`; isinya diperiksa terpisah (lihat di bawah) |
 

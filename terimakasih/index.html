@@ -15,6 +15,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant:ital,wght@0,400;1,300;1,400&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
 
+<!--
+  Halaman kenangan. docs/kenangan.md.
+
+  Kerangkanya sama dengan undangan — sampul, seksi berselang gelap-terang,
+  ukir, reveal — tapi hubungan gelap-terangnya dibalik: latar belakangnya
+  acaranya sendiri, dan tulisan mengambang di atasnya. Undangan itu janji;
+  halaman ini ingatan.
+
+  Gulir = waktu berjalan. Babak-babaknya baris `acara` yang sama dengan
+  undangan, dalam urutan hari itu. Tamu yang datang sore tidak melihat
+  akadnya; di sini mereka melihat seluruh harinya, berurutan.
+
+  Halaman menyesuaikan bahan, dan tidak pernah kosong:
+    babak berfoto     → foto penuh layar, pan lambat
+    babak tanpa foto  → kartu teks di atas nila
+    tanpa babak sama sekali → sampul, angka, ucapan, penutup
+-->
+
 <style>
 :root{
   --nila:#131E33; --nila-2:#1B2A46; --nila-3:#0D1626;
@@ -41,7 +59,7 @@ section{padding:clamp(64px,14vw,110px) var(--pad);position:relative;}
 .center{text-align:center;}
 .eyebrow{font-size:11px;letter-spacing:.34em;text-transform:uppercase;font-weight:500;color:var(--kuningan);}
 h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25px,6.6vw,36px);letter-spacing:.05em;margin-top:12px;}
-.lead{font-size:14.5px;margin-top:14px;color:rgba(237,231,217,.7);max-width:470px;margin-inline:auto;}
+.lead{font-size:14.5px;margin-top:14px;color:rgba(237,231,217,.7);max-width:470px;margin-inline:auto;white-space:pre-line;}
 
 .on-paper{background:var(--kapur);color:var(--nila);}
 .on-paper .eyebrow{color:var(--kuningan-dim);}
@@ -61,22 +79,86 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
 .reveal{opacity:0;transform:translateY(26px);}
 .reveal.in{opacity:1;transform:none;transition:opacity .9s ease,transform .9s cubic-bezier(.22,.8,.3,1);}
 
+/* ---------- LATAR FOTO ----------
+   Satu aturan untuk sampul dan setiap babak. Fotonya <img>, bukan
+   background-image: ia bisa lazy, punya alt, dan ruangnya tidak
+   bergantung pada CSS yang menunggu JS.
+
+   Pan lambat: foto diam yang bergeser pelan terasa hidup tanpa biaya
+   video. Animasinya hanya berjalan selama seksinya terlihat (.jalan),
+   supaya HP tidak menggerakkan enam foto penuh layar yang tidak dilihat
+   siapa pun. Arahnya berselang per babak, supaya gulir tidak terasa
+   seperti satu gerakan yang diulang. */
+.latar{position:absolute;inset:0;overflow:hidden;background:var(--nila-3);}
+.latar img{
+  width:100%;height:100%;object-fit:cover;max-width:none;
+  transform:scale(1.08);transform-origin:50% 50%;
+  animation:pan 28s ease-in-out infinite alternate;animation-play-state:paused;
+}
+.jalan .latar img{animation-play-state:running;}
+.latar.balik img{animation-name:pan-balik;}
+@keyframes pan{
+  from{transform:scale(1.08) translate3d(-1.6%,-1%,0);}
+  to  {transform:scale(1.16) translate3d(1.6%,1%,0);}
+}
+@keyframes pan-balik{
+  from{transform:scale(1.16) translate3d(1.6%,-1%,0);}
+  to  {transform:scale(1.08) translate3d(-1.6%,1%,0);}
+}
+/* Gelap di bawah, tempat tulisannya duduk — terang di atas, tempat
+   fotonya bicara. Tanpa ini teks kapur di atas gaun putih tidak terbaca. */
+.latar::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(9,14,24,.92) 0%,rgba(9,14,24,.55) 38%,rgba(9,14,24,.12) 72%,rgba(9,14,24,.3) 100%);
+}
+
 /* ---------- SAMPUL ---------- */
 #atas{
-  min-height:min(100svh,760px);display:flex;flex-direction:column;
-  justify-content:center;align-items:center;text-align:center;
+  min-height:min(100svh,780px);display:flex;flex-direction:column;
+  justify-content:center;align-items:center;text-align:center;overflow:hidden;
   background:radial-gradient(110% 70% at 50% 100%,#22355A 0%,var(--nila) 55%,var(--nila-3) 100%);
 }
+#atas > :not(.latar){position:relative;}
+#atas .latar::after{background:radial-gradient(90% 70% at 50% 50%,rgba(9,14,24,.55) 0%,rgba(9,14,24,.82) 100%);}
 .nama-besar{font-family:var(--display);font-size:clamp(30px,9vw,52px);letter-spacing:.04em;line-height:1.2;margin-top:18px;}
 .nama-amp{font-family:var(--script);font-style:italic;font-weight:300;color:var(--kuningan);}
 .tanggal{margin-top:18px;font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--kuningan);}
-.salam{font-family:var(--script);font-style:italic;font-size:clamp(17px,4.4vw,21px);line-height:1.75;margin:30px auto 0;max-width:520px;color:var(--kapur);}
-.hadir-baris{margin-top:22px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(237,231,217,.5);}
-.hadir-baris b{font-family:var(--display);font-weight:400;font-size:19px;letter-spacing:.06em;color:var(--kuningan);}
+.salam{font-family:var(--script);font-style:italic;font-size:clamp(17px,4.4vw,21px);line-height:1.75;margin:30px auto 0;max-width:520px;color:var(--kapur);white-space:pre-line;}
+
+/* ---------- BABAK ---------- */
+.babak{
+  min-height:min(100svh,860px);display:flex;align-items:flex-end;
+  padding-bottom:clamp(56px,12vw,96px);overflow:hidden;
+}
+.babak .isi{position:relative;max-width:620px;}
+.babak .urut{font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--kuningan);font-weight:500;}
+.babak .waktu{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(237,231,217,.62);margin-top:10px;}
+.babak h2{font-family:var(--display);font-weight:400;font-size:clamp(30px,8.4vw,50px);letter-spacing:.04em;line-height:1.15;margin-top:8px;}
+.babak .kalimat{font-family:var(--script);font-style:italic;font-size:clamp(18px,4.6vw,23px);line-height:1.6;margin-top:14px;color:var(--kapur);max-width:520px;}
+.babak .ke-galeri{display:inline-block;margin-top:20px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--kuningan);text-decoration:none;border-bottom:1px solid rgba(195,154,92,.45);padding-bottom:2px;}
+/* Babak tanpa foto: kartu teks di atas nila. Rapi, bukan kotak kosong
+   menunggu foto yang tidak datang. Lebih pendek dari babak berfoto —
+   tidak ada gambar yang perlu ruang. */
+.babak.teks{
+  min-height:auto;align-items:center;justify-content:center;text-align:center;
+  padding:clamp(72px,16vw,120px) var(--pad);
+  background:radial-gradient(90% 80% at 50% 0%,var(--nila-2) 0%,var(--nila) 60%,var(--nila-3) 100%);
+  border-top:1px solid rgba(195,154,92,.12);
+}
+.babak.teks .isi{margin:0 auto;}
+.babak.teks .kalimat{margin-inline:auto;}
+
+/* ---------- ANGKA ---------- */
+.angka{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:22px;margin-top:34px;}
+.angka div{border-top:1px solid rgba(74,51,35,.22);padding-top:14px;}
+.angka b{display:block;font-family:var(--display);font-weight:400;font-size:clamp(30px,8vw,42px);letter-spacing:.03em;color:var(--jati);line-height:1.1;}
+.angka span{display:block;margin-top:6px;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(19,30,51,.6);}
 
 /* ---------- GALERI ----------
    Kolom, bukan grid: foto potret dan lanskap tercampur, dan grid
-   memaksa semuanya dipotong seragam. */
+   memaksa semuanya dipotong seragam. Di halaman kenangan galeri turun
+   pangkat jadi arsip — wajah tiap babak sudah tampil di atas. */
 .galeri{columns:2;column-gap:12px;margin-top:38px;}
 @media (min-width:720px){ .galeri{columns:3;column-gap:16px;} }
 .galeri figure{break-inside:avoid;margin:0 0 12px;position:relative;}
@@ -115,14 +197,16 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
 .balasan-teks{margin-top:6px;font-size:14px;color:rgba(237,231,217,.88);white-space:pre-wrap;overflow-wrap:anywhere;}
 
 .kabar{margin-top:30px;font-size:14px;color:rgba(237,231,217,.55);}
-.on-paper .kabar{color:rgba(19,30,51,.55);}
 
+/* ---------- PENUTUP ---------- */
+#penutup .salam{color:var(--nila);margin-top:20px;}
 .tutup{padding:clamp(48px,10vw,72px) var(--pad);text-align:center;border-top:1px solid rgba(195,154,92,.16);}
 .tutup a{color:var(--kuningan);text-decoration:none;border-bottom:1px solid rgba(195,154,92,.4);}
 
 @media (prefers-reduced-motion:reduce){
   .reveal,.reveal.in{opacity:1;transform:none;transition:none;}
   .galeri img{transition:none;}
+  .latar img{animation:none;transform:none;}
 }
 </style>
 </head>
@@ -140,19 +224,44 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
   </g>
 </defs></svg>
 
+<!-- Urutan blok di bawah ini tetap dan sengaja tidak bisa diubah dari
+     dasbor: sampul selalu pertama, penutup selalu terakhir, ucapan
+     selalu sesudah momen. Yang bisa diatur pasangan: blok mana yang
+     tampil, dan tulisannya. -->
+
 <section id="atas">
-  <p class="eyebrow reveal">Terima Kasih</p>
+  <p class="eyebrow reveal" id="atasEyebrow">Terima Kasih</p>
   <h1 class="nama-besar reveal" id="namaBesar">&nbsp;</h1>
   <p class="tanggal reveal" id="tanggal"></p>
-  <p class="salam reveal">Terima kasih atas doa, restu, dan kehadiran Anda. Kebahagiaan hari itu terasa jauh lebih penuh karena ada Anda di dalamnya.</p>
-  <p class="hadir-baris reveal" id="hadirBaris" hidden></p>
+  <p class="salam reveal" id="atasSalam">Terima kasih atas doa, restu, dan kehadiran Anda. Kebahagiaan hari itu terasa jauh lebih penuh karena ada Anda di dalamnya.</p>
   <svg class="ukir divider reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
+</section>
+
+<section id="pembuka" class="on-paper center" hidden>
+  <div class="wrap">
+    <p class="eyebrow reveal">Rangkaian Acara</p>
+    <h2 class="judul reveal" id="pembukaJudul"></h2>
+    <p class="lead reveal" id="pembukaTeks"></p>
+    <svg class="ukir divider reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
+  </div>
+</section>
+
+<div id="babakDaftar"></div>
+
+<section id="angka" class="on-paper center" hidden>
+  <div class="wrap">
+    <p class="eyebrow reveal">Hari Itu</p>
+    <h2 class="judul reveal" id="angkaJudul"></h2>
+    <p class="lead reveal" id="angkaTeks" hidden></p>
+    <div class="angka reveal" id="angkaIsi"></div>
+  </div>
 </section>
 
 <section id="galeri" class="on-paper center" hidden>
   <div class="wrap-lebar">
     <p class="eyebrow reveal">Dokumentasi</p>
-    <h2 class="judul reveal">Momen Hari Itu</h2>
+    <h2 class="judul reveal" id="galeriJudul"></h2>
+    <p class="lead reveal" id="galeriTeks" hidden></p>
     <div class="galeri" id="galeriGrid"></div>
   </div>
 </section>
@@ -160,10 +269,19 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
 <section id="ucapan" class="center">
   <div class="wrap">
     <p class="eyebrow reveal">Ucapan &amp; Doa</p>
-    <h2 class="judul reveal">Dari Para Tamu</h2>
-    <p class="lead reveal">Kami membacanya satu per satu.</p>
+    <h2 class="judul reveal" id="ucapanJudul">Dari Para Tamu</h2>
+    <p class="lead reveal" id="ucapanTeks">Kami membacanya satu per satu.</p>
     <div class="ucapan-list" id="ucapanList"></div>
     <p class="kabar" id="kabar">Memuat…</p>
+  </div>
+</section>
+
+<section id="penutup" class="on-paper center" hidden>
+  <div class="wrap">
+    <svg class="ukir divider reveal" viewBox="0 0 240 40" aria-hidden="true" style="margin-top:0"><use href="#ukir-pemisah"/></svg>
+    <h2 class="judul reveal" id="penutupJudul"></h2>
+    <p class="salam reveal" id="penutupTeks"></p>
+    <p class="tanggal reveal" id="penutupNama" style="color:var(--kuningan-dim)"></p>
   </div>
 </section>
 
@@ -180,10 +298,12 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
 
 <script src="/assets/varian.js"></script>
 <script src="/assets/gambar.js"></script>
+<script src="/assets/kenangan.js"></script>
 <script>
 (function(){
   'use strict';
   var M = window.MENGUNDANG;
+  var $ = function(id){ return document.getElementById(id); };
 
   function esc(s){
     return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
@@ -192,9 +312,8 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
   }
 
   /* ---------- Pasangan mana ini? ---------- */
-  /* Penentu pasangan sekarang tinggal satu, di assets/varian.js, dipakai
-     bersama halaman undangan. Sebelumnya disalin di sini — dan salinan
-     seperti itu selalu berakhir beda perilaku dari induknya. */
+  /* Penentu pasangan tinggal satu, di assets/varian.js, dipakai bersama
+     halaman undangan. Salinan di sini dulu berakhir beda perilaku. */
   var slugPasangan = M.slugPasangan;
 
   var BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli',
@@ -220,32 +339,115 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
     return 'l-belum';
   }
 
+  /* ---------- Blok: bawaan, ditimpa yang disimpan pasangan ----------
+     Baris kenangan_blok yang tidak ada berarti bawaan. Pasangan yang
+     tidak pernah membuka panel 9 tetap mendapat halaman utuh dengan
+     tulisan yang masuk akal — itu syarat, bukan fitur. Daftar bawaannya
+     di assets/kenangan.js, dibaca juga oleh dasbor sebagai placeholder. */
+  function blok(d, kunci){ return window.Kenangan.berlaku(d.blok, kunci); }
+
+  function latarHtml(f, balik, segera){
+    /* Versi penuh, bukan thumbnail: ia mengisi layar. Babak pertama
+       dimuat segera karena ia yang pertama terlihat sesudah sampul;
+       sisanya menunggu digulir. */
+    return '<div class="latar' + (balik ? ' balik' : '') + '" aria-hidden="true">'
+      +   '<img src="' + esc(window.Gambar.url(f.jalur)) + '" alt=""'
+      +        (segera ? '' : ' loading="lazy"') + ' decoding="async">'
+      + '</div>';
+  }
+
   /* ---------- Menggambar ---------- */
   function gambarAtas(d){
     var pria   = (d.mempelai && d.mempelai.pria   && d.mempelai.pria.panggilan)   || '';
     var wanita = (d.mempelai && d.mempelai.wanita && d.mempelai.wanita.panggilan) || '';
     if (pria || wanita){
-      document.getElementById('namaBesar').innerHTML =
-        esc(pria) + ' <span class="nama-amp">&amp;</span> ' + esc(wanita);
+      $('namaBesar').innerHTML = esc(pria) + ' <span class="nama-amp">&amp;</span> ' + esc(wanita);
       document.title = 'Terima Kasih — ' + pria + ' & ' + wanita;
+      $('penutupNama').textContent = pria + ' & ' + wanita;
     }
-    document.getElementById('tanggal').textContent = tanggalPanjang(d.tanggal_acara);
+    $('tanggal').textContent = tanggalPanjang(d.tanggal_acara);
 
-    /* Satu angka saja, dan hanya kalau pengantin sudah merekap. Server
-       mengirim null selama belum ada yang ditandai hadir, supaya halaman
-       pasangan yang belum sempat merekap tidak memajang "0 tamu hadir". */
-    if (d.hadir > 0){
-      var b = document.getElementById('hadirBaris');
-      b.innerHTML = 'Dihadiri <b>' + Number(d.hadir).toLocaleString('id-ID') + '</b> tamu undangan';
-      b.hidden = false;
+    var b = blok(d, 'sampul');
+    $('atasEyebrow').textContent = b.judul;
+    $('atasSalam').textContent   = b.teks;
+
+    /* Sampulnya pun acaranya sendiri: latar babak pertama yang punya
+       foto, digelapkan supaya nama tetap yang paling terbaca. */
+    var pertama = (d.babak || []).filter(function(x){ return x.latar; })[0];
+    if (pertama){
+      $('atas').insertAdjacentHTML('afterbegin', latarHtml(pertama.latar, false, true));
     }
   }
 
-  function gambarGaleri(foto){
-    if (!foto || !foto.length) return;            // tanpa foto, bagiannya tidak muncul
-    document.getElementById('galeriGrid').innerHTML = foto.map(function(f, i){
-      /* lebar/tinggi dipakai supaya ruangnya dipesan sebelum gambarnya
-         turun — tanpa itu galeri melompat-lompat di jaringan pelan. */
+  function gambarPembuka(d){
+    var b = blok(d, 'pembuka');
+    /* "Inilah hari itu, berurutan" tanpa satu babak pun di bawahnya
+       adalah janji yang tidak ditepati. Tanpa babak, pembuka diam. */
+    if (!b.tampil || !(d.babak || []).length) return;
+    $('pembukaJudul').textContent = b.judul;
+    $('pembukaTeks').textContent  = b.teks || '';
+    $('pembuka').hidden = false;
+  }
+
+  function gambarBabak(d, galeriTampil){
+    var daftar = d.babak || [];
+    var nBerfoto = 0;
+    $('babakDaftar').innerHTML = daftar.map(function(x, i){
+      var waktu = [x.tanggal, x.jam].filter(Boolean).join(' · ');
+      var sisa  = Math.max(0, (x.jumlah_foto || 0) - 1);
+      var ke    = (galeriTampil && sisa > 0)
+        ? '<a class="ke-galeri" href="#galeri">' + sisa + ' foto lagi di galeri</a>' : '';
+      var isi = '<div class="isi' + (x.latar ? '' : ' wrap') + '">'
+        +   '<p class="urut reveal">' + (i + 1) + ' / ' + daftar.length + '</p>'
+        +   (waktu ? '<p class="waktu reveal">' + esc(waktu) + '</p>' : '')
+        +   '<h2 class="reveal">' + esc(x.nama || 'Acara') + '</h2>'
+        +   (x.teks ? '<p class="kalimat reveal">' + esc(x.teks) + '</p>' : '')
+        +   ke
+        + '</div>';
+
+      if (!x.latar){
+        return '<section class="babak teks" data-babak="' + esc(x.id) + '">' + isi + '</section>';
+      }
+      nBerfoto++;
+      return '<section class="babak" data-babak="' + esc(x.id) + '">'
+        +   latarHtml(x.latar, nBerfoto % 2 === 0, nBerfoto === 1)
+        +   isi
+        + '</section>';
+    }).join('');
+  }
+
+  function gambarAngka(d){
+    var b = blok(d, 'angka');
+    var a = d.angka || {};
+    /* `hadir` lama tetap dibaca: ia satu-satunya angka sebelum 028. */
+    var hadir = a.hadir != null ? a.hadir : d.hadir;
+    var isi = [
+      [hadir,    'tamu hadir'],
+      [a.ucapan, 'ucapan & doa'],
+      [a.foto,   'foto'],
+      [a.babak,  'rangkaian acara']
+    ].filter(function(x){ return x[0] > 0; });
+
+    /* Hanya angka yang ada. Server mengirim null untuk nol, supaya
+       pasangan yang belum merekap tidak memajang "0 tamu hadir". */
+    if (!b.tampil || !isi.length) return;
+    $('angkaJudul').textContent = b.judul;
+    if (b.teks){ $('angkaTeks').textContent = b.teks; $('angkaTeks').hidden = false; }
+    $('angkaIsi').innerHTML = isi.map(function(x){
+      return '<div><b>' + Number(x[0]).toLocaleString('id-ID') + '</b><span>' + esc(x[1]) + '</span></div>';
+    }).join('');
+    $('angka').hidden = false;
+  }
+
+  function gambarGaleri(d){
+    var b = blok(d, 'galeri');
+    var foto = d.foto || [];
+    if (!b.tampil || !foto.length) return false;   // tanpa foto, bagiannya tidak muncul
+    $('galeriJudul').textContent = b.judul;
+    if (b.teks){ $('galeriTeks').textContent = b.teks; $('galeriTeks').hidden = false; }
+    $('galeriGrid').innerHTML = foto.map(function(f, i){
+      /* lebar/tinggi memesan ruang sebelum gambarnya turun — tanpa itu
+         galeri melompat-lompat di jaringan pelan. */
       var rasio = (f.lebar && f.tinggi) ? ' style="aspect-ratio:' + f.lebar + '/' + f.tinggi + '"' : '';
       var src   = window.Gambar.url(f.kecil || f.jalur);
       var ket   = f.keterangan ? '<figcaption>' + esc(f.keterangan) + '</figcaption>' : '';
@@ -256,17 +458,25 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
         +   '</button>' + ket
         + '</figure>';
     }).join('');
-    document.getElementById('galeri').hidden = false;
+    $('galeri').hidden = false;
+    return true;
   }
 
-  function gambarUcapan(daftar){
-    var kabar = document.getElementById('kabar');
-    if (!daftar || !daftar.length){
+  function gambarUcapan(d){
+    var b = blok(d, 'ucapan');
+    if (!b.tampil){ $('ucapan').hidden = true; return; }
+    $('ucapanJudul').textContent = b.judul;
+    $('ucapanTeks').textContent  = b.teks || '';
+    $('ucapanTeks').hidden = !b.teks;
+
+    var daftar = d.ucapan || [];
+    var kabar = $('kabar');
+    if (!daftar.length){
       kabar.textContent = 'Belum ada ucapan yang ditampilkan.';
       return;
     }
     kabar.hidden = true;
-    document.getElementById('ucapanList').innerHTML = daftar.map(function(u){
+    $('ucapanList').innerHTML = daftar.map(function(u){
       var balasan = u.balasan
         ? '<div class="balasan">'
           +   '<p class="balasan-label">Balasan dari kami</p>'
@@ -285,11 +495,16 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
     }).join('');
   }
 
+  function gambarPenutup(d){
+    var b = blok(d, 'penutup');
+    $('penutupJudul').textContent = b.judul;
+    $('penutupTeks').textContent  = b.teks || '';
+    $('penutup').hidden = false;
+  }
+
   /* ---------- Lightbox ---------- */
   var fotoAktif = [];
-  var kaca = document.getElementById('kaca');
-  var kacaImg = document.getElementById('kacaImg');
-  var kacaKet = document.getElementById('kacaKet');
+  var kaca = $('kaca'), kacaImg = $('kacaImg'), kacaKet = $('kacaKet');
   var pemanggil = null;
 
   function bukaKaca(i){
@@ -301,7 +516,7 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
     kacaKet.textContent = f.keterangan || '';
     kaca.hidden = false;
     document.body.style.overflow = 'hidden';
-    document.getElementById('kacaTutup').focus();
+    $('kacaTutup').focus();
   }
 
   function tutupKaca(){
@@ -311,18 +526,18 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
     if (pemanggil && pemanggil.focus) pemanggil.focus();
   }
 
-  document.getElementById('galeriGrid').addEventListener('click', function(e){
+  $('galeriGrid').addEventListener('click', function(e){
     var b = e.target.closest('button.buka');
     if (b) bukaKaca(Number(b.dataset.i));
   });
-  document.getElementById('kacaTutup').addEventListener('click', tutupKaca);
+  $('kacaTutup').addEventListener('click', tutupKaca);
   kaca.addEventListener('click', function(e){ if (e.target === kaca) tutupKaca(); });
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape' && !kaca.hidden) tutupKaca();
   });
 
-  /* ---------- Reveal ---------- */
-  function hidupkanReveal(){
+  /* ---------- Reveal dan pan ---------- */
+  function hidupkanGerak(){
     var kurangi = matchMedia('(prefers-reduced-motion: reduce)').matches;
     var item = document.querySelectorAll('.reveal');
     if (kurangi || !('IntersectionObserver' in window)){
@@ -335,9 +550,24 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
       });
     }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
     item.forEach(function(el){ pengamat.observe(el); });
+
+    /* Pan hanya selama terlihat, dan berhenti lagi sesudah lewat. */
+    var penggeser = new IntersectionObserver(function(masuk){
+      masuk.forEach(function(x){ x.target.classList.toggle('jalan', x.isIntersecting); });
+    }, { threshold: 0.01 });
+    document.querySelectorAll('#atas, .babak').forEach(function(el){
+      if (el.querySelector('.latar')) penggeser.observe(el);
+    });
   }
 
   /* ---------- Muat ---------- */
+  function belumAda(pesan){
+    /* Tetap halaman utuh: sampul dan penutup kaki, bukan layar kosong. */
+    $('atasSalam').textContent = pesan;
+    $('ucapan').hidden = true;
+    hidupkanGerak();
+  }
+
   fetch(M.SB.url + '/rest/v1/rpc/terimakasih_isi', {
     method: 'POST',
     headers: { apikey: M.SB.key, Authorization: 'Bearer ' + M.SB.key, 'Content-Type': 'application/json' },
@@ -346,19 +576,21 @@ h1.judul,h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(25p
   .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
   .then(function(d){
     if (!d || d.aktif !== true){
-      document.getElementById('kabar').textContent = 'Halaman ini belum tersedia.';
-      hidupkanReveal();
+      belumAda('Halaman ini belum tersedia.');
       return;
     }
     fotoAktif = d.foto || [];
     gambarAtas(d);
-    gambarGaleri(fotoAktif);
-    gambarUcapan(d.ucapan);
-    hidupkanReveal();
+    gambarPembuka(d);
+    var adaGaleri = gambarGaleri(d);
+    gambarBabak(d, adaGaleri);
+    gambarAngka(d);
+    gambarUcapan(d);
+    gambarPenutup(d);
+    hidupkanGerak();
   })
   .catch(function(){
-    document.getElementById('kabar').textContent = 'Belum bisa dimuat. Coba muat ulang halaman.';
-    hidupkanReveal();
+    belumAda('Belum bisa dimuat. Coba muat ulang halaman.');
   });
 })();
 </script>

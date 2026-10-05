@@ -172,7 +172,26 @@ Anggaran: 50 MB per pasangan, maksimal 6 klip jadi latar, total klip
 ≤ 2 MB. Supabase tier gratis 1 GB — 20 pasangan sudah mentok, dan itu
 masuk daftar Tahap 5 yang sudah ada.
 
-## 10. Urutan kerja
+## 10. Keputusan saat membangun langkah 3 (5 Oktober)
+
+- **Urutan babak tidak diatur di panel 9.** Babak adalah baris `acara`,
+  jadi urutannya urutan kotak 3 — yang memang urutan hari itu. Tombol
+  geser kedua di panel 9 akan berarti dua urutan untuk satu daftar.
+- **Sampul dan penutup wajib**, tulisannya tetap bisa diganti.
+- **Tulisan bawaan duduk di `assets/kenangan.js`**, dibaca halaman
+  sebagai bawaan dan dasbor sebagai placeholder.
+- **Blok yang tidak diubah tidak ditulis ke database.** Baris yang
+  menyalin bawaan akan membekukannya; tanpa baris, perbaikan tulisan
+  bawaan sampai ke semua pasangan sekaligus.
+- **Pembuka diam kalau tidak ada babak** — "inilah hari itu, berurutan"
+  tanpa satu babak pun adalah janji yang tidak ditepati.
+- **Angka kehadiran pindah dari sampul ke blok angka**, bersama jumlah
+  ucapan, foto, dan babak. Nol tetap tidak pernah dipajang.
+- **Pratinjau** membuka halaman yang dilihat tamu. Selama undangan masih
+  draf ia menjawab "belum tersedia"; mode draf untuk pemilik datang
+  bersama saklar terbit kenangan (langkah 4).
+
+## 11. Urutan kerja
 
 1. `acara.di_undangan` / `di_terimakasih` + panel 3
 2. Panel 8 unggah foto di `/dasbor`, `foto-unggah` terima JWT pemilik,
