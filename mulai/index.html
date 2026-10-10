@@ -4,13 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>mengundang.id — Undangan pernikahan digital</title>
-<meta name="description" content="Undangan pernikahan digital yang bisa Anda isi sendiri, sebar lewat WhatsApp, dan rekap amplopnya sesudah acara. Coba dulu, tanpa daftar.">
+<meta name="description" content="Undangan pernikahan digital yang menyapa tiap tamu dengan namanya, disebar lewat WhatsApp, lengkap dengan buku tamu dan rekap amplop sesudah acara.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="mengundang.id">
-<meta property="og:description" content="Coba dulu: isi nama Anda berdua, langsung lihat undangannya jadi.">
+<meta property="og:title" content="mengundang.id — Undangan pernikahan digital">
+<meta property="og:description" content="Undangan yang menyapa tiap tamu dengan namanya. Sebar lewat WhatsApp, rekap amplopnya sesudah acara.">
+<meta property="og:url" content="https://mengundang.id/mulai">
+<link rel="canonical" href="https://mengundang.id/mulai">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant:ital,wght@0,400;1,300;1,400&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+<!--
+  Halaman depan mengundang.id — versi yang bisa tayang di `main` SEBELUM
+  platform digabung. Sengaja berdiri sendiri: tanpa varian.js, tanpa
+  Supabase, tanpa demo /coba (yang baru ada di cabang platform). Contoh
+  undangannya pasangan rekaan yang digambar dengan HTML/CSS — tidak ada
+  foto orang sungguhan, dan tidak ada data pasangan mana pun.
+
+  Satu-satunya tautan keluar: WhatsApp. Nomornya di KONTAK di bawah.
+-->
+
 <style>
 :root{
   --nila:#131E33; --nila-2:#1B2A46; --nila-3:#0D1626;
@@ -29,17 +42,16 @@ body{
   line-height:1.7;font-weight:300;overflow-x:hidden;-webkit-font-smoothing:antialiased;
 }
 img,svg{display:block;max-width:100%;}
-button,input{font:inherit;color:inherit;}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;}
 [hidden]{display:none!important;}
 a{color:var(--kuningan);}
-
 section{padding:clamp(58px,12vw,100px) var(--pad);position:relative;}
 .wrap{max-width:660px;margin:0 auto;}
-.wrap-lebar{max-width:960px;margin:0 auto;}
+.wrap-lebar{max-width:980px;margin:0 auto;}
 .center{text-align:center;}
 .eyebrow{font-size:11px;letter-spacing:.34em;text-transform:uppercase;font-weight:500;color:var(--kuningan);}
 h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(24px,6.2vw,34px);letter-spacing:.04em;margin-top:12px;}
-.lead{font-size:15px;margin-top:14px;color:rgba(237,231,217,.72);max-width:520px;margin-inline:auto;}
+.lead{font-size:15px;margin-top:14px;color:rgba(237,231,217,.72);max-width:540px;margin-inline:auto;}
 
 .on-paper{background:var(--kapur);color:var(--nila);}
 .on-paper .eyebrow{color:var(--kuningan-dim);}
