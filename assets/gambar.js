@@ -178,6 +178,71 @@
     });
   }
 
+  /* ---------- Video ----------
+     Video TIDAK diubah di peramban: MediaRecorder berbeda-beda antar HP
+     dan hasilnya tidak bisa dijamin (docs/kenangan.md §9). Yang
+     dikerjakan di sini cuma tiga hal, semuanya sebelum apa pun dikirim:
+
+       1. jenis dan ukurannya masuk akal (MP4/WebM, ≤ BATAS_VIDEO)
+       2. peramban INI bisa memutarnya — video HEVC dari sebagian HP
+          ditolak di sini, bukan sesudah tamu melihat kotak hitam
+       3. satu bingkai dipotret jadi poster: tampil selagi videonya
+          dimuat, dan jadi thumbnail di dasbor
+
+     Kembaliannya { video, poster: {blob, lebar, tinggi}, lebar, tinggi,
+     durasi_ms }. */
+  var BATAS_VIDEO = 20 * 1024 * 1024;
+  var JENIS_VIDEO = ['video/mp4', 'video/webm'];
+
+  function siapkanVideo(berkas) {
+    if (!berkas || !/^video\//.test(berkas.type)) {
+      return Promise.reject(new Error('Yang dipilih bukan berkas video'));
+    }
+    if (JENIS_VIDEO.indexOf(berkas.type) < 0) {
+      return Promise.reject(new Error('Video ' + (berkas.type.split('/')[1] || '').toUpperCase()
+        + ' belum diterima — simpan sebagai MP4 dulu (di iPhone: Pengaturan › Kamera › Format › Paling Kompatibel)'));
+    }
+    if (berkas.size > BATAS_VIDEO) {
+      return Promise.reject(new Error('Video lebih dari 20 MB — potong jadi lebih pendek dulu'));
+    }
+    return new Promise(function (selesai, gagal) {
+      var url = URL.createObjectURL(berkas);
+      var v = document.createElement('video');
+      var habis = setTimeout(function () { akhiri(new Error('Video tidak bisa dibuka di perangkat ini')); }, 20000);
+      v.muted = true; v.playsInline = true; v.preload = 'auto';
+      function akhiri(galat, hasil) {
+        clearTimeout(habis);
+        v.removeAttribute('src'); v.load();
+        URL.revokeObjectURL(url);
+        galat ? gagal(galat) : selesai(hasil);
+      }
+      v.onerror = function () {
+        akhiri(new Error('Format video ini tidak bisa diputar di semua HP — simpan ulang sebagai MP4 (H.264)'));
+      };
+      v.onloadedmetadata = function () {
+        if (!v.videoWidth || !v.videoHeight) { akhiri(new Error('Video tanpa gambar tidak bisa dipakai')); return; }
+        v.currentTime = Math.min(1, (v.duration || 0) / 2);
+      };
+      v.onseeked = function () {
+        var s = skala(v.videoWidth, v.videoHeight, SISI_PENUH);
+        var l = Math.max(1, Math.round(v.videoWidth * s)), t = Math.max(1, Math.round(v.videoHeight * s));
+        var k = kanvasBaru(l, t);
+        k.getContext('2d').drawImage(v, 0, 0, l, t);
+        dukungWebp().then(function (webp) {
+          return keBlob(k, webp ? 'image/webp' : 'image/jpeg', 0.72);
+        }).then(function (blob) {
+          akhiri(null, {
+            video: berkas,
+            poster: { blob: blob, lebar: l, tinggi: t },
+            lebar: v.videoWidth, tinggi: v.videoHeight,
+            durasi_ms: Math.round((v.duration || 0) * 1000)
+          });
+        }).catch(function (e) { akhiri(e); });
+      };
+      v.src = url;
+    });
+  }
+
   /* ---------- Alamat publik sebuah foto ----------
      Sekadar penerus ke MENGUNDANG.fotoUrl(). Fungsinya pindah ke
      assets/varian.js supaya halaman undangan bisa memakainya tanpa ikut
@@ -190,6 +255,8 @@
 
   global.Gambar = {
     siapkan: siapkan,
+    siapkanVideo: siapkanVideo,
+    BATAS_VIDEO: BATAS_VIDEO,
     url: url,
     SISI_PENUH: SISI_PENUH,
     SISI_KECIL: SISI_KECIL

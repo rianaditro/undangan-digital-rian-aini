@@ -220,3 +220,32 @@ masuk daftar Tahap 5 yang sudah ada.
 
 Langkah 1–4 sudah menghasilkan halaman yang jauh lebih baik dari
 sekarang, dan tidak satu pun bergantung pada transcode video.
+
+## 13. Revisi 10 Oktober — versi 2 (migrasi 033)
+
+Permintaan pemilik platform, dan jawabannya di halaman:
+
+| Permintaan | Jadinya |
+|---|---|
+| Ucapan tamu jadi pop-up | Satu ucapan muncul di pojok bawah (kiri/kanan bergantian di layar lebar), 7 dtk, pudar, berikutnya — berurutan dari yang pertama masuk, berputar selama halaman dibuka. × menyembunyikannya. Tidak ada daftar ucapan lagi. |
+| Sampul bisa diisi | Bab `sampul`: foto/video sendiri (bergiliran), judul kecil, satu kalimat. Nama, tanggal · kota otomatis. |
+| Banyak foto per bagian | **Latar bergilir**: tiap bab menumpuk sampai 8 foto/video yang berganti pelan (6,5 dtk; video selama durasinya, 6,5–15 dtk). Titik untuk melompat, "Lihat semua" membuka penampil. Hanya bab yang terlihat yang bergerak. |
+| Foto keluarga, pasangan, dll. | Bab tetap baru, urutan hari itu: mempelai pria → mempelai wanita → kedatangan keluarga → [akad, resepsi, … dari kotak 3] → sungkem → keluarga → para tamu → kami berdua. |
+| Tipografi suara pengantin | Semua tulisan bawaan ditulis ulang sebagai "kami" kepada "Anda" (`assets/kenangan.js`). Penutup ditandatangani "Kami yang berbahagia". |
+| Hapus "Dalam Angka" | Tidak digambar lagi. Kunci `angka` tetap dikirim database dan tetap boleh ada di `kenangan_blok`, supaya halaman lama yang masih tersimpan di peramban tidak patah. |
+| Terima kasih kepada | Tabel `kenangan_vendor` (peran, nama, tautan https:// atau @akun Instagram), diisi di kotak 9. |
+| Musik + gulir otomatis | Tombol "Putar kenangan" di sampul: musik latar menyala, halaman bergulir sendiri. Tombol musik dan gulir mengambang seperti di undangan. |
+| Video | MP4/WebM ≤ 20 MB (maks. 12 video), tidak di-transcode: dasbor memeriksa bisa diputar dan mengambil satu bingkai jadi poster. MOV iPhone ditolak dengan petunjuk "Paling Kompatibel". |
+
+Data: `foto.bagian` menaruh berkas di bab tetap; `foto.acara_id` tetap
+untuk babak acara; satu berkas hanya di satu tempat (`foto_satu_tempat`).
+Latar = pembuka giliran, satu per bagian dan satu per babak (pemicu).
+Berkas tanpa bab masuk album.
+
+Bab media tanpa foto tidak muncul, **kecuali** pasangan menulis judul
+atau tulisannya — maka ia jadi kartu teks. Babak acara tanpa foto tetap
+kartu teks seperti sebelumnya.
+
+Urutan pasang di produksi: tempel `supabase/manual/2026-10-10_pasang-033.sql`
+dulu, baru deploy `foto-unggah` (ia menulis kolom baru dan memakai batas
+bucket 20 MB).

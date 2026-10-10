@@ -194,6 +194,44 @@ try {
   cek(r.s === 409, `batas 100 foto → ${r.s}`);
   jumlahFotoPaksa = null;
 
+  // ---------- video dan bagian (033) ----------
+  const videoForm = ({ tipe = 'video/mp4', bita = 5000, poster = true, bagian, durasi = '4200' } = {}) => {
+    const f = new FormData();
+    f.append('berkas', new Blob([new Uint8Array(bita)], { type: tipe }), 'klip.mp4');
+    if (poster) f.append('kecil', gambar(), 'poster.webp');
+    f.append('lebar', '1920'); f.append('tinggi', '1080'); f.append('durasi_ms', durasi);
+    if (bagian) f.append('bagian', bagian);
+    return f;
+  };
+  r = await minta('/', { method: 'POST', headers: dasbor('jwt-u1'), body: videoForm({ bagian: 'berdua' }) });
+  let v = data.foto.at(-1);
+  cek(r.s === 201 && v.jenis === 'video' && v.jalur.endsWith('.mp4') && v.jalur_kecil.endsWith('-kecil.webp')
+      && v.bagian === 'berdua' && v.durasi_ms === 4200 && v.acara_id === null,
+      `video MP4 + poster masuk ke bagian "berdua" → ${r.s} ${JSON.stringify(v)}`);
+  r = await minta('/', { method: 'POST', headers: dasbor('jwt-u1'), body: videoForm({ tipe: 'video/webm' }) });
+  cek(r.s === 201 && data.foto.at(-1).jalur.endsWith('.webm'), `video WebM diterima → ${r.s}`);
+  r = await minta('/', { method: 'POST', headers: dasbor('jwt-u1'), body: videoForm({ poster: false }) });
+  cek(r.s === 400 && unggahan().length === 0, `video tanpa poster ditolak sebelum naik → ${r.s}`);
+  r = await minta('/', { method: 'POST', headers: dasbor('jwt-u1'), body: videoForm({ tipe: 'video/quicktime' }) });
+  cek(r.s === 415 && unggahan().length === 0, `MOV ditolak → ${r.s}`);
+  r = await minta('/', { method: 'POST', headers: dasbor('jwt-u1'), body: videoForm({ bita: 20 * 1024 * 1024 + 1 }) });
+  cek(r.s === 413 && unggahan().length === 0, `video lebih dari 20 MB ditolak → ${r.s}`);
+  r = await minta('/?untuk=silsilah&id=S1', { method: 'POST', headers: dasbor('jwt-u1'), body: videoForm() });
+  cek(r.s === 415, `video tidak bisa jadi foto silsilah → ${r.s}`);
+  r = await minta('/', { method: 'POST', headers: dasbor('jwt-u1'), body: videoForm({ bagian: 'iklan', durasi: '999999999' }) });
+  v = data.foto.at(-1);
+  cek(r.s === 201 && v.bagian === null && v.durasi_ms === null, 'bagian di luar daftar dan durasi tak wajar dibuang, berkasnya tetap masuk');
+  const fb = formulir({ acara: 'A1' }); fb.append('bagian', 'keluarga');
+  r = await minta('/', { method: 'POST', headers: dasbor('jwt-u1'), body: fb });
+  v = data.foto.at(-1);
+  cek(r.s === 201 && v.bagian === 'keluarga' && v.acara_id === null && v.jenis === 'foto',
+      'foto dengan bagian: acara_id dikosongkan supaya satu berkas di satu tempat');
+  const nVideo = data.foto.filter(f => f.jenis === 'video').length;
+  data.foto.push(...Array.from({ length: 12 - nVideo }, (_, i) => ({ id: 'VX' + i, pasangan_id: 'PAS1', jenis: 'video', jalur: 'x' })));
+  r = await minta('/', { method: 'POST', headers: dasbor('jwt-u1'), body: videoForm() });
+  cek(r.s === 409 && /12 video/.test(r.isi?.pesan || '') && unggahan().length === 0, `batas 12 video per pasangan → ${r.s}`);
+  data.foto = data.foto.filter(f => !String(f.id).startsWith('VX'));
+
   // ---------- hapus ----------
   r = await minta('/?id=F2', { method: 'DELETE', headers: dasbor('jwt-u1') });
   cek(r.s === 404 && data.foto.some(f => f.id === 'F2') && buangan().length === 0, `dasbor: foto pasangan lain tidak bisa dihapus → ${r.s}`);

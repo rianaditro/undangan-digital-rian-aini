@@ -83,7 +83,8 @@ async function pasang(page, model) {
 
     if (jalur === '/functions/v1/foto-unggah') {
       model.fn.push({ metode: req.method(), auth: req.headers()['authorization'] || '',
-                      panitia: req.headers()['x-panitia-token'] || null, cari: u.search });
+                      panitia: req.headers()['x-panitia-token'] || null, cari: u.search,
+                      badan: req.method() === 'POST' ? (req.postDataBuffer() || Buffer.alloc(0)).toString('latin1') : '' });
       if (u.searchParams.get('untuk') === 'silsilah') {
         const s = model.silsilah.find(x => x.id === u.searchParams.get('id'));
         model.hapus.push({ tabel: 'foto-silsilah', id: u.searchParams.get('id'), metode: req.method() });
@@ -119,14 +120,17 @@ async function pasang(page, model) {
            latar lain di babak yang sama. Dasbor mengandalkannya — ia cuma
            mengirim satu PATCH. */
         if (tabel === 'foto' && baris && badan.latar === true) {
-          model.foto.forEach(f => { if (f !== baris && f.acara_id === baris.acara_id) f.latar = false; });
+          model.foto.forEach(f => { if (f !== baris && (baris.bagian ? f.bagian === baris.bagian
+                                                                     : f.acara_id === baris.acara_id)) f.latar = false; });
         }
         return kirim(null);
       }
       if (req.method() === 'DELETE') {
-        const id = (u.searchParams.get('id') || '').replace(/^eq\./, '');
+        const cari = u.searchParams.get('id') || '';
+        const id = cari.replace(/^eq\./, '');
+        const ids = /^in\.\(/.test(cari) ? cari.slice(4, -1).split(',') : [id];
         model.hapus.push({ tabel, id, metode: 'DELETE' });
-        model[tabel] = (model[tabel] || []).filter(x => x.id !== id);
+        model[tabel] = (model[tabel] || []).filter(x => !ids.includes(x.id));
         return kirim(null);
       }
       if (req.method() === 'POST' && u.searchParams.get('on_conflict')) {
@@ -141,9 +145,13 @@ async function pasang(page, model) {
         return kirim(null, 201);
       }
       if (req.method() === 'POST') {
-        const baru = Object.assign({ id: tabel + '-baru-' + ((model[tabel] || []).length + 1) }, badan);
-        (model[tabel] = model[tabel] || []).push(baru);
-        return kirim([baru], 201);
+        model.post.push({ tabel, cari: u.search, prefer: req.headers()['prefer'] || '', badan });
+        const baru = [].concat(badan).map(b => {
+          const x = Object.assign({ id: tabel + '-baru-' + ((model[tabel] || []).length + 1) }, b);
+          (model[tabel] = model[tabel] || []).push(x);
+          return x;
+        });
+        return kirim(baru, 201);
       }
     }
     return kirim({ message: 'tidak distub: ' + req.method() + ' ' + jalur }, 500);
@@ -243,32 +251,40 @@ const browser = await chromium.launch();
   const ubin = page.locator('#pustakaFoto .ubin');
   cek('6a pustaka menggambar tiap foto', (await ubin.count()) === 2);
   cek('6b kuota menyebut jumlah dan ukuran',
-      /2 dari 100 foto/.test(await page.locator('#kuotaFoto').textContent()),
+      /2 dari 100 berkas/.test(await page.locator('#kuotaFoto').textContent()),
       await page.locator('#kuotaFoto').textContent());
 
   /* Babak dipasang lewat .value, bukan atribut selected — acara_id bisa
      null, dan "null" di atribut terbaca sebagai nilai yang tampak sah. */
-  const pilih0 = ubin.nth(0).locator('[data-f="acara_id"]');
-  const pilih1 = ubin.nth(1).locator('[data-f="acara_id"]');
+  const pilih0 = ubin.nth(0).locator('[data-f="bab"]');
+  const pilih1 = ubin.nth(1).locator('[data-f="bab"]');
   cek('6c foto tanpa babak: pilihan kosong, bukan "null"',
       (await pilih0.inputValue()) === '', JSON.stringify(await pilih0.inputValue()));
-  cek('6d foto berbabak: pilihannya terpasang', (await pilih1.inputValue()) === 'a-1');
-  cek('6e daftar babak datang dari rangkaian acara',
-      (await pilih0.locator('option').allTextContents()).join('|') === 'Tanpa babak|Akad Nikah|Resepsi');
+  cek('6d foto berbabak: pilihannya terpasang', (await pilih1.inputValue()) === 'a:a-1');
+  const opsi = (await pilih0.locator('option').allTextContents()).join('|');
+  cek('6e daftar bab mengikuti hari itu: bab tetap, babak acara di tempatnya',
+      opsi === 'Tanpa bab (album)|Sampul|Mempelai pria|Mempelai wanita|Kedatangan keluarga|Akad Nikah|Resepsi|Sungkem|Keluarga|Para tamu|Kami berdua', opsi);
 
   /* --- memberi babak --- */
-  await pilih0.selectOption('a-2');
+  await pilih0.selectOption('a:a-2');
   await page.waitForFunction(() => document.querySelector('#toast').classList.contains('on'),
                              null, { timeout: 5000 });
   const p = model.patch.filter(x => x.tabel === 'foto' && x.id === 'f-1').at(-1);
-  cek('7a babak tersimpan lewat PATCH foto', p && p.badan.acara_id === 'a-2',
+  cek('7a babak tersimpan lewat PATCH foto, bagian dikosongkan', p && p.badan.acara_id === 'a-2' && p.badan.bagian === null,
       JSON.stringify(p && p.badan));
+
+  /* --- bab tetap: bagian terisi, acara_id dikosongkan (satu tempat) --- */
+  await pilih0.selectOption('b:keluarga');
+  await page.waitForTimeout(400);
+  const pb = model.patch.filter(x => x.tabel === 'foto' && x.id === 'f-1').at(-1);
+  cek('7a2 bab Keluarga: bagian=keluarga, acara_id null', pb && pb.badan.bagian === 'keluarga' && pb.badan.acara_id === null,
+      JSON.stringify(pb && pb.badan));
 
   /* --- melepas babak: null, bukan string kosong --- */
   await pilih0.selectOption('');
   await page.waitForTimeout(400);
   const p2 = model.patch.filter(x => x.tabel === 'foto' && x.id === 'f-1').at(-1);
-  cek('7b dilepas -> acara_id null, bukan ""', p2 && p2.badan.acara_id === null,
+  cek('7b dilepas -> acara_id dan bagian null, bukan ""', p2 && p2.badan.acara_id === null && p2.badan.bagian === null,
       JSON.stringify(p2 && p2.badan));
 
   /* --- keterangan --- */
@@ -310,7 +326,7 @@ const browser = await chromium.launch();
   const { ctx, page } = await masuk(browser, model);
   const hint = await page.locator('#hintFoto').textContent();
   cek('9c sesudah acara, keterangannya berubah',
-      /foto hari itu/i.test(hint), hint.slice(0, 60));
+      /foto dan video hari itu/i.test(hint), hint.slice(0, 60));
   await ctx.close();
 }
 
@@ -327,8 +343,11 @@ const browser = await chromium.launch();
   /* Langsung sesudah masuk, sebelum aksi apa pun: dulu blok baru
      tergambar sesudah foto dimuat ulang, dan uji yang mengganti latar
      lebih dulu menyembunyikannya. */
-  cek('10a2 keenam blok tergambar sejak halaman dimuat',
-      (await page.locator('#formBlok [data-kblok]').count()) === 6);
+  const jmlBlok = await page.evaluate(() => window.Kenangan.BLOK.filter(b => b.jenis !== 'acara').length);
+  cek('10a2 semua bab tergambar sejak halaman dimuat, tanpa "Dalam Angka"',
+      (await page.locator('#formBlok [data-kblok]').count()) === jmlBlok && jmlBlok === 13
+      && (await page.locator('#formBlok [data-kblok="angka"]').count()) === 0
+      && (await page.locator('#formBlok [data-info="acara"]').textContent()).includes('Akad Nikah, Resepsi'));
   cek('10b sesudah acara, keterangannya bercerita tentang halaman',
       /babak demi babak/i.test(await page.locator('#hintKenangan').textContent()));
 
@@ -399,10 +418,35 @@ const browser = await chromium.launch();
       (await page.locator('#formBabak [data-babak="a-2"] [data-kk="kenangan_teks"]').inputValue()) === 'Belum disimpan');
 
   /* --- foto diberi babak di kotak 8 → pilihan latar muncul di kotak 9 --- */
-  await page.locator('#pustakaFoto [data-foto="f-1"] [data-f="acara_id"]').selectOption('a-2');
+  await page.locator('#pustakaFoto [data-foto="f-1"] [data-f="bab"]').selectOption('a:a-2');
   await page.waitForFunction(() => document.querySelectorAll('#formBabak [data-babak="a-2"] .pilih-latar button').length === 1,
                              null, { timeout: 5000 });
   cek('15b memberi babak di kotak 8 langsung menyusun kotak 9', true);
+
+  /* --- bab tetap: pilihan latarnya di baris bab itu --- */
+  await page.locator('[data-kblok="sampul"] [data-kb="teks"]').fill('Ketikan sampul');
+  cek('15c bab Keluarga tanpa foto menjelaskan dirinya',
+      /Pilih bab Keluarga/i.test(await page.locator('[data-kblok="keluarga"]').textContent()));
+  await page.locator('#pustakaFoto [data-foto="f-1"] [data-f="bab"]').selectOption('b:keluarga');
+  await page.waitForFunction(() => document.querySelectorAll('[data-kblok="keluarga"] .pilih-latar button').length === 1,
+                             null, { timeout: 5000 });
+  cek('15d foto diberi bab Keluarga → muncul di baris Keluarga; ketikan bab lain bertahan',
+      (await page.locator('[data-kblok="sampul"] [data-kb="teks"]').inputValue()) === 'Ketikan sampul');
+  model.patch.length = 0;
+  model.foto.push({ id: 'f-4', pasangan_id: 'p-1', jalur: 'p-1/v.mp4', jalur_kecil: 'p-1/v-poster.webp', jenis: 'video',
+                    durasi_ms: 9000, lebar: 720, tinggi: 1280, bita: 9000000, urutan: 3, keterangan: '', tampil: true,
+                    acara_id: null, bagian: 'keluarga', latar: false, diunggah: '2026-09-16T02:20:00Z' });
+  await page.locator('#pustakaFoto [data-foto="f-1"] [data-f="keterangan"]').fill('x');
+  await page.locator('#pustakaFoto [data-foto="f-1"] [data-f="keterangan"]').blur();
+  await page.locator('#pustakaFoto [data-foto="f-2"] [data-aksi="tampil"]').click();   // memuat ulang foto
+  await page.waitForFunction(() => document.querySelectorAll('[data-kblok="keluarga"] .pilih-latar button').length >= 1
+                                   && !!document.querySelector('#pustakaFoto [data-foto="f-4"]'), null, { timeout: 5000 });
+  cek('15e video di pustaka bertanda ▶ dan durasinya',
+      (await page.locator('#pustakaFoto [data-foto="f-4"] .tanda-video').textContent()).includes('0:09'));
+  await page.locator('[data-kblok="keluarga"] [data-latar="f-4"]').click();
+  await page.waitForFunction(() => document.querySelector('[data-kblok="keluarga"] [data-latar="f-4"]')?.classList.contains('dipilih'),
+                             null, { timeout: 5000 });
+  cek('15f latar bab tetap: satu PATCH latar:true', model.patch.some(x => x.id === 'f-4' && x.badan.latar === true));
 
   /* --- tombol lihat membuka alamat halaman kenangan pasangan ini --- */
   await page.evaluate(() => { window.__buka = []; window.open = (u) => { window.__buka.push(u); }; });
@@ -422,7 +466,7 @@ const browser = await chromium.launch();
   const { ctx, page } = await masuk(browser, model, 400);
   cek('17a sebelum acara: panel 9 tetap terlihat, dengan keterangan pra-acara, blok lengkap',
       await page.locator('#panelKenangan').isVisible()
-      && (await page.locator('#formBlok [data-kblok]').count()) === 6
+      && (await page.locator('#formBlok [data-kblok]').count()) === 13
       && /belum perlu diisi/i.test(await page.locator('#hintKenangan').textContent()));
   const buruk = await page.evaluate(() => {
     const keluar = [];
@@ -436,6 +480,81 @@ const browser = await chromium.launch();
   cek('17b panel 9 dan 10 bersih di 400px', buruk.length === 0, buruk.slice(0, 5).join(' ; '));
   await page.locator('#panelTerbitKenangan').screenshot({ path: 'dasbor-terbit-kenangan-400.png' });
   await page.locator('#panelKenangan').screenshot({ path: 'dasbor-kenangan-400.png' });
+  await ctx.close();
+}
+
+/* ---------- panel 9: terima kasih kepada ---------- */
+{
+  const model = bikinModel();
+  model.kenangan_vendor = [{ id: 'v-1', pasangan_id: 'p-1', urutan: 0, peran: 'Fotografer', nama: 'Lensa', tautan: '@lensa' }];
+  const { ctx, page } = await masuk(browser, model, 400);
+  const baris = page.locator('#formVendor .vendor-baris');
+  cek('19a vendor tersimpan tergambar', (await baris.count()) === 1
+      && (await baris.nth(0).locator('[data-kv="nama"]').inputValue()) === 'Lensa');
+
+  const simpan = async () => {
+    await page.evaluate(() => { document.querySelector('#toast').textContent = ''; });
+    await page.locator('#btnSimpanKenangan').click();
+    await page.waitForFunction(() => document.querySelector('#toast').textContent !== '', null, { timeout: 5000 });
+    return page.locator('#toast').textContent();
+  };
+
+  await page.locator('#btnTambahVendor').click();
+  await baris.nth(1).locator('[data-kv="peran"]').fill('Dekorasi');
+  await baris.nth(1).locator('[data-kv="nama"]').fill('Sekar');
+  await baris.nth(1).locator('[data-kv="tautan"]').fill('javascript:alert(1)');
+  const t1 = await simpan();
+  cek('19b tautan aneh ditolak sebelum dikirim', /belum benar/i.test(t1) && !model.post.some(x => x.tabel === 'kenangan_vendor'), t1);
+
+  await baris.nth(1).locator('[data-kv="tautan"]').fill('https://www.instagram.com/sekar.dekor/');
+  await baris.nth(0).locator('[data-kv="nama"]').fill('Lensa Jepara');
+  await page.locator('#btnTambahVendor').click();       // baris kosong: diabaikan
+  await simpan();
+  const post = model.post.filter(x => x.tabel === 'kenangan_vendor');
+  const patch = model.patch.filter(x => x.tabel === 'kenangan_vendor');
+  cek('19c baris baru: satu POST, tautan Instagram jadi @akun, urutan ikut posisi',
+      post.length === 1 && post[0].badan.length === 1 && post[0].badan[0].tautan === '@sekar.dekor'
+      && post[0].badan[0].urutan === 1 && post[0].badan[0].pasangan_id === 'p-1', JSON.stringify(post));
+  cek('19d baris lama yang diubah: PATCH', patch.length === 1 && patch[0].id === 'v-1' && patch[0].badan.nama === 'Lensa Jepara',
+      JSON.stringify(patch));
+  cek('19e sesudah simpan, daftar dimuat ulang (baris kosong hilang)', (await baris.count()) === 2);
+
+  await baris.nth(0).locator('[data-hapus-vendor]').click();
+  await simpan();
+  cek('19f baris dihapus: DELETE id=in.(…)', model.hapus.some(x => x.tabel === 'kenangan_vendor')
+      && model.kenangan_vendor.length === 1 && model.kenangan_vendor[0].nama === 'Sekar');
+  await page.locator('#panelKenangan').screenshot({ path: 'dasbor-kenangan-400.png' });
+  await ctx.close();
+}
+
+/* ---------- panel 8: unggah video ---------- */
+{
+  const model = bikinModel();
+  const { ctx, page } = await masuk(browser, model);
+  const b64 = await page.evaluate(() => new Promise(selesai => {
+    const c = document.createElement('canvas'); c.width = 320; c.height = 480;
+    const g = c.getContext('2d');
+    const rek = new MediaRecorder(c.captureStream(20), { mimeType: 'video/webm' });
+    const potong = []; rek.ondataavailable = e => potong.push(e.data);
+    rek.onstop = () => { const f = new FileReader(); f.onload = () => selesai(f.result.split(',')[1]); f.readAsDataURL(new Blob(potong)); };
+    let n = 0; const t = setInterval(() => { g.fillStyle = `hsl(${n * 9},40%,40%)`; g.fillRect(0, 0, 320, 480); n++; }, 50);
+    rek.start(); setTimeout(() => { clearInterval(t); rek.stop(); }, 2500);
+  }));
+  model.fn.length = 0;
+  await page.locator('#inBerkasFoto').setInputFiles([
+    { name: 'klip.webm', mimeType: 'video/webm', buffer: Buffer.from(b64, 'base64') },
+    { name: 'IMG_0001.MOV', mimeType: 'video/quicktime', buffer: Buffer.from('bukan video') }
+  ]);
+  await page.waitForFunction(() => /gagal/.test(document.querySelector('#toast').textContent), null, { timeout: 30000 });
+  const toastV = await page.locator('#toast').textContent();
+  const kirim = model.fn.filter(x => x.metode === 'POST');
+  const badan = kirim[0] ? kirim[0].badan : '';
+  cek('20a video dikirim apa adanya + poster + durasi', kirim.length === 1
+      && /filename="video\.webm"/.test(badan) && /Content-Type: video\/webm/.test(badan)
+      && /filename="poster\.(webp|jpg)"/.test(badan) && /name="durasi_ms"\r\n\r\n\d+/.test(badan),
+      badan.replace(/[^\x20-\x7e\n]/g, '').split('\n').filter(l => /name=|Content-Type/.test(l)).join(' | ').slice(0, 400));
+  cek('20b MOV ditolak di perangkat dengan petunjuk iPhone, yang lain tetap masuk',
+      /1 masuk, 1 gagal/.test(toastV) && /MP4/.test(toastV) && /Paling Kompatibel/.test(toastV), toastV);
   await ctx.close();
 }
 
