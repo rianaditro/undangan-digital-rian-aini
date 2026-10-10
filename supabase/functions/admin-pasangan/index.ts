@@ -13,8 +13,12 @@
 // POST { aksi: 'sandi', email, sandi }
 // POST { aksi: 'pemilik', slug, email, sandi }
 // POST { aksi: 'konfirmasi', pesanan_id, nominal, komisi }      — pesanan → lunas
-// POST { aksi: 'reseller', email, sandi, kode, nama, kontak, rekening }   — owner
-// POST { aksi: 'admin', email, sandi, nama }                    — owner
+// POST { aksi: 'reseller', email, sandi, kode, nama, kontak, rekening }
+//
+// Istilah sejak migrasi 032: yang boleh memanggil fungsi ini adalah
+// PEMILIK platform (tabel `admin`, peran 'owner'). Yang di layar disebut
+// "admin" adalah mitra penjual — di database tabel `reseller`, dibuat
+// lewat aksi 'reseller' di atas.
 //
 // PENJAGANYA ADA DI DALAM, bukan di gerbang. Fungsi ini sengaja
 // dipasang dengan verify_jwt = false, dan itu BUKAN pelonggaran:
@@ -74,8 +78,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: adm } = await db
     .from('admin').select('user_id, peran').eq('user_id', siapa.user.id).maybeSingle();
-  if (!adm) return jawab({ pesan: 'Halaman ini hanya untuk admin' }, 403);
-  const owner = adm.peran === 'owner';
+  if (!adm || adm.peran !== 'owner') return jawab({ pesan: 'Halaman ini hanya untuk pemilik platform' }, 403);
 
   let badan: any = {};
   try { badan = await req.json(); } catch { /* biarkan kosong, divalidasi di bawah */ }
@@ -84,11 +87,9 @@ Deno.serve(async (req: Request) => {
     if (badan.aksi === 'sandi')   return await gantiSandi(db, badan);
     if (badan.aksi === 'pemilik') return await pasangPemilik(db, badan);
     if (badan.aksi === 'konfirmasi') return await konfirmasi(db, badan, siapa.user.id);
-    if (badan.aksi === 'reseller' || badan.aksi === 'admin') {
-      if (!owner) return jawab({ pesan: 'Hanya owner yang boleh membuat akun ' + badan.aksi }, 403);
-      return badan.aksi === 'reseller' ? await buatReseller(db, badan) : await buatAdmin(db, badan);
-    }
-    return await buat(db, badan);
+    if (badan.aksi === 'reseller') return await buatReseller(db, badan);
+    if (badan.aksi === 'buat')     return await buat(db, badan);
+    return jawab({ pesan: 'Aksi tidak dikenal' }, 400);
   } catch (e) {
     console.error('admin-pasangan gagal:', e);
     return jawab({ pesan: (e as Error).message || 'Gagal memproses' }, 500);
@@ -351,7 +352,7 @@ async function buatReseller(db: any, b: any) {
   const nama  = rapi(b.nama);
   if (!EMAIL.test(email)) return jawab({ pesan: 'Email tidak sah' }, 400);
   if (!/^[a-z0-9]{2,20}$/.test(kode)) return jawab({ pesan: 'Kode hanya huruf kecil dan angka, 2–20' }, 400);
-  if (!nama) return jawab({ pesan: 'Nama reseller harus diisi' }, 400);
+  if (!nama) return jawab({ pesan: 'Nama admin harus diisi' }, 400);
 
   const { data: kembar } = await db.from('reseller').select('id').eq('kode', kode).maybeSingle();
   if (kembar) return jawab({ pesan: `Kode "${kode}" sudah dipakai` }, 409);
@@ -366,24 +367,7 @@ async function buatReseller(db: any, b: any) {
   });
   if (error) {
     if (akun.akunBaru) await db.auth.admin.deleteUser(akun.pengguna.id).catch(() => {});
-    return jawab({ pesan: error.code === '23505' ? 'Akun itu sudah reseller' : error.message }, 400);
+    return jawab({ pesan: error.code === '23505' ? 'Akun itu sudah menjadi admin' : error.message }, 400);
   }
   return jawab({ email, kode, nama, akun_baru: akun.akunBaru }, 201);
-}
-
-async function buatAdmin(db: any, b: any) {
-  const email = rapi(b.email).toLowerCase();
-  const nama  = rapi(b.nama) || null;
-  if (!EMAIL.test(email)) return jawab({ pesan: 'Email tidak sah' }, 400);
-
-  let akun;
-  try { akun = await akunDenganSandi(db, email, String(b.sandi ?? '')); }
-  catch (e) { if (e instanceof GalatPengguna) return jawab({ pesan: e.message }, 400); throw e; }
-
-  const { error } = await db.from('admin').insert({ user_id: akun.pengguna.id, nama, peran: 'admin' });
-  if (error) {
-    if (akun.akunBaru) await db.auth.admin.deleteUser(akun.pengguna.id).catch(() => {});
-    return jawab({ pesan: error.code === '23505' ? 'Akun itu sudah admin' : error.message }, 400);
-  }
-  return jawab({ email, nama, akun_baru: akun.akunBaru }, 201);
 }

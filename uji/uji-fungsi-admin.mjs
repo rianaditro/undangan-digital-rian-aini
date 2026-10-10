@@ -124,66 +124,61 @@ const ada = (p) => jejak.some(j => j.p === p);
 try {
   // ---------- pintu ----------
   let r = await minta('jwt-biasa', { aksi: 'konfirmasi', pesanan_id: 'S1', nominal: 1, komisi: 0 });
-  cek(r.s === 403, `akun bukan admin ditolak → ${r.s}`);
-
+  cek(r.s === 403 && /pemilik platform/.test(r.isi?.pesan || ''), `akun biasa ditolak → ${r.s}`);
   r = await minta('jwt-admin', { aksi: 'reseller', email: 'r@contoh.com', sandi: 'sandipanjang1', kode: 'abc', nama: 'R' });
-  cek(r.s === 403 && !ada('/auth/v1/admin/users'), `admin biasa tidak boleh membuat reseller, tanpa akun terbuat → ${r.s}`);
-  r = await minta('jwt-admin', { aksi: 'admin', email: 'x@contoh.com', sandi: 'sandipanjang1' });
-  cek(r.s === 403, `admin biasa tidak boleh membuat admin → ${r.s}`);
+  cek(r.s === 403 && !ada('/auth/v1/admin/users'), `baris admin berperan selain owner (sisa 031) ditolak, tanpa akun terbuat → ${r.s}`);
+  r = await minta('jwt-owner', { aksi: 'admin', email: 'x@contoh.com', sandi: 'sandipanjang1' });
+  cek(r.s === 400 && !ada('/auth/v1/admin/users'), `aksi staf 'admin' sudah tidak ada → ${r.s}`);
+  r = await minta('jwt-owner', { aksi: 'ngawur', slug: 'a-b-c', email: 'x@contoh.com' });
+  cek(r.s === 400 && /tidak dikenal/.test(r.isi?.pesan || ''), `aksi tak dikenal tidak jatuh ke 'buat' → ${r.s}`);
 
-  // ---------- reseller dan admin oleh owner ----------
+  // ---------- admin (mitra) dibuat pemilik ----------
   r = await minta('jwt-owner', { aksi: 'reseller', email: 'Jepara@Contoh.com', sandi: 'sandipanjang1',
                                  kode: 'JEPARA', nama: 'Percetakan Jepara', rekening: 'BCA 123' });
   const rs = data.reseller.find(x => x.kode === 'jepara');
   cek(r.s === 201 && rs && data.users.some(u => u.id === rs.user_id && u.email === 'jepara@contoh.com') && rs.rekening === 'BCA 123',
-      `owner membuat reseller: akun + baris reseller, kode dan email dirapikan → ${r.s}`);
+      `pemilik membuat admin: akun + baris reseller, kode dan email dirapikan → ${r.s}`);
   r = await minta('jwt-owner', { aksi: 'reseller', email: 'lain@contoh.com', sandi: 'sandipanjang1', kode: '123', nama: 'B' });
   cek(r.s === 409 && !data.users.some(u => u.email === 'lain@contoh.com'), `kode kembar ditolak sebelum akun dibuat → ${r.s}`);
-  r = await minta('jwt-owner', { aksi: 'admin', email: 'staf@contoh.com', sandi: 'pendek' });
-  cek(r.s === 400 && !data.users.some(u => u.email === 'staf@contoh.com'), `sandi pendek ditolak → ${r.s}`);
-  r = await minta('jwt-owner', { aksi: 'admin', email: 'staf@contoh.com', sandi: 'sandipanjang1', nama: 'Staf' });
-  const ad = data.admin.find(a => data.users.find(u => u.id === a.user_id)?.email === 'staf@contoh.com');
-  cek(r.s === 201 && ad?.peran === 'admin', `owner membuat admin berperan 'admin', bukan owner → ${r.s}`);
-  r = await minta('jwt-owner', { aksi: 'admin', email: 'admin@contoh.com', sandi: 'x' });
-  cek(r.s === 400 && /sudah admin/.test(r.isi?.pesan || '') && data.users.some(u => u.id === 'ADMIN'),
-      `admin yang sudah ada: ditolak, akunnya tidak dihapus → ${r.s}`);
+  r = await minta('jwt-owner', { aksi: 'reseller', email: 'baru2@contoh.com', sandi: 'pendek', kode: 'xyz', nama: 'C' });
+  cek(r.s === 400 && !data.users.some(u => u.email === 'baru2@contoh.com'), `sandi pendek ditolak → ${r.s}`);
 
   // ---------- konfirmasi: undangan surel ----------
-  r = await minta('jwt-admin', { aksi: 'konfirmasi', pesanan_id: 'S2', nominal: 1, komisi: 0 });
+  r = await minta('jwt-owner', { aksi: 'konfirmasi', pesanan_id: 'S2', nominal: 1, komisi: 0 });
   cek(r.s === 409, `pesanan yang sudah lunas ditolak → ${r.s}`);
-  r = await minta('jwt-admin', { aksi: 'konfirmasi', pesanan_id: 'S1', nominal: 159000.5, komisi: 0 });
+  r = await minta('jwt-owner', { aksi: 'konfirmasi', pesanan_id: 'S1', nominal: 159000.5, komisi: 0 });
   cek(r.s === 400 && !ada('/auth/v1/invite'), `nominal pecahan ditolak sebelum apa pun → ${r.s}`);
 
-  r = await minta('jwt-admin', { aksi: 'konfirmasi', pesanan_id: 'S1', nominal: 159000, komisi: 65000 });
+  r = await minta('jwt-owner', { aksi: 'konfirmasi', pesanan_id: 'S1', nominal: 159000, komisi: 65000 });
   const undang = jejak.find(j => j.p === '/auth/v1/invite');
   const lunas = jejak.find(j => j.p === '/rest/v1/rpc/pesanan_lunaskan');
   cek(r.s === 201 && r.isi?.diundang === true && r.isi?.sandi === null && r.isi?.akun_baru === true,
       `klien baru diundang lewat surel, tanpa sandi di layar admin → ${r.s} ${JSON.stringify(r.isi)}`);
   cek(undang && decodeURIComponent(undang.q).includes('redirect_to=https://mengundang.id/dasbor'),
       `tautan undangan mengarah ke /dasbor → ${undang?.q}`);
-  cek(lunas && JSON.parse(lunas.badan).p_oleh === 'ADMIN' && JSON.parse(lunas.badan).p_komisi === 65000,
+  cek(lunas && JSON.parse(lunas.badan).p_oleh === 'OWNER' && JSON.parse(lunas.badan).p_komisi === 65000,
       'pesanan_lunaskan dipanggil dengan nominal, komisi, dan siapa yang mengonfirmasi');
   cek(r.isi?.token?.length === 1 && r.isi?.slug === 'budi-sari', 'jawabannya membawa link panitia untuk serah-terima');
 
   // ---------- konfirmasi: surel gagal → sandi cadangan ----------
   awal(); undanganGagal = true;
-  r = await minta('jwt-admin', { aksi: 'konfirmasi', pesanan_id: 'S1', nominal: 159000, komisi: 0 });
+  r = await minta('jwt-owner', { aksi: 'konfirmasi', pesanan_id: 'S1', nominal: 159000, komisi: 0 });
   const dibuat = data.users.find(u => u.email === 'baru@contoh.com');
   cek(r.s === 201 && r.isi?.diundang === false && /^[A-Za-z2-9]{14}$/.test(r.isi?.sandi || '') && dibuat,
       `surel gagal: akun dibuat dengan sandi acak 14 huruf untuk diserahkan manual → ${r.s}`);
 
   // ---------- konfirmasi: database menolak → akun baru dibuang ----------
   awal(); lunaskanGagal = true;
-  r = await minta('jwt-admin', { aksi: 'konfirmasi', pesanan_id: 'S1', nominal: 159000, komisi: 0 });
+  r = await minta('jwt-owner', { aksi: 'konfirmasi', pesanan_id: 'S1', nominal: 159000, komisi: 0 });
   cek(r.s === 400 && !data.users.some(u => u.email === 'baru@contoh.com') && ada('/auth/v1/invite'),
       `pesanan_lunaskan gagal: akun yang baru diundang dihapus lagi → ${r.s}`);
 
   // ---------- konfirmasi: email klien sudah punya akun ----------
   awal(); lunaskanGagal = true;
-  r = await minta('jwt-admin', { aksi: 'konfirmasi', pesanan_id: 'S3', nominal: 69000, komisi: 0 });
+  r = await minta('jwt-owner', { aksi: 'konfirmasi', pesanan_id: 'S3', nominal: 69000, komisi: 0 });
   cek(r.s === 400 && data.users.some(u => u.id === 'LAMA'), 'gagal dengan akun lama: akun lama TIDAK dihapus');
   awal();
-  r = await minta('jwt-admin', { aksi: 'konfirmasi', pesanan_id: 'S3', nominal: 69000, komisi: 0 });
+  r = await minta('jwt-owner', { aksi: 'konfirmasi', pesanan_id: 'S3', nominal: 69000, komisi: 0 });
   cek(r.s === 201 && r.isi?.akun_baru === false && r.isi?.diundang === false && !ada('/auth/v1/invite'),
       `akun lama dipakai, tidak diundang ulang → ${r.s}`);
 } finally {

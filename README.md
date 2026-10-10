@@ -545,9 +545,11 @@ ke dalamnya langsung jadi milik publik. Perlakukan sama seperti saringan
 
 ---
 
-## 1k. Meja admin
+## 1k. Meja pemilik
 
-`/admin`, migrasi `020`, edge function `admin-pasangan`. Ini yang dulu
+`/pemilik` (sampai migrasi 032 bernama `/admin`), migrasi `020`, edge
+function `admin-pasangan`. Mitra penjual punya mejanya sendiri di
+`/admin` — lihat `docs/operasi-domain-dan-admin.md` bagian 4. Ini yang dulu
 berarti membuka SQL Editor Supabase tiap kali ada klien baru.
 
 **Satu tombol menggantikan tujuh tabel:** pasangan, dua mempelai, dua

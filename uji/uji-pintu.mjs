@@ -42,12 +42,18 @@ r = await ambil('mengundang.id', '/kirim/?t=1');
 cek('3b /kirim/ → /kirim, query ikut', r.status === 307 && r.lokasi === '/kirim?t=1', r.lokasi);
 
 // 4. noindex
-for (const j of ['/kirim', '/dasbor', '/admin']) {
+for (const j of ['/kirim', '/dasbor', '/admin', '/pemilik']) {
   r = await ambil('mengundang.id', j);
   cek('4 ' + j + ' noindex', r.robot === 'noindex, nofollow', r.robot);
 }
 r = await ambil('rian-aini.mengundang.id', '/');
 cek('4 undangan TIDAK noindex', r.robot === '', r.robot);
+
+// 4b. alamat lama
+r = await ambil('mengundang.id', '/reseller');
+cek('4b /reseller → 301 /admin', r.status === 301 && r.lokasi === '/admin', r.status + ' ' + r.lokasi);
+r = await ambil('mengundang.id', '/_redirects');
+cek('4c _redirects sendiri tidak terbit', r.status === 200 && r.badan.includes('id="mempelai"'));
 
 // 5. berkas internal tidak pernah terbit
 for (const j of ['/docs/operasi-domain-dan-admin.md', '/supabase/migrations/028_kenangan_blok.sql',

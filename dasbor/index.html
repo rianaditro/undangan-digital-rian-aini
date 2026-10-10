@@ -152,13 +152,13 @@ select{appearance:none;cursor:pointer;}
     <input id="inEmail" type="email" autocomplete="username" inputmode="email">
     <label for="inSandi">Kata sandi</label>
     <input id="inSandi" type="password" autocomplete="current-password">
-    <div class="aksi"><button class="btn solid" id="btnMasuk">Masuk</button></div>
+    <div class="aksi"><button class="btn solid" id="btnMasuk">Masuk</button><button class="btn ghost kecil" id="btnLupa">Lupa sandi?</button></div>
     <p class="pesan" id="pesanMasuk"></p>
   </div>
   <div class="kotak-masuk" id="kotakSandiBaru" hidden>
     <p class="eyebrow">mengundang.id</p>
     <h1 style="font-size:23px">Buat kata sandi</h1>
-    <p class="sub">Undangan Anda sudah aktif. Buat kata sandi untuk masuk ke dasbor berikutnya — email Anda: <b id="emailUndangan"></b></p>
+    <p class="sub"><span id="judulSandiBaru">Undangan Anda sudah aktif. Buat kata sandi untuk masuk ke dasbor berikutnya</span> — email Anda: <b id="emailUndangan"></b></p>
     <label for="inSandiBaru">Kata sandi baru</label>
     <input id="inSandiBaru" type="password" autocomplete="new-password" minlength="10">
     <label for="inSandiUlang">Ulangi kata sandi</label>
@@ -309,6 +309,7 @@ select{appearance:none;cursor:pointer;}
 <div class="toast" id="toast"></div>
 
 <script src="/assets/varian.js"></script>
+<script src="/assets/akun.js"></script>
 <script src="/assets/gambar.js"></script>
 <script src="/assets/kenangan.js"></script>
 <script>
@@ -1255,10 +1256,24 @@ select{appearance:none;cursor:pointer;}
       var klaim = JSON.parse(atob(sesi.akses.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
       $('emailUndangan').textContent = klaim.email || '';
     }catch(e){}
+    if(hash.get('type') === 'recovery') $('judulSandiBaru').textContent = 'Buat kata sandi baru';
     $('gerbang').querySelector('.kotak-masuk').hidden = true;
     $('kotakSandiBaru').hidden = false;
     $('inSandiBaru').focus();
   }
+  /* Lupa sandi: tautannya kembali ke sini, dan blok di atas yang
+     menerimanya (type=recovery). */
+  $('btnLupa').addEventListener('click', async function(){
+    var b = this, pesan = $('pesanMasuk');
+    b.disabled = true;
+    try{
+      await AKUN.kirimPemulihan($('inEmail').value, '/dasbor');
+      pesan.className = 'pesan ok';
+      pesan.textContent = 'Kalau email itu terdaftar, tautan untuk membuat sandi baru sudah dikirim. Cek juga folder spam.';
+    }catch(e){ pesan.className = 'pesan err'; pesan.textContent = e.message; }
+    finally{ b.disabled = false; }
+  });
+
   $('btnSandiBaru').addEventListener('click', async function(){
     var b = this, a = $('inSandiBaru').value, u = $('inSandiUlang').value, pesan = $('pesanSandiBaru');
     pesan.className = 'pesan err';

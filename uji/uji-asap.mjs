@@ -12,7 +12,7 @@ const cek = (n, ok, k) => ok ? (lulus++, console.log('OK    ' + n))
 const srv = await mulai(PORT);
 const browser = await chromium.launch();
 
-for (const jalur of ['/', '/mulai', '/coba', '/admin', '/dasbor', '/kirim', '/terimakasih',
+for (const jalur of ['/', '/mulai', '/coba', '/admin', '/pemilik', '/dasbor', '/kirim', '/terimakasih',
                      '/rian-aini', '/rian-aini/bapak-ahmad']) {
   const ctx = await browser.newContext({ viewport:{width:430,height:900} });
   const page = await ctx.newPage();

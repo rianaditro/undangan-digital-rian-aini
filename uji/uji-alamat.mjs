@@ -55,6 +55,7 @@ const kasusPasangan = [
   ['mengundang.id',           '/kirim',                   'rian-aini'],
   ['mengundang.id',           '/dasbor',                  'rian-aini'],
   ['mengundang.id',           '/admin',                   'rian-aini'],
+  ['mengundang.id',           '/pemilik',                 'rian-aini'],
   ['mengundang.id',           '/mulai',                   'rian-aini'],
   // host pratinjau Vercel: domain bersama, bukan subdomain pasangan
   ['undangan-rian-aini.vercel.app', '/',                      'rian-aini'],

@@ -15,6 +15,7 @@
 //        miring), /kirim/ → 307 /kirim, /x/index.html → 307 /x
 //   3. tidak ada berkas → index.html, 200 (single-page-application)
 //   4. _headers dipasang di atas jawaban aset.
+//   0. _redirects mendahului semuanya di lapisan aset.
 import http from 'node:http';
 import fs   from 'node:fs';
 import path from 'node:path';
@@ -46,6 +47,17 @@ for (const baris of fs.readFileSync(path.join(ASET, '_headers'), 'utf8').split('
     HEADERS.at(-1).isi.push([baris.slice(0, i).trim(), baris.slice(i + 1).trim()]);
   }
 }
+
+// _redirects: "sumber tujuan status", jalur persis (tanpa pola) — hanya
+// itu yang dipakai repo ini. Diterapkan sebelum berkas dicari.
+const ALIH = new Map();
+if (fs.existsSync(path.join(ASET, '_redirects')))
+  for (const baris of fs.readFileSync(path.join(ASET, '_redirects'), 'utf8').split('\n')) {
+    const t = baris.trim();
+    if (!t || t.startsWith('#')) continue;
+    const [dari, ke, status] = t.split(/\s+/);
+    ALIH.set(dari, { ke, status: Number(status || 302) });
+  }
 
 const POLA_WORKER = (konf.assets.run_worker_first || []).map(p =>
   new RegExp('^' + p.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$'));
@@ -80,6 +92,8 @@ const ASSETS = {
     const u = new URL(req.url);
     let p;
     try { p = decodeURIComponent(u.pathname); } catch { p = u.pathname; }
+    const alih = ALIH.get(p);
+    if (alih) return new Response(null, { status: alih.status, headers: { Location: alih.ke } });
     const hasil = cariAset(p) || { berkas: 'index.html' };
     if (hasil.alih) return new Response(null, { status: 307, headers: { Location: hasil.alih + u.search } });
     const h = new Headers({ 'Content-Type': MIME[path.extname(hasil.berkas)] || 'application/octet-stream' });

@@ -580,6 +580,35 @@ const browser = await chromium.launch();
   await ctx2.close();
 }
 
+/* ---------- lupa sandi (assets/akun.js) ---------- */
+{
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  page.on('pageerror', e => { galatHalaman.push(e.message); console.log('   [pageerror] ' + e.message); });
+  await pasang(page, bikinModel());
+  const minta = [];
+  await page.route('**/auth/v1/recover**', r => { minta.push({ url:r.request().url(), isi:r.request().postData() });
+    r.fulfill({ status:200, contentType:'application/json', headers:{'access-control-allow-origin':'*'}, body:'{}' }); });
+  await page.goto(ASAL + '/dasbor');
+  await page.locator('#inEmail').fill('budi@contoh.com');
+  await page.locator('#btnLupa').click();
+  await page.waitForFunction(() => document.querySelector('#pesanMasuk').textContent.includes('tautan'), null, { timeout:5000 });
+  cek('21a Lupa sandi meminta tautan pemulihan ke /dasbor untuk email itu',
+      minta.length === 1 && JSON.parse(minta[0].isi).email === 'budi@contoh.com'
+      && decodeURIComponent(minta[0].url).includes('redirect_to=' + ASAL + '/dasbor'));
+  await ctx.close();
+
+  const ctx2 = await browser.newContext();
+  const page2 = await ctx2.newPage();
+  await pasang(page2, bikinModel());
+  const jwt = 'x.' + Buffer.from(JSON.stringify({ email:'budi@contoh.com' })).toString('base64url') + '.y';
+  await page2.goto(ASAL + '/dasbor#access_token=' + jwt + '&refresh_token=S&type=recovery');
+  await page2.waitForSelector('#kotakSandiBaru:not([hidden])', { timeout:5000 });
+  cek('21b tautan pemulihan: kotak sandi baru, judulnya bukan "undangan aktif"',
+      (await page2.locator('#judulSandiBaru').textContent()) === 'Buat kata sandi baru');
+  await ctx2.close();
+}
+
 /* ---------- tata letak HP ---------- */
 {
   const model = bikinModel();
