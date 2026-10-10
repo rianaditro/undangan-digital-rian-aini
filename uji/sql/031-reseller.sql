@@ -20,6 +20,7 @@ declare
   n       int;
   ok      boolean;
   lap     text := '';
+  kode_galat text;
   lulus   int  := 0;
   gagal   int  := 0;
 begin
@@ -28,7 +29,9 @@ begin
   insert into auth.users (id, email) values
     (u_owner, 'owner@uji.invalid'), (u_admin, 'admin@uji.invalid'),
     (u_r1, 'r1@uji.invalid'), (u_r2, 'r2@uji.invalid'), (u_klien, 'klien@uji.invalid');
-  insert into public.admin (user_id, nama, peran) values (u_owner, 'Owner', 'owner'), (u_admin, 'Admin', 'admin');
+  -- Sejak 032 hanya pemilik (owner) yang ada di tabel admin; u_admin
+  -- tinggal akun biasa yang dipakai sebagai "siapa yang mengonfirmasi".
+  insert into public.admin (user_id, nama, peran) values (u_owner, 'Owner', 'owner');
   insert into public.reseller (user_id, kode, nama) values (u_r1, '123', 'Percetakan A') returning id into r1;
   insert into public.reseller (user_id, kode, nama, aktif) values (u_r2, 'wo', 'WO B', true) returning id into r2;
 
@@ -166,16 +169,19 @@ begin
   end if;
 
   -- ---------- 6. pencairan ----------
-  perform set_config('request.jwt.claim.sub', u_admin::text, true);
+  perform set_config('request.jwt.claim.sub', u_r1::text, true);
   execute 'set local role authenticated';
   ok := false;
   begin
     perform public.admin_pencairan_catat(r1, 'TRX-123');
   exception when insufficient_privilege then ok := true; end;
-  select count(*) into n from public.admin_reseller();
+  b := false;
+  begin
+    perform public.admin_reseller();
+  exception when insufficient_privilege then b := true; end;
   reset role;
-  if ok and n = 2 then lulus := lulus + 1; lap := lap || E'ok     admin biasa melihat statistik reseller, tidak boleh mencatat pencairan\n';
-  else gagal := gagal + 1; lap := lap || format(E'GAGAL  admin biasa: pencairan ditolak=%s, reseller=%s\n', ok, n); end if;
+  if ok and b then lulus := lulus + 1; lap := lap || E'ok     admin (mitra) tidak bisa mencairkan komisinya sendiri atau melihat admin lain\n';
+  else gagal := gagal + 1; lap := lap || format(E'GAGAL  mitra: pencairan ditolak=%s, daftar ditolak=%s\n', ok, b); end if;
 
   perform set_config('request.jwt.claim.sub', u_owner::text, true);
   execute 'set local role authenticated';
@@ -215,28 +221,39 @@ begin
   if ok and n2 is not null then lulus := lulus + 1; lap := lap || E'ok     batal hanya untuk yang menunggu; slug-nya bebas lagi\n';
   else gagal := gagal + 1; lap := lap || E'GAGAL  pembatalan reseller\n'; end if;
 
-  -- ---------- 8. owner dan admin ----------
-  perform set_config('request.jwt.claim.sub', u_admin::text, true);
-  execute 'set local role authenticated';
+  -- ---------- 8. hanya pemilik di tabel admin (032) ----------
   ok := false;
   begin
-    perform public.admin_admin();
-  exception when insufficient_privilege then ok := true; end;
-  b := public.is_owner();
-  reset role;
+    insert into public.admin (user_id, nama, peran) values (u_admin, 'Staf', 'admin');
+  exception when check_violation then ok := true; end;
+  b := false;
+  begin
+    insert into public.pasangan (slug) values ('pemilik');
+  exception when invalid_parameter_value then b := true; end;
   perform set_config('request.jwt.claim.sub', u_owner::text, true);
   execute 'set local role authenticated';
-  select count(*) into n from public.admin_admin();
   begin
     perform public.admin_admin_cabut(u_owner);
     ok := false;
   exception when invalid_parameter_value then null; end;
-  perform public.admin_admin_cabut(u_admin);
   reset role;
-  if ok and not b and n = 2 and not exists (select 1 from public.admin where user_id = u_admin) then
-    lulus := lulus + 1; lap := lap || E'ok     hanya owner mengelola admin; owner tidak bisa dicabut, admin bisa\n';
+  if ok and b then
+    lulus := lulus + 1; lap := lap || E'ok     peran staf ditolak; pemilik tidak bisa dicabut; slug "pemilik" milik platform\n';
   else
-    gagal := gagal + 1; lap := lap || format(E'GAGAL  owner/admin: ok=%s is_owner(admin)=%s n=%s\n', ok, b, n);
+    gagal := gagal + 1; lap := lap || format(E'GAGAL  032: ok=%s slug=%s\n', ok, b);
+  end if;
+
+  perform set_config('request.jwt.claim.sub', u_klien::text, true);
+  execute 'set local role authenticated';
+  kode_galat := '';
+  begin
+    perform public.reseller_saya();
+  exception when insufficient_privilege then get stacked diagnostics kode_galat = message_text; end;
+  reset role;
+  if kode_galat = 'Halaman ini hanya untuk admin mengundang.id' then
+    lulus := lulus + 1; lap := lap || E'ok     pesan untuk yang bukan admin memakai istilah baru\n';
+  else
+    gagal := gagal + 1; lap := lap || format(E'GAGAL  pesan: %s\n', kode_galat);
   end if;
 
   -- ---------- 9. penjualan langsung tanpa komisi ----------
@@ -256,6 +273,6 @@ begin
     gagal := gagal + 1; lap := lap || E'GAGAL  penjualan langsung\n';
   end if;
 
-  raise exception E'\n===== LAPORAN UJI 031 =====\n%\nLULUS %  GAGAL %\n(transaksi dibatalkan)\n',
+  raise exception E'\n===== LAPORAN UJI 031 + 032 =====\n%\nLULUS %  GAGAL %\n(transaksi dibatalkan)\n',
     lap, lulus, gagal;
 end $$;

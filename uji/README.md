@@ -23,7 +23,9 @@ Playwright butuh Chromium. Kalau `npm install` tidak memasangnya sendiri:
 | `uji-coba` | `/coba` dan `/mulai`: demo tanpa jaringan, redirect akar domain |
 | `uji-asap` | tiap halaman dibuka tanpa stub; yang dicari cuma galat waktu memuat |
 | `uji-dasbor` | `/dasbor`: rangkaian acara, pustaka foto, panel 9 halaman kenangan (latar, kalimat babak, blok, upsert hanya yang berubah), keterangan pra/pasca-acara |
-| `uji-admin` | `/admin`: gerbang admin, buat pasangan, paket, link panitia |
+| `uji-pemilik` | `/pemilik`: gerbang pemilik, buat pasangan, paket, link panitia, pesanan, statistik admin, pencairan, lupa sandi |
+| `uji-admin` | `/admin` (mitra penjual): tautan rujukan, pesanan, komisi cair/belum, tidak menyentuh data tamu, lupa sandi, `/reseller` dialihkan |
+| `uji-fungsi-admin` | edge function `admin-pasangan` di Deno: hanya pemilik, konfirmasi + undangan email + sandi cadangan, admin baru |
 | `uji-rekap`, `uji-018` | rekap pasca-acara di `/kirim`: kehadiran, pemberian, berkat, kelompok |
 | `uji-lihat` | halaman kenangan: babak berfoto vs kartu teks, latar sampul, pan hanya saat terlihat, blok dari panel 9, angka nol tidak dipajang, jawaban bentuk lama, escape, gerak dikurangi. Foto latarnya dibuat di peramban (canvas) supaya tangkapan layarnya bisa dinilai mata |
 | `uji-fungsi-foto` | edge function `foto-unggah` **dijalankan sungguhan di Deno** dengan Supabase ditiru di belakangnya: token panitia vs JWT pemilik, pasangan mana yang kena, pembersihan berkas saat gagal. Butuh `deno` di PATH atau `DENO=` |

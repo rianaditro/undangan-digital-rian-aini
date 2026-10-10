@@ -1,0 +1,9 @@
+# Alamat lama → alamat baru. Dilayani lapisan aset Cloudflare sebelum
+# berkas dicari, jadi tautan yang sudah tersebar tetap mendarat benar.
+#
+# /reseller dulu meja mitra penjual; sejak istilahnya diganti, meja itu
+# bernama admin dan pindah ke /admin. Meja pemilik platform yang dulu
+# di /admin pindah ke /pemilik — tidak dialihkan, karena /admin sekarang
+# milik halaman lain.
+/reseller   /admin  301
+/reseller/  /admin  301

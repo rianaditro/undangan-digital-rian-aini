@@ -8,7 +8,7 @@ kecuali yang disebut begitu, semuanya hasil pemeriksaan hari itu.
 
 ## 1. Admin pertama — **selesai**
 
-Ayam-dan-telur yang memblokir seluruh platform: `/admin` menolak siapa pun
+Ayam-dan-telur yang memblokir seluruh platform: `/pemilik` (dulu `/admin`) menolak siapa pun
 yang tidak ada di tabel `admin`, dan satu-satunya jalan membuat akun —
 edge function `admin-pasangan` — juga menuntut pemanggilnya sudah admin.
 
@@ -70,7 +70,8 @@ custom domains*), jadi tidak ada tamu yang memegang tautan itu.
 |---|---|
 | `wrangler.jsonc` | aset = folder repo, `drop-trailing-slash`, `single-page-application`, rute `mengundang.id/*` dan `*.mengundang.id/*` |
 | `.assetsignore` | yang TIDAK terbit: `docs/`, `supabase/`, `uji/`, `alat/`, konfigurasi |
-| `_headers` | `X-Robots-Tag: noindex` untuk `/kirim`, `/dasbor`, `/admin` |
+| `_headers` | `X-Robots-Tag: noindex` untuk `/kirim`, `/dasbor`, `/admin`, `/pemilik` |
+| `_redirects` | alamat lama: `/reseller` → `/admin` |
 | `cloudflare/pintu.js` | `mengundang.id/` → `/mulai`, `www.mengundang.id/` → `https://mengundang.id/mulai` |
 | `uji/server.mjs`, `uji/uji-pintu.mjs` | peniru Workers dan uji jawabannya per host |
 
@@ -116,46 +117,57 @@ undangan.
 `alat/periksa-dns.py` dibuat untuk rencana bertahap (zona abu-abu yang
 mencerminkan Hostinger) dan tidak dipakai di jalur ini.
 
-## 4. Owner, admin, dan reseller (migrasi 031)
+## 4. Pemilik dan admin (migrasi 031, istilah 032)
 
 ### Peran
 
-| Peran | Halaman | Boleh |
-|---|---|---|
-| Owner | `/admin` | semua, termasuk menambah admin, menambah reseller, mencatat pencairan |
-| Admin | `/admin` | membuka pasangan, mengonfirmasi pesanan, melihat statistik reseller |
-| Reseller | `/reseller` | tautan rujukan, mencatat pesanan, melihat status dan komisi |
-| Pengantin | `/dasbor` | mengisi dan menerbitkan undangannya sendiri |
+| Peran | Halaman | Di database | Boleh |
+|---|---|---|---|
+| **Pemilik** | `/pemilik` | tabel `admin`, peran `owner` | semua: pasangan, konfirmasi pembayaran, menambah admin, mencatat pencairan |
+| **Admin** (mitra penjual) | `/admin` | tabel `reseller` | tautan rujukan, mencatat pesanan, melihat status dan komisinya |
+| Pengantin | `/dasbor` | tabel `pemilik` | mengisi dan menerbitkan undangannya sendiri |
 
-Admin pertama otomatis menjadi owner saat 031 dipasang. Owner tidak bisa
-dibuat atau dicabut dari halaman — hanya lewat SQL.
+Nama tabel dan fungsi di database sengaja tidak diganti (`reseller_*`,
+`admin_*`, `is_admin()` = "pemilik platform"); yang berganti hanya yang
+terbaca orang. Alamat lama `/reseller` dialihkan 301 ke `/admin` lewat
+`_redirects`. Meja pemilik yang dulu di `/admin` sekarang di `/pemilik`.
 
-Reseller **tidak pernah** melihat daftar tamu, RSVP, ucapan, atau amplop
-kliennya; `uji-reseller.mjs` memeriksa halaman itu tidak meminta satu
-pun.
+Pemilik dibuat lewat SQL, tidak pernah dari halaman. Peran "admin staf"
+dari 031 dihapus di 032 — tabel `admin` hanya boleh berisi `owner`.
 
-### Alur penjualan lewat reseller
+Admin **tidak pernah** melihat daftar tamu, RSVP, ucapan, atau amplop
+kliennya; `uji-admin.mjs` memeriksa halaman itu tidak meminta satu pun.
 
-1. Reseller membagikan `https://mengundang.id/?r=<kode>`. Pengunjungnya
+### Alur penjualan lewat admin
+
+1. Admin membagikan `https://mengundang.id/?r=<kode>`. Pengunjungnya
    dicatat (satu peramban, satu kali sehari) dan kodenya ikut di pesan
    WhatsApp dari halaman depan selama 90 hari.
-2. Klien setuju; reseller mencatat pesanan di `/reseller`
+2. Klien setuju; admin mencatat pesanan di `/admin`
    (status *menunggu pembayaran*). Penjualan yang masuk langsung lewat
-   WhatsApp dicatat owner/admin di `/admin` panel 4, dengan kode
-   reseller kalau pesannya membawa "Kode rujukan".
-3. Klien membayar ke rekening owner — satu pembayaran.
-4. Owner/admin di panel 4 mengisi nominal dan komisi, lalu **Lunas**:
+   WhatsApp dicatat pemilik di `/pemilik` panel 4, dengan kode admin
+   kalau pesannya membawa "Kode rujukan".
+3. Klien membayar ke rekening pemilik — satu pembayaran.
+4. Pemilik di panel 4 mengisi nominal dan komisi, lalu **Lunas**:
    akun klien dibuat, email undangan dikirim, pasangan langsung
    **aktif**. Teks serah-terima (alamat, /dasbor, link panitia) muncul
    untuk dikirim lewat WhatsApp juga.
 5. Klien membuka email, membuat sandinya sendiri di `/dasbor`, mengisi
    undangannya.
-6. Kapan pun, owner mentransfer komisi yang belum cair ke rekening
-   reseller dan menekan **Catat Pencairan** dengan nomor transaksinya.
+6. Kapan pun, pemilik mentransfer komisi yang belum cair ke rekening
+   admin dan menekan **Catat Pencairan** dengan nomor transaksinya.
    Semua komisi yang tertahan saat itu menjadi *cair* dengan nomor itu.
 
 Harga dan komisi belum ditetapkan, jadi keduanya diisi per pesanan saat
 konfirmasi.
+
+### Lupa sandi
+
+`/pemilik`, `/admin`, dan `/dasbor` punya tombol **Lupa sandi?**
+(`assets/akun.js`). Supabase mengirim email berisi tautan kembali ke
+halaman itu, dan halaman meminta sandi baru. Supaya tautannya tidak
+dibelokkan ke Site URL, ketiga alamat harus diizinkan — cukup satu baris
+di Redirect URLs: `https://mengundang.id/**`.
 
 ### Email undangan — perlu dipasang sekali
 
@@ -163,8 +175,8 @@ Pengirim email bawaan Supabase hanya mengirim ke anggota tim proyek dan
 dibatasi beberapa email per jam. Untuk klien sungguhan:
 
 1. **Supabase → Authentication → URL Configuration**:
-   Site URL `https://mengundang.id`, dan tambahkan
-   `https://mengundang.id/dasbor` di Redirect URLs.
+   Site URL `https://mengundang.id/dasbor`, dan di Redirect URLs
+   `https://mengundang.id/**` (mencakup /dasbor, /admin, /pemilik).
 2. **Supabase → Authentication → Emails → SMTP Settings**: pasang SMTP
    sendiri (mis. Resend atau Brevo, ada paket gratisnya). Pengirim
    `undangan@mengundang.id` butuh verifikasi domain di penyedia SMTP —
@@ -179,10 +191,10 @@ di teks serah-terima untuk dikirim lewat WhatsApp.
 
 ## Urutan yang disarankan
 
-1. Masuk ke `/admin`, pastikan akunnya bekerja, ganti sandinya.
+1. Masuk ke `/pemilik`, pastikan akunnya bekerja, ganti sandinya.
 2. Pindah ke Cloudflare mengikuti langkah di bagian 3.
 3. Sesudah delegasinya pindah dan `https://mengundang.id` terbuka, buat
-   pasangan kedua lewat `/admin` dengan paket **standar**, buka
+   pasangan kedua lewat `/pemilik` dengan paket **standar**, buka
    undangannya, kirim satu link tamu ke diri sendiri.
 4. Terakhir, uji satu subdomain pasangan sungguhan lewat HTTPS. Sebelum
    itu terbukti, jangan menjual paket premium.
