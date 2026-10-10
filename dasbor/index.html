@@ -87,6 +87,9 @@ select{appearance:none;cursor:pointer;}
 .ubin{border:1px solid var(--garis);background:rgba(0,0,0,.2);padding:8px;}
 .ubin.samar{opacity:.45;}
 .ubin img{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--nila-2);display:block;}
+.ubin .gbr,.pilih-latar .gbr{position:relative;display:block;}
+.tanda-video{position:absolute;right:6px;bottom:6px;padding:2px 6px;font-size:10px;letter-spacing:.08em;
+  background:rgba(13,22,38,.82);color:var(--kuningan);border-radius:2px;pointer-events:none;}
 .ubin select,.ubin input{font-size:12px;padding:6px 8px;margin-top:6px;}
 .ubin .alat{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
 /* Empat tombol dalam satu kolom sempit: panah dikunci kecil, dua tombol
@@ -114,7 +117,14 @@ select{appearance:none;cursor:pointer;}
 .blok-kepala{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
 .blok-kepala .centang{margin:0;padding:0;border:0;}
 .wajib{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(237,231,217,.4);}
-.baris.mati input:not([type=checkbox]),.baris.mati textarea{opacity:.45;}
+.baris.mati input:not([type=checkbox]),.baris.mati textarea,.baris.mati .pilih-latar{opacity:.45;}
+.vendor-baris{display:grid;gap:6px;grid-template-columns:1fr 1fr;align-items:end;}
+.vendor-baris input[data-kv="tautan"]{grid-column:1 / -1;}
+.vendor-baris .btn{grid-column:1 / -1;justify-self:start;padding:6px 10px;font-size:10px;}
+@media (min-width:720px){
+  .vendor-baris{grid-template-columns:1fr 1.3fr 1.4fr auto;}
+  .vendor-baris input[data-kv="tautan"],.vendor-baris .btn{grid-column:auto;}
+}
 /* ---------- silsilah (kotak 1) ----------
    Pindah dari /kirim. Aturan lebar tombolnya ikut dibawa: empat tombol
    di kartu sempit dikunci lebar minimumnya supaya MELIPAT, bukan
@@ -260,13 +270,13 @@ select{appearance:none;cursor:pointer;}
 
   <!-- 8 -->
   <div class="panel">
-    <h2>8 · Foto acara</h2>
+    <h2>8 · Foto &amp; video acara</h2>
     <p class="hint" id="hintFoto"></p>
     <div class="aksi" style="margin-top:0">
-      <label class="btn ghost berkas" for="inBerkasFoto">Pilih Foto</label>
-      <input id="inBerkasFoto" type="file" accept="image/*" multiple hidden>
+      <label class="btn ghost berkas" for="inBerkasFoto">Pilih Foto / Video</label>
+      <input id="inBerkasFoto" type="file" accept="image/*,video/mp4,video/webm" multiple hidden>
     </div>
-    <p class="hint" style="margin:10px 0 0">Foto dikecilkan dulu di perangkat ini sebelum dikirim, jadi tidak perlu diperkecil sendiri. Bisa pilih banyak sekaligus.</p>
+    <p class="hint" style="margin:10px 0 0">Foto dikecilkan dulu di perangkat ini sebelum dikirim, jadi tidak perlu diperkecil sendiri. Video: MP4 atau WebM, paling besar 20 MB — potongan pendek 10–30 detik paling pas. Bisa pilih banyak sekaligus. Pilih <em>Bab</em> di tiap ubin untuk menaruhnya di bagian halaman kenangan.</p>
     <div class="maju" id="majuFoto" hidden><i></i></div>
     <p class="kuota" id="kuotaFoto"></p>
     <div class="pustaka" id="pustakaFoto"></div>
@@ -277,13 +287,18 @@ select{appearance:none;cursor:pointer;}
     <h2>9 · Halaman kenangan</h2>
     <p class="hint" id="hintKenangan"></p>
 
-    <h3 class="subjudul">Babak</h3>
-    <p class="hint">Satu babak untuk setiap acara yang dicentang <em>jadi babak di halaman kenangan</em> di kotak 3, dalam urutan yang sama. Foto latarnya dipilih dari foto yang diberi babak itu di kotak 8.</p>
+    <h3 class="subjudul">Bab-bab halaman</h3>
+    <p class="hint">Urutannya mengikuti hari itu dan tetap — sampul selalu pertama, penutup selalu terakhir. Yang bisa diatur: bab mana yang tampil, tulisannya, dan foto/video mana yang membuka giliran latarnya. Isi tiap bab dipilih lewat kolom <em>Bab</em> di kotak 8. Kotak yang dibiarkan kosong memakai tulisan yang terlihat samar di dalamnya.</p>
+    <div id="formBlok"></div>
+
+    <h3 class="subjudul">Babak acara</h3>
+    <p class="hint">Satu babak untuk setiap acara yang dicentang <em>jadi babak di halaman kenangan</em> di kotak 3, dalam urutan yang sama.</p>
     <div id="formBabak"></div>
 
-    <h3 class="subjudul">Blok halaman</h3>
-    <p class="hint">Urutannya tetap — sampul selalu pertama, penutup selalu terakhir. Yang bisa diatur: blok mana yang tampil, dan tulisannya. Kotak yang dibiarkan kosong memakai tulisan yang terlihat samar di dalamnya.</p>
-    <div id="formBlok"></div>
+    <h3 class="subjudul">Terima kasih kepada</h3>
+    <p class="hint">Vendor, sponsor, atau brand yang ikut membantu — misalnya fotografer, dekorasi, katering, MUA. Tautan boleh alamat situs (https://…) atau akun Instagram (@nama). Kosong = bagian ini tidak muncul.</p>
+    <div id="formVendor"></div>
+    <div class="aksi" style="margin-top:8px"><button class="btn ghost" id="btnTambahVendor" type="button">+ Tambah</button></div>
 
     <div class="aksi">
       <button class="btn solid" id="btnSimpanKenangan">Simpan Halaman Kenangan</button>
@@ -343,7 +358,7 @@ select{appearance:none;cursor:pointer;}
      sekalipun ia berhasil mendaftar sendiri.
      ============================================================ */
   var KUNCI='dasbor-sesi', sesi=null, pasangan=null;
-  var data = { mempelai:[], tempat:[], acara:[], dompet:[], pihak:[], foto:[], kenangan_blok:[], silsilah:[] };
+  var data = { mempelai:[], tempat:[], acara:[], dompet:[], pihak:[], foto:[], kenangan_blok:[], silsilah:[], kenangan_vendor:[] };
 
   try{ sesi = JSON.parse(localStorage.getItem(KUNCI)||'null'); }catch(e){}
 
@@ -399,17 +414,20 @@ select{appearance:none;cursor:pointer;}
       api('pihak?select=*&pasangan_id=eq.'+pasangan.id+'&order=kode'),
       api('foto?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,diunggah'),
       api('kenangan_blok?select=*&pasangan_id=eq.'+pasangan.id),
-      api('silsilah?select=*&pasangan_id=eq.'+pasangan.id+'&order=sisi,urutan')
+      api('silsilah?select=*&pasangan_id=eq.'+pasangan.id+'&order=sisi,urutan'),
+      api('kenangan_vendor?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,dibuat')
     ]);
     data.mempelai=hasil[0]; data.tempat=hasil[1]; data.acara=hasil[2];
     data.dompet=hasil[3];   data.pihak=hasil[4];
     data.foto = hasil[5];
     data.kenangan_blok = hasil[6] || [];
     data.silsilah = hasil[7] || [];
+    data.kenangan_vendor = hasil[8] || [];
     gambar();
     gambarSilsilah();
     gambarFoto();
     gambarKenangan();
+    gambarVendor();
     kabarKenangan();
   }
 
@@ -839,11 +857,13 @@ select{appearance:none;cursor:pointer;}
        keterangannya berbeda, karena sebelum acara memang belum ada yang
        bisa diunggah. */
     $('hintFoto').textContent = acaraLewat()
-      ? 'Foto hari itu. Yang diunggah di sini muncul di halaman kenangan, dan yang diberi babak jadi wajah babaknya.'
-      : 'Belum perlu diisi sekarang — kotak ini untuk foto SESUDAH acara. Yang masuk ke sini nanti menyusun halaman kenangan, dikelompokkan menurut rangkaian acara di kotak 3.';
+      ? 'Foto dan video hari itu. Beri tiap berkas bab-nya — sampul, mempelai, kedatangan, akad, resepsi, sungkem, keluarga, para tamu, kami berdua — dan ia ikut bergiliran jadi latar bab itu. Yang tanpa bab masuk album.'
+      : 'Belum perlu diisi sekarang — kotak ini untuk foto dan video SESUDAH acara. Yang masuk ke sini nanti menyusun halaman kenangan, bab demi bab.';
 
+    var jmlVideo = daftar.filter(function(f){ return f.jenis === 'video'; }).length;
     $('kuotaFoto').textContent = daftar.length
-      ? daftar.length + ' dari ' + BATAS_FOTO + ' foto · '
+      ? daftar.length + ' dari ' + BATAS_FOTO + ' berkas'
+        + (jmlVideo ? ' (' + jmlVideo + ' video)' : '') + ' · '
         + (daftar.reduce(function(j,f){ return j + (f.bita||0); }, 0) / 1048576).toFixed(1) + ' MB'
       : '';
 
@@ -854,16 +874,15 @@ select{appearance:none;cursor:pointer;}
       return;
     }
 
-    var opsiBabak = '<option value="">Tanpa babak</option>'
-      + (data.acara || []).map(function(a){
-          return '<option value="'+esc(a.id)+'">'+esc(a.nama||'Acara')+'</option>';
-        }).join('');
+    var opsiBabak = opsiBab();
 
     $('pustakaFoto').innerHTML = daftar.map(function(f, i){
       var src = window.Gambar.url(f.jalur_kecil || f.jalur);
       return '<div class="ubin'+(f.tampil ? '' : ' samar')+'" data-foto="'+esc(f.id)+'">'
-        + '<img src="'+esc(src)+'" alt="" loading="lazy">'
-        + '<select data-f="acara_id" aria-label="Babak">'+opsiBabak+'</select>'
+        + '<span class="gbr"><img src="'+esc(src)+'" alt="" loading="lazy">'
+        +   (f.jenis === 'video' ? '<span class="tanda-video">&#9654; '+esc(lamaVideo(f.durasi_ms))+'</span>' : '')
+        + '</span>'
+        + '<select data-f="bab" aria-label="Bab">'+opsiBabak+'</select>'
         + '<input data-f="keterangan" type="text" maxlength="280" placeholder="Keterangan" value="'+esc(f.keterangan||'')+'">'
         + '<div class="alat">'
         +   '<button class="btn ghost" data-aksi="naik" '+(i===0?'disabled':'')+' title="Naikkan">&uarr;</button>'
@@ -879,17 +898,52 @@ select{appearance:none;cursor:pointer;}
        menghasilkan tulisan "null" sebagai nilai yang tampak sah. */
     daftar.forEach(function(f){
       var ubin = $('pustakaFoto').querySelector('[data-foto="'+f.id+'"]');
-      if(ubin) ubin.querySelector('[data-f="acara_id"]').value = f.acara_id || '';
+      if(ubin) ubin.querySelector('[data-f="bab"]').value = nilaiBab(f);
     });
   }
 
+  /* Bab sebuah berkas: salah satu bagian tetap halaman kenangan
+     (foto.bagian) ATAU satu babak acara (foto.acara_id), tidak pernah
+     keduanya — basis data menolaknya (033, foto_satu_tempat). Di select
+     ditulis "b:<bagian>" atau "a:<id acara>". */
+  function opsiBab(){
+    var K = window.Kenangan, sebelum = [], sesudah = [], lewatAcara = false;
+    K.BAGIAN.forEach(function(k){
+      var b = K.MENURUT[k];
+      (K.BLOK.indexOf(b) < K.BLOK.indexOf(K.MENURUT.acara) ? sebelum : sesudah)
+        .push('<option value="b:'+k+'">'+esc(b.nama)+'</option>');
+    });
+    var acara = (data.acara || []).map(function(a){
+      return '<option value="a:'+esc(a.id)+'">'+esc(a.nama||'Acara')+'</option>';
+    });
+    return '<option value="">Tanpa bab (album)</option>' + sebelum.join('') + acara.join('') + sesudah.join('');
+  }
+  function nilaiBab(f){
+    return f.bagian ? 'b:' + f.bagian : (f.acara_id ? 'a:' + f.acara_id : '');
+  }
+  function lamaVideo(ms){
+    var d = Math.round((ms || 0) / 1000);
+    return d ? Math.floor(d / 60) + ':' + ('0' + d % 60).slice(-2) : 'video';
+  }
+
   async function unggahSatuFoto(berkas){
-    var kecilan = await window.Gambar.siapkan(berkas);
     var form = new FormData();
-    form.append('berkas', kecilan.penuh.blob, 'foto.webp');
-    form.append('kecil',  kecilan.kecil.blob, 'kecil.webp');
-    form.append('lebar',  kecilan.penuh.lebar);
-    form.append('tinggi', kecilan.penuh.tinggi);
+    if(/^video\//.test(berkas.type) || /\.(mov|mp4|webm|m4v)$/i.test(berkas.name || '')){
+      /* Video tidak diubah di sini — hanya diperiksa bisa diputar
+         peramban, lalu satu bingkainya diambil jadi poster. */
+      var v = await window.Gambar.siapkanVideo(berkas);
+      form.append('berkas', v.video, berkas.type === 'video/webm' ? 'video.webm' : 'video.mp4');
+      form.append('kecil',  v.poster.blob, 'poster.' + (v.poster.blob.type === 'image/jpeg' ? 'jpg' : 'webp'));
+      form.append('lebar',  v.lebar);
+      form.append('tinggi', v.tinggi);
+      form.append('durasi_ms', v.durasi_ms);
+    }else{
+      var kecilan = await window.Gambar.siapkan(berkas);
+      form.append('berkas', kecilan.penuh.blob, 'foto.webp');
+      form.append('kecil',  kecilan.kecil.blob, 'kecil.webp');
+      form.append('lebar',  kecilan.penuh.lebar);
+      form.append('tinggi', kecilan.penuh.tinggi);
+    }
 
     var r = await fetch(M.SB.url + '/functions/v1/foto-unggah', {
       method: 'POST',
@@ -927,9 +981,11 @@ select{appearance:none;cursor:pointer;}
 
     if(gagal.length){
       console.warn('Foto yang gagal:', gagal);
-      toast(sukses + ' foto masuk, ' + gagal.length + ' gagal — lihat console', true);
+      /* Pesan gagal pertama ditampilkan apa adanya: untuk video
+         alasannya (MOV, terlalu besar) yang perlu dibaca pasangan. */
+      toast(sukses + ' masuk, ' + gagal.length + ' gagal — ' + gagal[0], true);
     }else{
-      toast(sukses + ' foto tersimpan');
+      toast(sukses + ' berkas tersimpan');
     }
     await muatFoto();
   }
@@ -937,7 +993,7 @@ select{appearance:none;cursor:pointer;}
   async function muatFoto(){
     data.foto = await api('foto?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,diunggah');
     gambarFoto();
-    gambarBabakKenangan();
+    gambarKenangan();
   }
 
   $('inBerkasFoto').addEventListener('change', pilihFoto);
@@ -947,13 +1003,19 @@ select{appearance:none;cursor:pointer;}
     if(!el) return;
     var id = el.closest('[data-foto]').dataset.foto;
     var badan = {};
-    badan[el.dataset.f] = el.dataset.f === 'acara_id' ? (el.value || null) : el.value;
+    if(el.dataset.f === 'bab'){
+      var v = el.value;
+      badan.bagian   = v.indexOf('b:') === 0 ? v.slice(2) : null;
+      badan.acara_id = v.indexOf('a:') === 0 ? v.slice(2) : null;
+    }else{
+      badan[el.dataset.f] = el.value;
+    }
     try{
       await api('foto?id=eq.'+id, { method:'PATCH', prefer:'return=minimal',
                                     body: JSON.stringify(badan) });
       var f = (data.foto||[]).find(function(x){ return x.id === id; });
       if(f) Object.assign(f, badan);
-      if(el.dataset.f === 'acara_id') gambarBabakKenangan();
+      if(el.dataset.f === 'bab') gambarKenangan();
       toast('Tersimpan');
     }catch(err){ toast(err.message, true); }
   });
@@ -969,7 +1031,7 @@ select{appearance:none;cursor:pointer;}
     tombol.disabled = true;
     try{
       if(aksi === 'hapus'){
-        if(!confirm('Hapus foto ini? Berkasnya ikut dihapus dan tidak bisa dikembalikan.')){
+        if(!confirm('Hapus ' + (f.jenis === 'video' ? 'video' : 'foto') + ' ini? Berkasnya ikut dihapus dan tidak bisa dikembalikan.')){
           tombol.disabled = false; return;
         }
         var r = await fetch(M.SB.url + '/functions/v1/foto-unggah?id=' + encodeURIComponent(id), {
@@ -1005,12 +1067,14 @@ select{appearance:none;cursor:pointer;}
   /* ============================================================
      9 · Halaman kenangan
 
-     Babak = baris `acara` yang dicentang di kotak 3; panel ini tidak
-     menyimpan daftar kedua. Yang diatur di sini cuma tiga hal:
+     Susunan bab dari assets/kenangan.js (revisi 033). Babak = baris
+     `acara` yang dicentang di kotak 3; panel ini tidak menyimpan
+     daftar kedua. Yang diatur di sini:
+       · bab: tampil, judul, tulisan → kenangan_blok
+       · latar tiap bab dan babak    → foto.latar (pemicu menjaga satu
+                                        latar per bagian / per babak)
        · satu kalimat per babak      → acara.kenangan_teks
-       · foto latar per babak        → foto.latar (pemicu 026 menjaga
-                                        satu latar per babak)
-       · blok rangka: tampil, tulisan → kenangan_blok
+       · terima kasih kepada         → kenangan_vendor
 
      Blok yang tidak pernah diubah TIDAK ditulis. Baris yang tidak ada
      berarti bawaan, dan bawaan bisa diperbaiki untuk semua pasangan
@@ -1050,14 +1114,9 @@ select{appearance:none;cursor:pointer;}
       /* Sama dengan terimakasih_isi: yang ditandai latar, kalau tidak
          ada, foto pertama babak itu. Panel harus menunjukkan foto yang
          SUNGGUH akan dipakai, termasuk ketika belum ada yang memilih. */
-      var dipakai = foto.filter(function(f){ return f.latar; })[0] || foto[0];
       var pilihan = foto.length
-        ? '<label>Latar</label><div class="pilih-latar">' + foto.map(function(f){
-            return '<button type="button" data-latar="'+esc(f.id)+'" class="'+(f===dipakai?'dipilih':'')+'"'
-              + ' aria-pressed="'+(f===dipakai)+'" title="Jadikan latar">'
-              + '<img src="'+esc(window.Gambar.url(f.jalur_kecil || f.jalur))+'" alt="" loading="lazy"></button>';
-          }).join('') + '</div>'
-        : '<p class="kosongstate">Belum ada foto untuk babak ini, jadi ia tampil sebagai kartu teks. Beri babak <em>'
+        ? pilihLatarHtml(foto)
+        : '<p class="kosongstate">Belum ada foto untuk babak ini, jadi ia tampil sebagai kartu teks. Pilih bab <em>'
           + esc(a.nama || 'ini') + '</em> pada foto di kotak 8.</p>';
       return '<div class="baris" data-babak="'+esc(a.id)+'">'
         + '<p class="baris-judul">'+(i+1)+' · '+esc(a.nama || 'Acara')+'</p>'
@@ -1065,26 +1124,144 @@ select{appearance:none;cursor:pointer;}
         + '<input data-kk="kenangan_teks" maxlength="200" value="'+esc(a.id in ketikan ? ketikan[a.id] : (a.kenangan_teks || ''))+'" placeholder="Kosongkan kalau tidak perlu kalimat">'
         + pilihan
         + '</div>';
-    }).join('') : '<p class="kosongstate">Belum ada acara yang dicentang jadi babak. Tanpa babak, halaman kenangan tetap utuh: sampul, angka, galeri, ucapan, penutup.</p>')
+    }).join('') : '<p class="kosongstate">Belum ada acara yang dicentang jadi babak. Tanpa babak, halaman kenangan tetap utuh: sampul, pesan, bab-bab berfoto, penutup.</p>')
       + (bukan.length ? '<p class="hint" style="margin-top:10px">Tidak jadi babak: '
           + bukan.map(function(a){ return esc(a.nama || 'Acara'); }).join(', ') + '.</p>' : '');
   }
 
+  /* Ubin pilihan latar. Yang dipakai = yang ditandai latar, kalau tidak
+     ada, yang pertama — sama dengan urutan terimakasih_isi. Panel harus
+     menunjukkan berkas yang SUNGGUH membuka giliran, termasuk ketika
+     belum ada yang memilih. */
+  function pilihLatarHtml(foto){
+    var dipakai = foto.filter(function(f){ return f.latar; })[0] || foto[0];
+    return '<label>Latar · ' + foto.length + ' berkas bergiliran</label><div class="pilih-latar">' + foto.map(function(f){
+      return '<button type="button" data-latar="'+esc(f.id)+'" class="'+(f===dipakai?'dipilih':'')+'"'
+        + ' aria-pressed="'+(f===dipakai)+'" title="Jadikan pembuka giliran">'
+        + '<span class="gbr"><img src="'+esc(window.Gambar.url(f.jalur_kecil || f.jalur))+'" alt="" loading="lazy">'
+        + (f.jenis === 'video' ? '<span class="tanda-video">&#9654;</span>' : '') + '</span></button>';
+    }).join('') + '</div>';
+  }
+
+  /* Digambar ulang tiap kali foto berubah (bab dipilih di kotak 8).
+     Ketikan yang belum disimpan ikut dibawa, seperti daftar babak. */
   function gambarBlokKenangan(){
-    var simpanan = blokSimpanan();
-    $('formBlok').innerHTML = window.Kenangan.BLOK.map(function(b){
+    var K = window.Kenangan, simpanan = blokSimpanan(), ketik = {};
+    document.querySelectorAll('#formBlok [data-kblok]').forEach(function(el){
+      var cb = el.querySelector('[data-kb="tampil"]'), j = el.querySelector('[data-kb="judul"]'), t = el.querySelector('[data-kb="teks"]');
+      ketik[el.dataset.kblok] = { tampil: cb ? cb.checked : true, judul: j ? j.value : '', teks: t ? t.value : '' };
+    });
+    var panggilan = {};
+    (data.mempelai || []).forEach(function(m){ panggilan[m.sisi] = m.panggilan; });
+
+    $('formBlok').innerHTML = K.BLOK.map(function(b){
+      if(b.jenis === 'acara'){
+        var babak = (data.acara || []).filter(function(a){ return a.di_terimakasih !== false; });
+        return '<div class="baris" data-info="acara"><p class="baris-judul">'+esc(b.nama)+'</p>'
+          + '<p class="hint" style="margin:4px 0 0">'
+          + (babak.length ? babak.length + ' babak: ' + babak.map(function(a){ return esc(a.nama || 'Acara'); }).join(', ')
+                            + '. Kalimat dan latarnya diatur di <em>Babak acara</em> di bawah.'
+                          : 'Belum ada acara yang dicentang jadi babak di kotak 3.')
+          + '</p></div>';
+      }
       var s = simpanan[b.kunci] || {};
-      var tampil = b.wajib || s.tampil !== false;
-      return '<div class="baris'+(tampil?'':' mati')+'" data-kblok="'+b.kunci+'">'
-        + '<div class="blok-kepala"><p class="baris-judul">'+esc(b.nama)+'</p>'
-        +   (b.wajib ? '<span class="wajib">Selalu tampil</span>'
-                     : '<div class="centang"><label><input type="checkbox" data-kb="tampil"'+(tampil?' checked':'')+'> Tampil</label></div>')
-        + '</div>'
-        + '<p class="hint" style="margin:4px 0 0">'+esc(b.guna)+'</p>'
-        + '<label>Judul</label><input data-kb="judul" maxlength="80" value="'+esc(s.judul || '')+'" placeholder="'+esc(b.judul)+'">'
-        + '<label>Tulisan</label><textarea data-kb="teks" maxlength="600" placeholder="'+esc(b.teks || 'Tanpa tulisan')+'">'+esc(s.teks || '')+'</textarea>'
+      var k = ketik[b.kunci] || { tampil: s.tampil !== false, judul: s.judul || '', teks: s.teks || '' };
+      var tampil = b.wajib || k.tampil;
+      var kepala = '<div class="blok-kepala"><p class="baris-judul">'+esc(b.nama)+'</p>'
+        + (b.wajib ? '<span class="wajib">Selalu tampil</span>'
+                   : '<div class="centang"><label><input type="checkbox" data-kb="tampil"'+(tampil?' checked':'')+'> Tampil</label></div>')
+        + '</div><p class="hint" style="margin:4px 0 0">'+esc(b.guna)+'</p>';
+      if(b.jenis === 'ucapan'){
+        return '<div class="baris'+(tampil?'':' mati')+'" data-kblok="'+b.kunci+'">' + kepala + '</div>';
+      }
+      var phJudul = b.judul || (b.kunci === 'pria' || b.kunci === 'wanita' ? (panggilan[b.kunci] || 'Nama panggilan') : '');
+      var media = '';
+      if(b.jenis === 'media'){
+        var foto = (data.foto || []).filter(function(f){ return f.bagian === b.kunci && f.tampil; });
+        media = foto.length ? pilihLatarHtml(foto)
+          : '<p class="kosongstate">Belum ada foto/video. Pilih bab <em>'+esc(b.nama)+'</em> pada berkas di kotak 8.'
+            + (b.wajib ? '' : ' Tanpa foto, bab ini hanya muncul kalau judul atau tulisannya diisi.') + '</p>';
+      }
+      return '<div class="baris'+(tampil?'':' mati')+'" data-kblok="'+b.kunci+'">' + kepala
+        + '<label>Judul</label><input data-kb="judul" maxlength="80" value="'+esc(k.judul)+'" placeholder="'+esc(phJudul)+'">'
+        + '<label>Tulisan</label><textarea data-kb="teks" maxlength="600" placeholder="'+esc(b.teks || 'Tanpa tulisan')+'">'+esc(k.teks)+'</textarea>'
+        + media
         + '</div>';
     }).join('');
+  }
+
+  /* ---------- Terima kasih kepada ---------- */
+  function vendorBarisHtml(v){
+    return '<div class="baris vendor-baris" data-vendor="'+esc(v.id || '')+'">'
+      + '<input data-kv="peran" maxlength="60" placeholder="Peran, mis. Fotografer" value="'+esc(v.peran || '')+'" aria-label="Peran">'
+      + '<input data-kv="nama" maxlength="80" placeholder="Nama" value="'+esc(v.nama || '')+'" aria-label="Nama">'
+      + '<input data-kv="tautan" maxlength="200" placeholder="@akun atau https://… (boleh kosong)" value="'+esc(v.tautan || '')+'" aria-label="Tautan">'
+      + '<button type="button" class="btn bahaya" data-hapus-vendor>Hapus</button>'
+      + '</div>';
+  }
+  function gambarVendor(){
+    $('formVendor').innerHTML = (data.kenangan_vendor || []).map(vendorBarisHtml).join('');
+  }
+  $('btnTambahVendor').addEventListener('click', function(){
+    $('formVendor').insertAdjacentHTML('beforeend', vendorBarisHtml({}));
+    $('formVendor').lastElementChild.querySelector('[data-kv="peran"]').focus();
+  });
+  $('formVendor').addEventListener('click', function(e){
+    var t = e.target.closest('[data-hapus-vendor]');
+    if(t) t.closest('.vendor-baris').remove();
+  });
+  /* "instagram.com/nama" dan "nama" polos jadi @nama; "www.…" jadi
+     https://…. Sisanya harus lolos aturan yang sama dengan database. */
+  function rapikanTautan(t){
+    t = (t || '').trim();
+    if(!t) return null;
+    var ig = t.match(/^(?:https?:\/\/)?(?:www\.)?instagram\.com\/([A-Za-z0-9._]{1,30})\/?$/i);
+    if(ig) return '@' + ig[1];
+    if(/^[A-Za-z0-9._]{1,30}$/.test(t) && !/\./.test(t)) return '@' + t;
+    if(/^www\./i.test(t)) t = 'https://' + t;
+    return t;
+  }
+  function tautanSah(t){
+    return t === null || (t.length <= 200 && (/^https?:\/\/\S+$/.test(t) || /^@[A-Za-z0-9._]{1,30}$/.test(t)));
+  }
+  function bacaVendor(){
+    var baris = [], salah = null;
+    document.querySelectorAll('#formVendor .vendor-baris').forEach(function(el){
+      var v = {
+        id: el.dataset.vendor || null,
+        peran:  el.querySelector('[data-kv="peran"]').value.trim(),
+        nama:   el.querySelector('[data-kv="nama"]').value.trim(),
+        tautan: rapikanTautan(el.querySelector('[data-kv="tautan"]').value)
+      };
+      if(!v.id && !v.peran && !v.nama && !v.tautan) return;      // baris baru yang dibiarkan kosong
+      if(!v.peran || !v.nama) salah = salah || 'Terima kasih kepada: peran dan nama perlu diisi keduanya.';
+      else if(!tautanSah(v.tautan)) salah = salah || 'Tautan "' + v.tautan + '" belum benar — tulis @akun atau alamat yang diawali https://';
+      v.urutan = baris.length;
+      baris.push(v);
+    });
+    if(salah) throw new Error(salah);
+    return baris;
+  }
+  function tugasVendor(){
+    var baris = bacaVendor(), lama = {}, tugas = [];
+    (data.kenangan_vendor || []).forEach(function(v){ lama[v.id] = v; });
+    var tetap = {};
+    baris.forEach(function(v){
+      if(v.id && lama[v.id]){
+        tetap[v.id] = true;
+        var l = lama[v.id];
+        if(l.peran === v.peran && l.nama === v.nama && (l.tautan || null) === v.tautan && l.urutan === v.urutan) return;
+        tugas.push(api('kenangan_vendor?id=eq.'+v.id, { method:'PATCH', prefer:'return=minimal',
+          body: JSON.stringify({ peran: v.peran, nama: v.nama, tautan: v.tautan, urutan: v.urutan }) }));
+      }
+    });
+    var baru = baris.filter(function(v){ return !v.id; }).map(function(v){
+      return { pasangan_id: pasangan.id, peran: v.peran, nama: v.nama, tautan: v.tautan, urutan: v.urutan };
+    });
+    if(baru.length) tugas.push(api('kenangan_vendor', { method:'POST', prefer:'return=minimal', body: JSON.stringify(baru) }));
+    var buang = Object.keys(lama).filter(function(id){ return !tetap[id]; });
+    if(buang.length) tugas.push(api('kenangan_vendor?id=in.('+buang.join(',')+')', { method:'DELETE', prefer:'return=minimal' }));
+    return tugas;
   }
 
   $('formBlok').addEventListener('change', function(e){
@@ -1096,7 +1273,7 @@ select{appearance:none;cursor:pointer;}
     var btn = $('btnSimpanKenangan');
     btn.disabled = true; btn.textContent = 'Menyimpan…';
     try{
-      var tugas = [];
+      var tugas = tugasVendor(), adaVendor = tugas.length > 0;
 
       document.querySelectorAll('#formBabak [data-babak]').forEach(function(el){
         var a = (data.acara || []).find(function(x){ return x.id === el.dataset.babak; });
@@ -1111,11 +1288,12 @@ select{appearance:none;cursor:pointer;}
       document.querySelectorAll('#formBlok [data-kblok]').forEach(function(el){
         var kunci = el.dataset.kblok;
         var cb = el.querySelector('[data-kb="tampil"]');
+        var j = el.querySelector('[data-kb="judul"]'), t = el.querySelector('[data-kb="teks"]');
         var baris = {
           pasangan_id: pasangan.id, kunci: kunci,
           tampil: cb ? cb.checked : true,
-          judul:  el.querySelector('[data-kb="judul"]').value.trim() || null,
-          teks:   el.querySelector('[data-kb="teks"]').value.trim()  || null
+          judul:  (j && j.value.trim()) || null,
+          teks:   (t && t.value.trim()) || null
         };
         var lama = simpanan[kunci];
         var bawaan = baris.tampil && !baris.judul && !baris.teks;
@@ -1136,17 +1314,21 @@ select{appearance:none;cursor:pointer;}
       if(tulis.length){
         data.kenangan_blok = await api('kenangan_blok?select=*&pasangan_id=eq.'+pasangan.id) || [];
       }
+      if(adaVendor){
+        data.kenangan_vendor = await api('kenangan_vendor?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,dibuat') || [];
+        gambarVendor();
+      }
       toast(tugas.length ? 'Halaman kenangan tersimpan' : 'Tidak ada yang berubah');
     }catch(e){ toast(e.message, true); }
     finally{ btn.disabled = false; btn.textContent = 'Simpan Halaman Kenangan'; }
   }
 
-  $('formBabak').addEventListener('click', async function(e){
+  $('panelKenangan').addEventListener('click', async function(e){
     var t = e.target.closest('[data-latar]');
     if(!t || t.classList.contains('dipilih')) return;
     try{
       /* Cukup menyalakan yang baru: pemicu foto_satu_latar mematikan
-         latar lama di babak yang sama, dalam transaksi yang sama. */
+         latar lama di bab/babak yang sama, dalam transaksi yang sama. */
       await api('foto?id=eq.'+t.dataset.latar, { method:'PATCH', prefer:'return=minimal',
                                                   body: JSON.stringify({ latar: true }) });
       await muatFoto();

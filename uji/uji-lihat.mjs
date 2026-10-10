@@ -29,10 +29,10 @@ const browser = await chromium.launch({ args:['--host-resolver-rules=MAP *.mengu
   await ctx.close();
 }
 
-/* ---------- halaman kenangan ----------
-   Foto latarnya dibuat di peramban sendiri (canvas → JPEG), supaya
-   tangkapan layarnya menunjukkan tulisan di atas gambar sungguhan —
-   keterbacaan di atas foto justru yang perlu dilihat mata. */
+/* ---------- halaman kenangan (versi 2, migrasi 033) ----------
+   Foto latarnya dibuat di peramban sendiri (canvas → JPEG), dan
+   videonya direkam dari canvas (MediaRecorder → WebM), supaya
+   tangkapan layarnya menunjukkan tulisan di atas gambar sungguhan. */
 async function bikinFoto(warna){
   const ctx = await browser.newContext();
   const pg = await ctx.newPage();
@@ -51,138 +51,243 @@ async function bikinFoto(warna){
   await ctx.close();
   return Buffer.from(b64, 'base64');
 }
+async function bikinVideo(){
+  const ctx = await browser.newContext();
+  const pg = await ctx.newPage();
+  await pg.goto('about:blank');
+  const b64 = await pg.evaluate(() => new Promise(selesai => {
+    const c = document.createElement('canvas'); c.width = 320; c.height = 480;
+    const g = c.getContext('2d');
+    const rek = new MediaRecorder(c.captureStream(20), { mimeType:'video/webm' });
+    const potong = []; rek.ondataavailable = e => potong.push(e.data);
+    rek.onstop = () => { const f = new FileReader(); f.onload = () => selesai(f.result.split(',')[1]); f.readAsDataURL(new Blob(potong)); };
+    let n = 0;
+    const t = setInterval(() => { g.fillStyle = `hsl(${n*9},40%,40%)`; g.fillRect(0, 0, 320, 480); n++; }, 50);
+    rek.start(); setTimeout(() => { clearInterval(t); rek.stop(); }, 1200);
+  }));
+  await ctx.close();
+  return Buffer.from(b64, 'base64');
+}
 const FOTO = { 'p/akad.jpg': await bikinFoto(['#6b4a2b', '#d9b98a']),
-               'p/resepsi.jpg': await bikinFoto(['#2b3b5b', '#b58a6a']) };
+               'p/resepsi.jpg': await bikinFoto(['#2b3b5b', '#b58a6a']),
+               'p/sampul.jpg': await bikinFoto(['#2a3550', '#c9a77a']),
+               'p/keluarga.jpg': await bikinFoto(['#3d4a33', '#cdb894']) };
+const VIDEO = await bikinVideo();
+
+const f = (jalur, lain = {}) => Object.assign({ id:'f-' + jalur + (lain.bagian || lain.acara_id || ''), jenis:'foto', jalur, kecil:jalur,
+  lebar:1200, tinggi:1600, durasi_ms:null, keterangan:null, acara_id:null, bagian:null, latar:false }, lain);
+const vid = (lain = {}) => f('p/klip.webm', Object.assign({ jenis:'video', kecil:'p/keluarga.jpg', lebar:320, tinggi:480, durasi_ms:1200 }, lain));
 
 function isiKenangan(ubah = {}){
   return Object.assign({
-    slug:'rian-aini', aktif:true, tanggal_acara:'2026-09-15', hadir:null,
+    slug:'rian-aini', aktif:true, tanggal_acara:'2026-09-15', kota:'jepara', hadir:null,
     mempelai: ISI.mempelai,
-    foto: [{ jalur:'p/akad.jpg', kecil:'p/akad.jpg', lebar:1200, tinggi:1600, keterangan:'Ijab kabul', acara_id:'A1' },
-           { jalur:'p/akad.jpg', kecil:'p/akad.jpg', lebar:1200, tinggi:1600, keterangan:null, acara_id:'A1' },
-           { jalur:'p/resepsi.jpg', kecil:'p/resepsi.jpg', lebar:1200, tinggi:1600, keterangan:null, acara_id:'A2' }],
+    foto: [f('p/sampul.jpg', { bagian:'sampul', latar:true }), f('p/resepsi.jpg', { bagian:'sampul' }),
+           f('p/akad.jpg', { bagian:'pria', keterangan:'Rian' }),
+           f('p/keluarga.jpg', { bagian:'keluarga', latar:true, keterangan:'Keluarga besar' }),
+           vid({ bagian:'keluarga' }), f('p/akad.jpg', { bagian:'keluarga' }),
+           f('p/akad.jpg', { acara_id:'A1', keterangan:'Ijab kabul', latar:true }), f('p/resepsi.jpg', { acara_id:'A1' }),
+           f('p/resepsi.jpg', { acara_id:'A2' }),
+           f('p/keluarga.jpg'), vid()],
     babak: [
       { id:'A1', nama:'Akad Nikah', tanggal:'Selasa, 15 September 2026', jam:'08.00 WIB',
-        teks:'Pagi yang hening, dan satu kalimat yang mengubah segalanya.', jumlah_foto:2,
-        latar:{ jalur:'p/akad.jpg', kecil:'p/akad.jpg', lebar:1200, tinggi:1600 } },
-      { id:'A2', nama:'Resepsi', tanggal:'Selasa, 15 September 2026', jam:'11.00 WIB',
-        teks:null, jumlah_foto:1, latar:{ jalur:'p/resepsi.jpg', kecil:'p/resepsi.jpg', lebar:1200, tinggi:1600 } },
+        teks:'Pagi yang hening, dan satu kalimat yang mengubah segalanya.', jumlah_foto:2, latar:null },
+      { id:'A2', nama:'Resepsi', tanggal:'Selasa, 15 September 2026', jam:'11.00 WIB', teks:null, jumlah_foto:1, latar:null },
       { id:'A3', nama:'Salam-salaman', tanggal:'Selasa, 15 September 2026', jam:'14.00 WIB',
         teks:'Antrean panjang, tangan yang tak habis-habis.', jumlah_foto:0, latar:null }
     ],
     blok: {},
-    angka: { hadir:null, ucapan:1, foto:3, babak:3 },
-    ucapan: [{ nama:'Budi', hadir:'Hadir', pesan:'Selamat!', waktu:'2026-09-16T02:00:00Z',
-               balasan:'Terima kasih, Budi.', dibalas:'2026-09-17T02:00:00Z' }]
+    vendor: [{ peran:'Fotografer', nama:'Lensa Jepara', tautan:'@lensajepara' },
+             { peran:'Dekorasi', nama:'Sekar Dekor', tautan:'https://www.sekar.example/katalog' },
+             { peran:'Katering', nama:'Dapur Bu Tin', tautan:null }],
+    angka: { hadir:null, ucapan:3, foto:11, babak:3 },
+    // dari server: terbaru dulu
+    ucapan: [{ nama:'Citra', hadir:'Hadir', pesan:'Bahagia selalu!', waktu:'2026-09-17T02:00:00Z' },
+             { nama:'Bayu',  hadir:'Tidak Hadir', pesan:'Maaf belum bisa datang, doa terbaik.', waktu:'2026-09-16T05:00:00Z' },
+             { nama:'Ani',   hadir:'Hadir', pesan:'Selamat menempuh hidup baru.', waktu:'2026-09-16T02:00:00Z' }]
   }, ubah);
 }
 
+function layani(page, isi, fn = 'terimakasih_isi'){
+  return page.route('**/*.supabase.co/**', r => {
+    const u = new URL(r.request().url());
+    if (u.pathname === '/rest/v1/rpc/' + fn)
+      return r.fulfill({ status:200, contentType:'application/json', body: JSON.stringify(isi) });
+    if (u.pathname.endsWith('/p/klip.webm')) return r.fulfill({ status:200, contentType:'video/webm', body: VIDEO });
+    const berkas = Object.keys(FOTO).find(k => u.pathname.endsWith('/' + k));
+    if (berkas) return r.fulfill({ status:200, contentType:'image/jpeg', body: FOTO[berkas] });
+    return r.fulfill({ status:200, contentType:'application/json', body:'null' });
+  });
+}
+
 async function tk(isi, opsi = {}){
-  const ctx = await browser.newContext({ viewport:{width:430,height:900}, deviceScaleFactor:2,
+  const ctx = await browser.newContext({ viewport:{ width: opsi.lebar || 400, height:860 }, deviceScaleFactor:2,
                                          reducedMotion: opsi.diam ? 'reduce' : 'no-preference' });
   const page = await ctx.newPage();
   const galat = [];
   page.on('pageerror', e => { galat.push(e.message); console.log('   [pageerror] ' + e.message); });
   page.galat = galat;
-  await page.route('**/*.supabase.co/**', r => {
-    const u = new URL(r.request().url());
-    if (u.pathname === '/rest/v1/rpc/terimakasih_isi')
-      return r.fulfill({ status:200, contentType:'application/json', body: JSON.stringify(isi) });
-    const berkas = Object.keys(FOTO).find(k => u.pathname.endsWith('/' + k));
-    if (berkas) return r.fulfill({ status:200, contentType:'image/jpeg', body: FOTO[berkas] });
-    return r.fulfill({ status:200, contentType:'application/json', body:'null' });
-  });
+  if (opsi.jam) await page.clock.install();
+  await layani(page, isi);
   await page.goto(ASAL + '/terimakasih');
-  // Selesai = penutup tergambar (aktif) atau ucapan disembunyikan (belum tersedia).
-  await page.waitForFunction(() => !document.getElementById('penutup').hidden
-                                   || document.getElementById('ucapan').hidden, null, { timeout:8000 });
+  await page.waitForSelector('body[data-siap]', { timeout:8000 });
   return { ctx, page };
 }
 const teks = (page, sel) => page.locator(sel).innerText().then(t => t.replace(/\s+/g, ' ').trim());
+const urutanBab = page => page.evaluate(() =>
+  [...document.querySelectorAll('#cerita > section')].map(s => s.dataset.bab || s.id));
 
-/* --- halaman penuh: babak berfoto, babak tanpa foto, angka, galeri --- */
+/* --- halaman penuh --- */
 {
-  const { ctx, page } = await tk(isiKenangan({ angka:{ hadir:1234, ucapan:1, foto:3, babak:3 } }));
-  const babak = page.locator('.babak');
-  cek('tk-1 tiga babak, urutan hari itu',
-      await babak.count() === 3
-      && (await teks(page, '.babak >> nth=0')).includes('AKAD NIKAH') === false   // judul tidak dikapitalkan CSS
-      && (await page.locator('.babak h2').allInnerTexts()).join('|') === 'Akad Nikah|Resepsi|Salam-salaman',
-      (await page.locator('.babak h2').allInnerTexts()).join('|'));
-  cek('tk-2 babak berfoto memakai fotonya sebagai latar',
-      await page.locator('.babak[data-babak="A1"] .latar img').getAttribute('src').then(s => s.endsWith('/p/akad.jpg')));
-  cek('tk-3 babak tanpa foto jadi kartu teks, bukan kotak kosong',
-      await page.locator('.babak[data-babak="A3"]').evaluate(el => el.classList.contains('teks') && !el.querySelector('.latar'))
-      && (await teks(page, '.babak[data-babak="A3"]')).includes('Antrean panjang'));
-  cek('tk-4 sampul memakai latar babak pertama',
-      await page.locator('#atas .latar img').getAttribute('src').then(s => s && s.endsWith('/p/akad.jpg')));
-  cek('tk-5 sisa foto babak diarahkan ke galeri',
-      (await teks(page, '.babak[data-babak="A1"] .ke-galeri')).toLowerCase() === '1 foto lagi di galeri'
-      && await page.locator('.babak[data-babak="A2"] .ke-galeri').count() === 0);
-  const angka = await teks(page, '#angkaIsi');
-  cek('tk-6 angka hari itu, diformat gaya Indonesia', angka.includes('1.234') && /tamu hadir/i.test(angka), angka);
-  cek('tk-7 pembuka muncul karena ada babak', await page.locator('#pembuka').isVisible());
-  cek('tk-8 penutup selalu ada, bertanda tangan nama pasangan',
-      await page.locator('#penutup').isVisible() && (await teks(page, '#penutupNama')).includes('&'));
+  const { ctx, page } = await tk(isiKenangan());
+  const urut = await urutanBab(page);
+  cek('tk-1 urutan bab = hari berjalan; bab tanpa media dan tanpa tulisan tidak muncul',
+      urut.join('|') === 'pembuka|pria|acara-A1|acara-A2|acara-A3|keluarga|galeri|vendor|penutup', urut.join('|'));
+  cek('tk-2 "Dalam Angka" sudah tidak ada',
+      await page.locator('#angka').count() === 0 && !/dalam angka|tamu hadir/i.test(await page.locator('body').innerText()));
+  cek('tk-3 sampul: nama, tanggal · kota, dua foto bergilir',
+      (await teks(page, '#namaBesar')) === "Rian & 'Aini"
+      && (await teks(page, '#tanggal')).toLowerCase() === '15 september 2026 · jepara'
+      && await page.locator('#sampul .lapis').count() === 2,
+      (await teks(page, '#namaBesar')) + ' / ' + (await teks(page, '#tanggal')));
+  const pria = await teks(page, '[data-bab="pria"]');
+  cek('tk-4 bab mempelai pria: nama panggilan dan orang tua dari silsilah',
+      /Rian/i.test(pria) && pria.toLowerCase().includes('bapak joko sudarno & ibu sri kanah'), pria);
+  cek('tk-5 babak acara tanpa foto jadi kartu teks',
+      await page.locator('[data-bab="acara-A3"]').evaluate(el => el.classList.contains('polos') && !el.querySelector('.latar'))
+      && (await teks(page, '[data-bab="acara-A3"]')).includes('Antrean panjang'));
+  cek('tk-6 bab keluarga: 3 lapis (foto + video), titik, tombol "Lihat 3 foto & video"',
+      await page.locator('[data-bab="keluarga"] .lapis').count() === 3
+      && await page.locator('[data-bab="keluarga"] .lapis video').count() === 1
+      && await page.locator('[data-bab="keluarga"] .titik button').count() === 3
+      && (await teks(page, '[data-bab="keluarga"] .lihat-semua')).toLowerCase() === 'lihat 3 foto & video');
+  cek('tk-7 latar membuka giliran (foto latar jadi lapis pertama)',
+      (await page.locator('[data-bab="keluarga"] .lapis.aktif img').getAttribute('src')).endsWith('/p/keluarga.jpg'));
+  cek('tk-8 album: hanya foto tanpa bab, video bertanda ▶',
+      await page.locator('[data-bab="galeri"] .album button').count() === 2
+      && await page.locator('[data-bab="galeri"] .tanda-video').count() === 1);
+  const vendor = page.locator('#vendor .vendor > div');
+  cek('tk-9 terima kasih kepada: @akun → Instagram, https → nama situs, tanpa tautan tetap tampil',
+      await vendor.count() === 3
+      && await page.locator('#vendor a[href="https://instagram.com/lensajepara"]').count() === 1
+      && (await teks(page, '#vendor .vendor > div >> nth=1')).includes('sekar.example')
+      && await page.locator('#vendor .vendor > div >> nth=2').locator('a').count() === 0);
+  cek('tk-10 penutup bertanda tangan kalian berdua',
+      (await teks(page, '[data-bab="penutup"] .tanda-tangan')).includes("Rian & 'Aini"));
+  cek('tk-11 tombol putar, musik, dan gulir siap',
+      await page.locator('#btnPutar').isVisible() && await page.locator('#btnMusik').isVisible()
+      && await page.locator('#btnGulir').isVisible());
 
-  // pan: bergerak selama terlihat, berhenti sesudah lewat
-  const jalan = () => page.evaluate(() =>
-    [...document.querySelectorAll('#atas, .babak')].filter(b => b.querySelector('.latar'))
-      .map(b => b.classList.contains('jalan') && getComputedStyle(b.querySelector('.latar img')).animationPlayState));
-  const awal = await jalan();
-  await page.locator('#penutup').scrollIntoViewIfNeeded();
+  // penampil
+  await page.locator('[data-bab="keluarga"] .lihat-semua').click();
+  const hitung1 = await teks(page, '#kacaHitung');
+  await page.keyboard.press('ArrowRight');
+  const adaVideo = await page.locator('#kacaIsi video[controls]').count();
+  await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
+  const hitung4 = await teks(page, '#kacaHitung');
+  await page.keyboard.press('Escape');
+  cek('tk-12 penampil: urutan bab, video dengan kontrol, berputar, Esc menutup',
+      hitung1 === '1 / 3' && adaVideo === 1 && hitung4 === '1 / 3' && await page.locator('#kaca').isHidden(),
+      JSON.stringify({ hitung1, adaVideo, hitung4 }));
+
+  // giliran berhenti di luar layar, berjalan di dalamnya
+  await page.locator('[data-bab="keluarga"]').scrollIntoViewIfNeeded();
   await page.waitForTimeout(400);
-  const lewat = await jalan();
-  await page.locator('.babak[data-babak="A2"]').scrollIntoViewIfNeeded();
+  const jalanDi = await page.locator('[data-bab="keluarga"]').evaluate(el => el.classList.contains('jalan'));
+  await page.locator('[data-bab="penutup"]').scrollIntoViewIfNeeded();
   await page.waitForTimeout(400);
-  const diA2 = await jalan();
-  cek('tk-9 pan berjalan selama terlihat, berhenti sesudah lewat',
-      awal[0] === 'running' && lewat.every(x => x === false) && diA2[2] === 'running',
-      JSON.stringify({ awal, lewat, diA2 }));
-  // Latar babak kedua lazy: ia harus benar-benar turun begitu digulir.
-  const termuat = await page.locator('.babak[data-babak="A2"] .latar img')
-    .evaluate(img => img.complete ? img.naturalWidth : new Promise(r => img.onload = () => r(img.naturalWidth)));
-  cek('tk-9b latar lazy termuat saat babaknya digulir', termuat === 1200, String(termuat));
+  const jalanLewat = await page.locator('[data-bab="keluarga"]').evaluate(el => el.classList.contains('jalan'));
+  cek('tk-13 bab bergerak hanya selama terlihat', jalanDi && !jalanLewat, JSON.stringify({ jalanDi, jalanLewat }));
+  cek('tk-14 tanpa galat halaman', page.galat.length === 0, page.galat.join(' | '));
+
   await page.evaluate(() => scrollTo(0, 0));
-  await page.waitForTimeout(300);
-
+  await page.waitForTimeout(1500);
   await page.screenshot({ path:'kenangan-sampul.png' });
-  await page.locator('.babak[data-babak="A1"]').scrollIntoViewIfNeeded();
+  await page.locator('[data-bab="pria"]').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1500);
+  await page.locator('[data-bab="pria"]').screenshot({ path:'kenangan-babak.png' });
+  await page.locator('[data-bab="acara-A3"]').scrollIntoViewIfNeeded();
   await page.waitForTimeout(1200);
-  await page.locator('.babak[data-babak="A1"]').screenshot({ path:'kenangan-babak.png' });
-  await page.locator('.babak[data-babak="A3"]').scrollIntoViewIfNeeded();
+  await page.locator('[data-bab="acara-A3"]').screenshot({ path:'kenangan-babak-teks.png' });
+  await page.locator('#vendor').scrollIntoViewIfNeeded();
   await page.waitForTimeout(1200);
-  await page.locator('.babak[data-babak="A3"]').screenshot({ path:'kenangan-babak-teks.png' });
+  await page.locator('#vendor').screenshot({ path:'kenangan-vendor.png' });
   await ctx.close();
 }
 {
-  // Satu halaman utuh untuk dilihat mata; gerak dimatikan supaya semua
-  // .reveal sudah tampil saat dipotret.
-  const { ctx, page } = await tk(isiKenangan({ angka:{ hadir:1234, ucapan:1, foto:3, babak:3 } }), { diam:true });
+  const { ctx, page } = await tk(isiKenangan(), { diam:true });
   await page.screenshot({ path:'kenangan-utuh.png', fullPage:true });
+  const anim = await page.locator('[data-bab="keluarga"] .lapis img >> nth=0').evaluate(el => getComputedStyle(el).animationName);
+  cek('tk-15 prefers-reduced-motion: foto diam', anim === 'none', anim);
   await ctx.close();
 }
 
-/* --- nol tidak dipajang --- */
+/* --- giliran latar dan ucapan, dengan jam palsu --- */
 {
-  const { ctx, page } = await tk(isiKenangan({ angka:{ hadir:null, ucapan:null, foto:null, babak:null }, hadir:null }));
-  cek('tk-10 tanpa angka sama sekali, blok angka diam', await page.locator('#angka').isHidden());
+  const { ctx, page } = await tk(isiKenangan(), { jam:true });
+  await page.locator('[data-bab="keluarga"]').scrollIntoViewIfNeeded();
+  await page.waitForSelector('[data-bab="keluarga"].jalan');
+  await page.clock.runFor(500);
+  const awal = await page.locator('[data-bab="keluarga"] .lapis').evaluateAll(l => l.findIndex(x => x.classList.contains('aktif')));
+  await page.clock.runFor(6600);
+  const sesudah = await page.locator('[data-bab="keluarga"] .lapis').evaluateAll(l => l.findIndex(x => x.classList.contains('aktif')));
+  const titik = await page.locator('[data-bab="keluarga"] .titik button[aria-current="true"]').getAttribute('data-ke');
+  cek('tk-16 latar bergilir ke foto/video berikutnya, titik ikut', awal === 0 && sesudah === 1 && titik === '1',
+      JSON.stringify({ awal, sesudah, titik }));
+  await page.locator('[data-bab="keluarga"] .titik button >> nth=2').click();
+  cek('tk-17 titik bisa diketuk',
+      await page.locator('[data-bab="keluarga"] .lapis >> nth=2').evaluate(el => el.classList.contains('aktif')));
+
   await ctx.close();
 }
 {
-  const { ctx, page } = await tk(isiKenangan({ angka:{ hadir:0, ucapan:2, foto:null, babak:null } }));
-  const t = await teks(page, '#angkaIsi');
-  cek('tk-11 hadir=0 tidak dipajang, angka lain tetap', !/tamu hadir/i.test(t) && /ucapan/i.test(t), t);
+  // ucapan: muncul 2,5 dtk sesudah siap, dari yang PERTAMA masuk;
+  // satu putaran = 7 dtk tampil + 0,6 pudar + 1,6 jeda
+  const { ctx, page } = await tk(isiKenangan(), { jam:true });
+  await page.clock.runFor(3000);
+  const u1 = await teks(page, '#ucapan .nama');
+  await page.clock.runFor(9200);
+  const u2 = await teks(page, '#ucapan .nama');
+  await page.clock.runFor(9200);
+  const u3 = await teks(page, '#ucapan .nama');
+  await page.clock.runFor(9200);
+  const u4 = await teks(page, '#ucapan .nama');
+  cek('tk-18 ucapan muncul satu per satu, berurutan, lalu berputar', [u1, u2, u3, u4].join('|') === 'Ani|Bayu|Citra|Ani',
+      [u1, u2, u3, u4].join('|'));
+  await page.screenshot({ path:'kenangan-ucapan.png' });
+  await page.locator('#ucapan .tutup').click();
+  await page.clock.runFor(20000);
+  cek('tk-19 × menyembunyikan ucapan sampai halaman dimuat ulang', await page.locator('#ucapan .ucap').count() === 0);
   await ctx.close();
 }
 {
-  // Jawaban sebelum 028: cuma `hadir`, tanpa babak/blok/angka.
-  const lama = { slug:'rian-aini', aktif:true, tanggal_acara:'2026-09-15', hadir:312,
-                 mempelai: ISI.mempelai, foto: [], ucapan: [] };
-  const { ctx, page } = await tk(lama);
-  cek('tk-12 jawaban bentuk lama tetap tergambar (hadir dari kunci lama)',
-      (await teks(page, '#angkaIsi')).includes('312') && await page.locator('.babak').count() === 0
-      && await page.locator('#pembuka').isHidden() && page.galat.length === 0);
+  const { ctx, page } = await tk(isiKenangan({ blok:{ ucapan:{ tampil:false } } }), { jam:true });
+  await page.clock.runFor(12000);
+  cek('tk-20 ucapan dimatikan dari panel 9: tidak ada pop-up', await page.locator('#ucapan .ucap').count() === 0);
+  await ctx.close();
+}
+{
+  const { ctx, page } = await tk(isiKenangan(), { lebar:1280 });
+  await page.waitForSelector('#ucapan .ucap.in', { timeout:5000 });
+  const kiri = await page.locator('#ucapan').evaluate(el => el.classList.contains('kanan'));
+  await page.waitForFunction(() => document.getElementById('ucapan').classList.contains('kanan'), null, { timeout:12000 });
+  cek('tk-21 layar lebar: ucapan bergantian kiri lalu kanan', kiri === false);
+  await ctx.close();
+}
+
+/* --- putar kenangan: musik + gulir otomatis --- */
+{
+  const { ctx, page } = await tk(isiKenangan());
+  await page.addInitScript(() => {});
+  await page.evaluate(() => { HTMLMediaElement.prototype.play = function(){ window.__musik = this.src; return Promise.resolve(); }; });
+  await page.locator('#btnPutar').click();
+  await page.waitForFunction(() => document.getElementById('btnGulir').getAttribute('aria-pressed') === 'true', null, { timeout:5000 });
+  const y1 = await page.evaluate(() => scrollY);
+  await page.waitForTimeout(800);
+  const y2 = await page.evaluate(() => scrollY);
+  cek('tk-22 "Putar kenangan": musik menyala, tombol hilang, halaman bergulir sendiri',
+      await page.evaluate(() => /backsound\.mp3$/.test(window.__musik || '')) && await page.locator('#btnMusik.on').count() === 1
+      && await page.locator('#btnPutar').isHidden() && y2 > y1 && y1 > 0, JSON.stringify({ y1, y2 }));
   await ctx.close();
 }
 
@@ -190,66 +295,77 @@ const teks = (page, sel) => page.locator(sel).innerText().then(t => t.replace(/\
 {
   const { ctx, page } = await tk(isiKenangan({ blok: {
     galeri:  { tampil:false, judul:null, teks:null },
-    ucapan:  { tampil:false, judul:null, teks:null },
     sampul:  { tampil:false, judul:'Matur Nuwun', teks:'Sugeng rawuh.' },
     penutup: { tampil:false, judul:'Wassalam', teks:null },
-    pembuka: { tampil:true, judul:'Hari Kami', teks:null }
+    pembuka: { tampil:true, judul:'Hari Kami', teks:null },
+    wanita:  { tampil:true, judul:null, teks:'Yang paling sabar menunggu.' },
+    keluarga:{ tampil:false, judul:null, teks:null },
+    vendor:  { tampil:true, judul:'Dengan Dukungan', teks:null }
   }}));
-  cek('tk-13 galeri dimatikan: tidak tampil walau ada foto, tautan "di galeri" ikut hilang',
-      await page.locator('#galeri').isHidden() && await page.locator('.ke-galeri').count() === 0);
-  cek('tk-14 ucapan dimatikan', await page.locator('#ucapan').isHidden());
-  cek('tk-15 sampul tidak bisa dimatikan, tulisannya bisa diganti',
-      await page.locator('#atas').isVisible() && (await teks(page, '#atasEyebrow')) === 'MATUR NUWUN'
-      && (await teks(page, '#atasSalam')) === 'Sugeng rawuh.');
-  cek('tk-16 penutup tidak bisa dimatikan; judul baru, teks bawaan',
-      await page.locator('#penutup').isVisible() && (await teks(page, '#penutupJudul')) === 'Wassalam'
-      && (await teks(page, '#penutupTeks')).length > 20);
-  cek('tk-17 judul pembuka diganti, teksnya tetap bawaan',
-      (await teks(page, '#pembukaJudul')) === 'Hari Kami' && (await teks(page, '#pembukaTeks')).length > 20);
+  const urut = await urutanBab(page);
+  cek('tk-23 galeri dan keluarga dimatikan; wanita tanpa foto muncul karena ditulisi',
+      !urut.includes('galeri') && !urut.includes('keluarga') && urut.includes('wanita')
+      && await page.locator('[data-bab="wanita"]').evaluate(el => el.classList.contains('polos')), urut.join('|'));
+  cek('tk-24 sampul tidak bisa dimatikan, tulisannya bisa diganti',
+      await page.locator('#sampul').isVisible() && (await teks(page, '#sampulJudul')).toUpperCase() === 'MATUR NUWUN'
+      && (await teks(page, '#sampulKalimat')) === 'Sugeng rawuh.');
+  cek('tk-25 penutup tidak bisa dimatikan; judul baru, teks bawaan',
+      (await teks(page, '[data-bab="penutup"] h2')) === 'Wassalam' && (await teks(page, '[data-bab="penutup"] .kalimat')).length > 20);
+  cek('tk-26 judul pembuka dan vendor diganti, teksnya tetap bawaan',
+      (await teks(page, '[data-bab="pembuka"] h2')) === 'Hari Kami' && (await teks(page, '[data-bab="pembuka"] .kalimat')).length > 20
+      && (await teks(page, '#vendor h2')) === 'Dengan Dukungan');
   await ctx.close();
 }
 
 /* --- tanpa bahan apa pun: tetap halaman utuh --- */
 {
-  const { ctx, page } = await tk(isiKenangan({ babak:[], foto:[], ucapan:[], angka:{ hadir:null, ucapan:null, foto:null, babak:null } }));
-  cek('tk-18 tanpa babak dan foto: sampul, ucapan, penutup tetap ada; pembuka dan galeri diam',
-      await page.locator('#atas').isVisible() && await page.locator('#penutup').isVisible()
-      && await page.locator('#ucapan').isVisible() && await page.locator('#pembuka').isHidden()
-      && await page.locator('#galeri').isHidden() && await page.locator('#atas .latar').count() === 0);
+  const { ctx, page } = await tk(isiKenangan({ babak:[], foto:[], ucapan:[], vendor:[] }));
+  const urut = await urutanBab(page);
+  cek('tk-27 tanpa foto, babak, vendor: sampul, pembuka, penutup saja; sampul tanpa latar',
+      urut.join('|') === 'pembuka|penutup' && await page.locator('#sampul .latar').count() === 0 && page.galat.length === 0,
+      urut.join('|'));
   await page.screenshot({ path:'kenangan-kosong.png', fullPage:true });
   await ctx.close();
 }
 {
+  // Jawaban sebelum 033: foto tanpa jenis/bagian, tanpa vendor, tanpa kota.
+  const lama = isiKenangan({ vendor: undefined, kota: undefined,
+    foto: [{ jalur:'p/akad.jpg', kecil:'p/akad.jpg', lebar:1200, tinggi:1600, keterangan:null, acara_id:'A1' },
+           { jalur:'p/resepsi.jpg', kecil:'p/resepsi.jpg', lebar:1200, tinggi:1600, keterangan:null, acara_id:null }] });
+  delete lama.vendor; delete lama.kota;
+  const { ctx, page } = await tk(lama);
+  cek('tk-28 jawaban bentuk lama tetap tergambar',
+      await page.locator('[data-bab="acara-A1"] .lapis').count() === 1 && await page.locator('[data-bab="galeri"] .album button').count() === 1
+      && await page.locator('#vendor').count() === 0 && (await teks(page, '#tanggal')).toLowerCase() === '15 september 2026' && page.galat.length === 0);
+  await ctx.close();
+}
+{
   const { ctx, page } = await tk({ slug:'rian-aini', aktif:false });
-  cek('tk-19 belum terbit: sampul berkata belum tersedia, tidak ada ucapan',
-      (await teks(page, '#atasSalam')) === 'Halaman ini belum tersedia.' && await page.locator('#ucapan').isHidden());
+  cek('tk-29 belum terbit: sampul berkata belum tersedia, tidak ada ucapan',
+      (await teks(page, '#sampulKalimat')) === 'Halaman ini belum tersedia.' && await page.locator('#ucapan .ucap').count() === 0
+      && await page.locator('#btnPutar').isHidden());
   await ctx.close();
 }
 
-/* --- isi dari pasangan tidak pernah jadi HTML --- */
+/* --- isi dari pasangan dan tamu tidak pernah jadi HTML --- */
 {
   const jahat = '<img src=x onerror="window.__kena=1">';
   const isi = isiKenangan();
   isi.babak[0].nama = jahat; isi.babak[2].teks = jahat;
-  isi.blok = { sampul:{ tampil:true, judul:jahat, teks:jahat } };
+  isi.blok = { sampul:{ tampil:true, judul:jahat, teks:jahat }, keluarga:{ tampil:true, judul:jahat, teks:null } };
+  isi.vendor[0].nama = jahat; isi.vendor[1].tautan = 'https://x.example/"><img src=x onerror="window.__kena=1">';
+  isi.ucapan[2].pesan = jahat; isi.ucapan[2].nama = jahat;
   const { ctx, page } = await tk(isi);
-  await page.waitForTimeout(300);
-  cek('tk-20 nama babak, kalimat, dan blok di-escape',
-      await page.evaluate(() => !window.__kena) && (await teks(page, '.babak[data-babak="A1"] h2')).includes('<img'));
-  await ctx.close();
-}
-
-/* --- gerak dikurangi: tidak ada pan --- */
-{
-  const { ctx, page } = await tk(isiKenangan(), { diam:true });
-  const anim = await page.locator('.babak[data-babak="A1"] .latar img').evaluate(el => getComputedStyle(el).animationName);
-  cek('tk-21 prefers-reduced-motion: foto diam', anim === 'none', anim);
+  await page.waitForSelector('#ucapan .ucap', { timeout:5000 });
+  cek('tk-30 nama babak, blok, vendor, dan ucapan di-escape',
+      await page.evaluate(() => !window.__kena) && (await teks(page, '[data-bab="acara-A1"] h2')).includes('<img')
+      && (await teks(page, '#ucapan .nama')).includes('<img'));
   await ctx.close();
 }
 
 /* ---------- pratinjau pemilik ---------- */
 async function tkPratinjau({ cari = '?pratinjau=1', sesi = true, jawab = 200, isi = {} } = {}){
-  const ctx = await browser.newContext({ viewport:{width:430,height:900} });
+  const ctx = await browser.newContext({ viewport:{width:400,height:860} });
   const page = await ctx.newPage();
   const panggil = [];
   page.on('pageerror', e => console.log('   [pageerror] ' + e.message));
@@ -271,55 +387,54 @@ async function tkPratinjau({ cari = '?pratinjau=1', sesi = true, jawab = 200, is
     return r.fulfill({ status:200, contentType:'application/json', body:'null' });
   });
   await page.goto(ASAL + '/terimakasih' + cari);
-  await page.waitForFunction(() => !document.getElementById('penutup').hidden
-                                   || document.getElementById('ucapan').hidden, null, { timeout:8000 });
+  await page.waitForSelector('body[data-siap]', { timeout:8000 });
   return { ctx, page, panggil };
 }
 {
   const { ctx, page, panggil } = await tkPratinjau();
-  cek('tk-22 pratinjau memanggil terimakasih_pratinjau dengan JWT pemilik, bukan anon key',
+  cek('tk-31 pratinjau memanggil terimakasih_pratinjau dengan JWT pemilik, bukan anon key',
       panggil.length === 1 && panggil[0].fn === 'terimakasih_pratinjau' && panggil[0].auth === 'Bearer JWT-pemilik',
       JSON.stringify(panggil));
   const pita = await teks(page, '#pita');
-  cek('tk-23 pita pratinjau jujur: belum terbit, tamu belum melihat', /belum diterbitkan/i.test(pita), pita);
-  cek('tk-24 isi pratinjau tergambar seperti halaman tamu', await page.locator('.babak').count() === 3);
-  await page.waitForTimeout(1500);   // reveal 0,9 dtk + foto sampul turun
+  cek('tk-32 pita pratinjau jujur: belum terbit, tamu belum melihat', /belum diterbitkan/i.test(pita), pita);
+  cek('tk-33 isi pratinjau tergambar seperti halaman tamu', await page.locator('[data-bab^="acara-"]').count() === 3);
+  await page.waitForTimeout(1500);
   await page.screenshot({ path:'kenangan-pratinjau.png' });
   await ctx.close();
 }
 {
   const { ctx, page, panggil } = await tkPratinjau({ cari: '' });
-  cek('tk-25 tanpa ?pratinjau=1, sesi pemilik tidak disentuh: pintu tamu, anon key, tanpa pita',
+  cek('tk-34 tanpa ?pratinjau=1, sesi pemilik tidak disentuh: pintu tamu, anon key, tanpa pita',
       panggil.length === 1 && panggil[0].fn === 'terimakasih_isi' && !/JWT-pemilik/.test(panggil[0].auth)
       && await page.locator('#pita').isHidden(), JSON.stringify(panggil));
   await ctx.close();
 }
 {
   const { ctx, page, panggil } = await tkPratinjau({ sesi: false });
-  cek('tk-26 pratinjau tanpa sesi: tidak memanggil apa pun, mengarahkan ke dasbor',
-      panggil.length === 0 && await page.locator('#atasSalam a[href="/dasbor"]').count() === 1, JSON.stringify(panggil));
+  cek('tk-35 pratinjau tanpa sesi: tidak memanggil apa pun, mengarahkan ke dasbor',
+      panggil.length === 0 && await page.locator('#sampulKalimat a[href="/dasbor"]').count() === 1, JSON.stringify(panggil));
   await ctx.close();
 }
 {
   const { ctx, page } = await tkPratinjau({ jawab: 401 });
-  cek('tk-27 sesi habis: diminta masuk lagi', /sudah habis/i.test(await teks(page, '#atasSalam')));
+  cek('tk-36 sesi habis: diminta masuk lagi', /sudah habis/i.test(await teks(page, '#sampulKalimat')));
   await ctx.close();
 }
 {
   const { ctx, page } = await tkPratinjau({ jawab: 403 });
-  cek('tk-28 bukan pemilik: dikatakan terus terang, tanpa isi', /bukan pemilik/i.test(await teks(page, '#atasSalam'))
-      && await page.locator('.babak').count() === 0);
+  cek('tk-37 bukan pemilik: dikatakan terus terang, tanpa isi', /bukan pemilik/i.test(await teks(page, '#sampulKalimat'))
+      && await page.locator('#cerita section').count() === 0);
   await ctx.close();
 }
 {
   const { ctx, page } = await tkPratinjau({ isi: { undangan_terbit:false, kenangan_terbit:true } });
-  cek('tk-29 pita: undangan masih draf disebut, walau saklar kenangan menyala',
+  cek('tk-38 pita: undangan masih draf disebut, walau saklar kenangan menyala',
       /undangan masih draf/i.test(await teks(page, '#pita')));
   await ctx.close();
 }
 {
   const { ctx, page } = await tkPratinjau({ isi: { undangan_terbit:true, kenangan_terbit:true } });
-  cek('tk-30 pita: sudah terbit, warnanya berbeda',
+  cek('tk-39 pita: sudah terbit, warnanya berbeda',
       /sudah terbit/i.test(await teks(page, '#pita')) && await page.locator('#pita.terbit').count() === 1);
   await ctx.close();
 }
