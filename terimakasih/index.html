@@ -272,7 +272,22 @@ section{position:relative;}
   .lapis img,.latar.balik .lapis img{animation:none;transform:scale(var(--z,1));}
   #btnMusik .spin{animation:none;}
   .ucap{transition:none;}
+
 }
+/* ---------- Tampil utuh (035) ----------
+   Foto landscape di layar tegak: fotonya utuh selebar layar, di tengah
+   ruang kosong di atas tulisan bab (--tengah, dihitung aturTengah());
+   sisa layar diisi foto yang sama, buram dan gelap. Hanya untuk layar
+   tegak — di layar mendatar foto landscape memang pas sebagai latar. */
+.lapis .buram{display:none;}
+@media (orientation:portrait){
+  .latar .lapis.utuh .buram{display:block;position:absolute;inset:-6%;width:112%;height:112%;max-width:none;
+    object-fit:cover;filter:blur(26px) brightness(.42) saturate(1.15);transform:none;animation:none;}
+  .latar .lapis.utuh .utama{position:absolute;left:0;right:0;width:100%;height:auto;max-height:52%;
+    top:max(var(--tengah,40%), calc(min(26%, 34vw) + 10px));
+    object-fit:contain;transform:translateY(-50%);animation:none;box-shadow:0 18px 40px -18px rgba(0,0,0,.8);}
+}
+
 </style>
 </head>
 <body>
@@ -391,15 +406,41 @@ section{position:relative;}
     return ' style="--fx:' + angkaPotong(f.fokus_x, 50, 0, 100) + '%;--fy:' + angkaPotong(f.fokus_y, 50, 0, 100)
       + '%;--z:' + angkaPotong(f.zum, 1, 1, 3) + '"';
   }
+  /* Mode tampil per foto (035): pilihan pasangan, atau otomatis dari
+     ukurannya — landscape tampil utuh, selain itu isi layar. */
+  function modeTampil(f){
+    if (f.tampilan === 'isi' || f.tampilan === 'utuh') return f.tampilan;
+    return (f.lebar && f.tinggi && f.lebar > f.tinggi * 1.15) ? 'utuh' : 'isi';
+  }
   function lapisHtml(f, i){
     var aktif = i === 0 ? ' aktif' : '';
+    var utuh = modeTampil(f) === 'utuh';
+    var malas = i === 0 ? '' : ' loading="lazy"';
+    // latar buram: berkas yang sama (dari cache), atau poster untuk video
+    var buram = utuh ? '<img class="buram" src="' + esc(url(f.jenis === 'video' ? (f.kecil || f.jalur) : f.jalur)) + '" alt=""' + malas + ' decoding="async">' : '';
+    var kelas = 'lapis' + aktif + (utuh ? ' utuh' : '');
     if (f.jenis === 'video'){
-      return '<div class="lapis' + aktif + '" data-durasi="' + (f.durasi_ms || 0) + '"' + potongan(f) + '>'
-        + '<video muted loop playsinline preload="' + (i === 0 ? 'metadata' : 'none') + '"'
+      return '<div class="' + kelas + '" data-durasi="' + (f.durasi_ms || 0) + '"' + potongan(f) + '>' + buram
+        + '<video class="utama" muted loop playsinline preload="' + (i === 0 ? 'metadata' : 'none') + '"'
         + (f.kecil ? ' poster="' + esc(url(f.kecil)) + '"' : '') + ' src="' + esc(url(f.jalur)) + '"></video></div>';
     }
-    return '<div class="lapis' + aktif + '"' + potongan(f) + '><img src="' + esc(url(f.jalur)) + '" alt=""'
-      + (i === 0 ? '' : ' loading="lazy"') + ' decoding="async"></div>';
+    return '<div class="' + kelas + '"' + potongan(f) + '>' + buram + '<img class="utama" src="' + esc(url(f.jalur)) + '" alt=""'
+      + malas + ' decoding="async"></div>';
+  }
+
+  /* Pusat foto "tampil utuh" = tengah ruang kosong di atas tulisan bab.
+     Dihitung ulang kalau ukuran layar berubah (HP diputar, bilah alamat
+     menyusut) dan sesudah huruf termuat. */
+  function aturTengah(){
+    document.querySelectorAll('.lapis.utuh').forEach(function(l){
+      var bab = l.closest('section'); if (!bab || bab._tengahDiatur) return;
+      bab._tengahDiatur = true;
+      var isi = Array.prototype.slice.call(bab.children).filter(function(c){ return !c.classList.contains('latar'); })[0];
+      if (!isi) return;
+      var ruang = isi.getBoundingClientRect().top - bab.getBoundingClientRect().top;
+      if (ruang > 120) bab.style.setProperty('--tengah', Math.round(ruang / 2) + 'px');
+    });
+    document.querySelectorAll('section').forEach(function(b){ b._tengahDiatur = false; });
   }
 
   function latarHtml(media, balik){
@@ -900,6 +941,9 @@ section{position:relative;}
     if (d.pratinjau) pasangPita(d);
     bangun(d);
     pasangGiliran();
+    aturTengah();
+    addEventListener('resize', aturTengah);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(aturTengah);
     hidupkanReveal();
     pasangPutar();
     if (K.berlaku(d.blok, 'ucapan').tampil){

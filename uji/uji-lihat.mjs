@@ -247,6 +247,40 @@ const urutanBab = page => page.evaluate(() =>
   await ctx.close();
 }
 
+/* --- mode tampil per foto (035) --- */
+{
+  const isiUtuh = isiKenangan({ foto: [
+    f('p/resepsi.jpg', { bagian:'kedatangan', lebar:1504, tinggi:1004, latar:true }),            // landscape → utuh otomatis
+    f('p/akad.jpg',    { bagian:'kedatangan', lebar:1504, tinggi:1004, tampilan:'isi' }),          // landscape, dipaksa isi
+    f('p/keluarga.jpg',{ bagian:'keluarga',   lebar:1004, tinggi:1504, tampilan:'utuh' }),         // potret, dipaksa utuh
+    f('p/sampul.jpg',  { bagian:'keluarga',   lebar:1004, tinggi:1504 }) ] });                     // potret → isi
+  const { ctx, page } = await tk(isiUtuh);
+  const kelas = await page.locator('.lapis').evaluateAll(l => l.map(x => x.classList.contains('utuh')));
+  cek('tk-40 mode per foto: otomatis dari ukuran, pilihan pasangan menang, dicampur dalam satu bab',
+      JSON.stringify(kelas) === '[true,false,true,false]', JSON.stringify(kelas));
+  await page.locator('[data-bab="kedatangan"]').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(400);
+  const ukur = await page.locator('[data-bab="kedatangan"]').evaluate(bab => {
+    const u = bab.querySelector('.lapis.utuh .utama'), b = bab.querySelector('.lapis.utuh .buram');
+    const ru = u.getBoundingClientRect(), rb = bab.getBoundingClientRect(), ri = bab.querySelector('.isi').getBoundingClientRect();
+    return { fit: getComputedStyle(u).objectFit, buram: getComputedStyle(b).display, lebar: Math.round(ru.width), babLebar: Math.round(rb.width),
+             atas: Math.round(ru.top - rb.top), bawah: Math.round(ru.bottom - rb.top), isiAtas: Math.round(ri.top - rb.top),
+             tengah: bab.style.getPropertyValue('--tengah') };
+  });
+  const pusat = (ukur.atas + ukur.bawah) / 2;
+  cek('tk-41 tampil utuh di HP: utuh selebar layar, latar buram, di tengah ruang di atas tulisan, tidak tertimpa tulisan',
+      ukur.fit === 'contain' && ukur.buram === 'block' && ukur.lebar === ukur.babLebar && ukur.atas > 0
+      && ukur.bawah <= ukur.isiAtas && Math.abs(pusat - ukur.isiAtas / 2) < 4, JSON.stringify(ukur));
+  await page.screenshot({ path:'kenangan-tampil-utuh.png' });
+  await ctx.close();
+
+  const lebar = await tk(isiUtuh, { lebar:1280 });
+  const l = await lebar.page.locator('[data-bab="kedatangan"] .lapis.utuh').evaluate(x =>
+    [getComputedStyle(x.querySelector('.utama')).objectFit, getComputedStyle(x.querySelector('.buram')).display]);
+  cek('tk-42 layar mendatar: foto landscape kembali jadi latar penuh, tanpa latar buram', l[0] === 'cover' && l[1] === 'none', JSON.stringify(l));
+  await lebar.ctx.close();
+}
+
 /* --- giliran latar dan ucapan, dengan jam palsu --- */
 {
   const { ctx, page } = await tk(isiKenangan(), { jam:true });
