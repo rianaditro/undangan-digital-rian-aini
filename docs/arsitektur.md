@@ -5,7 +5,7 @@ menjawab: aplikasinya nanti seperti apa, dibangun dengan apa, dan
 diamankan bagaimana.
 
 Ditulis dengan satu batasan yang mengubah hampir semua keputusan teknis:
-**Vercel dan Supabase itu sementara. Ujungnya VPS sendiri.**
+**Cloudflare Workers dan Supabase itu sementara. Ujungnya VPS sendiri.**
 
 ---
 
@@ -105,7 +105,7 @@ punya satu titik portabilitas yang harus dijaga.
 | Auth | Supabase GoTrue | milik sendiri | JWT + tabel `pengguna` |
 | **API** | **PostgREST + RPC** | **server sendiri** | **inilah yang harus diubah** |
 | Berkas | Cloudflare R2 | MinIO, atau R2 tetap | S3 API |
-| Statis | Vercel | Caddy | berkas statis biasa |
+| Statis | Cloudflare Workers | Caddy | berkas statis biasa |
 | Antrean | — | pg-boss di Postgres | Postgres |
 | Email | — | SMTP apa saja | SMTP |
 
@@ -275,7 +275,7 @@ retensi dan hak subjek.
 
 ## 6. Keputusan yang sudah diambil
 
-**Hosting sementara.** Vercel dan Supabase dipakai sampai VPS siap.
+**Hosting sementara.** Cloudflare Workers (dulu Vercel) dan Supabase dipakai sampai VPS siap.
 Karena itu jangan menambah ketergantungan baru yang khas penyedia:
 Edge Functions, Realtime, dan Supabase Storage sebaiknya dihindari
 walaupun tersedia. Yang boleh dipakai adalah yang punya padanan langsung

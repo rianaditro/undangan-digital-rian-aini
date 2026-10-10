@@ -21,7 +21,11 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 ├── supabase/
 │   ├── migrations/       ← migrasi bernomor, dijalankan berurutan
 │   └── functions/        ← edge function (jalur tulis yang dijaga)
-└── vercel.json
+├── cloudflare/
+│   └── pintu.js          ← Worker: akar mengundang.id → /mulai
+├── wrangler.jsonc        ← konfigurasi Cloudflare Workers
+├── _headers              ← noindex untuk kirim, dasbor, admin
+└── .assetsignore         ← yang TIDAK ikut terbit
 ```
 
 Sejak tahap 2, **isi undangan tidak lagi ada di berkas ini.** Nama mempelai,
@@ -130,13 +134,14 @@ dipakai bersama halaman undangan. Lihat bagian 1d.
 
 ### Jebakan routing
 
-`vercel.json` punya rewrite penangkap segalanya, `/(.*)` → `/index.html`,
-yang dipakai untuk link personal tamu. Aturan `/terimakasih` **harus**
-ditaruh sebelum baris itu — kalau tidak, yang muncul bukan halaman terima
-kasih melainkan undangan dengan nama tamu "terimakasih".
+`wrangler.jsonc` memakai `not_found_handling: "single-page-application"`:
+alamat yang bukan berkas — link personal tamu — mendapat `index.html`.
+Halaman platform (`/kirim`, `/terimakasih`, …) tidak perlu aturan sendiri:
+`kirim/index.html` ada, jadi lapisan aset menyajikannya lebih dulu, dan
+`/kirim/` dialihkan ke `/kirim` (`html_handling: "drop-trailing-slash"`).
 
-Berkas statis tetap dilayani lebih dulu oleh Vercel sebelum rewrite
-diterapkan, jadi `/assets/*.js` tidak ikut tertelan.
+Berkas statis selalu dilayani sebelum fallback SPA, jadi `/assets/*.js`
+tidak ikut tertelan.
 
 ### Yang belum bisa
 
@@ -171,8 +176,8 @@ berakhir beda perilaku dari induknya.
 `canonical_host` dipasang sebagai `<link rel="canonical">`, **bukan**
 sebagai pengalihan. Undangan ini sudah tersebar ke ratusan orang; sebuah
 pengalihan yang salah arah akan mematikan semuanya sekaligus, sementara
-tag ini paling buruk cuma diabaikan. Pengalihan 301 yang sebenarnya
-urusan lapisan server nanti, waktu pindah dari Vercel.
+tag ini paling buruk cuma diabaikan. Pengalihan 301 yang sebenarnya,
+kalau nanti dibutuhkan, tempatnya di `cloudflare/pintu.js`.
 
 ### Harga yang dibayar
 
@@ -710,64 +715,59 @@ di subdomain milik pasangan, segmen pertama memang nama tamu, jadi
 `rian-aini.mengundang.id/coba` tetap undangan untuk tamu itu. Slug `coba`
 juga sudah masuk `slug_terlarang` sejak migrasi `021`.
 
-### Akar domain: redirect, bukan rewrite
+### Akar domain: Worker, bukan aturan host
 
 `mengundang.id/` harus menampilkan landing, sementara
-`rian-aini.mengundang.id/` tetap menampilkan undangan. Yang **tidak**
-bekerja: rewrite `/` dengan `has: host` — karena `index.html` ada di akar
-dan Vercel memeriksa berkas **sebelum** menerapkan rewrite, jadi rewrite
-itu tidak akan pernah jalan.
+`rian-aini.mengundang.id/` tetap menampilkan undangan. Lapisan aset
+Cloudflare tidak bisa membedakan host, jadi keputusan itu diambil
+`cloudflare/pintu.js` — dan hanya untuk jalur `/`
+(`run_worker_first: ["/"]`), supaya permintaan lain tidak menghitung
+kuota Worker:
 
-Yang bekerja: `redirects`, yang dijalankan **sebelum** berkas diperiksa.
+| Host | `/` |
+|---|---|
+| `mengundang.id` | 307 → `/mulai` |
+| `www.mengundang.id` | 307 → `https://mengundang.id/mulai` |
+| selain itu | `index.html` (undangan) |
 
-```json
-{ "source": "/", "has": [{ "type": "host", "value": "mengundang.id" }],
-  "destination": "/mulai", "permanent": false }
-```
-
-Subdomain pasangan tidak cocok dengan `has`-nya, jadi tidak ikut
-dialihkan. Harness ujinya ikut menirukan urutan Vercel — redirect,
-berkas, rewrite — supaya jebakan yang sama ketahuan di sini, bukan di
-produksi.
-
-Kalau redirectnya ternyata tidak jalan, yang terjadi cuma apex kembali
-menampilkan undangan seperti sekarang. Landing tetap bisa dibuka di
-`/mulai`; tidak ada yang rusak.
+`uji/server.mjs` meniru Workers dan menjalankan `pintu.js` yang sama;
+`uji/uji-pintu.mjs` menguji jawabannya per host. Ini perlu karena
+`wrangler dev` mengganti host setiap permintaan dengan host rute
+pertama — logika per host tidak bisa diuji di sana.
 
 ---
 
 ## 2. Deploy
 
+Hosting di **Cloudflare Workers**, DNS di **Cloudflare**; domainnya
+terdaftar di Hostinger, yang di sana cuma nameserver-nya. Vercel sudah
+tidak dipakai sejak Oktober 2026.
+
+Deploy otomatis: Workers Builds terhubung ke repo ini, dan setiap push ke
+`main` menjalankan `npx wrangler deploy`. Tidak ada langkah build.
+
+Dari terminal, kalau perlu:
+
 ```bash
-npm i -g vercel
-vercel --prod
+npx wrangler deploy
 ```
 
-Pilih **Other** saat ditanya framework, build command dikosongkan, output
-directory titik (`.`).
+### Domain
 
-Tanpa terminal: buka vercel.com/new, seret folder ini ke sana.
+Rute di `wrangler.jsonc` — `mengundang.id/*` dan `*.mengundang.id/*` —
+menangkap apex dan semua subdomain. Rute hanya bekerja untuk nama yang
+rekaman DNS-nya **diproxy (awan oranye)**:
 
-### Domain `rian-aini.mengundang.id`
+| Type | Name | Isi | Proxy |
+|---|---|---|---|
+| AAAA | `@` | `100::` | oranye |
+| AAAA | `*` | `100::` | oranye |
 
-Sudah terpasang. `mengundang.id` dikelola di **Hostinger**, dan subdomainnya
-diarahkan ke Vercel lewat satu record:
-
-| Kolom | Isi |
-|---|---|
-| Type | CNAME |
-| Name | `rian-aini` (tanpa nama domain di belakangnya) |
-| Target | `cname.vercel-dns.com` |
-
-Kalau suatu saat perlu dipasang ulang: tambahkan dulu domainnya di Vercel →
-Settings → Domains, baru buat record di hPanel Hostinger → Domains →
-`mengundang.id` → DNS Records.
-
-**Vercel Authentication sengaja dibiarkan menyala** dengan mode
-*all except custom domains*. Efeknya semua URL `*.vercel.app` terkunci di
-balik login Vercel, sementara `rian-aini.mengundang.id` terbuka untuk umum.
-Itu yang diinginkan: tamu tidak bisa nyasar lewat alamat lama, dan link
-panitia hanya hidup di domain yang benar.
+`100::` artinya tidak ada server asal; setiap permintaan dijawab Worker.
+Subdomain pasangan baru (`budi-sari.mengundang.id`) langsung hidup tanpa
+langkah apa pun: wildcard menangkapnya, dan sertifikat Universal SSL
+mencakup `*.mengundang.id`. Langkah lengkap pemindahannya ada di
+`docs/operasi-domain-dan-admin.md` bagian 3.
 
 `SITUS` di `assets/varian.js` harus selalu sama dengan domain yang aktif.
 Link yang disusun halaman panitia mengikuti nilai itu, dan link yang sudah

@@ -52,7 +52,7 @@ cek('4 undangan TIDAK noindex', r.robot === '', r.robot);
 // 5. berkas internal tidak pernah terbit
 for (const j of ['/docs/operasi-domain-dan-admin.md', '/supabase/migrations/028_kenangan_blok.sql',
                  '/uji/server.mjs', '/alat/periksa-dns.py', '/cloudflare/pintu.js', '/wrangler.jsonc',
-                 '/vercel.json', '/README.md', '/_headers', '/.assetsignore', '/.github/workflows/uji.yml']) {
+                 '/README.md', '/_headers', '/.assetsignore', '/.github/workflows/uji.yml']) {
   r = await ambil('mengundang.id', j);
   // Berkas yang diabaikan = tidak ada; yang keluar index.html (SPA).
   cek('5 ' + j + ' tidak terbit', r.status === 200 && r.badan.includes('id="mempelai"'), r.badan.slice(0, 60));

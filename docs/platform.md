@@ -225,7 +225,11 @@ Ketiganya diputuskan 7 September 2026. Rinciannya di
 
 **Hosting: VPS sendiri sebagai tujuan akhir.** Vercel dan Supabase
 sementara. Cloudflare Workers dicoret — alasan aslinya adalah
-keterbatasan Cloudflare Pages, dan itu tidak relevan lagi. Konsekuensinya
+keterbatasan Cloudflare Pages, dan itu tidak relevan lagi.
+*(Diperbarui 2026-10-10: hosting statis pindah dari Vercel ke Cloudflare
+Workers — sebagai penyaji berkas statis saja, tanpa ketergantungan khas
+penyedia selain `cloudflare/pintu.js` yang 30 baris. Tujuan akhirnya
+tetap VPS.)* Konsekuensinya
 untuk fase 0: jangan menambah ketergantungan khas penyedia, dan sisipkan
 server API sendiri di antara peramban dan database selagi permukaannya
 masih kecil.
