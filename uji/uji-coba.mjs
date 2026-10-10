@@ -22,6 +22,16 @@ const browser = await chromium.launch();
 
   cek('1a landing terbuka', (await page.locator('.merek').textContent()).includes('mengundang'));
 
+  // Landing = jualan + demo dalam satu halaman. Merge konflik pernah
+  // menyisakan demo saja: kontak dan contohnya hilang tanpa ada uji
+  // yang gagal.
+  const wa = await page.$$eval('a.tautan-wa', a => a.map(x => x.href));
+  cek('1a1 tombol kontak WhatsApp menuju nomor mengundang.id',
+      wa.length >= 3 && wa.every(h => h.startsWith('https://wa.me/6289669249279?text=')), wa.join(' '));
+  cek('1a2 contoh, paket, dan tanya-jawab ada',
+      await page.locator('#contoh').count() === 1 && await page.locator('#paket').count() === 1
+      && await page.locator('#tanya').count() === 1);
+
   // tanpa nama → ditolak, tidak ada tautan
   await page.locator('#btnBuat').click();
   await page.waitForTimeout(150);

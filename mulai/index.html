@@ -15,13 +15,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant:ital,wght@0,400;1,300;1,400&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
 
 <!--
-  Halaman depan mengundang.id — versi yang bisa tayang di `main` SEBELUM
-  platform digabung. Sengaja berdiri sendiri: tanpa varian.js, tanpa
-  Supabase, tanpa demo /coba (yang baru ada di cabang platform). Contoh
-  undangannya pasangan rekaan yang digambar dengan HTML/CSS — tidak ada
-  foto orang sungguhan, dan tidak ada data pasangan mana pun.
+  Halaman depan mengundang.id. Dua jalan untuk calon klien:
 
-  Satu-satunya tautan keluar: WhatsApp. Nomornya di KONTAK di bawah.
+    1. Tanya lewat WhatsApp — nomornya di KONTAK di bawah.
+    2. Coba dulu (#coba) — menyusun tautan /coba dengan nama mereka
+       sendiri; undangan percobaannya dibangun varian.js di peramban,
+       tanpa Supabase dan tanpa menyimpan apa pun.
+
+  Contoh di #contoh pasangan rekaan yang digambar dengan HTML/CSS —
+  tidak ada foto orang sungguhan, dan tidak ada data pasangan mana pun.
 -->
 
 <style>
@@ -43,6 +45,7 @@ body{
 }
 img,svg{display:block;max-width:100%;}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;}
+input{font:inherit;color:inherit;}
 [hidden]{display:none!important;}
 a{color:var(--kuningan);}
 section{padding:clamp(58px,12vw,100px) var(--pad);position:relative;}
@@ -68,33 +71,110 @@ h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(24px,6.2vw,3
 
 .reveal{opacity:0;transform:translateY(24px);}
 .reveal.in{opacity:1;transform:none;transition:opacity .8s ease,transform .8s cubic-bezier(.22,.8,.3,1);}
-@media (prefers-reduced-motion:reduce){ .reveal,.reveal.in{opacity:1;transform:none;transition:none;} }
+html:not(.js) .reveal{opacity:1;transform:none;}
+@media (prefers-reduced-motion:reduce){ .reveal,.reveal.in{opacity:1;transform:none;transition:none;} html{scroll-behavior:auto;} }
 
-/* ---------- SAMPUL ---------- */
-#atas{
-  min-height:min(100svh,780px);display:flex;flex-direction:column;
-  justify-content:center;align-items:center;text-align:center;
-  background:radial-gradient(110% 70% at 50% 100%,#22355A 0%,var(--nila) 55%,var(--nila-3) 100%);
-}
-.merek{font-family:var(--display);font-size:clamp(30px,8.5vw,50px);letter-spacing:.04em;line-height:1.15;margin-top:16px;}
-.merek i{font-family:var(--script);font-style:italic;font-weight:300;color:var(--kuningan);}
-.slogan{font-family:var(--script);font-style:italic;font-size:clamp(17px,4.4vw,22px);line-height:1.7;margin:22px auto 0;max-width:500px;}
-.turun{margin-top:34px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
-
+/* ---------- tombol ---------- */
 .btn{
-  display:inline-block;border:1px solid var(--kuningan-dim);background:transparent;color:var(--kuningan);
-  border-radius:2px;padding:13px 26px;cursor:pointer;text-decoration:none;
+  display:inline-flex;align-items:center;gap:9px;border:1px solid var(--kuningan-dim);background:transparent;color:var(--kuningan);
+  border-radius:2px;padding:13px 24px;cursor:pointer;text-decoration:none;
   font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
-  transition:background .2s,color .2s,opacity .2s;
+  transition:background .2s,color .2s;
 }
 .btn:hover{background:var(--kuningan);color:var(--nila-3);}
 .btn.solid{background:var(--kuningan);color:var(--nila-3);border-color:var(--kuningan);}
 .btn.solid:hover{background:#D9AF6E;}
-.btn:disabled{opacity:.45;cursor:default;}
+.btn svg{width:16px;height:16px;flex:none;}
 .on-paper .btn{border-color:var(--kuningan-dim);color:var(--jati);}
 .on-paper .btn:hover{background:var(--jati);color:var(--kapur);}
 .on-paper .btn.solid{background:var(--jati);color:var(--kapur);border-color:var(--jati);}
+:focus-visible{outline:2px solid var(--kuningan);outline-offset:3px;}
 
+/* ---------- sampul ---------- */
+#atas{
+  min-height:min(100svh,800px);display:flex;flex-direction:column;
+  justify-content:center;align-items:center;text-align:center;
+  background:radial-gradient(110% 70% at 50% 100%,#22355A 0%,var(--nila) 55%,var(--nila-3) 100%);
+}
+.merek{font-family:var(--display);font-weight:400;font-size:clamp(32px,9vw,54px);letter-spacing:.04em;line-height:1.15;margin-top:16px;}
+.merek i{font-family:var(--script);font-style:italic;font-weight:300;color:var(--kuningan);}
+.slogan{font-family:var(--script);font-style:italic;font-size:clamp(18px,4.6vw,23px);line-height:1.65;margin:22px auto 0;max-width:520px;}
+.turun{margin-top:34px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+
+/* ---------- contoh: undangan rekaan di dalam bingkai HP ---------- */
+.contoh{display:flex;gap:22px;justify-content:center;margin-top:40px;overflow-x:auto;
+  padding:6px 4px 18px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
+.layar-wadah{flex:0 0 auto;scroll-snap-align:center;text-align:center;}
+.layar-wadah figcaption{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(19,30,51,.6);margin-top:12px;}
+.hp{
+  width:236px;height:486px;border-radius:34px;padding:10px;background:#0b0f18;
+  box-shadow:0 30px 60px -28px rgba(13,22,38,.55),inset 0 0 0 2px #262c38;position:relative;
+}
+.hp::before{content:"";position:absolute;top:16px;left:50%;transform:translateX(-50%);
+  width:62px;height:16px;border-radius:10px;background:#0b0f18;z-index:2;}
+.layar{width:100%;height:100%;border-radius:25px;overflow:hidden;position:relative;
+  background:radial-gradient(120% 75% at 50% 100%,#22355A 0%,var(--nila) 55%,var(--nila-3) 100%);
+  color:var(--kapur);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:30px 20px;text-align:center;}
+.layar .sudut{position:absolute;width:52px;height:52px;opacity:.9;}
+.layar .s1{top:12px;left:12px;} .layar .s2{top:12px;right:12px;transform:scaleX(-1);}
+.layar .s3{bottom:12px;left:12px;transform:scaleY(-1);} .layar .s4{bottom:12px;right:12px;transform:scale(-1,-1);}
+.mini-label{font-size:7.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--kuningan);}
+.mini-nama{font-family:var(--display);font-size:25px;letter-spacing:.05em;line-height:1.15;margin-top:10px;}
+.mini-nama i{display:block;font-family:var(--script);font-weight:300;color:var(--kuningan);font-size:22px;}
+.mini-tgl{font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--kuningan);margin-top:10px;}
+.mini-kepada{font-size:9px;color:rgba(237,231,217,.65);margin-top:22px;line-height:1.5;}
+.mini-tamu{display:block;font-family:var(--script);font-style:italic;font-size:17px;color:var(--kapur);margin-top:2px;}
+.mini-tombol{margin-top:16px;font-size:7.5px;letter-spacing:.2em;text-transform:uppercase;
+  border:1px solid var(--kuningan-dim);color:var(--kuningan);padding:7px 12px;border-radius:2px;}
+.layar.kertas{background:var(--kapur);color:var(--nila);justify-content:flex-start;padding-top:44px;}
+.layar.kertas .mini-label{color:var(--kuningan-dim);}
+.mini-judul{font-family:var(--display);font-size:16px;letter-spacing:.04em;margin-top:6px;}
+.mini-acara{margin-top:14px;width:100%;border-top:1px solid rgba(74,51,35,.2);padding-top:10px;}
+.mini-acara b{display:block;font-family:var(--display);font-weight:400;font-size:13px;}
+.mini-acara span{display:block;font-size:9px;color:rgba(19,30,51,.65);line-height:1.5;}
+.mini-peta{margin-top:12px;font-size:7.5px;letter-spacing:.18em;text-transform:uppercase;
+  border:1px solid rgba(74,51,35,.35);color:var(--jati);padding:6px 10px;border-radius:2px;}
+.mini-kartu{width:100%;text-align:left;background:var(--nila-2);border:1px solid rgba(195,154,92,.2);
+  border-radius:3px;padding:9px 10px;margin-top:9px;}
+.mini-kartu b{font-family:var(--display);font-weight:400;font-size:11px;}
+.mini-kartu em{font-style:normal;font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:var(--daun);
+  border:1px solid currentColor;border-radius:99px;padding:1px 5px;margin-left:5px;}
+.mini-kartu p{font-size:9px;color:rgba(237,231,217,.8);margin-top:4px;line-height:1.45;}
+.mini-balas{border-left:2px solid var(--kuningan-dim);padding-left:6px;margin-top:6px;font-size:8.5px!important;color:rgba(237,231,217,.7)!important;}
+.layar.tamu{justify-content:flex-start;padding-top:44px;}
+.catatan-contoh{font-size:12.5px;color:rgba(19,30,51,.55);margin-top:8px;}
+
+/* ---------- fitur ---------- */
+.fitur{display:grid;gap:14px;margin-top:34px;text-align:left;}
+@media (min-width:720px){ .fitur{grid-template-columns:1fr 1fr;} }
+.kartu{border:1px solid var(--garis);background:rgba(195,154,92,.04);padding:18px 20px;border-radius:2px;}
+.kartu h3{font-family:var(--display);font-weight:400;font-size:17.5px;letter-spacing:.02em;margin-top:2px;}
+.kartu p{font-size:13.5px;color:rgba(237,231,217,.65);margin-top:7px;}
+.kartu .tanda{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--kuningan);}
+
+/* ---------- paket ---------- */
+.paket{display:grid;gap:16px;margin-top:34px;text-align:left;}
+@media (min-width:680px){ .paket{grid-template-columns:1fr 1fr;} }
+.paket .kotak{border:1px solid rgba(74,51,35,.22);background:rgba(255,255,255,.55);padding:22px 22px 24px;border-radius:3px;}
+.paket .kotak.unggul{border-color:var(--kuningan-dim);box-shadow:0 18px 40px -26px rgba(74,51,35,.5);}
+.paket h3{font-family:var(--display);font-weight:400;font-size:21px;letter-spacing:.03em;}
+.paket .alamat{font-family:var(--script);font-size:17px;color:var(--jati);margin-top:6px;overflow-wrap:anywhere;}
+.paket .alamat b{font-weight:400;background:rgba(195,154,92,.22);padding:0 3px;border-radius:2px;}
+.paket ul{list-style:none;margin-top:14px;display:grid;gap:7px;font-size:14px;color:rgba(19,30,51,.78);}
+.paket li::before{content:"·";color:var(--kuningan-dim);font-weight:700;margin-right:8px;}
+.harga-catatan{font-size:13px;color:rgba(19,30,51,.6);margin-top:20px;}
+
+/* ---------- cara & tanya ---------- */
+.langkah{counter-reset:l;display:grid;gap:14px;margin-top:24px;text-align:left;}
+.langkah li{list-style:none;display:flex;gap:12px;align-items:flex-start;font-size:14.5px;color:rgba(237,231,217,.82);}
+.langkah li strong{color:var(--kapur);font-weight:500;}
+.langkah li::before{
+  counter-increment:l;content:counter(l);
+  font-family:var(--display);font-size:13px;color:var(--kuningan);
+  border:1px solid var(--kuningan-dim);border-radius:50%;
+  width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;margin-top:1px;
+}
 /* ---------- COBA ---------- */
 .kotak{
   border:1px solid rgba(74,51,35,.22);background:rgba(255,255,255,.5);
@@ -121,29 +201,32 @@ h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(24px,6.2vw,3
   font-family:var(--script);font-size:15px;color:var(--jati);
   overflow-wrap:anywhere;text-decoration:none;
 }
-.langkah{counter-reset:l;display:grid;gap:14px;margin-top:20px;text-align:left;}
-.langkah li{list-style:none;display:flex;gap:12px;align-items:flex-start;font-size:14.5px;}
-.langkah li::before{
-  counter-increment:l;content:counter(l);
-  font-family:var(--display);font-size:13px;color:var(--kuningan);
-  border:1px solid var(--kuningan-dim);border-radius:50%;
-  width:26px;height:26px;flex:0 0 26px;display:grid;place-items:center;margin-top:1px;
-}
+#coba{border-top:1px solid rgba(74,51,35,.14);}
+.on-paper .langkah li{color:rgba(19,30,51,.8);}
 .on-paper .langkah li::before{color:var(--jati);border-color:rgba(74,51,35,.4);}
 
-/* ---------- FITUR ---------- */
-.fitur{display:grid;gap:14px;margin-top:34px;text-align:left;}
-@media (min-width:720px){ .fitur{grid-template-columns:1fr 1fr;} }
-.kartu{border:1px solid var(--garis);background:rgba(195,154,92,.04);padding:18px 20px;border-radius:2px;}
-.kartu h3{font-family:var(--display);font-weight:400;font-size:17.5px;letter-spacing:.02em;}
-.kartu p{font-size:13.5px;color:rgba(237,231,217,.65);margin-top:7px;}
-.kartu .tanda{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--kuningan);}
+.tanya{margin-top:26px;text-align:left;display:grid;gap:10px;}
+.tanya details{border:1px solid rgba(74,51,35,.2);border-radius:2px;background:rgba(255,255,255,.45);}
+.tanya summary{cursor:pointer;padding:14px 16px;font-family:var(--display);font-size:16px;list-style:none;
+  display:flex;justify-content:space-between;gap:12px;}
+.tanya summary::-webkit-details-marker{display:none;}
+.tanya summary::after{content:"+";color:var(--kuningan-dim);font-family:var(--body);}
+.tanya details[open] summary::after{content:"–";}
+.tanya details p{padding:0 16px 15px;font-size:14px;color:rgba(19,30,51,.75);}
 
-.tutup{padding:clamp(48px,10vw,76px) var(--pad);text-align:center;border-top:1px solid rgba(195,154,92,.16);}
-.tutup a.btn{margin-top:18px;}
-.kaki{font-size:12px;color:rgba(237,231,217,.4);margin-top:26px;}
-:focus-visible{outline:2px solid var(--kuningan);outline-offset:2px;}
+.tutup{padding:clamp(54px,11vw,84px) var(--pad);text-align:center;}
+.tutup .btn{margin-top:22px;}
+.kaki{padding:24px var(--pad) 30px;text-align:center;font-size:12px;color:rgba(237,231,217,.4);border-top:1px solid rgba(195,154,92,.14);}
+
+/* tombol WA melayang di HP — CTA yang selalu terjangkau jempol */
+#waApung{position:fixed;right:16px;bottom:max(16px,env(safe-area-inset-bottom));z-index:40;
+  width:54px;height:54px;border-radius:50%;background:#25D366;color:#fff;display:grid;place-items:center;
+  box-shadow:0 10px 24px -8px rgba(0,0,0,.5);opacity:0;transform:translateY(12px);pointer-events:none;
+  transition:opacity .3s,transform .3s;}
+#waApung.tampil{opacity:1;transform:none;pointer-events:auto;}
+#waApung svg{width:28px;height:28px;}
 </style>
+<script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
 
@@ -157,19 +240,79 @@ h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(24px,6.2vw,3
     <path style="fill:var(--ukir-isi);opacity:.85" d="M74 8 c6 -8 16 -8 21 -1 c-7 6 -16 6 -21 1z"/>
     <path style="fill:var(--ukir-isi);opacity:.85" d="M166 32 c-6 8 -16 8 -21 1 c7 -6 16 -6 21 -1z"/>
   </g>
+  <g id="ukir-sudut">
+    <path style="fill:none;stroke:var(--kuningan);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke" d="M4 116 C4 74 14 44 40 26 C58 13 78 8 116 6"/>
+    <path style="fill:none;stroke:var(--kuningan);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke" d="M40 26 C30 14 34 4 46 4 C56 4 60 12 55 18 C50 24 42 24 36 30"/>
+    <path style="fill:var(--kuningan);opacity:.85" d="M30 56 c9 -3 17 3 18 12 c-10 4 -18 -2 -18 -12z"/>
+    <path style="fill:var(--kuningan);opacity:.85" d="M100 26 c3 -9 12 -13 20 -9 c-3 9 -12 13 -20 9z"/>
+  </g>
+  <g id="ikon-wa">
+    <path fill="currentColor" d="M16 3C9 3 3.3 8.6 3.3 15.6c0 2.3.6 4.5 1.8 6.4L3 29l7.2-1.9c1.8 1 3.8 1.5 5.9 1.5 7 0 12.7-5.7 12.7-12.6C28.8 8.6 23 3 16 3zm0 23.2c-1.9 0-3.8-.5-5.4-1.5l-.4-.2-4.3 1.1 1.1-4.2-.3-.4c-1.1-1.7-1.6-3.6-1.6-5.5 0-5.8 4.8-10.5 10.7-10.5 5.9 0 10.7 4.7 10.7 10.5S21.9 26.2 16 26.2zm5.9-7.9c-.3-.2-1.9-.9-2.2-1-.3-.1-.5-.2-.7.2-.2.3-.8 1-1 1.2-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.6-1.6-1-.9-1.6-1.9-1.8-2.2-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.3-.6.1-.2 0-.4 0-.6l-1-2.4c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.8 0 1.6 1.2 3.2 1.4 3.4.2.2 2.3 3.6 5.7 5 .8.3 1.4.5 1.9.7.8.2 1.5.2 2.1.1.6-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z"/>
+  </g>
 </defs></svg>
 
 <!-- ====== SAMPUL ====== -->
 <section id="atas">
   <p class="eyebrow reveal">Undangan Pernikahan Digital</p>
   <h1 class="merek reveal">mengundang<i>.</i>id</h1>
-  <p class="slogan reveal">Isi sendiri, sebar lewat WhatsApp, rekap amplopnya sesudah acara.</p>
+  <p class="slogan reveal">Undangan yang menyapa tiap tamu dengan namanya. Sebar lewat WhatsApp, rekap amplopnya sesudah acara.</p>
   <div class="turun reveal">
-    <a class="btn solid" href="#coba">Coba Sekarang</a>
-    <a class="btn" href="#fitur">Lihat Isinya</a>
+    <a class="btn solid tautan-wa" href="#" data-pesan="sampul"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ikon-wa"/></svg>Tanya lewat WhatsApp</a>
+    <a class="btn" href="#coba">Coba Gratis</a>
   </div>
   <svg class="ukir divider reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
-  <p class="lead reveal" style="margin-top:22px;font-size:13px">Tanpa daftar. Tanpa nomor Anda disimpan.</p>
+</section>
+
+<!-- ====== CONTOH ====== -->
+<section id="contoh" class="on-paper center">
+  <div class="wrap-lebar">
+    <p class="eyebrow reveal">Contoh</p>
+    <h2 class="judul reveal">Yang diterima tamu Anda</h2>
+    <p class="lead reveal">Setiap tamu mendapat tautannya sendiri. Namanya muncul di sampul, alamat acaranya menyesuaikan pihak yang mengundang, dan ucapannya langsung masuk buku tamu.</p>
+
+    <div class="contoh reveal" role="list">
+      <figure class="layar-wadah" role="listitem">
+        <div class="hp"><div class="layar">
+          <svg class="sudut s1" viewBox="0 0 120 120" aria-hidden="true"><use href="#ukir-sudut"/></svg>
+          <svg class="sudut s2" viewBox="0 0 120 120" aria-hidden="true"><use href="#ukir-sudut"/></svg>
+          <svg class="sudut s3" viewBox="0 0 120 120" aria-hidden="true"><use href="#ukir-sudut"/></svg>
+          <svg class="sudut s4" viewBox="0 0 120 120" aria-hidden="true"><use href="#ukir-sudut"/></svg>
+          <p class="mini-label">Walimatul 'Ursy</p>
+          <p class="mini-nama">DIMAS<i>&amp;</i>LARAS</p>
+          <p class="mini-tgl">Sabtu · 13 Februari 2027</p>
+          <p class="mini-kepada">Kepada Bapak/Ibu/Saudara/i<span class="mini-tamu">Bapak Ahmad Fauzi</span></p>
+          <span class="mini-tombol">Buka Undangan</span>
+        </div></div>
+        <figcaption>Sampul dengan nama tamu</figcaption>
+      </figure>
+
+      <figure class="layar-wadah" role="listitem">
+        <div class="hp"><div class="layar kertas">
+          <p class="mini-label">Waktu &amp; Tempat</p>
+          <p class="mini-judul">Rangkaian Acara</p>
+          <div class="mini-acara"><b>Akad Nikah</b><span>Sabtu, 13 Februari 2027<br>Pukul 08.00 WIB</span></div>
+          <div class="mini-acara"><b>Resepsi</b><span>Sabtu, 13 Februari 2027<br>Pukul 11.00 WIB — selesai</span></div>
+          <div class="mini-acara"><b>Gedung Serbaguna Melati</b><span>Jl. Contoh No. 12, Semarang</span></div>
+          <span class="mini-peta">Buka Peta Lokasi</span>
+        </div></div>
+        <figcaption>Acara &amp; peta lokasi</figcaption>
+      </figure>
+
+      <figure class="layar-wadah" role="listitem">
+        <div class="hp"><div class="layar tamu">
+          <p class="mini-label">Ucapan &amp; Doa</p>
+          <p class="mini-judul">Buku Tamu</p>
+          <div class="mini-kartu"><b>Bapak Ahmad Fauzi</b><em>Hadir</em>
+            <p>Selamat menempuh hidup baru, semoga sakinah mawaddah warahmah.</p>
+            <p class="mini-balas">Aamiin, terima kasih Pak Ahmad.</p></div>
+          <div class="mini-kartu"><b>Rina &amp; keluarga</b><em>Hadir</em>
+            <p>Barakallahu lakuma. Sampai jumpa di resepsi!</p></div>
+        </div></div>
+        <figcaption>Buku tamu &amp; balasan</figcaption>
+      </figure>
+    </div>
+    <p class="catatan-contoh reveal">Dimas &amp; Laras adalah pasangan contoh — bukan klien sungguhan.</p>
+  </div>
 </section>
 
 <!-- ====== COBA ====== -->
@@ -177,7 +320,7 @@ h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(24px,6.2vw,3
   <div class="wrap">
     <p class="eyebrow reveal">Coba Dulu</p>
     <h2 class="judul reveal">Undangan Anda, dalam sepuluh detik</h2>
-    <p class="lead reveal">Isi nama Anda berdua. Undangannya langsung jadi — dengan nama Anda di dalamnya — dan bisa langsung Anda kirimkan ke calon pasangan Anda lewat WhatsApp.</p>
+    <p class="lead reveal">Sudah lihat contohnya — sekarang dengan nama Anda sendiri. Isi nama Anda berdua. Undangannya langsung jadi — dengan nama Anda di dalamnya — dan bisa langsung Anda kirimkan ke calon pasangan Anda lewat WhatsApp.</p>
 
     <div class="kotak reveal">
       <div class="dua">
@@ -242,7 +385,6 @@ h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(24px,6.2vw,3
     <p class="eyebrow reveal">Yang Anda Dapat</p>
     <h2 class="judul reveal">Bukan cuma halaman undangan</h2>
     <p class="lead reveal">Yang paling melelahkan dari hajatan bukan undangannya — tapi menyebarnya, dan merekapnya sesudah selesai.</p>
-
     <div class="fitur">
       <div class="kartu reveal">
         <p class="tanda">Sebelum acara</p>
@@ -256,51 +398,111 @@ h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(24px,6.2vw,3
       </div>
       <div class="kartu reveal">
         <p class="tanda">Sebelum acara</p>
-        <h3>Bapak, ibu, dan mertua punya tautannya sendiri</h3>
-        <p>Tiap pihak dapat halaman sendiri berisi tamunya sendiri. Tanpa login, tanpa bisa melihat atau mengubah daftar pihak lain.</p>
+        <h3>Keluarga ikut membantu menyebar</h3>
+        <p>Bapak, ibu, dan mertua mendapat halaman sendiri berisi tamunya sendiri. Tanpa daftar akun, tanpa bisa melihat atau mengubah daftar pihak lain.</p>
       </div>
       <div class="kartu reveal">
         <p class="tanda">Hari acara</p>
-        <h3>Buku tamu dan RSVP</h3>
+        <h3>Buku tamu dan konfirmasi hadir</h3>
         <p>Tamu menulis ucapan dan mengabari hadir atau tidak, langsung dari undangannya. Anda bisa membalas satu per satu.</p>
       </div>
       <div class="kartu reveal">
         <p class="tanda">Sesudah acara</p>
         <h3>Rekap amplop dan barang</h3>
-        <p>Tandai siapa yang datang, catat amplop, rokok, gula, parsel, sampai sumbangan jasa. Satu keluarga yang datang terpencar bisa dikelompokkan supaya tidak bolak-balik.</p>
+        <p>Tandai siapa yang datang, catat amplop, rokok, gula, parsel, sampai sumbangan tenaga. Semuanya bisa diunduh jadi berkas Excel yang angkanya langsung bisa dijumlahkan.</p>
       </div>
       <div class="kartu reveal">
         <p class="tanda">Sesudah acara</p>
-        <h3>Unduh Excel, dan halaman terima kasih</h3>
-        <p>Seluruh sumbangan diunduh jadi berkas Excel sungguhan — angkanya angka, langsung bisa dijumlahkan. Plus satu halaman berisi foto acara dan ucapan tamu berikut balasan Anda.</p>
+        <h3>Halaman kenangan</h3>
+        <p>Satu halaman terima kasih yang menceritakan hari itu babak demi babak, dengan foto acara Anda sebagai latarnya — untuk tamu yang hadir, dan yang mendoakan dari jauh.</p>
       </div>
     </div>
   </div>
 </section>
 
+<!-- ====== PAKET ====== -->
+<section id="paket" class="on-paper center">
+  <div class="wrap-lebar">
+    <p class="eyebrow reveal">Paket</p>
+    <h2 class="judul reveal">Dua pilihan alamat</h2>
+    <p class="lead reveal">Isinya sama lengkap. Yang membedakan alamat undangan yang dibuka tamu.</p>
+    <div class="paket">
+      <div class="kotak reveal">
+        <h3>Standar</h3>
+        <p class="alamat">mengundang.id/<b>dimas-laras</b></p>
+        <ul>
+          <li>Undangan dengan nama tiap tamu</li>
+          <li>Sebar lewat WhatsApp, halaman untuk keluarga</li>
+          <li>Buku tamu, konfirmasi hadir, rekap amplop</li>
+          <li>Halaman kenangan sesudah acara</li>
+        </ul>
+      </div>
+      <div class="kotak unggul reveal">
+        <h3>Premium</h3>
+        <p class="alamat"><b>dimas-laras</b>.mengundang.id</p>
+        <ul>
+          <li>Semua yang ada di Standar</li>
+          <li>Alamat sendiri yang lebih ringkas untuk dibagikan</li>
+        </ul>
+      </div>
+    </div>
+    <p class="harga-catatan reveal">Harga dan ketersediaan tanggal — tanyakan langsung lewat WhatsApp.</p>
+    <p class="reveal" style="margin-top:18px"><a class="btn solid tautan-wa" href="#" data-pesan="paket"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ikon-wa"/></svg>Tanya Harga</a></p>
+  </div>
+</section>
+
 <!-- ====== CARA ====== -->
-<section class="on-paper center">
-  <div class="wrap">
+<section id="cara">
+  <div class="wrap center">
     <p class="eyebrow reveal">Cara Kerjanya</p>
-    <h2 class="judul reveal">Empat langkah, dari awal sampai selesai</h2>
-    <ol class="langkah reveal" style="margin-top:26px">
-      <li><strong>Isi sendiri.</strong> Kami buatkan akunnya, Anda mengisi nama, tempat, jadwal, dompet, dan silsilah lewat halaman dasbor. Bisa dilihat hasilnya sebelum diterbitkan.</li>
-      <li><strong>Sebar.</strong> Masukkan daftar tamu, bagikan tautan personal lewat WhatsApp. Bagi tugas dengan keluarga kalau perlu.</li>
-      <li><strong>Terima tamu.</strong> Ucapan dan RSVP masuk sendiri. Berkat ditandai: sudah dijatah, sudah diberikan.</li>
-      <li><strong>Rekap.</strong> Catat siapa datang dan siapa memberi apa, unduh Excel-nya, lalu terbitkan halaman terima kasih.</li>
+    <h2 class="judul reveal">Dari chat pertama sampai rekap terakhir</h2>
+    <ol class="langkah reveal">
+      <li><span><strong>Kabari kami lewat WhatsApp.</strong> Ceritakan tanggal dan rencana acara Anda, kami siapkan akunnya.</span></li>
+      <li><span><strong>Isi sendiri lewat dasbor.</strong> Nama, tempat, jadwal, dompet digital, dan silsilah. Lihat hasilnya sebelum diterbitkan.</span></li>
+      <li><span><strong>Sebar.</strong> Masukkan daftar tamu, bagikan tautan personal lewat WhatsApp, bagi tugas dengan keluarga.</span></li>
+      <li><span><strong>Rekap dan kenang.</strong> Catat siapa datang dan siapa memberi apa, unduh Excel-nya, lalu terbitkan halaman kenangan.</span></li>
     </ol>
     <svg class="ukir divider reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
   </div>
 </section>
 
+<!-- ====== TANYA ====== -->
+<section id="tanya" class="on-paper center">
+  <div class="wrap">
+    <p class="eyebrow reveal">Pertanyaan</p>
+    <h2 class="judul reveal">Yang sering ditanyakan</h2>
+    <div class="tanya reveal">
+      <details>
+        <summary>Apakah tamu perlu memasang aplikasi?</summary>
+        <p>Tidak. Undangannya halaman web biasa yang dibuka dari tautan WhatsApp, ringan untuk HP dan jaringan yang pas-pasan.</p>
+      </details>
+      <details>
+        <summary>Kalau ada yang salah ketik sesudah undangan disebar?</summary>
+        <p>Perbaiki saja di dasbor. Tautan yang sudah dikirim tetap sama, dan tamu langsung melihat isi yang sudah diperbaiki.</p>
+      </details>
+      <details>
+        <summary>Siapa yang bisa melihat nomor telepon tamu?</summary>
+        <p>Hanya Anda dan keluarga yang Anda beri tautan panitia — dan tiap pihak keluarga hanya melihat tamunya sendiri. Tamu tidak pernah melihat daftar tamu lain.</p>
+      </details>
+      <details>
+        <summary>Bisa untuk akad dan resepsi di tempat berbeda?</summary>
+        <p>Bisa. Tiap acara punya tempatnya sendiri, dan alamat yang ditampilkan bisa menyesuaikan pihak yang mengundang — tamu keluarga pria dan wanita bisa melihat lokasi yang berbeda.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
 <!-- ====== TUTUP ====== -->
-<footer class="tutup">
+<section class="tutup">
   <p class="eyebrow">Siap?</p>
-  <h2 class="judul" style="margin-bottom:6px">Coba dulu, gratis</h2>
-  <p class="lead">Buat undangan percobaan dengan nama Anda berdua, kirimkan ke calon pasangan Anda, baru putuskan.</p>
-  <p><a class="btn solid" href="#coba">Coba Sekarang</a></p>
-  <p class="kaki">mengundang.id</p>
-</footer>
+  <h2 class="judul">Ceritakan rencana acara Anda</h2>
+  <p class="lead">Kami jawab langsung, tanpa formulir dan tanpa daftar akun lebih dulu.</p>
+  <a class="btn solid tautan-wa" href="#" data-pesan="tutup"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ikon-wa"/></svg>Chat di WhatsApp</a>
+</section>
+
+<footer class="kaki">mengundang.id · undangan pernikahan digital</footer>
+
+<a id="waApung" class="tautan-wa" href="#" data-pesan="apung" aria-label="Chat di WhatsApp"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ikon-wa"/></svg></a>
 
 <script src="/assets/varian.js"></script>
 <script>
@@ -386,22 +588,57 @@ h2.judul{font-family:var(--display);font-weight:400;font-size:clamp(24px,6.2vw,3
   ['inPria','inWanita','inWa','inKota'].forEach(function(id){
     $(id).addEventListener('keydown', function(e){ if(e.key === 'Enter') $('btnBuat').click(); });
   });
+})();
+</script>
 
-  /* Reveal, sepola dengan undangannya */
-  (function(){
-    var kurangi = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var item = document.querySelectorAll('.reveal');
-    if(kurangi || !('IntersectionObserver' in window)){
-      item.forEach(function(el){ el.classList.add('in'); });
-      return;
-    }
-    var p = new IntersectionObserver(function(masuk){
+<script>
+(function(){
+  'use strict';
+
+  /* Satu tempat untuk nomor WhatsApp — ditampilkan publik. Format
+     internasional tanpa + dan tanpa 0 di depan, seperti yang dituntut wa.me. */
+  var KONTAK = '6289669249279';
+
+  /* Pesan pembuka berbeda tergantung tombol mana yang ditekan, supaya
+     yang menjawab tahu calon klien sedang membaca bagian apa. */
+  var PESAN = {
+    sampul: 'Halo mengundang.id, saya ingin tahu tentang undangan pernikahan digitalnya.',
+    paket:  'Halo mengundang.id, saya ingin tanya harga paket undangan digital. Rencana tanggal acara kami: ',
+    tutup:  'Halo mengundang.id, saya ingin memakai undangan digital untuk pernikahan kami. Rencana tanggal acara: ',
+    apung:  'Halo mengundang.id, saya ingin tanya tentang undangan digital.'
+  };
+
+  document.querySelectorAll('.tautan-wa').forEach(function(a){
+    var teks = PESAN[a.dataset.pesan] || PESAN.apung;
+    a.href = 'https://wa.me/' + KONTAK + '?text=' + encodeURIComponent(teks);
+    a.target = '_blank';
+    a.rel = 'noopener';
+  });
+
+  /* Tombol WA melayang baru muncul sesudah sampul lewat — di sampul
+     tombol besarnya sudah ada, dua tombol yang sama berdampingan cuma
+     berisik. */
+  var apung = document.getElementById('waApung');
+  if ('IntersectionObserver' in window){
+    new IntersectionObserver(function(m){
+      apung.classList.toggle('tampil', !m[0].isIntersecting);
+    }, { threshold: 0.15 }).observe(document.getElementById('atas'));
+  } else {
+    apung.classList.add('tampil');
+  }
+
+  /* Reveal */
+  var item = document.querySelectorAll('.reveal');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)){
+    item.forEach(function(el){ el.classList.add('in'); });
+  } else {
+    var pengamat = new IntersectionObserver(function(masuk){
       masuk.forEach(function(x){
-        if(x.isIntersecting){ x.target.classList.add('in'); p.unobserve(x.target); }
+        if (x.isIntersecting){ x.target.classList.add('in'); pengamat.unobserve(x.target); }
       });
-    }, { rootMargin:'0px 0px -8% 0px', threshold:0.06 });
-    item.forEach(function(el){ p.observe(el); });
-  })();
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+    item.forEach(function(el){ pengamat.observe(el); });
+  }
 })();
 </script>
 </body>
