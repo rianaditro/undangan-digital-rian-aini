@@ -75,6 +75,11 @@ async function pasang(page, model) {
     if (jalur === '/auth/v1/token') {
       return kirim({ access_token: 'JWT-pemilik', refresh_token: 'SEGAR' });
     }
+    if (jalur === '/auth/v1/user' && req.method() === 'PUT') {
+      (model.sandiBaru = model.sandiBaru || []).push({ auth: req.headers()['authorization'] || '',
+        isi: JSON.parse(req.postData() || '{}') });
+      return kirim({ id: 'u-1', email: 'budi@contoh.com' });
+    }
 
     if (jalur === '/functions/v1/foto-unggah') {
       model.fn.push({ metode: req.method(), auth: req.headers()['authorization'] || '',
@@ -535,6 +540,44 @@ const browser = await chromium.launch();
 {
   const sumber = await (await fetch(ASAL + '/kirim')).text();
   cek('19f /kirim tidak lagi punya editor silsilah', !/panelSilsilah|silsilah_simpan|silsilah_hapus|silsilah_daftar/.test(sumber));
+}
+
+/* ---------- tautan undangan dari email (031) ---------- */
+{
+  const model = bikinModel();
+  const ctx = await browser.newContext({ viewport: { width: 430, height: 900 } });
+  const page = await ctx.newPage();
+  page.on('pageerror', e => { galatHalaman.push(e.message); console.log('   [pageerror] ' + e.message); });
+  await pasang(page, model);
+  // JWT tiruan: kepala.badan.tanda, badan memuat email
+  const badan = Buffer.from(JSON.stringify({ email: 'budi@contoh.com', sub: 'u-1' })).toString('base64url');
+  const jwt = 'eyJhbGciOiJIUzI1NiJ9.' + badan + '.tanda';
+  await page.goto(ASAL + '/dasbor#access_token=' + jwt + '&refresh_token=SEGAR2&expires_in=3600&token_type=bearer&type=invite');
+  await page.waitForSelector('#kotakSandiBaru:not([hidden])', { timeout: 5000 });
+  cek('20a tautan undangan membuka kotak buat sandi, bukan formulir masuk',
+      await page.locator('#inEmail').isHidden() && (await page.locator('#emailUndangan').textContent()) === 'budi@contoh.com');
+  cek('20b token dibuang dari bilah alamat', !(await page.evaluate(() => location.href)).includes('access_token'));
+  await page.locator('#inSandiBaru').fill('pendek');
+  await page.locator('#inSandiUlang').fill('pendek');
+  await page.locator('#btnSandiBaru').click();
+  cek('20c sandi < 10 huruf ditolak di halaman', (await page.locator('#pesanSandiBaru').textContent()).includes('10') && !model.sandiBaru);
+  await page.locator('#inSandiBaru').fill('sandi-baru-panjang');
+  await page.locator('#inSandiUlang').fill('sandi-baru-panjang');
+  await page.locator('#btnSandiBaru').click();
+  await page.waitForSelector('#formAcara .baris', { timeout: 8000 });
+  cek('20d sandi disimpan lewat PUT /auth/v1/user dengan sesi dari tautan, lalu dasbor terbuka',
+      model.sandiBaru && model.sandiBaru[0].isi.password === 'sandi-baru-panjang'
+      && model.sandiBaru[0].auth === 'Bearer ' + jwt);
+  await ctx.close();
+
+  const ctx2 = await browser.newContext();
+  const page2 = await ctx2.newPage();
+  await pasang(page2, bikinModel());
+  await page2.goto(ASAL + '/dasbor#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired');
+  await page2.waitForTimeout(300);
+  cek('20e tautan kedaluwarsa: pesan jelas, formulir masuk tetap ada',
+      (await page2.locator('#pesanMasuk').textContent()).includes('kedaluwarsa') && await page2.locator('#inEmail').isVisible());
+  await ctx2.close();
 }
 
 /* ---------- tata letak HP ---------- */

@@ -12,6 +12,9 @@
 // POST { aksi: 'buat',  slug, email, sandi, pria, wanita, tanggal, kota, paket }
 // POST { aksi: 'sandi', email, sandi }
 // POST { aksi: 'pemilik', slug, email, sandi }
+// POST { aksi: 'konfirmasi', pesanan_id, nominal, komisi }      — pesanan → lunas
+// POST { aksi: 'reseller', email, sandi, kode, nama, kontak, rekening }   — owner
+// POST { aksi: 'admin', email, sandi, nama }                    — owner
 //
 // PENJAGANYA ADA DI DALAM, bukan di gerbang. Fungsi ini sengaja
 // dipasang dengan verify_jwt = false, dan itu BUKAN pelonggaran:
@@ -70,8 +73,9 @@ Deno.serve(async (req: Request) => {
   if (salahJwt || !siapa?.user) return jawab({ pesan: 'Sesi tidak sah' }, 401);
 
   const { data: adm } = await db
-    .from('admin').select('user_id').eq('user_id', siapa.user.id).maybeSingle();
+    .from('admin').select('user_id, peran').eq('user_id', siapa.user.id).maybeSingle();
   if (!adm) return jawab({ pesan: 'Halaman ini hanya untuk admin' }, 403);
+  const owner = adm.peran === 'owner';
 
   let badan: any = {};
   try { badan = await req.json(); } catch { /* biarkan kosong, divalidasi di bawah */ }
@@ -79,6 +83,11 @@ Deno.serve(async (req: Request) => {
   try {
     if (badan.aksi === 'sandi')   return await gantiSandi(db, badan);
     if (badan.aksi === 'pemilik') return await pasangPemilik(db, badan);
+    if (badan.aksi === 'konfirmasi') return await konfirmasi(db, badan, siapa.user.id);
+    if (badan.aksi === 'reseller' || badan.aksi === 'admin') {
+      if (!owner) return jawab({ pesan: 'Hanya owner yang boleh membuat akun ' + badan.aksi }, 403);
+      return badan.aksi === 'reseller' ? await buatReseller(db, badan) : await buatAdmin(db, badan);
+    }
     return await buat(db, badan);
   } catch (e) {
     console.error('admin-pasangan gagal:', e);
@@ -252,4 +261,129 @@ async function pasangPemilik(db: any, b: any) {
     slug: pas.slug, email, akun_baru: akunBaru, sudah_pemilik: !!sudah,
     canonical_host: pas.canonical_host ?? null,
   }, sudah ? 200 : 201);
+}
+
+// Sandi acak untuk cadangan kalau surel undangan tidak bisa dikirim.
+// Tanpa huruf yang mirip (0/O, 1/l/I) — sandi ini dibacakan lewat WhatsApp.
+function sandiAcak(): string {
+  const huruf = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const acak = crypto.getRandomValues(new Uint32Array(14));
+  return Array.from(acak, (n) => huruf[n % huruf.length]).join('');
+}
+
+// Akun untuk email ini: yang sudah ada dipakai; kalau belum ada, dibuat
+// dengan sandi yang diketik admin.
+async function akunDenganSandi(db: any, email: string, sandi: string) {
+  const ada = await cariEmail(db, email);
+  if (ada) return { pengguna: ada, akunBaru: false };
+  if (sandi.length < 10) throw new GalatPengguna('Kata sandi minimal 10 huruf');
+  const { data, error } = await db.auth.admin.createUser({ email, password: sandi, email_confirm: true });
+  if (error) throw new GalatPengguna(error.message);
+  return { pengguna: data.user, akunBaru: true };
+}
+
+class GalatPengguna extends Error {}
+
+// Pembayaran dikonfirmasi → akun klien → pasangan aktif.
+//
+// Akun klien yang belum ada diundang lewat surel: Supabase mengirim
+// tautan, klien memilih sandinya sendiri di /dasbor. Kalau surel tidak
+// bisa dikirim (SMTP belum dipasang, batas kirim habis), akun dibuat
+// dengan sandi acak dan sandinya dikembalikan ke admin untuk
+// diserahkan lewat WhatsApp — pesanan tidak boleh tertahan karena surel.
+async function konfirmasi(db: any, b: any, oleh: string) {
+  const id      = rapi(b.pesanan_id);
+  const nominal = Number(b.nominal);
+  const komisi  = Number(b.komisi ?? 0);
+  if (!Number.isInteger(nominal) || nominal < 0 || !Number.isInteger(komisi) || komisi < 0)
+    return jawab({ pesan: 'Nominal dan komisi harus angka bulat rupiah' }, 400);
+
+  const { data: s } = await db.from('pesanan')
+    .select('id, nomor, status, slug, email_klien, pria, wanita').eq('id', id).maybeSingle();
+  if (!s) return jawab({ pesan: 'Pesanan tidak ada' }, 404);
+  if (s.status !== 'menunggu') return jawab({ pesan: `Pesanan #${s.nomor} sudah ${s.status}` }, 409);
+
+  const { data: dipakai } = await db.from('pasangan').select('id').eq('slug', s.slug).maybeSingle();
+  if (dipakai) return jawab({ pesan: `Slug "${s.slug}" sudah dipakai pasangan lain` }, 409);
+
+  let pengguna = await cariEmail(db, s.email_klien);
+  let akunBaru = false, diundang = false, sandi: string | null = null;
+
+  if (!pengguna) {
+    const { data, error } = await db.auth.admin.inviteUserByEmail(s.email_klien, {
+      redirectTo: 'https://mengundang.id/dasbor',
+    });
+    if (!error && data?.user) {
+      pengguna = data.user; akunBaru = true; diundang = true;
+    } else {
+      console.error('undangan surel gagal, pakai sandi cadangan:', error?.message);
+      sandi = sandiAcak();
+      const dibuat = await db.auth.admin.createUser({ email: s.email_klien, password: sandi, email_confirm: true });
+      if (dibuat.error) return jawab({ pesan: dibuat.error.message }, 400);
+      pengguna = dibuat.data.user; akunBaru = true;
+    }
+  }
+
+  const { data: pasanganId, error: gagal } = await db.rpc('pesanan_lunaskan', {
+    p_id: id, p_nominal: nominal, p_komisi: komisi, p_oleh: oleh,
+  });
+  if (gagal) {
+    if (akunBaru) await db.auth.admin.deleteUser(pengguna.id).catch(() => {});
+    return jawab({ pesan: gagal.message }, 400);
+  }
+
+  const { data: pas } = await db.from('pasangan')
+    .select('canonical_host').eq('id', pasanganId).maybeSingle();
+  const { data: token } = await db.from('panitia_akses').select('nama, token, pihak')
+    .eq('pasangan_id', pasanganId).order('pihak', { nullsFirst: true });
+
+  return jawab({
+    pasangan_id: pasanganId, nomor: s.nomor, slug: s.slug, email: s.email_klien,
+    pria: s.pria, wanita: s.wanita,
+    akun_baru: akunBaru, diundang, sandi,
+    canonical_host: pas?.canonical_host ?? null, token: token ?? [],
+  }, 201);
+}
+
+async function buatReseller(db: any, b: any) {
+  const email = rapi(b.email).toLowerCase();
+  const kode  = rapi(b.kode).toLowerCase();
+  const nama  = rapi(b.nama);
+  if (!EMAIL.test(email)) return jawab({ pesan: 'Email tidak sah' }, 400);
+  if (!/^[a-z0-9]{2,20}$/.test(kode)) return jawab({ pesan: 'Kode hanya huruf kecil dan angka, 2–20' }, 400);
+  if (!nama) return jawab({ pesan: 'Nama reseller harus diisi' }, 400);
+
+  const { data: kembar } = await db.from('reseller').select('id').eq('kode', kode).maybeSingle();
+  if (kembar) return jawab({ pesan: `Kode "${kode}" sudah dipakai` }, 409);
+
+  let akun;
+  try { akun = await akunDenganSandi(db, email, String(b.sandi ?? '')); }
+  catch (e) { if (e instanceof GalatPengguna) return jawab({ pesan: e.message }, 400); throw e; }
+
+  const { error } = await db.from('reseller').insert({
+    user_id: akun.pengguna.id, kode, nama,
+    kontak: rapi(b.kontak) || null, rekening: rapi(b.rekening) || null,
+  });
+  if (error) {
+    if (akun.akunBaru) await db.auth.admin.deleteUser(akun.pengguna.id).catch(() => {});
+    return jawab({ pesan: error.code === '23505' ? 'Akun itu sudah reseller' : error.message }, 400);
+  }
+  return jawab({ email, kode, nama, akun_baru: akun.akunBaru }, 201);
+}
+
+async function buatAdmin(db: any, b: any) {
+  const email = rapi(b.email).toLowerCase();
+  const nama  = rapi(b.nama) || null;
+  if (!EMAIL.test(email)) return jawab({ pesan: 'Email tidak sah' }, 400);
+
+  let akun;
+  try { akun = await akunDenganSandi(db, email, String(b.sandi ?? '')); }
+  catch (e) { if (e instanceof GalatPengguna) return jawab({ pesan: e.message }, 400); throw e; }
+
+  const { error } = await db.from('admin').insert({ user_id: akun.pengguna.id, nama, peran: 'admin' });
+  if (error) {
+    if (akun.akunBaru) await db.auth.admin.deleteUser(akun.pengguna.id).catch(() => {});
+    return jawab({ pesan: error.code === '23505' ? 'Akun itu sudah admin' : error.message }, 400);
+  }
+  return jawab({ email, nama, akun_baru: akun.akunBaru }, 201);
 }

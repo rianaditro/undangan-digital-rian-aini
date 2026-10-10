@@ -26,10 +26,12 @@ begin
       lap := lap || format(E'GAGAL  %s: anon=%s authenticated=%s\n', r.f, r.anon, r.auth);
     end if;
   end loop;
-  if n = 7 and gagal = 0 then
-    lulus := lulus + 1; lap := lap || E'ok     ketujuh admin_* tertutup untuk anon, terbuka untuk authenticated\n';
-  elsif n <> 7 then
-    gagal := gagal + 1; lap := lap || format(E'GAGAL  diharapkan 7 fungsi admin_*, ada %s\n', n);
+  -- 7 dari 020/023; migrasi sesudahnya boleh menambah, dan yang baru
+  -- ikut diperiksa dengan aturan yang sama.
+  if n >= 7 and gagal = 0 then
+    lulus := lulus + 1; lap := lap || format(E'ok     semua %s admin_* tertutup untuk anon, terbuka untuk authenticated\n', n);
+  elsif n < 7 then
+    gagal := gagal + 1; lap := lap || format(E'GAGAL  diharapkan sedikitnya 7 fungsi admin_*, ada %s\n', n);
   end if;
 
   -- ---------- 2. ucapan_tulis: batasnya sendiri, bukan batasan tabel ----------

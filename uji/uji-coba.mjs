@@ -92,6 +92,45 @@ const browser = await chromium.launch();
   await ctx.close();
 }
 
+/* ---------- 1b. rujukan reseller ?r= ---------- */
+{
+  const ctx = await browser.newContext({ viewport:{width:430,height:900} });
+  const page = await ctx.newPage();
+  page.on('pageerror', e => console.log('   [pageerror] ' + e.message));
+  const catat = [];
+  await page.route('**/*.supabase.co/**', r => {
+    const arg = JSON.parse(r.request().postData() || '{}');
+    catat.push({ jalur: new URL(r.request().url()).pathname, arg });
+    r.fulfill({ status:200, contentType:'application/json', headers:{'access-control-allow-origin':'*'},
+                body: JSON.stringify(arg.p_kode === '123') });
+  });
+  await page.goto(ASAL + '/mulai?r=123');
+  await page.waitForFunction(() => document.querySelector('a.tautan-wa').href.includes('rujukan'), null, { timeout:5000 }).catch(() => {});
+  const c = catat[0];
+  cek('1c ?r=123 dicatat sekali lewat kunjungan_catat dengan id peramban',
+      catat.length === 1 && c.jalur.endsWith('/rpc/kunjungan_catat') && c.arg.p_kode === '123'
+      && /^[a-z0-9-]{8,40}$/.test(c.arg.p_pengunjung), JSON.stringify(catat));
+  const wa = await page.$$eval('a.tautan-wa', a => a.map(x => decodeURIComponent(x.href)));
+  cek('1d kode rujukan ikut di setiap pesan WhatsApp', wa.every(h => h.includes('(Kode rujukan: 123)')), wa[0]);
+
+  await page.goto(ASAL + '/mulai');
+  await page.waitForTimeout(300);
+  const wa2 = await page.$$eval('a.tautan-wa', a => a.map(x => decodeURIComponent(x.href)));
+  cek('1e kode diingat pada kunjungan berikutnya tanpa ?r=, tanpa dicatat ulang',
+      wa2.every(h => h.includes('Kode rujukan: 123')) && catat.length === 1, String(catat.length));
+  await ctx.close();
+
+  const ctx2 = await browser.newContext({ viewport:{width:430,height:900} });
+  const page2 = await ctx2.newPage();
+  await page2.route('**/*.supabase.co/**', r => r.fulfill({ status:200, contentType:'application/json',
+    headers:{'access-control-allow-origin':'*'}, body:'false' }));
+  await page2.goto(ASAL + '/mulai?r=palsu');
+  await page2.waitForTimeout(500);
+  const wa3 = await page2.$$eval('a.tautan-wa', a => a.map(x => decodeURIComponent(x.href)));
+  cek('1f kode yang tidak dikenal tidak ikut ke pesan WhatsApp', wa3.every(h => !h.includes('rujukan')));
+  await ctx2.close();
+}
+
 /* ---------- 2. /coba = undangan sungguhan, tanpa jaringan ---------- */
 {
   const ctx = await browser.newContext({ viewport:{width:430,height:900} });

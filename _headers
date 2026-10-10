@@ -13,3 +13,7 @@
   X-Robots-Tag: noindex, nofollow
 /admin/*
   X-Robots-Tag: noindex, nofollow
+/reseller
+  X-Robots-Tag: noindex, nofollow
+/reseller/*
+  X-Robots-Tag: noindex, nofollow
