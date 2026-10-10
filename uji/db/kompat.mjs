@@ -125,6 +125,10 @@ function bacaRef(ref) {
       if (!obj) { gagal.push(`${f}:${baris(s, m.index)} rpc(${m[1]}) — argumen tidak terbaca`); continue; }
       panggilan.push({ jenis: 'rpc', nama: m[1], arg: kunci(obj), peran: peranPembantu, di: `${f}:${baris(s, m.index)}` });
     }
+    // rpc('nama') tanpa argumen — admin_daftar, reseller_saya, …
+    const reRpcKosong = /\brpc\(\s*'([a-z_]\w*)'\s*\)/g;
+    while ((m = reRpcKosong.exec(s)))
+      panggilan.push({ jenis: 'rpc', nama: m[1], arg: [], peran: peranPembantu, di: `${f}:${baris(s, m.index)}` });
 
     // Panggilan tabel. Dua bentuk: lewat pembantu api() milik /kirim dan
     // /dasbor (membawa JWT, peran authenticated), dan fetch langsung ke
