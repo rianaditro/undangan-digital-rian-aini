@@ -1,0 +1,44 @@
+// mengundang.id di Cloudflare Workers — pengganti vercel.json.
+//
+// Situsnya statis tanpa langkah build: folder repo ini sendiri yang
+// diterbitkan sebagai aset, dikurangi yang disebut di .assetsignore.
+// Kode Worker (cloudflare/pintu.js) cuma dijalankan untuk "/" — sisanya
+// dilayani lapisan aset langsung, gratis dan tidak terhitung kuota.
+{
+  "name": "mengundang",
+  "main": "cloudflare/pintu.js",
+  "compatibility_date": "2026-09-01",
+
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS",
+
+    // /kirim menyajikan kirim/index.html di tempat; /kirim/ dialihkan
+    // ke /kirim. Sama dengan yang dilihat tamu di Vercel.
+    "html_handling": "drop-trailing-slash",
+
+    // Alamat yang bukan berkas — /budi-sari/ibu-rahayu,
+    // rian-aini.mengundang.id/bapak-ahmad — mendapat index.html, dan
+    // halaman itu sendiri yang membaca pasangan dan tamunya dari alamat.
+    // Pengganti rewrite "/(.*)" → "/index.html".
+    "not_found_handling": "single-page-application",
+
+    // Hanya akar yang perlu keputusan berdasarkan host.
+    "run_worker_first": ["/"]
+  },
+
+  // Alamat uji: mengundang.<akun>.workers.dev, plus alamat pratinjau
+  // per versi. Bentuknya domain bersama, jadi pasangan dibaca dari path
+  // (/rian-aini/bapak-ahmad) — persis seperti dulu di vercel.app.
+  "workers_dev": true,
+  "preview_urls": true,
+
+  // Rute baru mengambil alih sebuah nama begitu rekaman DNS-nya
+  // diproxy (awan oranye). Selama awannya abu-abu, nama itu tetap ke
+  // tujuan lamanya — jadi rute ini aman dipasang dari awal, dan
+  // perpindahan bisa dilakukan satu nama demi satu nama.
+  "routes": [
+    { "pattern": "mengundang.id/*",   "zone_name": "mengundang.id" },
+    { "pattern": "*.mengundang.id/*", "zone_name": "mengundang.id" }
+  ]
+}

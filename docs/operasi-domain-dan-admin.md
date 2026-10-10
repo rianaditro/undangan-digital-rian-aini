@@ -70,88 +70,126 @@ ada CAA yang menghalangi penerbitan sertifikat.
 Rekaman yang kurang TIDAK ditambahkan di Hostinger, karena zonanya
 sekaligus dipindah ke Cloudflare — lihat bagian 3.
 
-## 3. Pindah nameserver ke Cloudflare — urutannya menentukan
+## 3. Pindah ke Cloudflare — DNS dan hosting
 
-Keputusannya berubah (2026-10-10): nameserver `mengundang.id` pindah ke
-**Cloudflare** (paket Free), bukan ke Vercel. Hosting tetap di Vercel;
-Cloudflare cuma memegang DNS.
+Keputusan (2026-10-10): `mengundang.id` pindah seluruhnya ke
+**Cloudflare**. Nameserver pindah dari Hostinger ke Cloudflare (paket
+Free), hosting pindah dari Vercel ke **Cloudflare Workers**. Domain tetap
+terdaftar di Hostinger; yang pindah hanya nameserver-nya.
 
-**Aturan nomor satu: semua rekaman DNS only (awan abu-abu).** Proxy
-Cloudflare (awan oranye) di depan Vercel memutus penerbitan sertifikat
-Vercel, menggandakan cache, dan membuat IP pengunjung yang dilihat
-Vercel salah. Tidak ada yang kita butuhkan dari proxy itu.
+### Kenapa Workers
 
-### Harga yang dibayar: wildcard
+- **Subdomain pasangan premium jadi otomatis.** Satu rekaman `*` berproxy
+  plus rute `*.mengundang.id/*` menangkap semua subdomain, dan
+  sertifikat Universal SSL Cloudflare mencakup `mengundang.id` dan
+  `*.mengundang.id`. Di Vercel dengan DNS luar, setiap subdomain harus
+  ditambahkan satu per satu.
+- **Bukan Pages:** domain kustom Pages tidak bisa wildcard; rute Workers
+  bisa.
+- **Gratis untuk situs ini:** berkas statis dilayani lapisan aset tanpa
+  menghitung kuota. Kode Worker hanya berjalan untuk jalur `/` (satu
+  kali per buka undangan), jauh di bawah batas 100.000 per hari.
+- Situsnya tidak memakai fitur server Vercel apa pun: semua halaman
+  statis, data diambil peramban langsung dari Supabase, edge function
+  menerima origin mana pun, dan login dasbor memakai email+sandi tanpa
+  tautan redirect — jadi Supabase tidak perlu diubah.
 
-Sertifikat wildcard `*.mengundang.id` di Vercel hanya terbit lewat
-DNS-01, dan itu hanya bisa dikerjakan Vercel kalau nameserver-nya di
-Vercel. Dengan DNS di Cloudflare:
+### Berkasnya
 
-- Rekaman `*` tetap dibuat, supaya setiap subdomain mengarah ke Vercel.
-- Tapi sertifikatnya diterbitkan **per subdomain** (HTTP-01). Setiap
-  pasangan premium (`nama-nama.mengundang.id`) harus **ditambahkan satu
-  per satu** ke proyek Vercel — Settings → Domains → Add. Sertifikatnya
-  terbit dalam hitungan menit.
-- Domain `*.mengundang.id` yang sudah terdaftar di proyek boleh
-  dibiarkan; statusnya akan "Invalid Configuration" dan tidak merugikan.
-  Lebih rapi dihapus.
-- Kelak: langkah "tambah domain" ini bisa diotomatiskan dari
-  `admin-pasangan` lewat API Vercel saat pasangan premium dibuat.
+| Berkas | Isi |
+|---|---|
+| `wrangler.jsonc` | aset = folder repo, `drop-trailing-slash`, `single-page-application`, rute `mengundang.id/*` dan `*.mengundang.id/*` |
+| `.assetsignore` | yang TIDAK terbit: `docs/`, `supabase/`, `uji/`, `alat/`, konfigurasi. Cermin `.vercelignore`. |
+| `_headers` | `X-Robots-Tag: noindex` untuk `/kirim`, `/dasbor`, `/admin` |
+| `cloudflare/pintu.js` | Worker: `mengundang.id/` → `/mulai`, `www.mengundang.id/` → `https://mengundang.id/mulai`; selain itu langsung ke aset |
+| `uji/server.mjs` | peniru Workers untuk uji, menjalankan `pintu.js` yang sama |
+| `uji/uji-pintu.mjs` | uji jawaban HTTP: alih per host, SPA, noindex, berkas internal tidak terbit |
 
-### Kenapa urutannya tidak boleh dibalik
+Perilakunya dicocokkan dengan `wrangler dev` (runtime workerd
+sungguhan). Satu hal yang tidak bisa diuji di `wrangler dev`: ia
+mengganti host setiap permintaan dengan host rute pertama, jadi keputusan
+per host diuji lewat `uji-pintu.mjs`.
 
-Delegasi NS `mengundang.id` punya **TTL 21600 detik — 6 jam**. Begitu
-nameserver diganti di Hostinger, selama sampai 6 jam sebagian resolver
-masih bertanya ke Hostinger dan sebagian sudah bertanya ke Cloudflare.
+### Prinsip urutannya: setiap langkah bisa dibatalkan
 
-Selama **kedua sisi menjawab hal yang sama**, tidak ada yang terasa.
-Kalau sisi Cloudflare kurang satu rekaman, sebagian pengunjung kehilangan
-nama itu — dan yang paling mahal bukan halaman depan, melainkan
-`rian-aini.mengundang.id`: undangan sungguhan yang tautannya sudah
-dipegang 415 tamu.
+Rute Worker hanya mengambil alih sebuah nama kalau rekaman DNS-nya
+**diproxy (awan oranye)**. Selama awannya abu-abu, nama itu tetap ke
+Vercel seperti sekarang. Jadi:
 
-Jadi: **isi zona di Cloudflare dulu, buktikan jawabannya sama, baru pindah.**
+1. Zona Cloudflare diisi dengan rekaman abu-abu yang sama persis dengan
+   sekarang → pindah nameserver tanpa mengubah apa pun yang dilihat tamu.
+2. Sesudah zona aktif, setiap nama dipindah ke Workers dengan membalik
+   awannya jadi oranye — **satu nama demi satu nama**, dan
+   `rian-aini` paling akhir. Membatalkan = membalik lagi ke abu-abu.
+3. Vercel baru dimatikan sesudah semuanya stabil.
 
-### Rekaman yang harus ada di zona Cloudflare sebelum pindah
+`rian-aini.mengundang.id` adalah undangan sungguhan yang tautannya
+dipegang 415 tamu. Delegasi NS punya TTL 6 jam, jadi sisi Cloudflare
+harus menjawab sama dengan Hostinger SEBELUM nameserver diganti.
 
-| Tipe | Nama | Nilai | Proxy |
-|---|---|---|---|
-| CNAME | `rian-aini` | `db6d4fd625182504.vercel-dns-017.com` | DNS only — **wajib**, undangan yang sudah tersebar |
-| A | `@` | `76.76.21.21` | DNS only |
-| CNAME | `www` | `cname.vercel-dns.com` | DNS only |
-| CNAME | `*` | `cname.vercel-dns.com` | DNS only |
+### Tahap A — siapkan, tanpa risiko
 
-Cloudflare akan mengimpor rekaman lama dari Hostinger, termasuk A
-`2.57.91.91` (halaman parkir) untuk `@` dan `www`. **Hapus atau ganti**
-yang itu, dan periksa setiap rekaman hasil impor: Cloudflare cenderung
-menyalakan proxy secara bawaan.
+1. **Merge PR #1** (`claude/dev-without-laptop-0pfxk6` → `main`). PR itu
+   membawa halaman `/mulai` dan berkas Cloudflare ke `main`.
+2. **Cloudflare → Add a site → `mengundang.id` → Free.** Catat dua
+   nameserver yang diberikan (`xxx.ns.cloudflare.com`).
+3. **DNS → Records**, semuanya **DNS only (abu-abu)**:
 
-Tidak ada MX, TXT, maupun CAA yang perlu dibawa. Kalau dasbor Vercel
-(Settings → Domains) menampilkan nilai lain untuk apex atau www, pakai
-yang dari dasbor.
+   | Tipe | Nama | Nilai |
+   |---|---|---|
+   | CNAME | `rian-aini` | `db6d4fd625182504.vercel-dns-017.com` |
+   | A | `@` | `76.76.21.21` |
+   | CNAME | `www` | `cname.vercel-dns.com` |
+   | CNAME | `*` | `cname.vercel-dns.com` |
 
-### Langkahnya
+   Hapus rekaman hasil impor yang menunjuk `2.57.91.91` (parkir
+   Hostinger).
+4. **Workers & Pages → Create → Import a repository** →
+   `rianaditro/undangan-digital-rian-aini`, branch produksi `main`.
+   Build command kosong; deploy command bawaan (`npx wrangler deploy`).
+   Nama Worker diambil dari `wrangler.jsonc`: `mengundang`.
+   Kalau deploy pertama gagal karena rute (zona masih "Pending"),
+   lanjutkan saja ke tahap B dan klik "Retry deployment" sesudah zona
+   aktif.
+5. **Uji di `https://mengundang.<akun>.workers.dev`**: `/mulai`,
+   `/rian-aini/bapak-ahmad` (contoh tautan tamu bentuk path), `/kirim`.
 
-1. **Cloudflare → Add a site → `mengundang.id` → paket Free.** Catat dua
-   nameserver yang diberikan (bentuknya `xxx.ns.cloudflare.com`).
-2. **DNS → Records**: jadikan isinya persis empat rekaman di atas, semua
-   awan abu-abu.
-3. **Periksa** dari komputermu sendiri:
-   `python3 alat/periksa-dns.py xxx.ns.cloudflare.com` (salah satu dari
-   dua nameserver tadi). Jangan lanjut sebelum tulisannya `SIAP`.
-   Berkas itu juga berteriak `PROXY ORANYE` kalau ada awan yang menyala.
-4. **Hostinger → Domain → DNSSEC**: kalau menyala, matikan dulu, lalu
-   tunggu beberapa jam. DNSSEC lama yang tertinggal saat nameserver
-   pindah membuat domain gagal di resolver yang memvalidasi.
-5. **Hostinger → ganti nameserver** ke dua nameserver Cloudflare.
-6. **Periksa lagi**, sesekali selama 6 jam berikutnya. Cloudflare juga
-   mengirim email begitu situsnya "Active".
-7. **Vercel → Settings → Domains**: `mengundang.id`, `www` dan
-   `rian-aini` harus "Valid Configuration". Hapus `*.mengundang.id`.
-8. Buka `https://mengundang.id` (→ `/mulai`) dan
-   `https://rian-aini.mengundang.id`.
-9. Pasangan premium pertama: tambahkan subdomainnya di Vercel, tunggu
-   sertifikatnya, uji lewat HTTPS sebelum tautannya dikirim.
+### Tahap B — pindah nameserver
+
+6. Dari komputer sendiri:
+   `python3 alat/periksa-dns.py xxx.ns.cloudflare.com` → harus `SIAP`.
+7. **Hostinger → Domain → DNSSEC**: kalau menyala, matikan dulu.
+8. **Hostinger → nameserver** → dua nameserver Cloudflare.
+9. Tunggu sampai Cloudflare menyatakan zona **Active** (email), lalu
+   **SSL/TLS → Edge Certificates**: tunggu sertifikat Universal
+   (`mengundang.id, *.mengundang.id`) berstatus Active.
+   **SSL/TLS → Overview**: mode **Full (strict)**.
+
+Sampai titik ini semua masih dilayani Vercel.
+
+### Tahap C — pindah hosting, satu nama demi satu nama
+
+10. `@` dan `www` → oranye. Buka `https://mengundang.id` → harus
+    berakhir di `/mulai`.
+11. `*` → oranye. Buka `https://coba-acak.mengundang.id` → harus
+    "Undangan belum tersedia" (halaman undangan tanpa data), bukan
+    galat sertifikat.
+12. `rian-aini` → oranye, di jam sepi. Langsung buka satu tautan tamu
+    sungguhan dari HP (data seluler, bukan Wi-Fi rumah). Kalau ada yang
+    aneh: balik ke abu-abu, selesai.
+    Sesudah stabil, rekaman `rian-aini` boleh dihapus — wildcard `*`
+    yang oranye sudah menangkapnya.
+
+### Tahap D — matikan Vercel
+
+13. Sesudah beberapa hari tanpa masalah: hapus domain `mengundang.id`,
+    `www`, `*.mengundang.id`, `rian-aini.mengundang.id` dari proyek
+    Vercel, lalu **pause** proyeknya (bisa dikerjakan Claude lewat MCP
+    Vercel, atau Settings → General di dasbor).
+    Akibatnya: `undangan-rian-aini.vercel.app` ikut mati. Tautan tamu
+    yang dikirim dalam bentuk itu tidak terbuka lagi.
+14. Buang `vercel.json` dan `.vercelignore` dari repo, dan cabut
+    integrasi GitHub Vercel.
 
 ### Soal `alat/periksa-dns.py`
 
@@ -163,15 +201,18 @@ ke keduanya. Argumennya nameserver tujuan; tanpa argumen, ia memakai
 Ia **menolak menjawab** kalau nameserver tujuan tidak menjawab SOA
 `mengundang.id` dengan `aa=1` — artinya zonanya belum dibuat di sana,
 atau kueri tidak sampai. Yang kedua bukan teori: sandbox tempat berkas
-ini ditulis membelokkan semua UDP/53 ke resolvernya sendiri, dan
-jawabannya terlihat masuk akal walau datang dari tempat yang salah.
-Karena itu langkah 3 dan 6 dijalankan dari komputermu, bukan dari sini.
+ini ditulis membelokkan semua UDP/53 ke resolvernya sendiri. Jalankan
+dari komputermu sendiri.
+
+Peringatan `PROXY ORANYE` dari berkas itu berlaku untuk **tahap B**:
+sebelum nameserver dipindah, semua rekaman harus abu-abu. Di tahap C
+awan oranye memang tujuannya, dan di sana berkas itu tidak dipakai lagi.
 
 ## Urutan yang disarankan
 
 1. Masuk ke `/admin`, pastikan akunnya bekerja, ganti sandinya.
-2. Pindah nameserver ke Cloudflare mengikuti langkah di bagian 3 —
-   zona dulu, periksa, baru nameserver.
+2. Pindah ke Cloudflare mengikuti tahap A–D di bagian 3 — zona abu-abu
+   dulu, nameserver, baru hosting satu nama demi satu nama.
 3. Sesudah delegasinya pindah dan `https://mengundang.id` terbuka, buat
    pasangan kedua lewat `/admin` dengan paket **standar**, buka
    undangannya, kirim satu link tamu ke diri sendiri.
