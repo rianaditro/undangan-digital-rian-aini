@@ -1,5 +1,21 @@
 {
+  "redirects": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "mengundang.id" }],
+      "destination": "/mulai",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "www.mengundang.id" }],
+      "destination": "https://mengundang.id/mulai",
+      "permanent": false
+    }
+  ],
   "rewrites": [
+    { "source": "/mulai", "destination": "/mulai/index.html" },
+    { "source": "/mulai/", "destination": "/mulai/index.html" },
     { "source": "/kirim", "destination": "/kirim/index.html" },
     { "source": "/kirim/", "destination": "/kirim/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
