@@ -120,6 +120,17 @@ select{appearance:none;cursor:pointer;}
 .potong-bingkai img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none;user-select:none;-webkit-user-drag:none;pointer-events:none;
   object-position:var(--fx,50%) var(--fy,50%);transform:scale(var(--z,1));transform-origin:var(--fx,50%) var(--fy,50%);}
 .potong input[type=range]{width:100%;margin-top:6px;padding:0;}
+.potong-mode{display:flex;gap:0;margin-top:14px;border:1px solid var(--garis);}
+.potong-mode button{flex:1;padding:9px 6px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:none;border:0;
+  color:rgba(237,231,217,.6);cursor:pointer;}
+.potong-mode button[aria-checked="true"]{background:var(--kuningan);color:var(--nila);font-weight:700;}
+.potong-bingkai .buram{display:none;}
+/* Pratinjau "tampil utuh" — aturan yang sama dengan halaman kenangan. */
+.potong-bingkai.utuh{cursor:default;}
+.potong-bingkai.utuh .buram{display:block;inset:-6%;width:112%;height:112%;filter:blur(18px) brightness(.42) saturate(1.15);transform:none;}
+.potong-bingkai.utuh #potongGambar{top:40%;bottom:auto;height:auto;max-height:52%;object-fit:contain;transform:translateY(-50%);}
+.ubin .tanda-utuh{position:absolute;left:6px;bottom:6px;padding:2px 6px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  background:rgba(13,22,38,.82);color:var(--kuningan);border-radius:2px;pointer-events:none;}
 .potong .aksi{justify-content:flex-end;}
 .tanda-video{position:absolute;right:6px;bottom:6px;padding:2px 6px;font-size:10px;letter-spacing:.08em;
   background:rgba(13,22,38,.82);color:var(--kuningan);border-radius:2px;pointer-events:none;}
@@ -370,9 +381,16 @@ select{appearance:none;cursor:pointer;}
   <div class="potong-kotak">
     <p class="baris-judul" id="potongJudul">Atur untuk layar HP</p>
     <p class="hint" style="margin:6px 0 0">Geser foto di dalam bingkai, perbesar kalau perlu. Yang ada di dalam bingkai = yang terlihat di layar HP tamu. Di layar lebar, titik yang sama jadi pusatnya. Fotonya sendiri tidak diubah.</p>
-    <div class="potong-bingkai" id="potongBingkai"><img id="potongGambar" alt=""></div>
-    <label for="potongZum">Perbesar</label>
-    <input id="potongZum" type="range" min="1" max="3" step="0.01" value="1">
+    <div class="potong-mode" role="radiogroup" aria-label="Tampil di layar HP">
+      <button type="button" role="radio" data-mode="isi" aria-checked="true">Isi layar</button>
+      <button type="button" role="radio" data-mode="utuh" aria-checked="false">Tampil utuh</button>
+    </div>
+    <div class="potong-bingkai" id="potongBingkai"><img class="buram" id="potongBuram" alt=""><img id="potongGambar" alt=""></div>
+    <p class="hint" id="potongKetUtuh" hidden style="margin:8px 0 0;text-align:center">Foto tampil utuh selebar layar, sisanya diisi foto yang sama dalam keadaan buram. Cocok untuk foto rombongan atau foto landscape.</p>
+    <div id="potongKendali">
+      <label for="potongZum">Perbesar</label>
+      <input id="potongZum" type="range" min="1" max="3" step="0.01" value="1">
+    </div>
     <div class="aksi">
       <button class="btn ghost" id="potongTengah" type="button">Tengah</button>
       <button class="btn ghost" id="potongBatal" type="button">Batal</button>
@@ -935,6 +953,7 @@ select{appearance:none;cursor:pointer;}
       return '<div class="ubin'+(f.tampil ? '' : ' samar')+'" data-foto="'+esc(f.id)+'">'
         + '<span class="gbr" style="'+gayaPotong(f)+'"><img src="'+esc(src)+'" alt="" loading="lazy">'
         +   (f.jenis === 'video' ? '<span class="tanda-video">&#9654; '+esc(lamaVideo(f.durasi_ms))+'</span>' : '')
+        +   (modeTampil(f) === 'utuh' ? '<span class="tanda-utuh" title="Tampil utuh di layar HP">Utuh</span>' : '')
         + '</span>'
         + '<select data-f="bab" aria-label="Bab">'+opsiBabak+'</select>'
         + '<input data-f="keterangan" type="text" maxlength="280" placeholder="Keterangan" value="'+esc(f.keterangan||'')+'">'
@@ -976,6 +995,13 @@ select{appearance:none;cursor:pointer;}
   function nilaiBab(f){
     return f.bagian ? 'b:' + f.bagian : (f.acara_id ? 'a:' + f.acara_id : '');
   }
+  /* Sama dengan halaman kenangan: pilihan pasangan, atau otomatis dari
+     ukuran foto (landscape → tampil utuh). */
+  function modeTampil(f){
+    if(f.tampilan === 'isi' || f.tampilan === 'utuh') return f.tampilan;
+    return (f.lebar && f.tinggi && f.lebar > f.tinggi * 1.15) ? 'utuh' : 'isi';
+  }
+
   function gayaPotong(f){
     return '--fx:'+(f.fokus_x == null ? 50 : f.fokus_x)+'%;--fy:'+(f.fokus_y == null ? 50 : f.fokus_y)+'%;--z:'+(f.zum || 1);
   }
@@ -988,14 +1014,23 @@ select{appearance:none;cursor:pointer;}
      halaman — jadi yang terlihat di bingkai memang yang dilihat tamu. */
   var Potong = (function(){
     var el = $('potong'), bingkai = $('potongBingkai'), img = $('potongGambar'), zum = $('potongZum');
-    var f = null, fx = 50, fy = 50, z = 1, tarik = null, pemanggil = null;
+    var f = null, fx = 50, fy = 50, z = 1, mode = 'isi', tarik = null, pemanggil = null;
 
     function pasang(){
       bingkai.style.setProperty('--fx', fx + '%');
       bingkai.style.setProperty('--fy', fy + '%');
       bingkai.style.setProperty('--z', z);
       zum.value = z;
+      // Tampil utuh: potongan tidak dipakai, jadi geser dan perbesar disembunyikan.
+      bingkai.classList.toggle('utuh', mode === 'utuh');
+      $('potongKendali').hidden = mode === 'utuh';
+      $('potongTengah').hidden = mode === 'utuh';
+      $('potongKetUtuh').hidden = mode !== 'utuh';
+      el.querySelectorAll('[data-mode]').forEach(function(b){ b.setAttribute('aria-checked', b.dataset.mode === mode ? 'true' : 'false'); });
     }
+    el.querySelectorAll('[data-mode]').forEach(function(b){
+      b.addEventListener('click', function(){ mode = b.dataset.mode; pasang(); });
+    });
     /* Berapa piksel gambar bisa bergeser di dalam bingkai: kelebihan
        ukuran "cover", ditambah yang datang dari perbesaran. */
     function ruang(){
@@ -1009,17 +1044,19 @@ select{appearance:none;cursor:pointer;}
       fx = foto.fokus_x == null ? 50 : Number(foto.fokus_x);
       fy = foto.fokus_y == null ? 50 : Number(foto.fokus_y);
       z  = Number(foto.zum) || 1;
+      mode = modeTampil(foto);
       // Video: posternya punya ukuran yang sama dengan videonya.
-      img.src = window.Gambar.url(foto.jenis === 'video' ? (foto.jalur_kecil || foto.jalur) : foto.jalur);
+      img.src = $('potongBuram').src = window.Gambar.url(foto.jenis === 'video' ? (foto.jalur_kecil || foto.jalur) : foto.jalur);
       pasang();
       el.hidden = false;
       $('potongSimpan').focus();
     }
     function tutup(){
-      el.hidden = true; img.removeAttribute('src'); f = null;
+      el.hidden = true; img.removeAttribute('src'); $('potongBuram').removeAttribute('src'); f = null;
       if(pemanggil && pemanggil.focus) pemanggil.focus();
     }
     bingkai.addEventListener('pointerdown', function(e){
+      if(mode === 'utuh') return;
       tarik = { x: e.clientX, y: e.clientY, fx: fx, fy: fy };
       bingkai.setPointerCapture(e.pointerId);
     });
@@ -1033,6 +1070,7 @@ select{appearance:none;cursor:pointer;}
     });
     ['pointerup','pointercancel'].forEach(function(n){ bingkai.addEventListener(n, function(){ tarik = null; }); });
     bingkai.addEventListener('wheel', function(e){
+      if(mode === 'utuh') return;
       e.preventDefault();
       z = Math.min(3, Math.max(1, z - e.deltaY * 0.002)); pasang();
     }, { passive: false });
@@ -1044,13 +1082,17 @@ select{appearance:none;cursor:pointer;}
     $('potongSimpan').addEventListener('click', async function(){
       if(!f) return;
       var badan = { fokus_x: Math.round(fx * 10) / 10, fokus_y: Math.round(fy * 10) / 10, zum: Math.round(z * 100) / 100 };
+      /* Tampilan hanya ditulis kalau berbeda dari pilihan otomatis — foto
+         yang tidak pernah diubah tetap mengikuti ukurannya. */
+      var otomatis = modeTampil({ lebar: f.lebar, tinggi: f.tinggi });
+      if(f.tampilan || mode !== otomatis) badan.tampilan = mode;
       var btn = this; btn.disabled = true;
       try{
         await api('foto?id=eq.'+f.id, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify(badan) });
         Object.assign(f, badan);
         tutup();
         gambarFoto(); gambarKenangan();
-        toast('Potongan tersimpan');
+        toast(mode === 'utuh' ? 'Tersimpan: tampil utuh' : 'Potongan tersimpan');
       }catch(err){ toast(err.message, true); }
       finally{ btn.disabled = false; }
     });

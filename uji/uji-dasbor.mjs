@@ -603,6 +603,7 @@ const browser = await chromium.launch();
   const ubin = page.locator('#pustakaFoto [data-foto="f-1"]');
   await ubin.locator('[data-aksi="potong"]').click();
   const bingkai = page.locator('#potongBingkai');
+  await page.locator('#potong [data-mode="isi"]').click();     // foto contoh landscape: otomatis "utuh"
   await page.waitForFunction(() => document.getElementById('potongGambar').naturalWidth > 0, null, { timeout: 5000 });
   const kotak = await bingkai.boundingBox();
   cek('21a editor terbuka dengan bingkai layar HP (390:844)',
@@ -619,13 +620,34 @@ const browser = await chromium.launch();
   await page.locator('#potongSimpan').click();
   await page.waitForFunction(() => document.getElementById('potong').hidden, null, { timeout: 5000 });
   const p = model.patch.find(x => x.tabel === 'foto' && x.id === 'f-1');
-  cek('21b tarik + perbesar: satu PATCH fokus_x turun, fokus_y tetap (gambar mendatar tidak punya ruang tegak tanpa zum), zum 1.6',
+  cek('21b tarik + perbesar: satu PATCH fokus_x turun, fokus_y tetap (gambar mendatar tidak punya ruang tegak tanpa zum), zum 1.6, mode isi',
       p && p.badan.fokus_x < 50 && p.badan.fokus_x >= 0 && p.badan.fokus_y === 50 && p.badan.zum === 1.6
-      && Object.keys(p.badan).sort().join(',') === 'fokus_x,fokus_y,zum', JSON.stringify(p && p.badan) + ' ' + pos);
+      && p.badan.tampilan === 'isi' && Object.keys(p.badan).sort().join(',') === 'fokus_x,fokus_y,tampilan,zum', JSON.stringify(p && p.badan) + ' ' + pos);
   const gaya = await page.locator('#pustakaFoto [data-foto="f-1"] .gbr').getAttribute('style');
   cek('21c ubin pustaka langsung memakai potongan baru', gaya.includes('--z:1.6') && gaya.includes('--fx:' + p.badan.fokus_x + '%'), gaya);
+  // Mode tampil: foto contoh 1600×1067 (landscape) → otomatis "Tampil utuh"
+  await page.locator('#pustakaFoto [data-foto="f-2"] [data-aksi="potong"]').click();
+  const modeAwal = await page.locator('#potong [data-mode][aria-checked="true"]').getAttribute('data-mode');
+  cek('21e foto landscape: editor membuka dengan "Tampil utuh" (otomatis), tanpa geser/perbesar',
+      modeAwal === 'utuh' && await page.locator('#potongKendali').isHidden() && await page.locator('#potongBuram').isVisible());
+  model.patch.length = 0;
+  await page.locator('#potongSimpan').click();
+  await page.waitForFunction(() => document.getElementById('potong').hidden, null, { timeout: 5000 });
+  const pOto = model.patch.find(x => x.id === 'f-2');
+  cek('21f pilihan otomatis tidak dibekukan: tampilan tidak dikirim', pOto && !('tampilan' in pOto.badan), JSON.stringify(pOto && pOto.badan));
+  await page.locator('#pustakaFoto [data-foto="f-2"] [data-aksi="potong"]').click();
+  await page.locator('#potong [data-mode="isi"]').click();
+  cek('21g "Isi layar": geser dan perbesar muncul lagi', await page.locator('#potongKendali').isVisible());
+  model.patch.length = 0;
+  await page.locator('#potongSimpan').click();
+  await page.waitForFunction(() => document.getElementById('potong').hidden, null, { timeout: 5000 });
+  const pIsi = model.patch.find(x => x.id === 'f-2');
+  cek('21h pilihan berbeda dari otomatis: tampilan "isi" dikirim; tanda "Utuh" hilang dari ubin',
+      pIsi && pIsi.badan.tampilan === 'isi' && await page.locator('#pustakaFoto [data-foto="f-2"] .tanda-utuh').count() === 0, JSON.stringify(pIsi && pIsi.badan));
+
   // Batal tidak menyimpan
   await page.locator('#pustakaFoto [data-foto="f-2"] [data-aksi="potong"]').click();
+  await page.locator('#potong [data-mode="isi"]').click();
   await page.locator('#potongZum').fill('2.5');
   model.patch.length = 0;
   await page.locator('#potongBatal').click();

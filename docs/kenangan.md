@@ -298,3 +298,19 @@ Drive-nya dipindah atau dihapus.
 
 Tanpa kunci, fungsi menjawab 503 "kunci API belum dipasang" dan dasbor
 menampilkannya.
+
+## 16. Mode tampil per foto (migrasi 035)
+
+Foto landscape (rombongan, foto keluarga) yang dipaksa mengisi layar HP
+tegak kehilangan separuh orangnya. Tiap foto sekarang punya mode:
+
+- **Isi layar**: mengisi layar, potongan 034 berlaku.
+- **Tampil utuh**: utuh selebar layar, di tengah ruang kosong di atas
+  tulisan bab; sisa layar diisi foto yang sama, buram dan gelap.
+
+`foto.tampilan` = `'isi'` / `'utuh'` / `null` (otomatis: landscape → utuh,
+selain itu → isi). Dipilih per foto, bukan per bab: satu bab boleh
+mencampur, dan ukuran bab tidak berubah saat foto bergilir. Hanya berlaku
+di layar tegak; di layar mendatar foto landscape tetap jadi latar penuh.
+Saklarnya di editor *Atur* (kotak 8). Pilihan yang sama dengan otomatis
+tidak ditulis, supaya foto yang tidak pernah diubah tetap mengikuti ukurannya.
