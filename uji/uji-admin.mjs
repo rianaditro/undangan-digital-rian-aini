@@ -69,6 +69,13 @@ async function pasang(page, model){
     if (jalur === '/functions/v1/admin-pasangan'){
       model.panggilan.push({ nama:'fn', arg, auth });
       if (arg.aksi === 'sandi') return kirim({ email:arg.email, diganti:true });
+      if (arg.aksi === 'pemilik'){
+        const p = model.pasangan.find(x => x.slug === arg.slug);
+        if (!p) return kirim({ pesan:'tidak ada' }, 404);
+        p.pemilik = arg.email;
+        return kirim({ slug:p.slug, email:arg.email, akun_baru:true, sudah_pemilik:false,
+                       canonical_host:p.canonical_host }, 201);
+      }
       if (model.pasangan.some(p => p.slug === arg.slug))
         return kirim({ pesan:`Slug "${arg.slug}" sudah dipakai pasangan lain` }, 409);
       return kirim({ pasangan_id:'p-2', slug:arg.slug, email:arg.email, akun_baru:true,
@@ -309,6 +316,40 @@ const browser = await chromium.launch();
       fs2.arg.aksi === 'sandi' && fs2.arg.email === 'budi@contoh.com'
       && fs2.arg.sandi.length >= 12, JSON.stringify({...fs2.arg, sandi:'…'}));
 
+  await ctx.close();
+}
+
+/* ===== pasang akun ke pasangan lama ===== */
+{
+  const { ctx, page, model } = await halaman(browser);
+  model.pasangan[0].pemilik = null;
+  await page.locator('#inEmail').fill('admin@contoh.com');
+  await page.locator('#inSandi').fill('benar');
+  await page.locator('#btnMasuk').click();
+  await page.waitForSelector('.ps', { timeout:8000 });
+  const p0 = model.pasangan[0];
+
+  cek('16a pasangan tanpa pemilik punya tombol Pasang Akun',
+      await page.locator('.ps button[data-aksi="pemilik"]').count() === 1);
+  await page.locator('.ps button[data-aksi="pemilik"]').click();
+  await page.locator('.ps [data-isi="email"]').fill('pengantin@contoh.com');
+  await page.locator('.ps button[data-aksi="acakPemilik"]').click();
+  const sandiP = await page.locator('.ps [data-isi="sandi"]').inputValue();
+  await page.locator('.ps button[data-aksi="simpanPemilik"]').click();
+  await page.waitForSelector('.ps [data-isi="serah"]:not([hidden])', { timeout:5000 });
+  const fp = model.panggilan.filter(p => p.nama === 'fn').at(-1);
+  cek('16b memakai aksi pemilik dengan slug pasangan itu',
+      fp.arg.aksi === 'pemilik' && fp.arg.slug === p0.slug && fp.arg.email === 'pengantin@contoh.com'
+      && sandiP.length >= 12, JSON.stringify({...fp.arg, sandi:'…'}));
+  cek('16c token admin yang dikirim, bukan anon', fp.auth.startsWith('JWT-'), fp.auth);
+  const teks = await page.locator('.ps [data-isi="serah"]').inputValue();
+  cek('16d teks serah-terima memuat /dasbor, email, dan sandinya',
+      teks.includes('/dasbor') && teks.includes('pengantin@contoh.com') && teks.includes(sandiP), teks);
+
+  model.pasangan[0].pemilik = 'pengantin@contoh.com';
+  await page.locator('#btnSegarkan').click();
+  await page.waitForFunction(() => !document.querySelector('.ps button[data-aksi="pemilik"]'), null, { timeout:5000 });
+  cek('16e sesudah dimuat ulang tombolnya hilang', true);
   await ctx.close();
 }
 

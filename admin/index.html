@@ -84,6 +84,9 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--kuningan
 .token div{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;}
 .token code{font-family:var(--mono);font-size:11.5px;color:var(--kuningan);overflow-wrap:anywhere;}
 .token .alat{display:flex;gap:6px;}
+.token.pemilik{gap:0;max-width:460px;}
+.token.pemilik label:first-child{margin-top:0;}
+.token.pemilik textarea{min-height:170px;margin-top:12px;font-family:var(--mono);font-size:12px;line-height:1.7;}
 /* Di layar sempit alamatnya sudah selebar layar, jadi satu barisnya
    dipatah bertumpuk — kalau dibiarkan mengalir, label, alamat, dan
    tombolnya berombak dan sulit ditelusuri baris per baris. */
@@ -534,12 +537,25 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
         +   '</div>'
         +   '<div class="ps-angka">'+esc(angka.join(' · '))+'</div>'
         +   '<div class="token" data-token hidden></div>'
+        +   (p.pemilik ? '' :
+              '<div class="token pemilik" data-pemilik hidden>'
+            +   '<label>Email pemilik — untuk masuk ke /dasbor</label>'
+            +   '<input type="email" data-isi="email" autocomplete="off" placeholder="nama@contoh.com">'
+            +   '<label>Kata sandi <span style="text-transform:none;letter-spacing:0">(diabaikan kalau emailnya sudah punya akun)</span></label>'
+            +   '<div style="display:flex;gap:8px;align-items:center">'
+            +     '<input data-isi="sandi" autocomplete="off" style="flex:1" placeholder="minimal 10 huruf">'
+            +     '<button class="btn ghost kecil" data-aksi="acakPemilik">Acak</button>'
+            +   '</div>'
+            +   '<div class="aksi"><button class="btn solid kecil" data-aksi="simpanPemilik">Pasang Akun</button></div>'
+            +   '<textarea data-isi="serah" readonly spellcheck="false" hidden></textarea>'
+            + '</div>')
         + '</div>'
         + '<div class="ps-alat">'
         +   '<select data-aksi="status" aria-label="Status">'+opsi+'</select>'
         +   '<select data-aksi="paket" aria-label="Paket">'+opsiPaket+'</select>'
         +   '<button class="btn kecil ghost" data-aksi="lihat">Undangan</button>'
         +   '<button class="btn kecil ghost" data-aksi="token">Link Panitia</button>'
+        +   (p.pemilik ? '' : '<button class="btn kecil" data-aksi="pemilik">Pasang Akun</button>')
         +   '<button class="btn kecil bahaya" data-aksi="hapus">Hapus</button>'
         + '</div>'
       + '</div>';
@@ -629,6 +645,43 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
                     (await rpc('admin_token', { p_pasangan_id: id })) || [], p);
         toast('Token diganti');
       }catch(err){ toast(err.message, true); }
+      return;
+    }
+    if(aksi === 'pemilik'){
+      var f = kartu.querySelector('[data-pemilik]');
+      f.hidden = !f.hidden;
+      if(!f.hidden) f.querySelector('[data-isi="email"]').focus();
+      return;
+    }
+    if(aksi === 'acakPemilik'){
+      kartu.querySelector('[data-isi="sandi"]').value = sandiAcak();
+      return;
+    }
+    if(aksi === 'simpanPemilik'){
+      var email = kartu.querySelector('[data-isi="email"]').value;
+      var sandiP = kartu.querySelector('[data-isi="sandi"]').value;
+      tbl.disabled = true;
+      try{
+        var d = await fungsi({ aksi:'pemilik', slug:p.slug, email:email, sandi:sandiP });
+        var pas = { slug: d.slug, canonical_host: d.canonical_host || '' };
+        /* Teks serah-terima tinggal di kartu ini; muat() tidak dipanggil
+           sampai ditutup, karena menggambar ulang daftar akan
+           menghapusnya — dan sandinya hanya muncul sekali. */
+        var serah = kartu.querySelector('[data-isi="serah"]');
+        serah.value = [
+          'Undangan digital ' + (p.pria || '?') + ' & ' + (p.wanita || '?'),
+          '',
+          'Alamat undangan : ' + M.alamatUndangan(pas),
+          '',
+          'ISI SENDIRI DATANYA',
+          'Halaman  : ' + location.origin + '/dasbor',
+          'Email    : ' + d.email,
+          (d.akun_baru ? 'Sandi    : ' + sandiP : 'Sandi    : (memakai akun yang sudah ada)')
+        ].join('\n');
+        serah.hidden = false;
+        tbl.textContent = 'Terpasang';
+        toast(d.sudah_pemilik ? 'Akun itu sudah pemilik pasangan ini' : 'Akun terpasang — salin teksnya sebelum memuat ulang');
+      }catch(err){ toast(err.message, true); tbl.disabled = false; }
       return;
     }
     if(aksi === 'hapus'){

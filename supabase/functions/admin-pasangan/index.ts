@@ -11,6 +11,7 @@
 //
 // POST { aksi: 'buat',  slug, email, sandi, pria, wanita, tanggal, kota, paket }
 // POST { aksi: 'sandi', email, sandi }
+// POST { aksi: 'pemilik', slug, email, sandi }
 //
 // PENJAGANYA ADA DI DALAM, bukan di gerbang. Fungsi ini sengaja
 // dipasang dengan verify_jwt = false, dan itu BUKAN pelonggaran:
@@ -76,7 +77,8 @@ Deno.serve(async (req: Request) => {
   try { badan = await req.json(); } catch { /* biarkan kosong, divalidasi di bawah */ }
 
   try {
-    if (badan.aksi === 'sandi') return await gantiSandi(db, badan);
+    if (badan.aksi === 'sandi')   return await gantiSandi(db, badan);
+    if (badan.aksi === 'pemilik') return await pasangPemilik(db, badan);
     return await buat(db, badan);
   } catch (e) {
     console.error('admin-pasangan gagal:', e);
@@ -199,4 +201,55 @@ async function gantiSandi(db: any, b: any) {
   if (error) return jawab({ pesan: error.message }, 400);
 
   return jawab({ email, diganti: true });
+}
+
+// Akun pemilik untuk pasangan yang SUDAH ada — yang dibuat sebelum ada
+// admin panel (rian-aini, hasil migrasi 003), atau yang pemiliknya perlu
+// ditambah: pengantin kedua dengan email sendiri. Pasangan, mempelai,
+// dan token panitianya tidak disentuh sama sekali.
+async function pasangPemilik(db: any, b: any) {
+  const slug  = rapi(b.slug).toLowerCase();
+  const email = rapi(b.email).toLowerCase();
+  const sandi = String(b.sandi ?? '');
+
+  if (!SLUG.test(slug)) return jawab({ pesan: 'Slug tidak sah' }, 400);
+  if (!EMAIL.test(email)) return jawab({ pesan: 'Email klien tidak sah' }, 400);
+
+  const { data: pas } = await db
+    .from('pasangan').select('id, slug, canonical_host').eq('slug', slug).maybeSingle();
+  if (!pas) return jawab({ pesan: `Pasangan "${slug}" tidak ada` }, 404);
+
+  let akunBaru = false;
+  let pengguna = await cariEmail(db, email);
+
+  if (!pengguna) {
+    if (sandi.length < 10)
+      return jawab({ pesan: 'Kata sandi minimal 10 huruf' }, 400);
+    const { data, error } = await db.auth.admin.createUser({
+      email, password: sandi, email_confirm: true,
+    });
+    if (error) return jawab({ pesan: error.message }, 400);
+    pengguna = data.user;
+    akunBaru = true;
+  }
+
+  const { data: sudah } = await db
+    .from('pemilik').select('user_id')
+    .eq('user_id', pengguna.id).eq('pasangan_id', pas.id).maybeSingle();
+
+  if (!sudah) {
+    const { error: gagal } = await db
+      .from('pemilik').insert({ user_id: pengguna.id, pasangan_id: pas.id });
+    if (gagal) {
+      // Sama dengan buat(): akun yang baru dibuat di panggilan ini
+      // dibatalkan; akun lama tidak disentuh.
+      if (akunBaru) await db.auth.admin.deleteUser(pengguna.id).catch(() => {});
+      return jawab({ pesan: gagal.message }, 400);
+    }
+  }
+
+  return jawab({
+    slug: pas.slug, email, akun_baru: akunBaru, sudah_pemilik: !!sudah,
+    canonical_host: pas.canonical_host ?? null,
+  }, sudah ? 200 : 201);
 }
