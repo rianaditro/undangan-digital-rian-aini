@@ -94,6 +94,24 @@ select{appearance:none;cursor:pointer;}
   transform:scale(var(--z,1));transform-origin:var(--fx,50%) var(--fy,50%);}
 .ubin .alat .btn[data-aksi="potong"]{flex:1 1 90px;min-width:90px;}
 /* ---------- editor potongan (kotak 8) ---------- */
+/* ---------- impor Google Drive (kotak 8) ---------- */
+.drive{border:1px solid var(--garis);background:rgba(0,0,0,.18);padding:14px;margin-top:12px;}
+.drive-baris{display:flex;gap:8px;flex-wrap:wrap;}
+.drive-baris input{flex:1 1 220px;min-width:0;}
+.drive-alat{display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;margin-top:12px;}
+.drive-alat label{display:flex;align-items:center;gap:6px;margin:0;font-size:12px;}
+.drive-alat input[type=checkbox]{width:auto;}
+.drive-alat select{flex:1 1 180px;width:auto;}
+.drive-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:12px;max-height:440px;overflow:auto;}
+.drive-ubin{position:relative;display:block;margin:0;border:2px solid transparent;background:var(--nila-2);cursor:pointer;font-size:10px;line-height:1.3;}
+.drive-ubin input{position:absolute;top:5px;left:5px;width:18px;height:18px;margin:0;z-index:1;}
+.drive-ubin .gb{display:block;aspect-ratio:1;background:rgba(237,231,217,.06);overflow:hidden;}
+.drive-ubin img{width:100%;height:100%;object-fit:cover;display:block;}
+.drive-ubin .nama{display:block;padding:4px 5px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(237,231,217,.8);}
+.drive-ubin .ket{display:block;padding:0 5px 5px;color:rgba(237,231,217,.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.drive-ubin:has(input:checked){border-color:var(--kuningan);}
+.drive-ubin.mati{opacity:.45;cursor:not-allowed;}
+.drive-ubin.selesai .ket{color:var(--kuningan);}
 .potong{position:fixed;inset:0;z-index:80;background:rgba(9,14,24,.92);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto;}
 .potong-kotak{background:var(--nila);border:1px solid var(--garis);padding:18px;width:min(420px,100%);}
 .potong-bingkai{position:relative;width:min(240px,62vw);aspect-ratio:390/844;margin:14px auto 0;overflow:hidden;
@@ -290,6 +308,16 @@ select{appearance:none;cursor:pointer;}
     <div class="aksi" style="margin-top:0">
       <label class="btn ghost berkas" for="inBerkasFoto">Pilih Foto / Video</label>
       <input id="inBerkasFoto" type="file" accept="image/*,video/mp4,video/webm" multiple hidden>
+      <button class="btn ghost" id="btnDrive" type="button" aria-expanded="false" aria-controls="drive">Impor dari Google Drive</button>
+    </div>
+    <div class="drive" id="drive" hidden>
+      <label for="inDrive">Link folder Google Drive</label>
+      <div class="drive-baris">
+        <input id="inDrive" type="url" inputmode="url" placeholder="https://drive.google.com/drive/folders/…">
+        <button class="btn solid" id="btnDriveLihat" type="button">Lihat isi</button>
+      </div>
+      <p class="hint" style="margin:8px 0 0">Folder dari fotografer bisa langsung dipakai. Aksesnya harus <em>Siapa saja yang memiliki link</em>. Subfolder (Akad, Resepsi, …) ikut terbaca. Foto dikecilkan dulu sebelum disimpan, dan sesudah diimpor halaman kenangan tidak bergantung lagi pada Drive.</p>
+      <div id="driveIsi"></div>
     </div>
     <p class="hint" style="margin:10px 0 0">Foto dikecilkan dulu di perangkat ini sebelum dikirim, jadi tidak perlu diperkecil sendiri. Video: MP4 atau WebM, paling besar 20 MB — potongan pendek 10–30 detik paling pas. Bisa pilih banyak sekaligus. Pilih <em>Bab</em> di tiap ubin untuk menaruhnya di bagian halaman kenangan, dan tekan <em>Atur</em> untuk memilih bagian foto yang terlihat di layar HP.</p>
     <div class="maju" id="majuFoto" hidden><i></i></div>
@@ -1038,8 +1066,10 @@ select{appearance:none;cursor:pointer;}
     return d ? Math.floor(d / 60) + ':' + ('0' + d % 60).slice(-2) : 'video';
   }
 
-  async function unggahSatuFoto(berkas){
+  async function unggahSatuFoto(berkas, bab){
     var form = new FormData();
+    if(bab && bab.indexOf('b:') === 0) form.append('bagian', bab.slice(2));
+    if(bab && bab.indexOf('a:') === 0) form.append('acara_id', bab.slice(2));
     if(/^video\//.test(berkas.type) || /\.(mov|mp4|webm|m4v)$/i.test(berkas.name || '')){
       /* Video tidak diubah di sini — hanya diperiksa bisa diputar
          peramban, lalu satu bingkainya diambil jadi poster. */
@@ -1109,6 +1139,159 @@ select{appearance:none;cursor:pointer;}
   }
 
   $('inBerkasFoto').addEventListener('change', pilihFoto);
+
+  /* ---------- Impor dari Google Drive ----------
+     drive-impor hanya mendaftar isi folder dan meneruskan unduhan
+     (kunci API Google tinggal di server). Tiap berkas lalu melewati
+     pipa yang sama dengan unggahan dari HP: dikecilkan / dipotret
+     posternya di sini, dikirim ke foto-unggah. Jadi batas, bab, dan
+     potongan berlaku sama, dan halaman tidak bergantung pada Drive. */
+  var Drive = (function(){
+    var FN = M.SB.url + '/functions/v1/drive-impor';
+    var hasil = null, sedang = false, berhenti = false, sudah = {};
+    var BATAS_VIDEO_DRIVE = 20 * 1024 * 1024, BATAS_FOTO_DRIVE = 40 * 1024 * 1024;
+
+    function kepala(){ return { 'Authorization': 'Bearer ' + (sesi && sesi.akses), 'apikey': M.SB.key }; }
+    function ukuran(b){ return b == null ? '' : b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.round(b / 1024) + ' KB'; }
+    /* Berkas yang pasti gagal ditandai sebelum dipilih, dengan alasannya. */
+    function alasanTolak(b){
+      if(b.jenis === 'video/quicktime') return 'MOV — simpan sebagai MP4';
+      if(/^video\//.test(b.jenis) && b.bita > BATAS_VIDEO_DRIVE) return 'video > 20 MB';
+      if(/^image\//.test(b.jenis) && b.bita > BATAS_FOTO_DRIVE) return 'foto > 40 MB';
+      return '';
+    }
+
+    $('btnDrive').addEventListener('click', function(){
+      var buka = $('drive').hidden;
+      $('drive').hidden = !buka;
+      this.setAttribute('aria-expanded', buka ? 'true' : 'false');
+      if(buka) $('inDrive').focus();
+    });
+
+    async function lihat(){
+      var link = $('inDrive').value.trim();
+      if(!link){ toast('Tempel link folder Google Drive dulu', true); return; }
+      var btn = $('btnDriveLihat'); btn.disabled = true; btn.textContent = 'Membaca…';
+      $('driveIsi').innerHTML = '<p class="kosongstate">Membaca isi folder…</p>';
+      try{
+        var r = await fetch(FN + '?folder=' + encodeURIComponent(link), { headers: kepala() });
+        var j = null; try{ j = await r.json(); }catch(e){}
+        if(!r.ok) throw new Error((j && j.pesan) || ('Gagal membaca folder (HTTP ' + r.status + ')'));
+        hasil = j; sudah = {};
+        gambarIsi();
+      }catch(err){
+        $('driveIsi').innerHTML = '<p class="kosongstate" role="alert">' + esc(err.message) + '</p>';
+      }finally{ btn.disabled = false; btn.textContent = 'Lihat isi'; }
+    }
+    $('btnDriveLihat').addEventListener('click', lihat);
+    $('inDrive').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); lihat(); } });
+
+    function gambarIsi(){
+      var b = hasil.berkas || [];
+      if(!b.length){
+        $('driveIsi').innerHTML = '<p class="kosongstate">Folder <em>' + esc(hasil.folder.nama) + '</em> tidak berisi foto atau video.</p>';
+        return;
+      }
+      $('driveIsi').innerHTML =
+          '<p class="baris-judul" style="margin-top:14px">' + esc(hasil.folder.nama) + ' · ' + b.length + ' berkas'
+        + (hasil.terpotong ? ' (hanya 500 pertama)' : '') + '</p>'
+        + '<div class="drive-alat">'
+        +   '<label><input type="checkbox" id="drivePilihSemua"> Pilih semua</label>'
+        +   '<label for="driveBab" style="color:rgba(237,231,217,.6)">Masukkan ke bab</label>'
+        +   '<select id="driveBab">' + opsiBab() + '</select>'
+        + '</div>'
+        + '<div class="drive-grid" id="driveGrid">' + b.map(function(x){
+            var tolak = alasanTolak(x), video = /^video\//.test(x.jenis);
+            var ket = [x.sub, video ? '▶ ' + lamaVideo(x.durasi_ms) : '', ukuran(x.bita), tolak].filter(Boolean).join(' · ');
+            return '<label class="drive-ubin' + (tolak ? ' mati' : '') + '" data-drive-ubin="' + esc(x.id) + '" title="' + esc(x.nama) + '">'
+              + '<input type="checkbox" data-drive="' + esc(x.id) + '"' + (tolak ? ' disabled' : '') + '>'
+              + '<span class="gb">' + (x.kecil ? '<img src="' + esc(x.kecil) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">' : '') + '</span>'
+              + '<span class="nama">' + esc(x.nama) + '</span><span class="ket">' + esc(ket) + '</span></label>';
+          }).join('') + '</div>'
+        + '<p class="kuota" id="driveHitung"></p>'
+        + '<div class="aksi"><button class="btn solid" id="btnDriveImpor" type="button" disabled>Impor</button>'
+        + '<button class="btn ghost" id="btnDriveTutup" type="button">Tutup</button></div>';
+      hitung();
+    }
+
+    function dipilih(){
+      return Array.prototype.slice.call(document.querySelectorAll('#driveGrid [data-drive]:checked')).map(function(c){
+        return hasil.berkas.find(function(x){ return x.id === c.dataset.drive; });
+      });
+    }
+    function hitung(){
+      if(!hasil || !$('driveHitung')) return;
+      var p = dipilih(), video = p.filter(function(x){ return /^video\//.test(x.jenis); }).length;
+      var sisa = hasil.batas - hasil.terpakai, sisaVideo = hasil.batas_video - hasil.terpakai_video;
+      var lebih = p.length > sisa ? 'Melebihi sisa kuota (' + sisa + ' berkas lagi).'
+                : video > sisaVideo ? 'Video melebihi sisa kuota (' + sisaVideo + ' video lagi).' : '';
+      $('driveHitung').textContent = p.length + ' dipilih' + (video ? ' (' + video + ' video)' : '')
+        + ' · sisa kuota ' + sisa + ' berkas' + (lebih ? ' — ' + lebih : '');
+      $('driveHitung').style.color = lebih ? 'var(--merah, #e08a7a)' : '';
+      var btn = $('btnDriveImpor');
+      btn.disabled = sedang || !p.length || !!lebih;
+      btn.textContent = sedang ? 'Mengimpor…' : 'Impor ' + (p.length || '');
+      var semua = $('drivePilihSemua'), bisa = document.querySelectorAll('#driveGrid [data-drive]:not(:disabled)');
+      semua.checked = bisa.length > 0 && p.length === bisa.length;
+    }
+
+    $('driveIsi').addEventListener('change', function(e){
+      if(e.target.id === 'drivePilihSemua'){
+        document.querySelectorAll('#driveGrid [data-drive]:not(:disabled)').forEach(function(c){ c.checked = e.target.checked; });
+      }
+      hitung();
+    });
+    $('driveIsi').addEventListener('click', function(e){
+      if(e.target.id === 'btnDriveImpor') impor();
+      if(e.target.id === 'btnDriveTutup'){
+        if(sedang){ berhenti = true; toast('Menghentikan sesudah berkas yang sedang diproses…'); return; }
+        $('drive').hidden = true; $('btnDrive').setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    async function impor(){
+      var p = dipilih(); if(!p.length) return;
+      var bab = $('driveBab').value;
+      sedang = true; berhenti = false; hitung();
+      var maju = $('majuFoto'), batang = maju.querySelector('i');
+      maju.hidden = false;
+      var sukses = 0, gagal = [];
+      for(var i = 0; i < p.length && !berhenti; i++){
+        var x = p[i], ubin = document.querySelector('[data-drive-ubin="' + x.id + '"]');
+        batang.style.width = Math.round(i / p.length * 100) + '%';
+        toast('Mengimpor ' + (i+1) + ' dari ' + p.length + '…');
+        try{
+          var r = await fetch(FN + '?unduh=' + encodeURIComponent(x.id), { headers: kepala() });
+          if(!r.ok){ var j = null; try{ j = await r.json(); }catch(e){} throw new Error((j && j.pesan) || ('HTTP ' + r.status)); }
+          var blob = await r.blob();
+          var berkas = new File([blob], x.nama, { type: x.jenis });
+          await unggahSatuFoto(berkas, bab);
+          sukses++; sudah[x.id] = true;
+          hasil.terpakai++; if(/^video\//.test(x.jenis)) hasil.terpakai_video++;
+          if(ubin){
+            ubin.classList.add('mati', 'selesai');
+            var c = ubin.querySelector('input'); c.checked = false; c.disabled = true;
+            ubin.querySelector('.ket').textContent = 'sudah diimpor';
+          }
+        }catch(err){
+          gagal.push(x.nama + ': ' + err.message);
+          if(ubin) ubin.querySelector('.ket').textContent = err.message;
+        }
+        hitung();
+      }
+      batang.style.width = '100%';
+      setTimeout(function(){ maju.hidden = true; batang.style.width = '0'; }, 600);
+      sedang = false; hitung();
+      if(gagal.length){
+        console.warn('Impor yang gagal:', gagal);
+        toast(sukses + ' diimpor, ' + gagal.length + ' gagal — ' + gagal[0], true);
+      }else{
+        toast(berhenti ? sukses + ' diimpor, sisanya dihentikan' : sukses + ' berkas diimpor dari Google Drive');
+      }
+      await muatFoto();
+    }
+    return { lihat: lihat };
+  })();
 
   $('pustakaFoto').addEventListener('change', async function(e){
     var el = e.target.closest('[data-f]');
