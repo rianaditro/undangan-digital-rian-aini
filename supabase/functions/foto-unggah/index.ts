@@ -537,3 +537,25 @@ async function hapus(db: any, pasanganId: string, req: Request, untuk: string) {
 
   return jawab({ dihapus: id });
 }
+
+// ---------------------------------------------------------------------------
+// Pemeriksaan sekali tiap fungsi menyala: apakah kunci tiket di sini sama
+// dengan yang dipasang di Worker? Tiket hapus untuk kunci yang tidak
+// pernah dipakai — tidak ada yang berubah — lalu jawabannya dicatat di
+// log fungsi (Supabase → Edge Functions → foto-unggah → Logs).
+// ---------------------------------------------------------------------------
+setTimeout(async () => {
+  if (!MEDIA_KUNCI) {
+    console.warn('periksa media: MEDIA_KUNCI belum dipasang di Supabase — unggahan memakai jalan lama');
+    return;
+  }
+  const uji = '00000000-0000-4000-8000-000000000000/00000000-0000-4000-8000-000000000000.webp';
+  try {
+    const r = await fetch(`${MEDIA_ASAL}/media/${uji}`, { method: 'DELETE', headers: await tiket('hapus', uji, '', 0) });
+    const arti = r.status === 204 ? 'kunci cocok' : r.status === 403 ? 'KUNCI BEDA dengan Worker'
+               : r.status === 503 ? 'kunci BELUM dipasang di Worker' : 'jawaban tak terduga';
+    console.log(`periksa media: Worker menjawab ${r.status} — ${arti}`);
+  } catch (e) {
+    console.error('periksa media: Worker tidak terjangkau', e);
+  }
+}, 0);

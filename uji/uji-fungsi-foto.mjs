@@ -319,6 +319,9 @@ try {
   r = await minta('/?id=' + idR2, { method: 'DELETE', headers: dasbor('jwt-u4') });
   cek(r.s === 200 && !r2.isi.has(iz.jalur) && !r2.isi.has(iz.jalur_kecil), `hapus: berkas dan thumbnail hilang dari R2 → ${r.s}`);
 
+  cek(/periksa media: Worker menjawab 204 — kunci cocok/.test(log), 'saat menyala, foto-unggah memeriksa kuncinya ke Worker dan mencatat "kunci cocok"',
+      (log.match(/periksa media[^\n]*/) || ['(tidak ada)'])[0]);
+
   // ---------- hapus ----------
   r = await minta('/?id=F2', { method: 'DELETE', headers: dasbor('jwt-u1') });
   cek(r.s === 404 && data.foto.some(f => f.id === 'F2') && buangan().length === 0, `dasbor: foto pasangan lain tidak bisa dihapus → ${r.s}`);
