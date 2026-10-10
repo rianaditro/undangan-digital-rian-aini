@@ -87,7 +87,22 @@ select{appearance:none;cursor:pointer;}
 .ubin{border:1px solid var(--garis);background:rgba(0,0,0,.2);padding:8px;}
 .ubin.samar{opacity:.45;}
 .ubin img{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--nila-2);display:block;}
-.ubin .gbr,.pilih-latar .gbr{position:relative;display:block;}
+.ubin .gbr,.pilih-latar .gbr{position:relative;display:block;overflow:hidden;}
+/* Ubin pustaka memakai potongan yang sama dengan halaman (034), supaya
+   yang dilihat di sini sudah mendekati layar HP tamu. */
+.ubin .gbr img{aspect-ratio:3/4;object-position:var(--fx,50%) var(--fy,50%);
+  transform:scale(var(--z,1));transform-origin:var(--fx,50%) var(--fy,50%);}
+.ubin .alat .btn[data-aksi="potong"]{flex:1 1 90px;min-width:90px;}
+/* ---------- editor potongan (kotak 8) ---------- */
+.potong{position:fixed;inset:0;z-index:80;background:rgba(9,14,24,.92);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto;}
+.potong-kotak{background:var(--nila);border:1px solid var(--garis);padding:18px;width:min(420px,100%);}
+.potong-bingkai{position:relative;width:min(240px,62vw);aspect-ratio:390/844;margin:14px auto 0;overflow:hidden;
+  border:2px solid var(--kuningan);border-radius:18px;background:var(--nila-2);touch-action:none;cursor:grab;}
+.potong-bingkai:active{cursor:grabbing;}
+.potong-bingkai img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none;user-select:none;-webkit-user-drag:none;pointer-events:none;
+  object-position:var(--fx,50%) var(--fy,50%);transform:scale(var(--z,1));transform-origin:var(--fx,50%) var(--fy,50%);}
+.potong input[type=range]{width:100%;margin-top:6px;padding:0;}
+.potong .aksi{justify-content:flex-end;}
 .tanda-video{position:absolute;right:6px;bottom:6px;padding:2px 6px;font-size:10px;letter-spacing:.08em;
   background:rgba(13,22,38,.82);color:var(--kuningan);border-radius:2px;pointer-events:none;}
 .ubin select,.ubin input{font-size:12px;padding:6px 8px;margin-top:6px;}
@@ -276,7 +291,7 @@ select{appearance:none;cursor:pointer;}
       <label class="btn ghost berkas" for="inBerkasFoto">Pilih Foto / Video</label>
       <input id="inBerkasFoto" type="file" accept="image/*,video/mp4,video/webm" multiple hidden>
     </div>
-    <p class="hint" style="margin:10px 0 0">Foto dikecilkan dulu di perangkat ini sebelum dikirim, jadi tidak perlu diperkecil sendiri. Video: MP4 atau WebM, paling besar 20 MB — potongan pendek 10–30 detik paling pas. Bisa pilih banyak sekaligus. Pilih <em>Bab</em> di tiap ubin untuk menaruhnya di bagian halaman kenangan.</p>
+    <p class="hint" style="margin:10px 0 0">Foto dikecilkan dulu di perangkat ini sebelum dikirim, jadi tidak perlu diperkecil sendiri. Video: MP4 atau WebM, paling besar 20 MB — potongan pendek 10–30 detik paling pas. Bisa pilih banyak sekaligus. Pilih <em>Bab</em> di tiap ubin untuk menaruhnya di bagian halaman kenangan, dan tekan <em>Atur</em> untuk memilih bagian foto yang terlihat di layar HP.</p>
     <div class="maju" id="majuFoto" hidden><i></i></div>
     <p class="kuota" id="kuotaFoto"></p>
     <div class="pustaka" id="pustakaFoto"></div>
@@ -322,6 +337,21 @@ select{appearance:none;cursor:pointer;}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="potong" id="potong" hidden role="dialog" aria-modal="true" aria-labelledby="potongJudul">
+  <div class="potong-kotak">
+    <p class="baris-judul" id="potongJudul">Atur untuk layar HP</p>
+    <p class="hint" style="margin:6px 0 0">Geser foto di dalam bingkai, perbesar kalau perlu. Yang ada di dalam bingkai = yang terlihat di layar HP tamu. Di layar lebar, titik yang sama jadi pusatnya. Fotonya sendiri tidak diubah.</p>
+    <div class="potong-bingkai" id="potongBingkai"><img id="potongGambar" alt=""></div>
+    <label for="potongZum">Perbesar</label>
+    <input id="potongZum" type="range" min="1" max="3" step="0.01" value="1">
+    <div class="aksi">
+      <button class="btn ghost" id="potongTengah" type="button">Tengah</button>
+      <button class="btn ghost" id="potongBatal" type="button">Batal</button>
+      <button class="btn solid" id="potongSimpan" type="button">Simpan</button>
+    </div>
+  </div>
+</div>
 
 <script src="/assets/varian.js"></script>
 <script src="/assets/akun.js"></script>
@@ -879,7 +909,7 @@ select{appearance:none;cursor:pointer;}
     $('pustakaFoto').innerHTML = daftar.map(function(f, i){
       var src = window.Gambar.url(f.jalur_kecil || f.jalur);
       return '<div class="ubin'+(f.tampil ? '' : ' samar')+'" data-foto="'+esc(f.id)+'">'
-        + '<span class="gbr"><img src="'+esc(src)+'" alt="" loading="lazy">'
+        + '<span class="gbr" style="'+gayaPotong(f)+'"><img src="'+esc(src)+'" alt="" loading="lazy">'
         +   (f.jenis === 'video' ? '<span class="tanda-video">&#9654; '+esc(lamaVideo(f.durasi_ms))+'</span>' : '')
         + '</span>'
         + '<select data-f="bab" aria-label="Bab">'+opsiBabak+'</select>'
@@ -888,6 +918,7 @@ select{appearance:none;cursor:pointer;}
         +   '<button class="btn ghost" data-aksi="naik" '+(i===0?'disabled':'')+' title="Naikkan">&uarr;</button>'
         +   '<button class="btn ghost" data-aksi="turun" '+(i===daftar.length-1?'disabled':'')+' title="Turunkan">&darr;</button>'
         +   '<button class="btn ghost" data-aksi="tampil">'+(f.tampil?'Sembunyi':'Tampil')+'</button>'
+        +   '<button class="btn ghost" data-aksi="potong" title="Atur potongan untuk layar HP">Atur</button>'
         +   '<button class="btn bahaya" data-aksi="hapus">Hapus</button>'
         + '</div>'
         + '</div>';
@@ -921,6 +952,87 @@ select{appearance:none;cursor:pointer;}
   function nilaiBab(f){
     return f.bagian ? 'b:' + f.bagian : (f.acara_id ? 'a:' + f.acara_id : '');
   }
+  function gayaPotong(f){
+    return '--fx:'+(f.fokus_x == null ? 50 : f.fokus_x)+'%;--fy:'+(f.fokus_y == null ? 50 : f.fokus_y)+'%;--z:'+(f.zum || 1);
+  }
+
+  /* ---------- Editor potongan (034) ----------
+     Bab kenangan memenuhi layar HP tegak; yang dipilih di sini adalah
+     jendela tegak di dalam foto: titik fokus (object-position, juga
+     pusat perbesaran) dan perbesaran. Bingkainya berukuran layar HP
+     umum (390 × 844), dan gambarnya dipasang PERSIS dengan aturan CSS
+     halaman — jadi yang terlihat di bingkai memang yang dilihat tamu. */
+  var Potong = (function(){
+    var el = $('potong'), bingkai = $('potongBingkai'), img = $('potongGambar'), zum = $('potongZum');
+    var f = null, fx = 50, fy = 50, z = 1, tarik = null, pemanggil = null;
+
+    function pasang(){
+      bingkai.style.setProperty('--fx', fx + '%');
+      bingkai.style.setProperty('--fy', fy + '%');
+      bingkai.style.setProperty('--z', z);
+      zum.value = z;
+    }
+    /* Berapa piksel gambar bisa bergeser di dalam bingkai: kelebihan
+       ukuran "cover", ditambah yang datang dari perbesaran. */
+    function ruang(){
+      var bw = bingkai.clientWidth, bh = bingkai.clientHeight;
+      var iw = img.naturalWidth || bw, ih = img.naturalHeight || bh;
+      var k = Math.max(bw / iw, bh / ih);
+      return { x: iw * k * z - bw, y: ih * k * z - bh };
+    }
+    function buka(foto, dari){
+      f = foto; pemanggil = dari || null;
+      fx = foto.fokus_x == null ? 50 : Number(foto.fokus_x);
+      fy = foto.fokus_y == null ? 50 : Number(foto.fokus_y);
+      z  = Number(foto.zum) || 1;
+      // Video: posternya punya ukuran yang sama dengan videonya.
+      img.src = window.Gambar.url(foto.jenis === 'video' ? (foto.jalur_kecil || foto.jalur) : foto.jalur);
+      pasang();
+      el.hidden = false;
+      $('potongSimpan').focus();
+    }
+    function tutup(){
+      el.hidden = true; img.removeAttribute('src'); f = null;
+      if(pemanggil && pemanggil.focus) pemanggil.focus();
+    }
+    bingkai.addEventListener('pointerdown', function(e){
+      tarik = { x: e.clientX, y: e.clientY, fx: fx, fy: fy };
+      bingkai.setPointerCapture(e.pointerId);
+    });
+    bingkai.addEventListener('pointermove', function(e){
+      if(!tarik) return;
+      var r = ruang();
+      // Gambar ditarik ke kanan = jendela bergeser ke kiri = fokus turun.
+      if(r.x > 1) fx = Math.min(100, Math.max(0, tarik.fx - (e.clientX - tarik.x) / r.x * 100));
+      if(r.y > 1) fy = Math.min(100, Math.max(0, tarik.fy - (e.clientY - tarik.y) / r.y * 100));
+      pasang();
+    });
+    ['pointerup','pointercancel'].forEach(function(n){ bingkai.addEventListener(n, function(){ tarik = null; }); });
+    bingkai.addEventListener('wheel', function(e){
+      e.preventDefault();
+      z = Math.min(3, Math.max(1, z - e.deltaY * 0.002)); pasang();
+    }, { passive: false });
+    zum.addEventListener('input', function(){ z = Number(zum.value); pasang(); });
+    $('potongTengah').addEventListener('click', function(){ fx = 50; fy = 50; z = 1; pasang(); });
+    $('potongBatal').addEventListener('click', tutup);
+    el.addEventListener('click', function(e){ if(e.target === el) tutup(); });
+    document.addEventListener('keydown', function(e){ if(!el.hidden && e.key === 'Escape') tutup(); });
+    $('potongSimpan').addEventListener('click', async function(){
+      if(!f) return;
+      var badan = { fokus_x: Math.round(fx * 10) / 10, fokus_y: Math.round(fy * 10) / 10, zum: Math.round(z * 100) / 100 };
+      var btn = this; btn.disabled = true;
+      try{
+        await api('foto?id=eq.'+f.id, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify(badan) });
+        Object.assign(f, badan);
+        tutup();
+        gambarFoto(); gambarKenangan();
+        toast('Potongan tersimpan');
+      }catch(err){ toast(err.message, true); }
+      finally{ btn.disabled = false; }
+    });
+    return { buka: buka };
+  })();
+
   function lamaVideo(ms){
     var d = Math.round((ms || 0) / 1000);
     return d ? Math.floor(d / 60) + ':' + ('0' + d % 60).slice(-2) : 'video';
@@ -1027,6 +1139,7 @@ select{appearance:none;cursor:pointer;}
     var i  = (data.foto||[]).findIndex(function(x){ return x.id === id; });
     if(i < 0) return;
     var f = data.foto[i], aksi = tombol.dataset.aksi;
+    if(aksi === 'potong'){ Potong.buka(f, tombol); return; }
 
     tombol.disabled = true;
     try{

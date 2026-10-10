@@ -84,7 +84,7 @@ function isiKenangan(ubah = {}){
     mempelai: ISI.mempelai,
     foto: [f('p/sampul.jpg', { bagian:'sampul', latar:true }), f('p/resepsi.jpg', { bagian:'sampul' }),
            f('p/akad.jpg', { bagian:'pria', keterangan:'Rian' }),
-           f('p/keluarga.jpg', { bagian:'keluarga', latar:true, keterangan:'Keluarga besar' }),
+           f('p/keluarga.jpg', { bagian:'keluarga', latar:true, keterangan:'Keluarga besar', fokus_x:20, fokus_y:80, zum:1.5 }),
            vid({ bagian:'keluarga' }), f('p/akad.jpg', { bagian:'keluarga' }),
            f('p/akad.jpg', { acara_id:'A1', keterangan:'Ijab kabul', latar:true }), f('p/resepsi.jpg', { acara_id:'A1' }),
            f('p/resepsi.jpg', { acara_id:'A2' }),
@@ -156,16 +156,24 @@ const urutanBab = page => page.evaluate(() =>
   cek('tk-5 babak acara tanpa foto jadi kartu teks',
       await page.locator('[data-bab="acara-A3"]').evaluate(el => el.classList.contains('polos') && !el.querySelector('.latar'))
       && (await teks(page, '[data-bab="acara-A3"]')).includes('Antrean panjang'));
-  cek('tk-6 bab keluarga: 3 lapis (foto + video), titik, tombol "Lihat 3 foto & video"',
+  cek('tk-6 bab keluarga: 3 lapis (foto + video), titik, tombol geser ‹ ›, tanpa "Lihat/Perbesar"',
       await page.locator('[data-bab="keluarga"] .lapis').count() === 3
       && await page.locator('[data-bab="keluarga"] .lapis video').count() === 1
       && await page.locator('[data-bab="keluarga"] .titik button').count() === 3
-      && (await teks(page, '[data-bab="keluarga"] .lihat-semua')).toLowerCase() === 'lihat 3 foto & video');
+      && await page.locator('[data-bab="keluarga"] .geser').count() === 2
+      && await page.locator('.lihat-semua, [data-bab]:not([data-bab="galeri"]) [data-lihat]').count() === 0
+      && await page.locator('[data-bab="pria"] .geser').count() === 0);
+  const pot = await page.locator('[data-bab="keluarga"] .lapis >> nth=0').evaluate(el => {
+    const g = getComputedStyle(el.querySelector('img'));
+    return g.objectPosition + ' | ' + g.transformOrigin.split(' ').length + ' | ' + el.getAttribute('style');
+  });
+  cek('tk-6b potongan dari dasbor: titik fokus jadi object-position, zum ikut', pot.startsWith('20% 80%') && pot.includes('--z:1.5'), pot);
   cek('tk-7 latar membuka giliran (foto latar jadi lapis pertama)',
       (await page.locator('[data-bab="keluarga"] .lapis.aktif img').getAttribute('src')).endsWith('/p/keluarga.jpg'));
-  cek('tk-8 album: hanya foto tanpa bab, video bertanda ▶',
-      await page.locator('[data-bab="galeri"] .album button').count() === 2
-      && await page.locator('[data-bab="galeri"] .tanda-video').count() === 1);
+  const albumSrc = await page.locator('[data-bab="galeri"] .album img').evaluateAll(l => l.map(i => i.getAttribute('src').split('/').pop()));
+  cek('tk-8 album: SEMUA foto (yang sudah tampil di bab ikut), urut bab, yang tanpa bab di akhir',
+      albumSrc.length === 11 && albumSrc[0] === 'sampul.jpg' && albumSrc[2] === 'akad.jpg'
+      && await page.locator('[data-bab="galeri"] .tanda-video').count() === 2, albumSrc.join(','));
   const vendor = page.locator('#vendor .vendor > div');
   cek('tk-9 terima kasih kepada: @akun → Instagram, https → nama situs, tanpa tautan tetap tampil',
       await vendor.count() === 3
@@ -174,20 +182,21 @@ const urutanBab = page => page.evaluate(() =>
       && await page.locator('#vendor .vendor > div >> nth=2').locator('a').count() === 0);
   cek('tk-10 penutup bertanda tangan kalian berdua',
       (await teks(page, '[data-bab="penutup"] .tanda-tangan')).includes("Rian & 'Aini"));
-  cek('tk-11 tombol putar, musik, dan gulir siap',
+  cek('tk-11 tombol putar, musik, gulir, dan ucapan siap',
       await page.locator('#btnPutar').isVisible() && await page.locator('#btnMusik').isVisible()
-      && await page.locator('#btnGulir').isVisible());
+      && await page.locator('#btnGulir').isVisible() && await page.locator('#btnUcapan').isVisible()
+      && (await page.locator('#btnUcapan').getAttribute('aria-pressed')) === 'true');
 
-  // penampil
-  await page.locator('[data-bab="keluarga"] .lihat-semua').click();
+  // penampil: hanya dari album
+  await page.locator('[data-bab="galeri"] .album button >> nth=7').click();
   const hitung1 = await teks(page, '#kacaHitung');
-  await page.keyboard.press('ArrowRight');
   const adaVideo = await page.locator('#kacaIsi video[controls]').count();
+  await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
   await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
   const hitung4 = await teks(page, '#kacaHitung');
   await page.keyboard.press('Escape');
-  cek('tk-12 penampil: urutan bab, video dengan kontrol, berputar, Esc menutup',
-      hitung1 === '1 / 3' && adaVideo === 1 && hitung4 === '1 / 3' && await page.locator('#kaca').isHidden(),
+  cek('tk-12 penampil album: video dengan kontrol, berputar, Esc menutup',
+      hitung1 === '8 / 11' && adaVideo === 1 && hitung4 === '1 / 11' && await page.locator('#kaca').isHidden(),
       JSON.stringify({ hitung1, adaVideo, hitung4 }));
 
   // giliran berhenti di luar layar, berjalan di dalamnya
@@ -209,6 +218,9 @@ const urutanBab = page => page.evaluate(() =>
   await page.locator('[data-bab="acara-A3"]').scrollIntoViewIfNeeded();
   await page.waitForTimeout(1200);
   await page.locator('[data-bab="acara-A3"]').screenshot({ path:'kenangan-babak-teks.png' });
+  await page.locator('[data-bab="keluarga"]').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1500);
+  await page.locator('[data-bab="keluarga"]').screenshot({ path:'kenangan-bab-geser.png' });
   await page.locator('#vendor').scrollIntoViewIfNeeded();
   await page.waitForTimeout(1200);
   await page.locator('#vendor').screenshot({ path:'kenangan-vendor.png' });
@@ -235,8 +247,22 @@ const urutanBab = page => page.evaluate(() =>
   cek('tk-16 latar bergilir ke foto/video berikutnya, titik ikut', awal === 0 && sesudah === 1 && titik === '1',
       JSON.stringify({ awal, sesudah, titik }));
   await page.locator('[data-bab="keluarga"] .titik button >> nth=2').click();
-  cek('tk-17 titik bisa diketuk',
-      await page.locator('[data-bab="keluarga"] .lapis >> nth=2').evaluate(el => el.classList.contains('aktif')));
+  const lapisAktif = () => page.locator('[data-bab="keluarga"] .lapis').evaluateAll(l => l.findIndex(x => x.classList.contains('aktif')));
+  const t2 = await lapisAktif();
+  await page.locator('[data-bab="keluarga"] .geser[data-geser="1"]').click();
+  const t0 = await lapisAktif();
+  await page.locator('[data-bab="keluarga"] .geser[data-geser="-1"]').click();
+  const tBalik = await lapisAktif();
+  // usap mendatar ke kiri = berikutnya; usap tegak tidak menggeser
+  const usap = (dx, dy) => page.locator('[data-bab="keluarga"]').evaluate((el, [dx, dy]) => {
+    const t = (x, y) => new Touch({ identifier: 1, target: el, clientX: x, clientY: y });
+    el.dispatchEvent(new TouchEvent('touchstart', { touches: [t(200, 400)], changedTouches: [t(200, 400)], bubbles: true }));
+    el.dispatchEvent(new TouchEvent('touchend', { touches: [], changedTouches: [t(200 + dx, 400 + dy)], bubbles: true }));
+  }, [dx, dy]);
+  await usap(-120, 10); const tUsap = await lapisAktif();
+  await usap(-60, 200); const tTegak = await lapisAktif();
+  cek('tk-17 titik, tombol ‹ ›, dan usap mendatar menggeser; usap tegak tidak',
+      t2 === 2 && t0 === 0 && tBalik === 2 && tUsap === 0 && tTegak === 0, JSON.stringify({ t2, t0, tBalik, tUsap, tTegak }));
 
   await ctx.close();
 }
@@ -255,15 +281,28 @@ const urutanBab = page => page.evaluate(() =>
   cek('tk-18 ucapan muncul satu per satu, berurutan, lalu berputar', [u1, u2, u3, u4].join('|') === 'Ani|Bayu|Citra|Ani',
       [u1, u2, u3, u4].join('|'));
   await page.screenshot({ path:'kenangan-ucapan.png' });
+  const op = await page.locator('#ucapan .ucap').evaluate(el => { const g = getComputedStyle(el); return [g.opacity, g.backgroundColor, el.getBoundingClientRect().width]; });
+  cek('tk-18b pop-up kecil dan tembus pandang', Number(op[0]) < 1 && /rgba\(.*0\.4\d?\)/.test(op[1]) && op[2] <= 262, JSON.stringify(op));
   await page.locator('#ucapan .tutup').click();
   await page.clock.runFor(20000);
-  cek('tk-19 × menyembunyikan ucapan sampai halaman dimuat ulang', await page.locator('#ucapan .ucap').count() === 0);
+  cek('tk-19 × menyembunyikan ucapan; tombol gelembung ikut mati',
+      await page.locator('#ucapan .ucap').count() === 0 && (await page.locator('#btnUcapan').getAttribute('aria-pressed')) === 'false');
+  await page.reload();
+  await page.waitForSelector('body[data-siap]');
+  await page.clock.runFor(12000);
+  const masihMati = await page.locator('#ucapan .ucap').count() === 0;
+  await page.locator('#btnUcapan').click();
+  await page.clock.runFor(800);
+  cek('tk-19b pilihan diingat sesudah dimuat ulang; tombol gelembung menyalakannya lagi',
+      masihMati && await page.locator('#ucapan .ucap').count() === 1
+      && (await page.locator('#btnUcapan').getAttribute('aria-pressed')) === 'true');
   await ctx.close();
 }
 {
   const { ctx, page } = await tk(isiKenangan({ blok:{ ucapan:{ tampil:false } } }), { jam:true });
   await page.clock.runFor(12000);
-  cek('tk-20 ucapan dimatikan dari panel 9: tidak ada pop-up', await page.locator('#ucapan .ucap').count() === 0);
+  cek('tk-20 ucapan dimatikan dari panel 9: tidak ada pop-up, tidak ada tombolnya',
+      await page.locator('#ucapan .ucap').count() === 0 && await page.locator('#btnUcapan').isHidden());
   await ctx.close();
 }
 {
@@ -335,7 +374,7 @@ const urutanBab = page => page.evaluate(() =>
   delete lama.vendor; delete lama.kota;
   const { ctx, page } = await tk(lama);
   cek('tk-28 jawaban bentuk lama tetap tergambar',
-      await page.locator('[data-bab="acara-A1"] .lapis').count() === 1 && await page.locator('[data-bab="galeri"] .album button').count() === 1
+      await page.locator('[data-bab="acara-A1"] .lapis').count() === 1 && await page.locator('[data-bab="galeri"] .album button').count() === 2
       && await page.locator('#vendor').count() === 0 && (await teks(page, '#tanggal')).toLowerCase() === '15 september 2026' && page.galat.length === 0);
   await ctx.close();
 }
