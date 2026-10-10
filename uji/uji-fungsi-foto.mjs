@@ -11,6 +11,8 @@
 import http from 'node:http';
 import { spawn, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { layaniMedia } from '../cloudflare/media.js';
+import { R2Tiruan } from './r2-tiruan.mjs';
 
 const akar = fileURLToPath(new URL('..', import.meta.url));
 let lulus = 0, gagal = 0;
@@ -22,12 +24,17 @@ catch { console.log('GAGAL  deno tidak ditemukan — isi DENO=/jalur/ke/deno'); 
 
 // ---------- Supabase tiruan ----------
 const ANON = 'kunci-anon';
+// Pasangan ber-uuid sungguhan untuk jalan R2 (kunci /media memakai uuid).
+const PASU = '11111111-2222-4333-8444-555555555555';
+const SIL_LAMA = PASU + '/99999999-2222-4333-8444-555555555555.webp';
 const data = {
-  pengguna: { 'jwt-u1': 'U1', 'jwt-u2': 'U2', 'jwt-u3': 'U3' },
-  pemilik:  [{ user_id: 'U1', pasangan_id: 'PAS1' },
+  pengguna: { 'jwt-u1': 'U1', 'jwt-u2': 'U2', 'jwt-u3': 'U3', 'jwt-u4': 'U4' },
+  pemilik:  [{ user_id: 'U4', pasangan_id: PASU },
+             { user_id: 'U1', pasangan_id: 'PAS1' },
              { user_id: 'U2', pasangan_id: 'PAS1' }, { user_id: 'U2', pasangan_id: 'PAS2' }],
   acara:    [{ id: 'A1', pasangan_id: 'PAS1' }, { id: 'A2', pasangan_id: 'PAS2' }],
-  silsilah: [{ id: 'S1', pasangan_id: 'PAS1', foto_jalur: 'PAS1/lama.webp', foto_kecil: 'PAS1/lama-kecil.webp' },
+  silsilah: [{ id: 'S4', pasangan_id: PASU, foto_jalur: SIL_LAMA, foto_kecil: null },
+             { id: 'S1', pasangan_id: 'PAS1', foto_jalur: 'PAS1/lama.webp', foto_kecil: 'PAS1/lama-kecil.webp' },
              { id: 'S2', pasangan_id: 'PAS2', foto_jalur: null, foto_kecil: null }],
   foto:     [{ id: 'F1', pasangan_id: 'PAS1', jalur: 'PAS1/f1.webp', jalur_kecil: 'PAS1/f1-kecil.webp' },
              { id: 'F2', pasangan_id: 'PAS2', jalur: 'PAS2/f2.webp', jalur_kecil: null }],
@@ -96,12 +103,28 @@ const tiruan = http.createServer(async (req, res) => {
 await new Promise(r => tiruan.listen(0, '127.0.0.1', r));
 const SB = `http://127.0.0.1:${tiruan.address().port}`;
 
+// ---------- Worker /media tiruan: modul Worker yang sungguhan, R2 di memori ----------
+const MEDIA_KUNCI = 'kunci-media-uji';
+const r2 = new R2Tiruan();
+await r2.put(SIL_LAMA, Buffer.from('lama'), { httpMetadata: { contentType: 'image/webp' } });
+const media = http.createServer(async (req, res) => {
+  const adaBadan = !['GET', 'HEAD'].includes(req.method);
+  const rq = new Request('http://127.0.0.1' + req.url, { method: req.method, headers: req.headers,
+    ...(adaBadan ? { body: req, duplex: 'half' } : {}) });
+  const j = await layaniMedia(rq, { MEDIA: r2, MEDIA_KUNCI }, { waitUntil() {} });
+  res.writeHead(j.status, Object.fromEntries(j.headers));
+  res.end(req.method === 'HEAD' ? undefined : Buffer.from(await j.arrayBuffer()));
+});
+await new Promise(r => media.listen(0, '127.0.0.1', r));
+const MEDIA = `http://127.0.0.1:${media.address().port}`;
+
 // ---------- fungsinya, di Deno ----------
 const PORT = 18000 + Math.floor(Math.random() * 1000);
 const deno = spawn(DENO, ['run', '--allow-net', '--allow-env', '--quiet',
   'supabase/functions/foto-unggah/index.ts'], {
   cwd: akar,
   env: { ...process.env, SUPABASE_URL: SB, SUPABASE_SERVICE_ROLE_KEY: 'kunci-servis',
+         MEDIA_ASAL: MEDIA, MEDIA_KUNCI,
          DENO_SERVE_ADDRESS: `tcp:127.0.0.1:${PORT}` },
 });
 let log = '';
@@ -232,6 +255,70 @@ try {
   cek(r.s === 409 && /12 video/.test(r.isi?.pesan || '') && unggahan().length === 0, `batas 12 video per pasangan → ${r.s}`);
   data.foto = data.foto.filter(f => !String(f.id).startsWith('VX'));
 
+  // ---------- R2: izin → PUT ke /media → catat ----------
+  const json = (jwt, badan) => ({ method: 'POST', headers: { ...dasbor(jwt), 'Content-Type': 'application/json' }, body: JSON.stringify(badan) });
+  const kirimMedia = async (u, isi) => (await fetch(MEDIA + u.url, { method: 'PUT', body: isi,
+    headers: { 'content-type': u.jenis, ...u.kepala } })).status;
+  r = await minta('/?langkah=izin', json('jwt-u4', {}));
+  cek(r.s === 400, `izin tanpa jenis/ukuran → ${r.s}`);
+  r = await minta('/?langkah=izin', json('jwt-u4', { berkas: { jenis: 'image/webp', bita: 1500 }, kecil: { jenis: 'image/webp', bita: 300 } }));
+  const iz = r.isi;
+  cek(r.s === 200 && iz.unggah.length === 2 && iz.jalur.startsWith(PASU + '/') && iz.unggah[0].url === '/media/' + iz.jalur
+      && iz.unggah[1].jalur === iz.jalur_kecil && unggahan().length === 0,
+      `izin: dua tiket, jalur di folder pasangannya, TIDAK ada yang naik ke Supabase → ${r.s}`);
+  cek(!JSON.stringify(iz).includes(MEDIA_KUNCI), 'izin: rahasia tiket tidak ikut terkirim');
+  cek(await kirimMedia(iz.unggah[0], new Uint8Array(1500)) === 201 && await kirimMedia(iz.unggah[1], new Uint8Array(300)) === 201,
+      'tiket dari foto-unggah diterima Worker (format tanda tangan sama di dua sisi)');
+  cek(await kirimMedia(iz.unggah[0], new Uint8Array(10)) === 409, 'tiket tidak bisa dipakai menimpa');
+  r = await minta('/?langkah=catat', json('jwt-u4', { jalur: iz.jalur, jalur_kecil: iz.jalur_kecil, lebar: 1600, tinggi: 1200,
+                                                       bagian: 'keluarga', bita: 1 }));
+  let rf = data.foto.at(-1);
+  cek(r.s === 201 && rf.pasangan_id === PASU && rf.jalur === iz.jalur && rf.jalur_kecil === iz.jalur_kecil
+      && rf.bita === 1500 && rf.jenis === 'foto' && rf.bagian === 'keluarga',
+      `catat: baris tercatat; ukuran dari R2 (1500), bukan dari peramban → ${r.s} ${JSON.stringify(rf)}`);
+  r = await minta('/?langkah=catat', json('jwt-u1', { jalur: iz.jalur, jalur_kecil: iz.jalur_kecil }));
+  cek(r.s === 400, `catat: jalur milik pasangan lain ditolak → ${r.s}`);
+  r = await minta('/?langkah=catat', json('jwt-u4', { jalur: PASU + '/77777777-2222-4333-8444-555555555555.webp' }));
+  cek(r.s === 409, `catat: berkas yang belum sampai di R2 ditolak → ${r.s}`);
+  r = await minta('/?langkah=catat', json('jwt-u4', { jalur: iz.jalur, jalur_kecil: PASU + '/88888888-2222-4333-8444-555555555555-kecil.webp' }));
+  cek(r.s === 400, `catat: thumbnail dari berkas lain ditolak → ${r.s}`);
+
+  r = await minta('/?langkah=izin', json('jwt-u4', { berkas: { jenis: 'image/png', bita: 100 } }));
+  cek(r.s === 415, `izin: PNG ditolak → ${r.s}`);
+  r = await minta('/?langkah=izin', json('jwt-u4', { berkas: { jenis: 'image/webp', bita: 3 * 1024 * 1024 } }));
+  cek(r.s === 413, `izin: foto > 2 MB ditolak → ${r.s}`);
+  r = await minta('/?langkah=izin', json('jwt-u4', { berkas: { jenis: 'video/mp4', bita: 5000 } }));
+  cek(r.s === 400, `izin: video tanpa poster ditolak → ${r.s}`);
+  jumlahFotoPaksa = 100;
+  r = await minta('/?langkah=izin', json('jwt-u4', { berkas: { jenis: 'image/webp', bita: 100 } }));
+  cek(r.s === 409, `izin: batas 100 berkas → ${r.s}`);
+  jumlahFotoPaksa = null;
+
+  r = await minta('/?langkah=izin', json('jwt-u4', { berkas: { jenis: 'video/mp4', bita: 5000 }, kecil: { jenis: 'image/jpeg', bita: 200 } }));
+  const iv = r.isi;
+  await kirimMedia(iv.unggah[0], new Uint8Array(5000)); await kirimMedia(iv.unggah[1], new Uint8Array(200));
+  r = await minta('/?langkah=catat', json('jwt-u4', { jalur: iv.jalur, jalur_kecil: iv.jalur_kecil, durasi_ms: 4200, acara_id: 'A1' }));
+  rf = data.foto.at(-1);
+  cek(r.s === 201 && rf.jenis === 'video' && rf.jalur.endsWith('.mp4') && rf.jalur_kecil.endsWith('-kecil.jpg')
+      && rf.durasi_ms === 4200 && rf.acara_id === null,
+      `video lewat R2: jenis dari R2, poster JPEG, acara pasangan lain dibuang → ${r.s}`);
+
+  // silsilah lewat R2: foto lama ikut dibuang dari R2
+  r = await minta('/?langkah=izin&untuk=silsilah&id=S1', json('jwt-u4', { berkas: { jenis: 'image/webp', bita: 100 } }));
+  cek(r.s === 404, `izin silsilah: baris pasangan lain → ${r.s}`);
+  r = await minta('/?langkah=izin&untuk=silsilah&id=S4', json('jwt-u4', { berkas: { jenis: 'image/webp', bita: 100 } }));
+  const is = r.isi;
+  await kirimMedia(is.unggah[0], new Uint8Array(100));
+  r = await minta('/?langkah=catat&untuk=silsilah&id=S4', json('jwt-u4', { jalur: is.jalur, lebar: 400, tinggi: 400 }));
+  const s4 = data.silsilah.find(b => b.id === 'S4');
+  cek(r.s === 201 && s4.foto_jalur === is.jalur && !r2.isi.has(SIL_LAMA) && buangan().includes(SIL_LAMA),
+      `silsilah lewat R2: baris menunjuk berkas baru; yang lama dibuang dari R2 dan Supabase → ${r.s}`);
+
+  // hapus: R2 ikut dibersihkan
+  const idR2 = data.foto.find(f => f.jalur === iz.jalur).id;
+  r = await minta('/?id=' + idR2, { method: 'DELETE', headers: dasbor('jwt-u4') });
+  cek(r.s === 200 && !r2.isi.has(iz.jalur) && !r2.isi.has(iz.jalur_kecil), `hapus: berkas dan thumbnail hilang dari R2 → ${r.s}`);
+
   // ---------- hapus ----------
   r = await minta('/?id=F2', { method: 'DELETE', headers: dasbor('jwt-u1') });
   cek(r.s === 404 && data.foto.some(f => f.id === 'F2') && buangan().length === 0, `dasbor: foto pasangan lain tidak bisa dihapus → ${r.s}`);
@@ -239,7 +326,7 @@ try {
   cek(r.s === 200 && !data.foto.some(f => f.id === 'F1'), `dasbor: hapus foto sendiri → ${r.s}`);
   cek(buangan().includes('PAS1/f1.webp') && buangan().includes('PAS1/f1-kecil.webp'), 'dasbor: berkas dan thumbnail ikut dibuang');
 } finally {
-  deno.kill(); tiruan.close();
+  deno.kill(); tiruan.close(); media.close();
 }
 
 if (/error|uncaught/i.test(log) && gagal) console.log(log.slice(-2000));

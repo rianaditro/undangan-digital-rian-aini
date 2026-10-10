@@ -22,8 +22,19 @@
     // halaman itu sendiri yang membaca pasangan dan tamunya dari alamat.
     "not_found_handling": "single-page-application",
 
-    // Hanya akar yang perlu keputusan berdasarkan host.
-    "run_worker_first": ["/"]
+    // Akar perlu keputusan berdasarkan host; /media/* dilayani dari R2.
+    "run_worker_first": ["/", "/media/*"]
+  },
+
+  // Foto dan video pasangan (cloudflare/media.js). Unggahan baru ditulis
+  // ke sini lewat tiket dari foto-unggah; berkas lama di Supabase
+  // disalin ke sini saat pertama dibuka. Rahasia MEDIA_KUNCI dipasang
+  // di dashboard (Settings → Variables and Secrets), tidak di repo.
+  "r2_buckets": [
+    { "binding": "MEDIA", "bucket_name": "mengundang-media" }
+  ],
+  "vars": {
+    "SUPABASE_FOTO": "https://mavjlhlyrtacxleulbom.supabase.co/storage/v1/object/public/foto/"
   },
 
   // Alamat uji: mengundang.<akun>.workers.dev, plus alamat pratinjau

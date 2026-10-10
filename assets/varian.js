@@ -525,9 +525,13 @@
      membangun alamat foto silsilah, tapi tidak perlu pengecilnya: tamu
      tidak pernah mengunggah apa pun, dan mengirimi mereka 7 KB pustaka
      yang tak terpakai itu mahal di jaringan desa. */
+  /* Foto dan video pasangan dilayani Worker di /media/ (R2, cache edge
+     Cloudflare) — di host mana pun halaman ini dibuka, tanpa egress
+     Supabase. Berkas lama yang masih di Supabase Storage disalin Worker
+     ke R2 saat pertama dibuka (cloudflare/media.js). */
   function fotoUrl(jalur) {
     if (!jalur) return '';
-    return SB.url + '/storage/v1/object/public/foto/' + jalur;
+    return '/media/' + jalur;
   }
 
   /* ---------- Alamat, dua bentuk ----------

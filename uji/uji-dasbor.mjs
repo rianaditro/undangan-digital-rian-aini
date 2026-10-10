@@ -5,7 +5,9 @@
    untuk baca-tulis. Yang direkam: PATCH yang benar-benar dikirim, karena
    di situlah bug-nya dulu — nilai centang yang terbaca dari .value. */
 import { chromium } from 'playwright';
-import { mulai } from './server.mjs';
+import { mulai, MEDIA, MEDIA_KUNCI } from './server.mjs';
+import { tandatangan } from '../cloudflare/media.js';
+import { randomUUID } from 'node:crypto';
 
 const GAMBAR_DATAR = 'iVBORw0KGgoAAAANSUhEUgAAACgAAAAUCAIAAABwJOjsAAAAJElEQVR4nGM4MS1lQBDDqMWjFo9aPGrxqMWjFo9aPGrxyLEYAIILfozXZrotAAAAAElFTkSuQmCC';
 const PORT = 4401, ASAL = 'http://127.0.0.1:' + PORT;
@@ -62,6 +64,16 @@ function bikinModel() {
 }
 
 async function pasang(page, model) {
+  // /media/: yang sudah diunggah dalam uji dilayani Worker di server uji
+  // (R2 tiruan); jalur data contoh yang tidak ada di sana diganti gambar
+  // mendatar, supaya ubin dan editor potongan punya gambar sungguhan.
+  await page.route('**/media/**', async (route) => {
+    const req = route.request();
+    const kunci = decodeURIComponent(new URL(req.url()).pathname.slice('/media/'.length));
+    if (req.method() === 'GET' && !MEDIA.isi.has(kunci))
+      return route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from(GAMBAR_DATAR, 'base64') });
+    return route.continue();
+  });
   await page.route('**/*.supabase.co/**', async (route) => {
     const req = route.request();
     const u = new URL(req.url());
@@ -76,6 +88,36 @@ async function pasang(page, model) {
     // ruang geser yang sungguhan.
     if (jalur.startsWith('/storage/')) {
       return route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from(GAMBAR_DATAR, 'base64') });
+    }
+    if (jalur === '/functions/v1/foto-unggah' && ['izin', 'catat'].includes(u.searchParams.get('langkah'))) {
+      const b = JSON.parse(req.postData() || '{}');
+      (model.r2 = model.r2 || []).push({ langkah: u.searchParams.get('langkah'), cari: u.search, badan: b,
+                                        auth: req.headers()['authorization'] || '' });
+      if (u.searchParams.get('langkah') === 'izin') {
+        if (model.r2Mati) return kirim({ pesan: 'Penyimpanan media belum disiapkan', jalanLama: true }, 503);
+        const P = '11111111-2222-4333-8444-555555555555', nama = randomUUID();
+        const eks = t => ({ 'image/webp': 'webp', 'image/jpeg': 'jpg', 'video/mp4': 'mp4', 'video/webm': 'webm' }[t]);
+        const kd = String(Math.floor(Date.now() / 1000) + 600);
+        const satu = async (j, t, n) => ({ jalur: j, url: '/media/' + j, jenis: t,
+          kepala: { 'x-media-tanda': await tandatangan(MEDIA_KUNCI, 'unggah', j, t, String(n), kd),
+                    'x-media-batas': String(n), 'x-media-kedaluwarsa': kd } });
+        const jalurU = `${P}/${nama}.${eks(b.berkas.jenis)}`;
+        const jalurK = b.kecil ? `${P}/${nama}-kecil.${eks(b.kecil.jenis)}` : null;
+        const unggah = [await satu(jalurU, b.berkas.jenis, b.berkas.bita)];
+        if (jalurK) unggah.push(await satu(jalurK, b.kecil.jenis, b.kecil.bita));
+        return kirim({ jalur: jalurU, jalur_kecil: jalurK, unggah });
+      }
+      if (u.searchParams.get('untuk') === 'silsilah') {
+        const s = model.silsilah.find(x => x.id === u.searchParams.get('id'));
+        if (s) { s.foto_jalur = b.jalur; s.foto_kecil = b.jalur_kecil; }
+        return kirim({ silsilah: s }, 201);
+      }
+      const baru = { id: 'f-r2-' + (model.foto.length + 1), pasangan_id: 'p-1', jalur: b.jalur, jalur_kecil: b.jalur_kecil,
+                     lebar: b.lebar, tinggi: b.tinggi, bita: 1, urutan: model.foto.length, keterangan: '', tampil: true,
+                     acara_id: b.acara_id || null, bagian: b.bagian || null, latar: false, diunggah: '2026-10-10T03:00:00Z',
+                     jenis: /\.(mp4|webm)$/.test(b.jalur) ? 'video' : 'foto', durasi_ms: b.durasi_ms ?? null };
+      model.foto.push(baru);
+      return kirim({ foto: baru, terpakai: model.foto.length, batas: 100 }, 201);
     }
 
     if (jalur === '/auth/v1/token') {
@@ -623,11 +665,11 @@ const browser = await chromium.launch();
   await page.screenshot({ path: 'dasbor-drive-400.png', fullPage: false });
   await page.locator('#btnDriveImpor').click();
   await page.waitForFunction(() => document.querySelectorAll('#driveGrid .drive-ubin.selesai').length === 2, null, { timeout: 20000 });
-  const kirim = model.fn.filter(x => x.metode === 'POST');
-  cek('22f tiap berkas lewat foto-unggah (dikecilkan jadi webp/jpeg), masuk bab Keluarga',
-      kirim.length === 2 && kirim.every(k => /name="bagian"\r\n\r\nkeluarga/.test(k.badan)
-        && /Content-Type: image\/(webp|jpeg)/.test(k.badan) && /name="kecil"/.test(k.badan)),
-      kirim.map(k => k.badan.split('\r\n').filter(l => /name=|Content-Type/.test(l)).join(' ')).join(' || ').slice(0, 300));
+  const izinD = model.r2.filter(x => x.langkah === 'izin'), catatD = model.r2.filter(x => x.langkah === 'catat');
+  cek('22f tiap berkas dikecilkan (webp/jpeg + thumbnail), dikirim ke R2, dicatat di bab Keluarga',
+      izinD.length === 2 && izinD.every(x => /^image\/(webp|jpeg)$/.test(x.badan.berkas.jenis) && x.badan.kecil)
+      && catatD.length === 2 && catatD.every(x => x.badan.bagian === 'keluarga' && MEDIA.isi.has(x.badan.jalur)),
+      JSON.stringify(model.r2.map(x => [x.langkah, x.badan.bagian, x.badan.berkas && x.badan.berkas.jenis])));
   cek('22g yang sudah diimpor tidak bisa dipilih lagi; pustaka dimuat ulang',
       await page.locator('#driveGrid [data-drive]:not(:disabled)').count() === 0
       && await page.locator('#pustakaFoto .ubin').count() === 4);
@@ -677,14 +719,34 @@ const browser = await chromium.launch();
   ]);
   await page.waitForFunction(() => /gagal/.test(document.querySelector('#toast').textContent), null, { timeout: 30000 });
   const toastV = await page.locator('#toast').textContent();
-  const kirim = model.fn.filter(x => x.metode === 'POST');
-  const badan = kirim[0] ? kirim[0].badan : '';
-  cek('20a video dikirim apa adanya + poster + durasi', kirim.length === 1
-      && /filename="video\.webm"/.test(badan) && /Content-Type: video\/webm/.test(badan)
-      && /filename="poster\.(webp|jpg)"/.test(badan) && /name="durasi_ms"\r\n\r\n\d+/.test(badan),
-      badan.replace(/[^\x20-\x7e\n]/g, '').split('\n').filter(l => /name=|Content-Type/.test(l)).join(' | ').slice(0, 400));
+  const izin = (model.r2 || []).filter(x => x.langkah === 'izin'), catat = (model.r2 || []).filter(x => x.langkah === 'catat');
+  const kunciV = catat[0] && catat[0].badan.jalur, kunciP = catat[0] && catat[0].badan.jalur_kecil;
+  cek('20a video lewat R2: izin menyebut jenis+ukuran, isi video dan poster tiba di /media, catat membawa durasi; tidak ada multipart',
+      izin.length === 1 && izin[0].badan.berkas.jenis === 'video/webm' && izin[0].badan.kecil
+      && /^image\/(webp|jpeg)$/.test(izin[0].badan.kecil.jenis)
+      && MEDIA.isi.get(kunciV)?.buf.length === izin[0].badan.berkas.bita && MEDIA.isi.get(kunciV)?.jenis === 'video/webm'
+      && MEDIA.isi.get(kunciP)?.buf.length === izin[0].badan.kecil.bita
+      && catat.length === 1 && catat[0].badan.durasi_ms > 0 && !model.fn.some(x => x.metode === 'POST')
+      && izin.every(x => x.auth === 'Bearer JWT-pemilik'),
+      JSON.stringify({ izin: izin.map(x => x.badan), catat: catat.map(x => x.badan) }).slice(0, 400));
   cek('20b MOV ditolak di perangkat dengan petunjuk iPhone, yang lain tetap masuk',
       /1 masuk, 1 gagal/.test(toastV) && /MP4/.test(toastV) && /Paling Kompatibel/.test(toastV), toastV);
+  await ctx.close();
+}
+
+/* ---------- R2 belum disiapkan: jatuh ke jalan lama ---------- */
+{
+  const model = bikinModel();
+  model.r2Mati = true;
+  const { ctx, page } = await masuk(browser, model);
+  model.fn.length = 0;
+  await page.locator('#inBerkasFoto').setInputFiles([{ name: 'a.png', mimeType: 'image/png', buffer: Buffer.from(GAMBAR_DATAR, 'base64') }]);
+  await page.waitForFunction(() => /tersimpan/.test(document.querySelector('#toast').textContent), null, { timeout: 15000 });
+  const lama = model.fn.filter(x => x.metode === 'POST');
+  cek('24a izin menjawab 503 jalanLama: unggahan jatuh ke multipart lama, tetap tersimpan',
+      model.r2.filter(x => x.langkah === 'izin').length === 1 && !model.r2.some(x => x.langkah === 'catat')
+      && lama.length === 1 && /name="berkas"; filename="berkas\.(webp|jpg)"/.test(lama[0].badan) && /name="kecil"/.test(lama[0].badan),
+      lama.map(x => x.badan.split('\r\n').filter(l => /name=/.test(l)).join(' ')).join(' | '));
   await ctx.close();
 }
 
@@ -771,10 +833,11 @@ const browser = await chromium.launch();
   await page.locator('#silDaftar [data-sil="s-2"] [data-sil-aksi="foto"]').click();
   await (await pemilih).setFiles({ name: 'ibu.png', mimeType: 'image/png', buffer: png });
   await page.waitForFunction(() => !!document.querySelector('#silDaftar [data-sil="s-2"] img.gbr'), null, { timeout: 8000 });
-  const unggah = model.fn.filter(f => f.metode === 'POST' && /untuk=silsilah/.test(f.cari)).at(-1);
-  cek('19d foto silsilah: foto-unggah ?untuk=silsilah dengan JWT pemilik, tanpa token panitia',
-      unggah && /id=s-2/.test(unggah.cari) && unggah.auth === 'Bearer JWT-pemilik' && unggah.panitia === null,
-      JSON.stringify(unggah));
+  const izinS = (model.r2 || []).filter(f => /untuk=silsilah/.test(f.cari));
+  cek('19d foto silsilah: izin + catat ?untuk=silsilah&id=s-2 dengan JWT pemilik, isinya ke /media (R2)',
+      izinS.length === 2 && izinS.every(f => /id=s-2/.test(f.cari) && f.auth === 'Bearer JWT-pemilik')
+      && MEDIA.isi.has(izinS[1].badan.jalur) && !model.fn.some(f => f.metode === 'POST' && /untuk=silsilah/.test(f.cari)),
+      JSON.stringify(izinS.map(f => [f.langkah, f.cari])));
 
   /* --- hapus baris berfoto: fotonya dibuang dulu --- */
   model.hapus.length = 0;
