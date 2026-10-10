@@ -32,9 +32,10 @@ Playwright butuh Chromium. Kalau `npm install` tidak memasangnya sendiri:
 Galat JavaScript di halaman (`[pageerror]`) dihitung gagal oleh `semua.mjs`,
 walaupun semua cek suite-nya lulus.
 
-`server.mjs` meniru urutan routing Vercel — redirect, lalu berkas, lalu
-rewrite — karena urutan itulah yang dulu membuat redirect akar domain
-bekerja sementara rewrite tidak. `stub.mjs` dan `undangan-isi.json`
+`server.mjs` meniru Cloudflare Workers: konfigurasi dari `wrangler.jsonc`,
+`.assetsignore`, dan `_headers`, dan untuk `/` menjalankan
+`cloudflare/pintu.js` yang sama dengan produksi. Aturan lapisan asetnya
+dicocokkan dengan `wrangler dev`. `stub.mjs` dan `undangan-isi.json`
 memegang data tiruan.
 
 ## Database

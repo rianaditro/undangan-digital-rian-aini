@@ -1,4 +1,4 @@
-// mengundang.id di Cloudflare Workers — pengganti vercel.json.
+// mengundang.id di Cloudflare Workers.
 //
 // Situsnya statis tanpa langkah build: folder repo ini sendiri yang
 // diterbitkan sebagai aset, dikurangi yang disebut di .assetsignore.
@@ -14,13 +14,12 @@
     "binding": "ASSETS",
 
     // /kirim menyajikan kirim/index.html di tempat; /kirim/ dialihkan
-    // ke /kirim. Sama dengan yang dilihat tamu di Vercel.
+    // ke /kirim.
     "html_handling": "drop-trailing-slash",
 
     // Alamat yang bukan berkas — /budi-sari/ibu-rahayu,
     // rian-aini.mengundang.id/bapak-ahmad — mendapat index.html, dan
     // halaman itu sendiri yang membaca pasangan dan tamunya dari alamat.
-    // Pengganti rewrite "/(.*)" → "/index.html".
     "not_found_handling": "single-page-application",
 
     // Hanya akar yang perlu keputusan berdasarkan host.
@@ -29,14 +28,12 @@
 
   // Alamat uji: mengundang.<akun>.workers.dev, plus alamat pratinjau
   // per versi. Bentuknya domain bersama, jadi pasangan dibaca dari path
-  // (/rian-aini/bapak-ahmad) — persis seperti dulu di vercel.app.
+  // (/rian-aini/bapak-ahmad).
   "workers_dev": true,
   "preview_urls": true,
 
-  // Rute baru mengambil alih sebuah nama begitu rekaman DNS-nya
-  // diproxy (awan oranye). Selama awannya abu-abu, nama itu tetap ke
-  // tujuan lamanya — jadi rute ini aman dipasang dari awal, dan
-  // perpindahan bisa dilakukan satu nama demi satu nama.
+  // Apex dan semua subdomain. Rute hanya bekerja untuk nama yang
+  // rekaman DNS-nya diproxy (awan oranye): AAAA @ 100:: dan AAAA * 100::.
   "routes": [
     { "pattern": "mengundang.id/*",   "zone_name": "mengundang.id" },
     { "pattern": "*.mengundang.id/*", "zone_name": "mengundang.id" }
