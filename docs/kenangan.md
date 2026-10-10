@@ -262,3 +262,39 @@ bucket 20 MB).
 
 Tombol mengambang di kanan bawah sekarang tiga (ucapan, gulir, musik);
 di HP tulisan bab menyisakan jalurnya supaya tidak tertutup.
+
+## 15. Impor dari Google Drive (10 Oktober)
+
+Fotografer biasanya menyerahkan hasil sebagai folder Drive. Di kotak 8:
+**Impor dari Google Drive** → tempel link folder → *Lihat isi* → centang
+(atau *Pilih semua*) → pilih bab tujuan → *Impor*.
+
+Bukan menayangkan dari Drive: setiap berkas **disalin** lewat pipa yang
+sama dengan unggahan dari HP (dikecilkan / dipotret posternya di
+peramban, lalu `foto-unggah`). Jadi batas 100 berkas dan 12 video, bab,
+dan potongan berlaku sama, dan halaman kenangan tidak rusak kalau folder
+Drive-nya dipindah atau dihapus.
+
+- Fungsi `drive-impor` (JWT pemilik): `?folder=` mendaftar foto/video di
+  folder dan dua tingkat subfolder (maks. 500), `?unduh=` meneruskan satu
+  berkas sesudah jenis dan ukurannya diperiksa dari metadata (foto ≤ 40 MB,
+  video ≤ 20 MB; MOV ditolak). Kunci API Google hanya di server.
+- Folder harus dibagikan **Siapa saja yang memiliki link**.
+- Foto HEIC dari iPhone bisa gagal dikecilkan di Chrome (Safari bisa);
+  alasannya muncul di ubinnya.
+- Mengimpor berkas yang sama dua kali = dua salinan. Dalam satu sesi,
+  ubin yang sudah diimpor dikunci.
+
+### Menyiapkan kunci API (sekali, oleh pengelola)
+
+1. console.cloud.google.com → buat/pilih proyek → **APIs & Services →
+   Library** → aktifkan **Google Drive API**.
+2. **Credentials → Create credentials → API key**.
+3. Batasi kuncinya: *API restrictions* → hanya **Google Drive API**.
+   (Application restrictions dibiarkan *None* — dipanggil dari server
+   Supabase, bukan dari situs.)
+4. Pasang sebagai secret fungsi: `GOOGLE_API_KEY` (Supabase → Edge
+   Functions → Secrets).
+
+Tanpa kunci, fungsi menjawab 503 "kunci API belum dipasang" dan dasbor
+menampilkannya.

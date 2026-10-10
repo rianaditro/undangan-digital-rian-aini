@@ -87,6 +87,27 @@ async function pasang(page, model) {
       return kirim({ id: 'u-1', email: 'budi@contoh.com' });
     }
 
+    if (jalur === '/functions/v1/drive-impor') {
+      model.drive = model.drive || [];
+      model.drive.push({ cari: u.search, auth: req.headers()['authorization'] || '' });
+      if (u.searchParams.has('folder')) {
+        if (/pribadi/.test(u.searchParams.get('folder')))
+          return kirim({ pesan: 'Folder belum bisa dibaca. Ubah aksesnya jadi "Siapa saja yang memiliki link".' }, 403);
+        return kirim(Object.assign({
+          folder: { id: 'FOLDER1', nama: 'Rian & Aini — fotografer' }, terpotong: false,
+          terpakai: model.foto.length, batas: 100, terpakai_video: 0, batas_video: 12,
+          berkas: [
+            { id: 'D1', nama: 'IMG_0001.jpg', jenis: 'image/png', bita: 5000000, lebar: 40, tinggi: 20, kecil: null, sub: '' },
+            { id: 'D2', nama: 'IMG_0002.jpg', jenis: 'image/png', bita: 4000000, lebar: 40, tinggi: 20, kecil: null, sub: 'Akad' },
+            { id: 'D3', nama: 'klip.MOV', jenis: 'video/quicktime', bita: 9000000, kecil: null, sub: 'Akad' },
+            { id: 'D4', nama: 'utuh.mp4', jenis: 'video/mp4', bita: 300000000, durasi_ms: 600000, kecil: null, sub: '' }
+          ] }, model.driveUbah || {}));
+      }
+      if (u.searchParams.get('unduh') === 'D2' && model.driveGagalD2)
+        return kirim({ pesan: 'Google sedang membatasi akses. Coba lagi beberapa menit lagi.' }, 429);
+      return route.fulfill({ status: 200, contentType: 'image/png', headers: { 'access-control-allow-origin': '*' },
+                             body: Buffer.from(GAMBAR_DATAR, 'base64') });
+    }
     if (jalur === '/functions/v1/foto-unggah') {
       model.fn.push({ metode: req.method(), auth: req.headers()['authorization'] || '',
                       panitia: req.headers()['x-panitia-token'] || null, cari: u.search,
@@ -570,6 +591,69 @@ const browser = await chromium.launch();
   await page.locator('#pustakaFoto [data-foto="f-1"] [data-aksi="potong"]').click();
   await page.waitForTimeout(200);
   await page.locator('#potong').screenshot({ path: 'dasbor-potong-400.png' });
+  await ctx.close();
+}
+
+/* ---------- panel 8: impor dari Google Drive ---------- */
+{
+  const model = bikinModel();
+  const { ctx, page } = await masuk(browser, model, 400);
+  cek('22a panel impor tersembunyi sampai tombolnya ditekan', await page.locator('#drive').isHidden());
+  await page.locator('#btnDrive').click();
+  await page.locator('#inDrive').fill('https://drive.google.com/drive/folders/pribadi?usp=sharing');
+  await page.locator('#btnDriveLihat').click();
+  await page.waitForSelector('#driveIsi [role="alert"]', { timeout: 5000 });
+  cek('22b folder pribadi: pesan dari fungsi ditampilkan apa adanya',
+      /Siapa saja yang memiliki link/.test(await page.locator('#driveIsi').textContent()));
+
+  await page.locator('#inDrive').fill('https://drive.google.com/drive/folders/FOLDER1?usp=sharing');
+  await page.locator('#inDrive').press('Enter');
+  await page.waitForSelector('#driveGrid', { timeout: 5000 });
+  const ubin = page.locator('#driveGrid .drive-ubin');
+  cek('22c isi folder tergambar; MOV dan video 300 MB ditandai tidak bisa, dengan alasannya',
+      await ubin.count() === 4 && await page.locator('#driveGrid [data-drive]:disabled').count() === 2
+      && /MOV/.test(await ubin.nth(2).textContent()) && /20 MB/.test(await ubin.nth(3).textContent()));
+  cek('22d permintaan memakai JWT pemilik', model.drive.every(x => x.auth === 'Bearer JWT-pemilik'));
+
+  await page.locator('#drivePilihSemua').check();
+  cek('22e pilih semua = hanya yang bisa', /^2 dipilih/.test(await page.locator('#driveHitung').textContent())
+      && (await page.locator('#btnDriveImpor').textContent()).trim() === 'Impor 2');
+  await page.locator('#driveBab').selectOption('b:keluarga');
+  model.fn.length = 0;
+  await page.screenshot({ path: 'dasbor-drive-400.png', fullPage: false });
+  await page.locator('#btnDriveImpor').click();
+  await page.waitForFunction(() => document.querySelectorAll('#driveGrid .drive-ubin.selesai').length === 2, null, { timeout: 20000 });
+  const kirim = model.fn.filter(x => x.metode === 'POST');
+  cek('22f tiap berkas lewat foto-unggah (dikecilkan jadi webp/jpeg), masuk bab Keluarga',
+      kirim.length === 2 && kirim.every(k => /name="bagian"\r\n\r\nkeluarga/.test(k.badan)
+        && /Content-Type: image\/(webp|jpeg)/.test(k.badan) && /name="kecil"/.test(k.badan)),
+      kirim.map(k => k.badan.split('\r\n').filter(l => /name=|Content-Type/.test(l)).join(' ')).join(' || ').slice(0, 300));
+  cek('22g yang sudah diimpor tidak bisa dipilih lagi; pustaka dimuat ulang',
+      await page.locator('#driveGrid [data-drive]:not(:disabled)').count() === 0
+      && await page.locator('#pustakaFoto .ubin').count() === 4);
+  await ctx.close();
+}
+{
+  const model = bikinModel();
+  model.driveUbah = { terpakai: 99 };
+  model.driveGagalD2 = false;
+  const { ctx, page } = await masuk(browser, model);
+  await page.locator('#btnDrive').click();
+  await page.locator('#inDrive').fill('FOLDER1xxxxxx');
+  await page.locator('#btnDriveLihat').click();
+  await page.waitForSelector('#driveGrid', { timeout: 5000 });
+  await page.locator('#drivePilihSemua').check();
+  cek('23a melebihi sisa kuota: tombol impor mati, alasannya disebut',
+      await page.locator('#btnDriveImpor').isDisabled() && /Melebihi sisa kuota \(1 berkas/.test(await page.locator('#driveHitung').textContent()));
+  await page.locator('#driveGrid [data-drive="D2"]').uncheck();
+  model.driveGagalD2 = true;
+  await page.locator('#driveGrid [data-drive="D2"]').check();
+  await page.locator('#driveGrid [data-drive="D1"]').uncheck();
+  await page.locator('#btnDriveImpor').click();
+  await page.waitForFunction(() => /gagal/.test(document.querySelector('#toast').textContent), null, { timeout: 10000 });
+  cek('23b unduhan gagal: alasannya di ubin dan di toast, tidak ada yang diunggah',
+      /membatasi/.test(await page.locator('[data-drive-ubin="D2"] .ket').textContent())
+      && !model.fn.some(x => x.metode === 'POST'));
   await ctx.close();
 }
 
