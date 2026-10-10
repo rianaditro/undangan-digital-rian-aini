@@ -2,29 +2,99 @@
   "redirects": [
     {
       "source": "/",
-      "has": [{ "type": "host", "value": "mengundang.id" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "mengundang.id"
+        }
+      ],
       "destination": "/mulai",
       "permanent": false
     },
     {
       "source": "/",
-      "has": [{ "type": "host", "value": "www.mengundang.id" }],
-      "destination": "https://mengundang.id/mulai",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.mengundang.id"
+        }
+      ],
+      "destination": "/mulai",
       "permanent": false
     }
   ],
   "rewrites": [
-    { "source": "/mulai", "destination": "/mulai/index.html" },
-    { "source": "/mulai/", "destination": "/mulai/index.html" },
-    { "source": "/kirim", "destination": "/kirim/index.html" },
-    { "source": "/kirim/", "destination": "/kirim/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/kirim",
+      "destination": "/kirim/index.html"
+    },
+    {
+      "source": "/kirim/",
+      "destination": "/kirim/index.html"
+    },
+    {
+      "source": "/terimakasih",
+      "destination": "/terimakasih/index.html"
+    },
+    {
+      "source": "/terimakasih/",
+      "destination": "/terimakasih/index.html"
+    },
+    {
+      "source": "/dasbor",
+      "destination": "/dasbor/index.html"
+    },
+    {
+      "source": "/dasbor/",
+      "destination": "/dasbor/index.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/admin/",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/mulai",
+      "destination": "/mulai/index.html"
+    },
+    {
+      "source": "/mulai/",
+      "destination": "/mulai/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/kirim(.*)",
       "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/dasbor(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/admin(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
       ]
     }
   ]

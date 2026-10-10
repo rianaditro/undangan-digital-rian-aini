@@ -1,0 +1,25 @@
+# Situs ini statis: SEMUA berkas di repo ikut terbit sebagai berkas publik,
+# kecuali yang disebut di sini. Tanpa berkas ini, mengundang.id/docs/… akan
+# menyajikan catatan internal — termasuk email dan user_id admin, rencana DNS,
+# dan uraian lubang keamanan yang sudah ditambal.
+#
+# Yang dikecualikan bukan rahasia dalam arti kata kunci (tidak ada satu pun
+# di repo ini), tapi juga bukan urusan tamu undangan.
+
+# catatan rancangan dan operasi
+docs/
+
+# migrasi dan edge function — dipasang ke Supabase lewat jalurnya sendiri,
+# tidak pernah dibutuhkan peramban
+supabase/
+
+# alat bantu yang dijalankan di komputer, bukan di situs
+alat/
+
+# uji otomatis dan dependensinya
+uji/
+
+README.md
+
+# CI
+.github/

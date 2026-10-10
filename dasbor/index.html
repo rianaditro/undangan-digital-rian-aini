@@ -1,0 +1,1239 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dasbor — mengundang.id</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --nila:#131E33; --nila-2:#1B2A46; --nila-3:#0D1626;
+  --kuningan:#C39A5C; --kuningan-dim:#8C6A3A; --kapur:#EDE7D9;
+  --daun:#7C8B63; --merah:#B4573F;
+  --garis:rgba(195,154,92,.22);
+  --display:'Marcellus',serif; --body:'Karla',system-ui,sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--nila);color:var(--kapur);font-family:var(--body);font-weight:300;line-height:1.65;-webkit-font-smoothing:antialiased;}
+[hidden]{display:none!important;}
+img{display:block;max-width:100%;}
+button{font:inherit;color:inherit;}
+
+.bungkus{max-width:860px;margin:0 auto;padding:clamp(18px,4vw,34px);}
+header.atas{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:22px;}
+.eyebrow{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--kuningan);}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(22px,5vw,30px);letter-spacing:.03em;margin-top:6px;}
+.sub{font-size:12.5px;color:rgba(237,231,217,.55);margin-top:4px;}
+
+.panel{border:1px solid var(--garis);background:rgba(195,154,92,.03);padding:clamp(15px,3.4vw,22px);margin-bottom:18px;}
+.panel h2{font-family:var(--display);font-weight:400;font-size:18px;letter-spacing:.03em;margin-bottom:3px;}
+.hint{font-size:12.5px;color:rgba(237,231,217,.5);margin-bottom:12px;}
+label{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--kuningan-dim);margin:13px 0 5px;}
+input,textarea,select{
+  width:100%;background:rgba(0,0,0,.28);border:1px solid var(--garis);border-radius:2px;
+  color:var(--kapur);padding:10px 12px;font:inherit;font-size:14px;transition:border-color .2s;
+}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--kuningan-dim);}
+textarea{resize:vertical;min-height:70px;}
+select{appearance:none;cursor:pointer;}
+.duo{display:grid;gap:12px;}
+@media(min-width:640px){.duo{grid-template-columns:1fr 1fr;}}
+.trio{display:grid;gap:12px;}
+/* Centang mewarisi input{width:100%} kalau tidak ditahan di sini —
+   kotaknya melar selebar panel dan barisnya jadi tidak terbaca. */
+.centang{display:flex;gap:20px;flex-wrap:wrap;margin-top:15px;padding-top:13px;border-top:1px solid var(--garis);}
+.centang label{display:flex;align-items:center;gap:8px;margin:0;font-size:12.5px;letter-spacing:.02em;
+  text-transform:none;color:rgba(237,231,217,.72);cursor:pointer;}
+.centang input{width:16px;height:16px;flex:none;padding:0;accent-color:var(--kuningan);cursor:pointer;}
+@media(min-width:640px){.trio{grid-template-columns:1fr 1fr 1fr;}}
+
+.btn{border:1px solid var(--kuningan-dim);background:transparent;color:var(--kuningan);border-radius:2px;
+  padding:10px 18px;cursor:pointer;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  transition:background .2s,color .2s,opacity .2s;}
+.btn:hover{background:var(--kuningan);color:var(--nila-3);}
+.btn:disabled{opacity:.45;cursor:default;}
+.btn:disabled:hover{background:transparent;color:var(--kuningan);}
+.btn.solid{background:var(--kuningan);color:var(--nila-3);}
+.btn.ghost{border-color:var(--garis);color:rgba(237,231,217,.6);}
+.btn.ghost:hover{background:rgba(237,231,217,.08);color:var(--kapur);}
+.btn.bahaya{border-color:rgba(180,87,63,.5);color:var(--merah);}
+.btn.kecil{padding:7px 12px;font-size:9.5px;letter-spacing:.1em;}
+.aksi{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px;}
+
+/* gerbang masuk */
+#gerbang{min-height:100svh;display:grid;place-items:center;padding:24px;}
+.kotak-masuk{width:min(380px,100%);border:1px solid var(--garis);padding:28px;background:rgba(195,154,92,.03);}
+.pesan{font-size:12.5px;margin-top:10px;min-height:1.2em;}
+.pesan.err{color:var(--merah);} .pesan.ok{color:var(--daun);}
+
+/* status terbit */
+.status{display:inline-flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  padding:5px 11px;border-radius:99px;border:1px solid currentColor;}
+.status.draf{color:var(--kuningan);} .status.terbit{color:var(--daun);}
+
+.baris{border:1px solid var(--garis);padding:12px;margin-top:10px;background:rgba(0,0,0,.18);}
+.baris-kepala{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.baris-judul{font-family:var(--display);font-size:15px;}
+.kosongstate{font-size:13px;color:rgba(237,231,217,.45);padding:12px 0;}
+.berkas{display:inline-block;cursor:pointer;}
+.kuota{font-size:12px;color:rgba(237,231,217,.45);margin-top:10px;}
+.maju{height:3px;background:rgba(195,154,92,.15);margin-top:12px;overflow:hidden;}
+.maju i{display:block;height:100%;width:0;background:var(--kuningan);transition:width .25s;}
+.pustaka{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;margin-top:16px;}
+.ubin{border:1px solid var(--garis);background:rgba(0,0,0,.2);padding:8px;}
+.ubin.samar{opacity:.45;}
+.ubin img{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--nila-2);display:block;}
+.ubin select,.ubin input{font-size:12px;padding:6px 8px;margin-top:6px;}
+.ubin .alat{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
+/* Empat tombol dalam satu kolom sempit: panah dikunci kecil, dua tombol
+   teks diberi lebar minimum supaya MELIPAT ke baris berikutnya, bukan
+   diperas sampai tulisannya saling tindih. Aturan ini pindah dari
+   /kirim, tempat lebarnya dulu diukur — bukan dikira. */
+.ubin .alat .btn{padding:5px 7px;font-size:9px;letter-spacing:.06em;}
+.ubin .alat .btn[data-aksi="naik"],
+.ubin .alat .btn[data-aksi="turun"]{flex:0 0 auto;width:30px;}
+.ubin .alat .btn[data-aksi="tampil"],
+.ubin .alat .btn[data-aksi="hapus"]{flex:1 1 90px;min-width:90px;}
+
+.subjudul{font-family:var(--display);font-weight:400;font-size:15px;letter-spacing:.03em;margin:22px 0 2px;}
+/* Pemilih latar: ubin kecil yang bisa diklik. Yang terpilih diberi
+   bingkai kuningan — bukan centang di pojok, karena di HP centang kecil
+   di atas foto tidak terbaca. */
+.pilih-latar{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px;margin-top:8px;}
+.pilih-latar button{padding:0;border:2px solid transparent;background:var(--nila-2);cursor:pointer;position:relative;}
+.pilih-latar button img{width:100%;aspect-ratio:1;object-fit:cover;display:block;opacity:.7;transition:opacity .2s;}
+.pilih-latar button:hover img{opacity:.95;}
+.pilih-latar button.dipilih{border-color:var(--kuningan);}
+.pilih-latar button.dipilih img{opacity:1;}
+.pilih-latar button.dipilih::after{content:'Latar';position:absolute;left:0;right:0;bottom:0;padding:2px 0;
+  font-size:9px;letter-spacing:.14em;text-transform:uppercase;background:rgba(13,22,38,.82);color:var(--kuningan);}
+.blok-kepala{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.blok-kepala .centang{margin:0;padding:0;border:0;}
+.wajib{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(237,231,217,.4);}
+.baris.mati input:not([type=checkbox]),.baris.mati textarea{opacity:.45;}
+/* ---------- silsilah (kotak 1) ----------
+   Pindah dari /kirim. Aturan lebar tombolnya ikut dibawa: empat tombol
+   di kartu sempit dikunci lebar minimumnya supaya MELIPAT, bukan
+   diperas sampai tulisannya bertindih. */
+.sil-tambah{display:grid;gap:8px;margin-top:10px;}
+@media (min-width:720px){
+  .sil-tambah{grid-template-columns:1.1fr 1fr 1.4fr .9fr auto;align-items:center;}
+}
+.sil-tambah .btn{white-space:nowrap;}
+.sil-sisi{margin-top:18px;}
+.sil-sisi h4{font-family:var(--display);font-weight:400;font-size:14px;letter-spacing:.04em;margin-bottom:10px;color:var(--kuningan);}
+.sil-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+.sil-kartu{border:1px solid var(--garis);background:rgba(0,0,0,.22);padding:8px;}
+.sil-kartu .gbr{width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;background:rgba(237,231,217,.06);max-width:96px;margin:0 auto 8px;display:block;}
+.sil-kartu .kosong{display:grid;place-items:center;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(237,231,217,.3);}
+.sil-kartu .peran{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--kuningan-dim);text-align:center;}
+.sil-kartu .nama{font-family:var(--display);font-size:13.5px;text-align:center;margin-top:3px;line-height:1.35;}
+.sil-kartu .alat{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
+.sil-kartu .alat .btn{padding:5px 7px;font-size:9px;letter-spacing:.06em;flex:1 1 66px;min-width:66px;}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);z-index:80;
+  background:var(--nila-2);border:1px solid var(--garis);padding:11px 18px;font-size:13px;
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:92vw;}
+.toast.on{opacity:1;transform:translate(-50%,0);}
+.toast.galat{border-color:rgba(180,87,63,.6);color:#E8B4A4;}
+</style>
+</head>
+<body>
+
+<div id="gerbang">
+  <div class="kotak-masuk">
+    <p class="eyebrow">mengundang.id</p>
+    <h1 style="font-size:23px">Dasbor Pengantin</h1>
+    <p class="sub">Masuk dengan email yang didaftarkan untuk undangan Anda.</p>
+    <label for="inEmail">Email</label>
+    <input id="inEmail" type="email" autocomplete="username" inputmode="email">
+    <label for="inSandi">Kata sandi</label>
+    <input id="inSandi" type="password" autocomplete="current-password">
+    <div class="aksi"><button class="btn solid" id="btnMasuk">Masuk</button></div>
+    <p class="pesan" id="pesanMasuk"></p>
+  </div>
+</div>
+
+<div class="bungkus" id="isi" hidden>
+  <header class="atas">
+    <div>
+      <p class="eyebrow">Dasbor Pengantin</p>
+      <h1 id="judulPasangan">&nbsp;</h1>
+      <p class="sub" id="alamatUndangan"></p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span class="status draf" id="lencanaStatus">Draf</span>
+      <button class="btn ghost kecil" id="btnPratinjau">Pratinjau</button>
+      <button class="btn ghost kecil" id="btnKeluar">Keluar</button>
+    </div>
+  </header>
+
+  <!-- 1 -->
+  <div class="panel">
+    <h2>1 · Mempelai</h2>
+    <p class="hint">Nama panggilan dipakai di sampul dan tanda tangan. Nama lengkap dipakai di kartu mempelai.</p>
+    <div id="formMempelai" class="duo"></div>
+
+    <h3 class="subjudul">Silsilah keluarga</h3>
+    <p class="hint">Dua generasi per sisi — orang tua, dan kalau perlu kakek-nenek. Ditampilkan di undangan sebagai grid, bukan pohon: yang dicari tamu cuma nama dan wajahnya.</p>
+    <div class="sil-tambah">
+      <select id="silSisi" aria-label="Sisi keluarga">
+        <option value="pria">Keluarga pihak pria</option>
+        <option value="wanita">Keluarga pihak wanita</option>
+      </select>
+      <input id="silPeran" type="text" maxlength="40" placeholder="Peran — Ayah, Ibu, Kakek…" aria-label="Peran">
+      <input id="silNama"  type="text" maxlength="80" placeholder="Nama lengkap" aria-label="Nama lengkap">
+      <input id="silKet"   type="text" maxlength="20" placeholder="(Alm) / (Almh), boleh kosong" aria-label="Keterangan">
+      <button class="btn solid kecil" id="btnSilTambah">Tambah</button>
+    </div>
+    <div id="silDaftar"></div>
+    <input id="berkasSilsilah" type="file" accept="image/*" hidden>
+  </div>
+
+  <!-- 2 -->
+  <div class="panel">
+    <h2>2 · Tempat</h2>
+    <p class="hint">Tamu pihak pria diarahkan ke alamat pria, tamu pihak wanita ke alamat wanita — kecuali acaranya dikunci ke satu tempat di kotak 3.</p>
+    <div id="formTempat"></div>
+  </div>
+
+  <!-- 3 -->
+  <div class="panel">
+    <h2>3 · Rangkaian acara</h2>
+    <p class="hint">Acara yang <strong>dikunci</strong> ke satu tempat ditampilkan sama untuk semua tamu. Yang dibiarkan <em>mengikuti pihak tamu</em> berpindah alamat sesuai undangan yang dibuka.</p>
+    <p class="hint">Daftar ini dipakai dua halaman. Undangan memakainya untuk memberi tahu acaranya; halaman kenangan memakainya sebagai urutan babak sesudah acara selesai. Dua centang di tiap baris menentukan di mana ia muncul — jadi <em>salam-salaman</em> boleh ada di kenangan tanpa ikut di undangan, dan acara yang batal bisa dimatikan tanpa dihapus.</p>
+    <div id="formAcara"></div>
+    <div class="aksi"><button class="btn ghost kecil" id="btnAcaraBaru">Tambah Acara</button></div>
+  </div>
+
+  <!-- 4 -->
+  <div class="panel">
+    <h2>4 · Dompet digital</h2>
+    <p class="hint">Urutannya mengikuti pihak tamu sendiri — dompet sisi tamu ditampilkan lebih dulu. Tidak perlu diatur.</p>
+    <div id="formDompet"></div>
+    <div class="aksi"><button class="btn ghost kecil" id="btnDompetBaru">Tambah Dompet</button></div>
+  </div>
+
+  <!-- 5 -->
+  <div class="panel">
+    <h2>5 · Penutup</h2>
+    <p class="hint">Kalimat tanda tangan di bagian bawah undangan, berbeda untuk tamu pengantin dan tamu keluarga.</p>
+    <div id="formPihak"></div>
+  </div>
+
+  <!-- 6 -->
+  <div class="panel">
+    <h2>6 · Acara &amp; tampilan</h2>
+    <div class="trio">
+      <div><label for="inTanggal">Tanggal acara</label><input id="inTanggal" type="date"></div>
+      <div><label for="inKota">Kota</label><input id="inKota" type="text" maxlength="60" placeholder="Jepara"></div>
+      <div><label for="inTema">Tema</label><select id="inTema"></select></div>
+    </div>
+    <label for="inPihakBawaan">Varian bawaan</label>
+    <select id="inPihakBawaan"></select>
+    <p class="hint" style="margin-top:6px">Dipakai kalau link tamu tidak menyebut pihaknya.</p>
+  </div>
+
+  <!-- 7 -->
+  <div class="panel">
+    <h2>7 · Terbitkan</h2>
+    <p class="hint" id="hintTerbit"></p>
+    <div class="aksi">
+      <button class="btn solid" id="btnSimpan">Simpan Semua</button>
+      <button class="btn" id="btnTerbit">Terbitkan</button>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="panel">
+    <h2>8 · Foto acara</h2>
+    <p class="hint" id="hintFoto"></p>
+    <div class="aksi" style="margin-top:0">
+      <label class="btn ghost berkas" for="inBerkasFoto">Pilih Foto</label>
+      <input id="inBerkasFoto" type="file" accept="image/*" multiple hidden>
+    </div>
+    <p class="hint" style="margin:10px 0 0">Foto dikecilkan dulu di perangkat ini sebelum dikirim, jadi tidak perlu diperkecil sendiri. Bisa pilih banyak sekaligus.</p>
+    <div class="maju" id="majuFoto" hidden><i></i></div>
+    <p class="kuota" id="kuotaFoto"></p>
+    <div class="pustaka" id="pustakaFoto"></div>
+  </div>
+
+  <!-- 9 -->
+  <div class="panel" id="panelKenangan">
+    <h2>9 · Halaman kenangan</h2>
+    <p class="hint" id="hintKenangan"></p>
+
+    <h3 class="subjudul">Babak</h3>
+    <p class="hint">Satu babak untuk setiap acara yang dicentang <em>jadi babak di halaman kenangan</em> di kotak 3, dalam urutan yang sama. Foto latarnya dipilih dari foto yang diberi babak itu di kotak 8.</p>
+    <div id="formBabak"></div>
+
+    <h3 class="subjudul">Blok halaman</h3>
+    <p class="hint">Urutannya tetap — sampul selalu pertama, penutup selalu terakhir. Yang bisa diatur: blok mana yang tampil, dan tulisannya. Kotak yang dibiarkan kosong memakai tulisan yang terlihat samar di dalamnya.</p>
+    <div id="formBlok"></div>
+
+    <div class="aksi">
+      <button class="btn solid" id="btnSimpanKenangan">Simpan Halaman Kenangan</button>
+      <button class="btn ghost" id="btnLihatKenangan">Pratinjau</button>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="panel" id="panelTerbitKenangan">
+    <div class="blok-kepala">
+      <h2>10 · Terbitkan halaman kenangan</h2>
+      <span class="status draf" id="lencanaKenangan">Draf</span>
+    </div>
+    <p class="hint" id="hintTerbitKenangan"></p>
+    <p class="sub" id="alamatKenangan" hidden></p>
+    <div class="aksi">
+      <button class="btn" id="btnTerbitKenangan">Terbitkan Halaman Kenangan</button>
+      <button class="btn ghost" id="btnPratinjauKenangan">Pratinjau</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/assets/varian.js"></script>
+<script src="/assets/gambar.js"></script>
+<script src="/assets/kenangan.js"></script>
+<script>
+(function(){
+  'use strict';
+  var M = window.MENGUNDANG;
+  var $ = function(id){ return document.getElementById(id); };
+
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function toast(t, galat){
+    var el=$('toast'); el.textContent=t;
+    el.classList.toggle('galat', !!galat); el.classList.add('on');
+    clearTimeout(el._x); el._x=setTimeout(function(){el.classList.remove('on');}, galat?4200:1900);
+  }
+
+  /* ============================================================
+     Sesi
+
+     Dasbor memakai login email, bukan link bertoken seperti /kirim.
+     Bedanya disengaja: link bisa diteruskan siapa saja, sementara
+     pemilik undangan butuh kunci yang melekat padanya dan bisa dicabut.
+
+     Sesudah masuk, halaman ini menulis LANGSUNG ke tabel lewat REST —
+     tanpa RPC perantara. Itu aman karena RLS sejak migrasi 006 sudah
+     menyaring tiap tabel dengan pasangan_saya(), yang membaca tabel
+     `pemilik`. Akun yang tidak terdaftar di sana tidak melihat apa pun,
+     sekalipun ia berhasil mendaftar sendiri.
+     ============================================================ */
+  var KUNCI='dasbor-sesi', sesi=null, pasangan=null;
+  var data = { mempelai:[], tempat:[], acara:[], dompet:[], pihak:[], foto:[], kenangan_blok:[], silsilah:[] };
+
+  try{ sesi = JSON.parse(localStorage.getItem(KUNCI)||'null'); }catch(e){}
+
+  function simpanSesi(s){
+    sesi=s;
+    try{ s ? localStorage.setItem(KUNCI, JSON.stringify(s)) : localStorage.removeItem(KUNCI); }catch(e){}
+  }
+
+  async function masuk(email, sandi){
+    var r = await fetch(M.SB.url+'/auth/v1/token?grant_type=password',{
+      method:'POST',
+      headers:{'apikey':M.SB.key,'Content-Type':'application/json'},
+      body: JSON.stringify({email:email, password:sandi})
+    });
+    var j = await r.json();
+    if(!r.ok) throw new Error(j.error_description || j.msg || 'Email atau kata sandi salah');
+    simpanSesi({akses:j.access_token, segar:j.refresh_token});
+  }
+
+  async function api(jalur, opsi){
+    opsi = opsi || {};
+    var r = await fetch(M.SB.url+'/rest/v1/'+jalur, Object.assign({}, opsi, {
+      headers: Object.assign({
+        'apikey': M.SB.key,
+        'Authorization': 'Bearer ' + (sesi && sesi.akses),
+        'Content-Type': 'application/json',
+        'Prefer': opsi.prefer || 'return=representation'
+      }, opsi.headers||{})
+    }));
+    var teks = await r.text();
+    if(r.status === 401){ simpanSesi(null); location.reload(); throw new Error('Sesi habis'); }
+    if(!r.ok){
+      var pesan = teks;
+      try{ pesan = JSON.parse(teks).message || teks; }catch(e){}
+      throw new Error(pesan);
+    }
+    return teks ? JSON.parse(teks) : null;
+  }
+
+  /* ---------- memuat ---------- */
+  async function muat(){
+    var p = await api('pasangan?select=*&limit=1');
+    if(!p || !p.length){
+      throw new Error('Akun ini belum dihubungkan ke undangan mana pun. Hubungi admin.');
+    }
+    pasangan = p[0];
+
+    var hasil = await Promise.all([
+      api('mempelai?select=*&pasangan_id=eq.'+pasangan.id+'&order=sisi'),
+      api('tempat?select=*&pasangan_id=eq.'+pasangan.id+'&order=kode'),
+      api('acara?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan'),
+      api('dompet?select=*&pasangan_id=eq.'+pasangan.id+'&order=kode'),
+      api('pihak?select=*&pasangan_id=eq.'+pasangan.id+'&order=kode'),
+      api('foto?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,diunggah'),
+      api('kenangan_blok?select=*&pasangan_id=eq.'+pasangan.id),
+      api('silsilah?select=*&pasangan_id=eq.'+pasangan.id+'&order=sisi,urutan')
+    ]);
+    data.mempelai=hasil[0]; data.tempat=hasil[1]; data.acara=hasil[2];
+    data.dompet=hasil[3];   data.pihak=hasil[4];
+    data.foto = hasil[5];
+    data.kenangan_blok = hasil[6] || [];
+    data.silsilah = hasil[7] || [];
+    gambar();
+    gambarSilsilah();
+    gambarFoto();
+    gambarKenangan();
+    kabarKenangan();
+  }
+
+  /* ---------- menggambar ---------- */
+  var SISI = { pria:'Mempelai Pria', wanita:'Mempelai Wanita' };
+
+  function gambar(){
+    $('judulPasangan').textContent = data.mempelai.map(function(m){return m.panggilan;}).join(' & ') || pasangan.slug;
+    /* Paket standar tidak punya subdomain. Menuliskannya seolah punya
+       berarti klien menyalin alamat yang sertifikatnya tidak ada. */
+    $('alamatUndangan').textContent = M.alamatUndangan(pasangan).replace(/^https?:\/\//, '');
+    kabarStatus();
+
+    $('formMempelai').innerHTML = data.mempelai.map(function(m,i){
+      return '<div data-blok="mempelai" data-i="'+i+'">'
+        + '<label>'+esc(SISI[m.sisi]||m.sisi)+' — panggilan</label>'
+        + '<input data-k="panggilan" maxlength="30" value="'+esc(m.panggilan)+'">'
+        + '<label>Nama lengkap</label>'
+        + '<input data-k="lengkap" maxlength="80" value="'+esc(m.lengkap)+'">'
+        + '<label>Anak ke-berapa / keterangan</label>'
+        + '<input data-k="anak" maxlength="60" value="'+esc(m.anak||'')+'" placeholder="Putra dari">'
+        + '</div>';
+    }).join('');
+
+    $('formTempat').innerHTML = data.tempat.map(function(t,i){
+      return '<div class="baris" data-blok="tempat" data-i="'+i+'">'
+        + '<p class="baris-judul">'+esc(t.kode==='pria'?'Sisi pria':'Sisi wanita')+'</p>'
+        + '<label>Nama tempat</label><input data-k="nama" maxlength="80" value="'+esc(t.nama||'')+'">'
+        + '<label>Alamat lengkap</label><textarea data-k="alamat" maxlength="200">'+esc(t.alamat||'')+'</textarea>'
+        + '<label>Alamat ringkas (untuk pesan WhatsApp)</label><input data-k="ringkas" maxlength="120" value="'+esc(t.ringkas||'')+'">'
+        + '<label>Link Google Maps</label><input data-k="maps" maxlength="300" value="'+esc(t.maps||'')+'" placeholder="https://maps.app.goo.gl/…">'
+        + '</div>';
+    }).join('');
+
+    $('formAcara').innerHTML = data.acara.length ? data.acara.map(function(a,i){
+      var opsi = '<option value="">Mengikuti pihak tamu</option>'
+        + data.tempat.map(function(t){
+            return '<option value="'+esc(t.id)+'"'+(a.tempat_id===t.id?' selected':'')+'>Dikunci di: '+esc(t.nama||t.kode)+'</option>';
+          }).join('');
+      return '<div class="baris" data-blok="acara" data-i="'+i+'">'
+        + '<div class="baris-kepala"><p class="baris-judul">Acara '+(i+1)+'</p>'
+        +   '<button class="btn bahaya kecil" data-aksi="hapus-acara">Hapus</button></div>'
+        + '<div class="duo">'
+        +   '<div><label>Nama acara</label><input data-k="nama" maxlength="60" value="'+esc(a.nama||'')+'" placeholder="Akad Nikah"></div>'
+        +   '<div><label>Mulai (untuk hitung mundur)</label><input data-k="mulai" type="datetime-local" value="'+esc(keLokal(a.mulai))+'"></div>'
+        + '</div>'
+        + '<div class="duo">'
+        +   '<div><label>Tanggal (tulisan)</label><input data-k="tanggal" maxlength="60" value="'+esc(a.tanggal||'')+'" placeholder="Selasa, 15 September 2026"></div>'
+        +   '<div><label>Jam (tulisan)</label><input data-k="jam" maxlength="60" value="'+esc(a.jam||'')+'" placeholder="Pukul 13.00 WIB"></div>'
+        + '</div>'
+        + '<label>Ringkas (untuk pesan WhatsApp)</label><input data-k="ringkas" maxlength="60" value="'+esc(a.ringkas||'')+'" placeholder="Akad 13.00 WIB">'
+        + '<label>Tempat</label><select data-k="tempat_id">'+opsi+'</select>'
+        + '<div class="centang">'
+        +   '<label><input type="checkbox" data-k="di_undangan"'+(a.di_undangan!==false?' checked':'')+'> Tampil di undangan</label>'
+        +   '<label><input type="checkbox" data-k="di_terimakasih"'+(a.di_terimakasih!==false?' checked':'')+'> Jadi babak di halaman kenangan</label>'
+        + '</div>'
+        + '</div>';
+    }).join('') : '<p class="kosongstate">Belum ada acara.</p>';
+
+    $('formDompet').innerHTML = data.dompet.length ? data.dompet.map(function(d,i){
+      return '<div class="baris" data-blok="dompet" data-i="'+i+'">'
+        + '<div class="baris-kepala"><p class="baris-judul">'+esc(d.bank||'Dompet')+'</p>'
+        +   '<button class="btn bahaya kecil" data-aksi="hapus-dompet">Hapus</button></div>'
+        + '<div class="trio">'
+        +   '<div><label>Bank / dompet</label><input data-k="bank" maxlength="40" value="'+esc(d.bank||'')+'"></div>'
+        +   '<div><label>Nomor</label><input data-k="nomor" maxlength="40" value="'+esc(d.nomor||'')+'"></div>'
+        +   '<div><label>Milik sisi</label><select data-k="sisi">'
+        +     '<option value="pria"'+(d.sisi==='pria'?' selected':'')+'>Pria</option>'
+        +     '<option value="wanita"'+(d.sisi==='wanita'?' selected':'')+'>Wanita</option>'
+        +   '</select></div>'
+        + '</div>'
+        + '<label>Atas nama</label><input data-k="atas_nama" maxlength="80" value="'+esc(d.atas_nama||'')+'">'
+        + '</div>';
+    }).join('') : '<p class="kosongstate">Belum ada dompet digital.</p>';
+
+    $('formPihak').innerHTML = data.pihak.map(function(ph,i){
+      return '<div class="baris" data-blok="pihak" data-i="'+i+'">'
+        + '<p class="baris-judul">'+esc(ph.label)+'</p>'
+        + '<div class="duo">'
+        +   '<div><label>Kalimat pembuka</label><input data-k="ttd_label" maxlength="60" value="'+esc(ph.ttd_label||'')+'"></div>'
+        +   '<div><label>Kalimat penutup</label><input data-k="ttd_sub" maxlength="160" value="'+esc(ph.ttd_sub||'')+'"></div>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    $('inTanggal').value = pasangan.tanggal_acara || '';
+    $('inKota').value    = pasangan.kota || '';
+    $('inTema').innerHTML = ['ukir-jepara'].map(function(t){
+      return '<option value="'+esc(t)+'"'+(pasangan.tema===t?' selected':'')+'>'+esc(t)+'</option>';
+    }).join('');
+    $('inPihakBawaan').innerHTML = data.pihak.map(function(ph){
+      return '<option value="'+esc(ph.kode)+'"'+(pasangan.pihak_bawaan===ph.kode?' selected':'')+'>'+esc(ph.label)+'</option>';
+    }).join('');
+  }
+
+  function kabarStatus(){
+    var l = $('lencanaStatus');
+    l.textContent = pasangan.terbit ? 'Terbit' : 'Draf';
+    l.className = 'status ' + (pasangan.terbit ? 'terbit' : 'draf');
+    $('btnTerbit').textContent = pasangan.terbit ? 'Tarik dari Publik' : 'Terbitkan';
+    $('hintTerbit').textContent = pasangan.terbit
+      ? 'Undangan Anda sudah bisa dibuka tamu. Menariknya membuat alamatnya menjawab “belum tersedia”, tapi tidak menghapus apa pun.'
+      : 'Selama masih draf, alamat undangannya menjawab “belum tersedia”. Terbitkan kalau isinya sudah siap dibaca tamu.';
+  }
+
+  /* datetime-local perlu waktu LOKAL tanpa zona; timestamptz dari server
+     datang dalam UTC, jadi digeser dulu — kalau tidak, jam yang muncul
+     meleset sebesar selisih zona waktunya. */
+  function keLokal(iso){
+    if(!iso) return '';
+    var d = new Date(iso);
+    if(isNaN(d)) return '';
+    var g = new Date(d.getTime() - d.getTimezoneOffset()*60000);
+    return g.toISOString().slice(0,16);
+  }
+  function dariLokal(v){ return v ? new Date(v).toISOString() : null; }
+
+  /* ---------- mengumpulkan & menyimpan ---------- */
+  function panen(){
+    document.querySelectorAll('[data-blok]').forEach(function(blok){
+      var baris = data[blok.dataset.blok][Number(blok.dataset.i)];
+      if(!baris) return;
+      blok.querySelectorAll('[data-k]').forEach(function(el){
+        var k = el.dataset.k;
+        /* Centang menyimpan jawabannya di .checked; .value-nya selalu
+           "on" — dibaca seperti input biasa, semuanya jadi true. */
+        baris[k] = (el.type === 'checkbox') ? el.checked
+                 : (k === 'mulai') ? dariLokal(el.value)
+                 : (k === 'tempat_id') ? (el.value || null)
+                 : el.value;
+      });
+    });
+    pasangan.tanggal_acara = $('inTanggal').value || null;
+    pasangan.kota          = $('inKota').value.trim() || null;
+    pasangan.tema          = $('inTema').value;
+    pasangan.pihak_bawaan  = $('inPihakBawaan').value;
+  }
+
+  function bersih(baris, kolom){
+    var o = {};
+    kolom.forEach(function(k){ o[k] = baris[k]; });
+    return o;
+  }
+
+  async function simpan(){
+    panen();
+    var btn = $('btnSimpan');
+    btn.disabled = true; btn.textContent = 'Menyimpan…';
+    try{
+      await api('pasangan?id=eq.'+pasangan.id, {
+        method:'PATCH', prefer:'return=minimal',
+        body: JSON.stringify(bersih(pasangan, ['tanggal_acara','kota','tema','pihak_bawaan']))
+      });
+
+      var tugas = [];
+      data.mempelai.forEach(function(m){
+        tugas.push(api('mempelai?id=eq.'+m.id,{method:'PATCH',prefer:'return=minimal',
+          body:JSON.stringify(bersih(m,['panggilan','lengkap','anak']))}));
+      });
+      data.tempat.forEach(function(t){
+        tugas.push(api('tempat?id=eq.'+t.id,{method:'PATCH',prefer:'return=minimal',
+          body:JSON.stringify(bersih(t,['nama','alamat','ringkas','maps']))}));
+      });
+      data.acara.forEach(function(a,i){
+        a.urutan = i+1;
+        tugas.push(api('acara?id=eq.'+a.id,{method:'PATCH',prefer:'return=minimal',
+          body:JSON.stringify(bersih(a,['nama','tanggal','jam','ringkas','mulai','tempat_id','urutan',
+                                        'di_undangan','di_terimakasih']))}));
+      });
+      data.dompet.forEach(function(d){
+        tugas.push(api('dompet?id=eq.'+d.id,{method:'PATCH',prefer:'return=minimal',
+          body:JSON.stringify(bersih(d,['bank','nomor','atas_nama','sisi']))}));
+      });
+      data.pihak.forEach(function(ph){
+        tugas.push(api('pihak?id=eq.'+ph.id,{method:'PATCH',prefer:'return=minimal',
+          body:JSON.stringify(bersih(ph,['ttd_label','ttd_sub']))}));
+      });
+      await Promise.all(tugas);
+      gambarBabakKenangan();
+      kabarKenangan();
+      toast('Tersimpan');
+    }catch(e){ toast(e.message, true); }
+    finally{ btn.disabled=false; btn.textContent='Simpan Semua'; }
+  }
+
+  async function tambahAcara(){
+    panen();
+    try{
+      var baru = await api('acara',{method:'POST',body:JSON.stringify({
+        pasangan_id: pasangan.id, urutan: data.acara.length+1,
+        nama:'Acara Baru', tanggal:'', jam:'', ringkas:'', mulai:null, tempat_id:null
+      })});
+      data.acara.push(Array.isArray(baru)?baru[0]:baru);
+      gambar(); gambarBabakKenangan(); toast('Acara ditambahkan');
+    }catch(e){ toast(e.message, true); }
+  }
+
+  async function tambahDompet(){
+    panen();
+    var kode = 'dompet-' + Date.now().toString(36);
+    try{
+      var baru = await api('dompet',{method:'POST',body:JSON.stringify({
+        pasangan_id: pasangan.id, kode: kode, bank:'', nomor:'', atas_nama:'', sisi:'pria'
+      })});
+      data.dompet.push(Array.isArray(baru)?baru[0]:baru);
+      gambar(); toast('Dompet ditambahkan');
+    }catch(e){ toast(e.message, true); }
+  }
+
+  async function hapusBaris(tabel, baris, daftar){
+    if(!confirm('Hapus baris ini?')) return;
+    panen();
+    try{
+      await api(tabel+'?id=eq.'+baris.id,{method:'DELETE',prefer:'return=minimal'});
+      var i = daftar.indexOf(baris);
+      if(i>=0) daftar.splice(i,1);
+      gambar(); gambarBabakKenangan(); toast('Dihapus');
+    }catch(e){ toast(e.message, true); }
+  }
+
+  async function alihTerbit(){
+    var btn=$('btnTerbit'); btn.disabled=true;
+    try{
+      await simpan();
+      var mau = !pasangan.terbit;
+      await api('pasangan?id=eq.'+pasangan.id,{method:'PATCH',prefer:'return=minimal',
+        body:JSON.stringify({ terbit: mau, status: mau ? 'aktif' : 'draf' })});
+      pasangan.terbit = mau;
+      pasangan.status = mau ? 'aktif' : 'draf';
+      kabarStatus();
+      kabarKenangan();
+      toast(mau ? 'Undangan diterbitkan' : 'Undangan ditarik dari publik');
+    }catch(e){ toast(e.message, true); }
+    finally{ btn.disabled=false; }
+  }
+
+  /* ---------- pendengar ---------- */
+  document.addEventListener('click', function(e){
+    /* Pendengar ini cuma mengurus dua aksi baris di kotak 3 dan 4. Kotak
+       lain — pustaka foto, misalnya — juga memakai data-aksi tapi tidak
+       duduk di dalam [data-blok]; tanpa saringan ini, setiap klik di sana
+       melempar galat null.dataset. */
+    var t = e.target.closest('[data-aksi="hapus-acara"],[data-aksi="hapus-dompet"]');
+    if(!t) return;
+    var blok = t.closest('[data-blok]');
+    if(!blok) return;
+    var i = Number(blok.dataset.i);
+    if(t.dataset.aksi==='hapus-acara')  hapusBaris('acara', data.acara[i], data.acara);
+    if(t.dataset.aksi==='hapus-dompet') hapusBaris('dompet', data.dompet[i], data.dompet);
+  });
+
+  $('btnSimpan').addEventListener('click', simpan);
+  $('btnTerbit').addEventListener('click', alihTerbit);
+  $('btnAcaraBaru').addEventListener('click', tambahAcara);
+  $('btnDompetBaru').addEventListener('click', tambahDompet);
+  $('btnPratinjau').addEventListener('click', function(){
+    window.open(M.alamatUndangan(pasangan), '_blank', 'noopener');
+  });
+  $('btnKeluar').addEventListener('click', function(){ simpanSesi(null); location.reload(); });
+
+  /* ============================================================
+     1 · Silsilah keluarga
+
+     Pindah dari /kirim (Fase 3). Di sana ia lewat RPC bertoken
+     panitia; di sini pemilik menulis langsung ke tabel lewat REST —
+     RLS `silsilah panitia` sudah menyaring dengan pasangan_saya() sejak
+     014. Fotonya lewat foto-unggah dengan JWT pemilik (?untuk=silsilah),
+     pintu yang sama dengan foto acara di kotak 8.
+     ============================================================ */
+  var silSasaranFoto = null;
+  var LABEL_SISI = { pria:'Keluarga pihak pria', wanita:'Keluarga pihak wanita' };
+
+  async function muatSilsilah(){
+    data.silsilah = await api('silsilah?select=*&pasangan_id=eq.'+pasangan.id+'&order=sisi,urutan') || [];
+    gambarSilsilah();
+  }
+
+  function gambarSilsilah(){
+    var daftar = data.silsilah || [];
+    if(!daftar.length){
+      $('silDaftar').innerHTML = '<p class="kosongstate">Belum ada yang diisi. Tanpa isi, bagian silsilah tidak muncul di undangan.</p>';
+      return;
+    }
+    $('silDaftar').innerHTML = ['pria','wanita'].map(function(sisi){
+      var isi = daftar.filter(function(o){ return o.sisi === sisi; });
+      if(!isi.length) return '';
+      return '<div class="sil-sisi"><h4>' + esc(LABEL_SISI[sisi]) + '</h4><div class="sil-grid">'
+        + isi.map(kartuSil).join('') + '</div></div>';
+    }).join('');
+  }
+
+  function kartuSil(o){
+    var foto = o.foto_kecil || o.foto_jalur;
+    var gbr = foto
+      ? '<img class="gbr" src="' + esc(window.Gambar.url(foto)) + '" alt="" loading="lazy">'
+      : '<div class="gbr kosong">tanpa foto</div>';
+    return '<div class="sil-kartu" data-sil="' + esc(o.id) + '">'
+      +   gbr
+      +   '<p class="peran">' + esc(o.peran) + '</p>'
+      +   '<p class="nama">' + esc(o.nama)
+      +     (o.keterangan ? ' <span style="opacity:.6">' + esc(o.keterangan) + '</span>' : '')
+      +   '</p>'
+      +   '<div class="alat">'
+      +     '<button class="btn ghost" data-sil-aksi="foto">' + (foto ? 'Ganti Foto' : 'Foto') + '</button>'
+      +     (foto ? '<button class="btn ghost" data-sil-aksi="lepas">Lepas Foto</button>' : '')
+      +     '<button class="btn bahaya" data-sil-aksi="hapus">Hapus</button>'
+      +   '</div>'
+      + '</div>';
+  }
+
+  async function tambahSil(){
+    var peran = $('silPeran').value.trim();
+    var nama  = $('silNama').value.trim();
+    var sisi  = $('silSisi').value;
+    if(!peran || !nama){ toast('Peran dan nama harus diisi', true); return; }
+    var btn = $('btnSilTambah');
+    btn.disabled = true;
+    try{
+      /* Urutan: paling belakang di sisinya, seperti silsilah_simpan dulu. */
+      var urutan = (data.silsilah || []).filter(function(o){ return o.sisi === sisi; })
+        .reduce(function(m, o){ return Math.max(m, o.urutan || 0); }, 0) + 1;
+      await api('silsilah', { method:'POST', prefer:'return=minimal', body: JSON.stringify({
+        pasangan_id: pasangan.id, sisi: sisi, peran: peran, nama: nama,
+        keterangan: $('silKet').value.trim() || null, urutan: urutan
+      }) });
+      $('silPeran').value = ''; $('silNama').value = ''; $('silKet').value = '';
+      toast('Ditambahkan');
+      await muatSilsilah();
+    }catch(e){ toast(e.message, true); }
+    finally{ btn.disabled = false; }
+  }
+
+  function fotoSilsilah(metode, id, badan){
+    return fetch(M.SB.url + '/functions/v1/foto-unggah?untuk=silsilah&id=' + encodeURIComponent(id), {
+      method: metode,
+      headers: { 'Authorization': 'Bearer ' + (sesi && sesi.akses), 'apikey': M.SB.key },
+      body: badan
+    });
+  }
+
+  $('silDaftar').addEventListener('click', async function(e){
+    var tombol = e.target.closest('button[data-sil-aksi]');
+    if(!tombol) return;
+    var id = tombol.closest('[data-sil]').dataset.sil;
+    var aksi = tombol.dataset.silAksi;
+    var o = (data.silsilah || []).find(function(x){ return x.id === id; });
+
+    if(aksi === 'foto'){
+      silSasaranFoto = id;
+      $('berkasSilsilah').click();
+      return;
+    }
+
+    tombol.disabled = true;
+    try{
+      if(aksi === 'hapus'){
+        if(!confirm('Hapus baris ini dari silsilah?')){ tombol.disabled = false; return; }
+        /* Berkas fotonya dibuang dulu. silsilah_hapus di /kirim dulu cuma
+           menghapus baris, dan fotonya tertinggal di bucket tanpa pemilik. */
+        if(o && o.foto_jalur){
+          var rf = await fotoSilsilah('DELETE', id);
+          if(!rf.ok) throw new Error('Gagal membuang fotonya');
+        }
+        await api('silsilah?id=eq.'+id, { method:'DELETE', prefer:'return=minimal' });
+        toast('Dihapus');
+      }else if(aksi === 'lepas'){
+        var r = await fotoSilsilah('DELETE', id);
+        if(!r.ok) throw new Error('Gagal melepas foto');
+        toast('Foto dilepas');
+      }
+      await muatSilsilah();
+    }catch(err){ toast(err.message, true); tombol.disabled = false; }
+  });
+
+  $('berkasSilsilah').addEventListener('change', async function(e){
+    var berkas = (e.target.files || [])[0];
+    e.target.value = '';
+    if(!berkas || !silSasaranFoto) return;
+    var id = silSasaranFoto; silSasaranFoto = null;
+
+    toast('Mengecilkan foto…');
+    try{
+      var kecilan = await window.Gambar.siapkan(berkas);
+      var form = new FormData();
+      form.append('berkas', kecilan.penuh.blob, 'foto.webp');
+      form.append('kecil',  kecilan.kecil.blob, 'kecil.webp');
+      form.append('lebar',  kecilan.penuh.lebar);
+      form.append('tinggi', kecilan.penuh.tinggi);
+      var r = await fotoSilsilah('POST', id, form);
+      var jawab = null; try{ jawab = await r.json(); }catch(x){}
+      if(!r.ok) throw new Error((jawab && jawab.pesan) || ('Gagal mengunggah (HTTP ' + r.status + ')'));
+      toast('Foto tersimpan');
+      await muatSilsilah();
+    }catch(err){ toast(err.message, true); }
+  });
+
+  $('btnSilTambah').addEventListener('click', tambahSil);
+
+  /* ============================================================
+     8 · Foto acara
+
+     Dulu unggahan foto cuma ada di /kirim, lewat token panitia, karena
+     foto-unggah memang cuma memeriksa token itu. Sekarang fungsinya
+     menerima JWT pemilik juga, jadi seluruh penyiapan — data diri,
+     acara, foto — duduk di satu halaman. Panelnya dihapus dari /kirim:
+     dua tempat unggah berarti dua perilaku yang cepat atau lambat beda.
+
+     Metadatanya (keterangan, babak, urutan, tampil) ditulis langsung
+     lewat PostgREST — RLS `foto panitia` sudah mengizinkan pemilik, jadi
+     tidak perlu RPC sendiri. Yang lewat edge function cuma yang menuntut
+     service_role: menulis dan menghapus berkas di bucket.
+     ============================================================ */
+  var BATAS_FOTO = 100;
+
+  function acaraLewat(){
+    if(!pasangan || !pasangan.tanggal_acara) return false;
+    /* Dibandingkan sebagai tanggal, bukan waktu: acara pagi tidak boleh
+       dianggap "belum" sepanjang sisa harinya. */
+    return pasangan.tanggal_acara < new Date().toISOString().slice(0,10);
+  }
+
+  function gambarFoto(){
+    var daftar = data.foto || [];
+
+    /* Panelnya tetap terlihat sebelum hari-H — supaya pasangan tahu sejak
+       awal halaman kenangan itu ada dan termasuk yang mereka beli — tapi
+       keterangannya berbeda, karena sebelum acara memang belum ada yang
+       bisa diunggah. */
+    $('hintFoto').textContent = acaraLewat()
+      ? 'Foto hari itu. Yang diunggah di sini muncul di halaman kenangan, dan yang diberi babak jadi wajah babaknya.'
+      : 'Belum perlu diisi sekarang — kotak ini untuk foto SESUDAH acara. Yang masuk ke sini nanti menyusun halaman kenangan, dikelompokkan menurut rangkaian acara di kotak 3.';
+
+    $('kuotaFoto').textContent = daftar.length
+      ? daftar.length + ' dari ' + BATAS_FOTO + ' foto · '
+        + (daftar.reduce(function(j,f){ return j + (f.bita||0); }, 0) / 1048576).toFixed(1) + ' MB'
+      : '';
+
+    if(!daftar.length){
+      $('pustakaFoto').innerHTML = '<p class="kosongstate">'
+        + (acaraLewat() ? 'Belum ada foto.' : 'Belum ada foto — wajar, acaranya belum berlangsung.')
+        + '</p>';
+      return;
+    }
+
+    var opsiBabak = '<option value="">Tanpa babak</option>'
+      + (data.acara || []).map(function(a){
+          return '<option value="'+esc(a.id)+'">'+esc(a.nama||'Acara')+'</option>';
+        }).join('');
+
+    $('pustakaFoto').innerHTML = daftar.map(function(f, i){
+      var src = window.Gambar.url(f.jalur_kecil || f.jalur);
+      return '<div class="ubin'+(f.tampil ? '' : ' samar')+'" data-foto="'+esc(f.id)+'">'
+        + '<img src="'+esc(src)+'" alt="" loading="lazy">'
+        + '<select data-f="acara_id" aria-label="Babak">'+opsiBabak+'</select>'
+        + '<input data-f="keterangan" type="text" maxlength="280" placeholder="Keterangan" value="'+esc(f.keterangan||'')+'">'
+        + '<div class="alat">'
+        +   '<button class="btn ghost" data-aksi="naik" '+(i===0?'disabled':'')+' title="Naikkan">&uarr;</button>'
+        +   '<button class="btn ghost" data-aksi="turun" '+(i===daftar.length-1?'disabled':'')+' title="Turunkan">&darr;</button>'
+        +   '<button class="btn ghost" data-aksi="tampil">'+(f.tampil?'Sembunyi':'Tampil')+'</button>'
+        +   '<button class="btn bahaya" data-aksi="hapus">Hapus</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    /* Nilai select dipasang sesudah HTML-nya ada, bukan lewat atribut
+       selected: acara_id bisa null, dan menaruh null di atribut
+       menghasilkan tulisan "null" sebagai nilai yang tampak sah. */
+    daftar.forEach(function(f){
+      var ubin = $('pustakaFoto').querySelector('[data-foto="'+f.id+'"]');
+      if(ubin) ubin.querySelector('[data-f="acara_id"]').value = f.acara_id || '';
+    });
+  }
+
+  async function unggahSatuFoto(berkas){
+    var kecilan = await window.Gambar.siapkan(berkas);
+    var form = new FormData();
+    form.append('berkas', kecilan.penuh.blob, 'foto.webp');
+    form.append('kecil',  kecilan.kecil.blob, 'kecil.webp');
+    form.append('lebar',  kecilan.penuh.lebar);
+    form.append('tinggi', kecilan.penuh.tinggi);
+
+    var r = await fetch(M.SB.url + '/functions/v1/foto-unggah', {
+      method: 'POST',
+      /* JWT pemilik, bukan anon key — itu yang ditukar foto-unggah jadi
+         pasangan lewat tabel pemilik. */
+      headers: { 'Authorization': 'Bearer ' + (sesi && sesi.akses), 'apikey': M.SB.key },
+      body: form
+    });
+    var jawab = null;
+    try{ jawab = await r.json(); }catch(e){}
+    if(!r.ok) throw new Error((jawab && jawab.pesan) || ('Gagal mengunggah (HTTP ' + r.status + ')'));
+    return jawab;
+  }
+
+  async function pilihFoto(e){
+    var berkas = Array.prototype.slice.call(e.target.files || []);
+    e.target.value = '';
+    if(!berkas.length) return;
+
+    var maju = $('majuFoto'), batang = maju.querySelector('i');
+    maju.hidden = false;
+    var sukses = 0, gagal = [];
+
+    for(var i = 0; i < berkas.length; i++){
+      batang.style.width = Math.round(i / berkas.length * 100) + '%';
+      toast('Mengunggah ' + (i+1) + ' dari ' + berkas.length + '…');
+      try{ await unggahSatuFoto(berkas[i]); sukses++; }
+      /* Satu berkas rusak tidak boleh menghentikan sisanya — orang
+         memilih 80 foto sekaligus, dan satu HEIC di tengah tidak layak
+         membatalkan 79 lainnya. */
+      catch(err){ gagal.push(berkas[i].name + ': ' + err.message); }
+    }
+    batang.style.width = '100%';
+    setTimeout(function(){ maju.hidden = true; batang.style.width = '0'; }, 600);
+
+    if(gagal.length){
+      console.warn('Foto yang gagal:', gagal);
+      toast(sukses + ' foto masuk, ' + gagal.length + ' gagal — lihat console', true);
+    }else{
+      toast(sukses + ' foto tersimpan');
+    }
+    await muatFoto();
+  }
+
+  async function muatFoto(){
+    data.foto = await api('foto?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,diunggah');
+    gambarFoto();
+    gambarBabakKenangan();
+  }
+
+  $('inBerkasFoto').addEventListener('change', pilihFoto);
+
+  $('pustakaFoto').addEventListener('change', async function(e){
+    var el = e.target.closest('[data-f]');
+    if(!el) return;
+    var id = el.closest('[data-foto]').dataset.foto;
+    var badan = {};
+    badan[el.dataset.f] = el.dataset.f === 'acara_id' ? (el.value || null) : el.value;
+    try{
+      await api('foto?id=eq.'+id, { method:'PATCH', prefer:'return=minimal',
+                                    body: JSON.stringify(badan) });
+      var f = (data.foto||[]).find(function(x){ return x.id === id; });
+      if(f) Object.assign(f, badan);
+      if(el.dataset.f === 'acara_id') gambarBabakKenangan();
+      toast('Tersimpan');
+    }catch(err){ toast(err.message, true); }
+  });
+
+  $('pustakaFoto').addEventListener('click', async function(e){
+    var tombol = e.target.closest('button[data-aksi]');
+    if(!tombol) return;
+    var id = tombol.closest('[data-foto]').dataset.foto;
+    var i  = (data.foto||[]).findIndex(function(x){ return x.id === id; });
+    if(i < 0) return;
+    var f = data.foto[i], aksi = tombol.dataset.aksi;
+
+    tombol.disabled = true;
+    try{
+      if(aksi === 'hapus'){
+        if(!confirm('Hapus foto ini? Berkasnya ikut dihapus dan tidak bisa dikembalikan.')){
+          tombol.disabled = false; return;
+        }
+        var r = await fetch(M.SB.url + '/functions/v1/foto-unggah?id=' + encodeURIComponent(id), {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + (sesi && sesi.akses), 'apikey': M.SB.key }
+        });
+        if(!r.ok) throw new Error('Gagal menghapus');
+        toast('Foto dihapus');
+
+      }else if(aksi === 'tampil'){
+        await api('foto?id=eq.'+id, { method:'PATCH', prefer:'return=minimal',
+                                      body: JSON.stringify({ tampil: !f.tampil }) });
+        toast(f.tampil ? 'Foto disembunyikan' : 'Foto ditampilkan');
+
+      }else{
+        /* Naik/turun cukup menukar nilai urutan dengan tetangganya.
+           Nilainya berurutan sejak diunggah, jadi tidak perlu menomori
+           ulang seluruh daftar. */
+        var j = aksi === 'naik' ? i - 1 : i + 1;
+        var g = data.foto[j];
+        if(!g){ tombol.disabled = false; return; }
+        await Promise.all([
+          api('foto?id=eq.'+f.id, { method:'PATCH', prefer:'return=minimal',
+                                    body: JSON.stringify({ urutan: g.urutan }) }),
+          api('foto?id=eq.'+g.id, { method:'PATCH', prefer:'return=minimal',
+                                    body: JSON.stringify({ urutan: f.urutan }) })
+        ]);
+      }
+      await muatFoto();
+    }catch(err){ toast(err.message, true); tombol.disabled = false; }
+  });
+
+  /* ============================================================
+     9 · Halaman kenangan
+
+     Babak = baris `acara` yang dicentang di kotak 3; panel ini tidak
+     menyimpan daftar kedua. Yang diatur di sini cuma tiga hal:
+       · satu kalimat per babak      → acara.kenangan_teks
+       · foto latar per babak        → foto.latar (pemicu 026 menjaga
+                                        satu latar per babak)
+       · blok rangka: tampil, tulisan → kenangan_blok
+
+     Blok yang tidak pernah diubah TIDAK ditulis. Baris yang tidak ada
+     berarti bawaan, dan bawaan bisa diperbaiki untuk semua pasangan
+     sekaligus; baris yang menyalin bawaan membekukannya selamanya.
+     ============================================================ */
+  function blokSimpanan(){
+    var o = {};
+    (data.kenangan_blok || []).forEach(function(b){ o[b.kunci] = b; });
+    return o;
+  }
+
+  function gambarKenangan(){
+    gambarBabakKenangan();
+    gambarBlokKenangan();
+  }
+
+  /* Daftar babak digambar ulang tiap kali acara atau foto berubah —
+     termasuk sesudah "Simpan Semua" di kotak 7. Kalimat yang sudah
+     diketik tapi belum disimpan ikut dibawa, supaya menyimpan kotak lain
+     tidak diam-diam menghapus tulisan di kotak ini. */
+  function gambarBabakKenangan(){
+    if(!pasangan) return;
+    var ketikan = {};
+    document.querySelectorAll('#formBabak [data-babak]').forEach(function(el){
+      ketikan[el.dataset.babak] = el.querySelector('[data-kk="kenangan_teks"]').value;
+    });
+
+    $('hintKenangan').textContent = acaraLewat()
+      ? 'Halaman yang dibuka tamu sesudah acara: hari itu diceritakan babak demi babak, dengan foto kalian sebagai latarnya. Semua yang tidak diisi memakai bawaan yang masuk akal — halaman ini tidak pernah kosong.'
+      : 'Belum perlu diisi sekarang. Sesudah acara, halaman ini bercerita babak demi babak memakai foto dari kotak 8. Tulisannya sudah bisa disiapkan dari sekarang kalau mau; yang dibiarkan kosong memakai bawaan.';
+
+    var babak = (data.acara || []).filter(function(a){ return a.di_terimakasih !== false; });
+    var bukan = (data.acara || []).filter(function(a){ return a.di_terimakasih === false; });
+
+    $('formBabak').innerHTML = (babak.length ? babak.map(function(a, i){
+      var foto = (data.foto || []).filter(function(f){ return f.acara_id === a.id && f.tampil; });
+      /* Sama dengan terimakasih_isi: yang ditandai latar, kalau tidak
+         ada, foto pertama babak itu. Panel harus menunjukkan foto yang
+         SUNGGUH akan dipakai, termasuk ketika belum ada yang memilih. */
+      var dipakai = foto.filter(function(f){ return f.latar; })[0] || foto[0];
+      var pilihan = foto.length
+        ? '<label>Latar</label><div class="pilih-latar">' + foto.map(function(f){
+            return '<button type="button" data-latar="'+esc(f.id)+'" class="'+(f===dipakai?'dipilih':'')+'"'
+              + ' aria-pressed="'+(f===dipakai)+'" title="Jadikan latar">'
+              + '<img src="'+esc(window.Gambar.url(f.jalur_kecil || f.jalur))+'" alt="" loading="lazy"></button>';
+          }).join('') + '</div>'
+        : '<p class="kosongstate">Belum ada foto untuk babak ini, jadi ia tampil sebagai kartu teks. Beri babak <em>'
+          + esc(a.nama || 'ini') + '</em> pada foto di kotak 8.</p>';
+      return '<div class="baris" data-babak="'+esc(a.id)+'">'
+        + '<p class="baris-judul">'+(i+1)+' · '+esc(a.nama || 'Acara')+'</p>'
+        + '<label>Satu kalimat untuk babak ini</label>'
+        + '<input data-kk="kenangan_teks" maxlength="200" value="'+esc(a.id in ketikan ? ketikan[a.id] : (a.kenangan_teks || ''))+'" placeholder="Kosongkan kalau tidak perlu kalimat">'
+        + pilihan
+        + '</div>';
+    }).join('') : '<p class="kosongstate">Belum ada acara yang dicentang jadi babak. Tanpa babak, halaman kenangan tetap utuh: sampul, angka, galeri, ucapan, penutup.</p>')
+      + (bukan.length ? '<p class="hint" style="margin-top:10px">Tidak jadi babak: '
+          + bukan.map(function(a){ return esc(a.nama || 'Acara'); }).join(', ') + '.</p>' : '');
+  }
+
+  function gambarBlokKenangan(){
+    var simpanan = blokSimpanan();
+    $('formBlok').innerHTML = window.Kenangan.BLOK.map(function(b){
+      var s = simpanan[b.kunci] || {};
+      var tampil = b.wajib || s.tampil !== false;
+      return '<div class="baris'+(tampil?'':' mati')+'" data-kblok="'+b.kunci+'">'
+        + '<div class="blok-kepala"><p class="baris-judul">'+esc(b.nama)+'</p>'
+        +   (b.wajib ? '<span class="wajib">Selalu tampil</span>'
+                     : '<div class="centang"><label><input type="checkbox" data-kb="tampil"'+(tampil?' checked':'')+'> Tampil</label></div>')
+        + '</div>'
+        + '<p class="hint" style="margin:4px 0 0">'+esc(b.guna)+'</p>'
+        + '<label>Judul</label><input data-kb="judul" maxlength="80" value="'+esc(s.judul || '')+'" placeholder="'+esc(b.judul)+'">'
+        + '<label>Tulisan</label><textarea data-kb="teks" maxlength="600" placeholder="'+esc(b.teks || 'Tanpa tulisan')+'">'+esc(s.teks || '')+'</textarea>'
+        + '</div>';
+    }).join('');
+  }
+
+  $('formBlok').addEventListener('change', function(e){
+    if(e.target.dataset.kb !== 'tampil') return;
+    e.target.closest('[data-kblok]').classList.toggle('mati', !e.target.checked);
+  });
+
+  async function simpanKenangan(){
+    var btn = $('btnSimpanKenangan');
+    btn.disabled = true; btn.textContent = 'Menyimpan…';
+    try{
+      var tugas = [];
+
+      document.querySelectorAll('#formBabak [data-babak]').forEach(function(el){
+        var a = (data.acara || []).find(function(x){ return x.id === el.dataset.babak; });
+        var nilai = el.querySelector('[data-kk="kenangan_teks"]').value.trim() || null;
+        if(!a || (a.kenangan_teks || null) === nilai) return;
+        a.kenangan_teks = nilai;
+        tugas.push(api('acara?id=eq.'+a.id, { method:'PATCH', prefer:'return=minimal',
+                                              body: JSON.stringify({ kenangan_teks: nilai }) }));
+      });
+
+      var simpanan = blokSimpanan(), tulis = [];
+      document.querySelectorAll('#formBlok [data-kblok]').forEach(function(el){
+        var kunci = el.dataset.kblok;
+        var cb = el.querySelector('[data-kb="tampil"]');
+        var baris = {
+          pasangan_id: pasangan.id, kunci: kunci,
+          tampil: cb ? cb.checked : true,
+          judul:  el.querySelector('[data-kb="judul"]').value.trim() || null,
+          teks:   el.querySelector('[data-kb="teks"]').value.trim()  || null
+        };
+        var lama = simpanan[kunci];
+        var bawaan = baris.tampil && !baris.judul && !baris.teks;
+        // Tidak ada baris dan isinya bawaan: biarkan tidak ada.
+        if(!lama && bawaan) return;
+        if(lama && lama.tampil === baris.tampil && (lama.judul||null) === baris.judul
+                && (lama.teks||null) === baris.teks) return;
+        tulis.push(baris);
+      });
+      if(tulis.length){
+        tugas.push(api('kenangan_blok?on_conflict=pasangan_id,kunci', {
+          method:'POST', prefer:'resolution=merge-duplicates,return=minimal',
+          body: JSON.stringify(tulis)
+        }));
+      }
+
+      await Promise.all(tugas);
+      if(tulis.length){
+        data.kenangan_blok = await api('kenangan_blok?select=*&pasangan_id=eq.'+pasangan.id) || [];
+      }
+      toast(tugas.length ? 'Halaman kenangan tersimpan' : 'Tidak ada yang berubah');
+    }catch(e){ toast(e.message, true); }
+    finally{ btn.disabled = false; btn.textContent = 'Simpan Halaman Kenangan'; }
+  }
+
+  $('formBabak').addEventListener('click', async function(e){
+    var t = e.target.closest('[data-latar]');
+    if(!t || t.classList.contains('dipilih')) return;
+    try{
+      /* Cukup menyalakan yang baru: pemicu foto_satu_latar mematikan
+         latar lama di babak yang sama, dalam transaksi yang sama. */
+      await api('foto?id=eq.'+t.dataset.latar, { method:'PATCH', prefer:'return=minimal',
+                                                  body: JSON.stringify({ latar: true }) });
+      await muatFoto();
+      toast('Latar diganti');
+    }catch(err){ toast(err.message, true); }
+  });
+
+  $('btnSimpanKenangan').addEventListener('click', simpanKenangan);
+  /* Pratinjau selalu di asal dasbor ini: sesinya ada di localStorage
+     asal ini, bukan di subdomain pasangan. */
+  function bukaPratinjau(){
+    window.open(M.alamatPratinjau(pasangan, '/terimakasih'), '_blank', 'noopener');
+  }
+  $('btnLihatKenangan').addEventListener('click', bukaPratinjau);
+  $('btnPratinjauKenangan').addEventListener('click', bukaPratinjau);
+
+  /* ============================================================
+     10 · Terbitkan halaman kenangan
+
+     Saklar sendiri, terpisah dari undangan. Undangan terbit berminggu-
+     minggu sebelum acara; halaman kenangan baru pantas dibuka sesudah
+     fotonya masuk. Tamu melihatnya hanya kalau KEDUANYA terbit — itu
+     dijaga terimakasih_isi, bukan halaman ini.
+     ============================================================ */
+  function kabarKenangan(){
+    if(!pasangan) return;
+    var nyala = !!pasangan.kenangan_terbit;
+    var l = $('lencanaKenangan');
+    l.textContent = nyala ? 'Terbit' : 'Draf';
+    l.className = 'status ' + (nyala ? 'terbit' : 'draf');
+    $('btnTerbitKenangan').textContent = nyala ? 'Tarik dari Publik' : 'Terbitkan Halaman Kenangan';
+
+    var hint;
+    if(nyala && !pasangan.terbit){
+      hint = 'Sudah dinyalakan, tapi undangannya masih draf — tamu baru bisa membukanya sesudah undangan diterbitkan di kotak 7.';
+    }else if(nyala){
+      hint = 'Tamu sudah bisa membuka halaman kenangan di alamat di bawah. Menariknya membuat alamat itu menjawab “belum tersedia”, tanpa menghapus apa pun.';
+    }else if(!acaraLewat()){
+      hint = 'Biarkan mati sampai acaranya lewat dan fotonya masuk. Sampai saat itu, tamu yang membuka alamatnya mendapat “belum tersedia”. Pratinjau tetap bisa dibuka kapan saja.';
+    }else{
+      hint = 'Kalau foto dan tulisannya sudah siap, terbitkan supaya tamu bisa membukanya. Lihat dulu lewat Pratinjau — yang tampil di sana persis yang nanti dilihat tamu.';
+    }
+    $('hintTerbitKenangan').textContent = hint;
+
+    var alamat = $('alamatKenangan');
+    alamat.hidden = !(nyala && pasangan.terbit);
+    alamat.textContent = M.alamatPlatform(pasangan, '/terimakasih').replace(/^https?:\/\//, '');
+  }
+
+  async function alihTerbitKenangan(){
+    var mau = !pasangan.kenangan_terbit;
+    if(mau && !acaraLewat()
+       && !confirm('Acaranya belum berlangsung. Halaman kenangan biasanya baru diterbitkan sesudah acara dan fotonya masuk. Terbitkan sekarang juga?')){
+      return;
+    }
+    var btn = $('btnTerbitKenangan'); btn.disabled = true;
+    try{
+      await api('pasangan?id=eq.'+pasangan.id, { method:'PATCH', prefer:'return=minimal',
+                                                 body: JSON.stringify({ kenangan_terbit: mau }) });
+      pasangan.kenangan_terbit = mau;
+      kabarKenangan();
+      toast(mau ? 'Halaman kenangan diterbitkan' : 'Halaman kenangan ditarik dari publik');
+    }catch(e){ toast(e.message, true); }
+    finally{ btn.disabled = false; }
+  }
+  $('btnTerbitKenangan').addEventListener('click', alihTerbitKenangan);
+
+  async function cobaMasuk(){
+    var email=$('inEmail').value.trim(), sandi=$('inSandi').value;
+    if(!email||!sandi){ $('pesanMasuk').className='pesan err'; $('pesanMasuk').textContent='Email dan kata sandi harus diisi.'; return; }
+    var b=$('btnMasuk'); b.disabled=true; b.textContent='Memeriksa…';
+    try{
+      await masuk(email,sandi);
+      $('inSandi').value=''; $('pesanMasuk').textContent='';
+      await buka();
+    }catch(e){
+      $('pesanMasuk').className='pesan err';
+      $('pesanMasuk').textContent=e.message;
+    }finally{ b.disabled=false; b.textContent='Masuk'; }
+  }
+  $('btnMasuk').addEventListener('click', cobaMasuk);
+  $('inSandi').addEventListener('keydown', function(e){ if(e.key==='Enter') cobaMasuk(); });
+
+  async function buka(){
+    await muat();
+    $('gerbang').hidden = true;
+    $('isi').hidden = false;
+  }
+
+  if(sesi && sesi.akses){
+    buka().catch(function(e){
+      $('pesanMasuk').className='pesan err';
+      $('pesanMasuk').textContent=e.message;
+      simpanSesi(null);
+    });
+  }else{
+    $('inEmail').focus();
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# Header untuk berkas yang dilayani lapisan aset Cloudflare.
+# Halaman kerja pasangan dan admin tidak punya urusan di mesin pencari.
+
+/kirim
+  X-Robots-Tag: noindex, nofollow
+/kirim/*
+  X-Robots-Tag: noindex, nofollow
+/dasbor
+  X-Robots-Tag: noindex, nofollow
+/dasbor/*
+  X-Robots-Tag: noindex, nofollow
+/admin
+  X-Robots-Tag: noindex, nofollow
+/admin/*
+  X-Robots-Tag: noindex, nofollow

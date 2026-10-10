@@ -3,338 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Undangan Pernikahan — Rian &amp; 'AINI</title>
+<title>Undangan Pernikahan</title>
 <script>document.documentElement.className += ' js';</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant:ital,wght@0,400;1,300;1,400&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --nila:#131E33;
-  --nila-2:#1B2A46;
-  --nila-3:#0D1626;
-  --jati:#4A3323;
-  --kuningan:#C39A5C;
-  --kuningan-dim:#8C6A3A;
-  --kapur:#EDE7D9;
-  --kapur-2:#E2DAC7;
-  --daun:#7C8B63;
-
-  --display:'Marcellus', 'Times New Roman', serif;
-  --script:'Cormorant', Georgia, serif;
-  --body:'Karla', 'Helvetica Neue', Arial, sans-serif;
-
-  --pad:clamp(20px, 6vw, 64px);
-}
-
-*{box-sizing:border-box;margin:0;padding:0;}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
-body{
-  font-family:var(--body);
-  background:var(--nila);
-  color:var(--kapur);
-  line-height:1.7;
-  overflow-x:hidden;
-  font-weight:300;
-  -webkit-font-smoothing:antialiased;
-}
-body.locked{overflow:hidden;height:100vh;}
-
-img,svg{display:block;max-width:100%;}
-button,input,select,textarea{font:inherit;color:inherit;}
-
-/* ============ TIPOGRAFI ============ */
-.eyebrow{
-  font-size:11px;letter-spacing:.34em;text-transform:uppercase;
-  font-weight:500;color:var(--kuningan);
-}
-.serif{font-family:var(--display);font-weight:400;line-height:1.25;}
-.amp{font-family:var(--script);font-style:italic;font-weight:300;color:var(--kuningan);}
-.arabic{font-family:'Traditional Arabic','Amiri','Scheherazade New',serif;font-size:clamp(20px,5vw,28px);line-height:2;}
-
-/* ============ ORNAMEN UKIR ============
-   Ornamen digambar sekali di <defs> lalu dipanggil dengan <use>.
-   Selektor turunan CSS tidak bisa menembus shadow tree <use>, jadi
-   warna dan animasinya dijalankan lewat custom property — yang
-   justru diwariskan ke dalam. Nilainya dibaca oleh style inline
-   pada tiap path di dalam <defs>. */
-@property --ukir-off   { syntax:'<number>'; inherits:true; initial-value:0; }
-@property --ukir-daun  { syntax:'<number>'; inherits:true; initial-value:.85; }
-
-.ukir{
-  --ukir-garis:var(--kuningan);
-  --ukir-garis-dim:var(--kuningan-dim);
-  --ukir-isi:var(--kuningan);
-}
-.on-paper .ukir{
-  --ukir-garis:var(--jati);
-  --ukir-garis-dim:var(--jati);
-  --ukir-isi:var(--jati);
-  --ukir-daun:.6;
-}
-
-/* goresan tergambar saat ornamen masuk layar */
-.js .draw{--ukir-off:1;--ukir-daun:0;}
-.js .draw.in{
-  --ukir-off:0;--ukir-daun:.85;
-  transition:--ukir-off 1.6s cubic-bezier(.22,.8,.3,1), --ukir-daun .7s ease .9s;
-}
-.js .on-paper .draw.in{--ukir-daun:.6;}
-
-.divider{display:block;margin:0 auto;width:min(260px,64vw);opacity:.95;}
-
-/* ============ SAMPUL ============ */
-#cover{
-  position:fixed;inset:0;z-index:60;
-  background:
-    radial-gradient(120% 80% at 50% 0%, #22355A 0%, var(--nila) 45%, var(--nila-3) 100%);
-  display:flex;align-items:center;justify-content:center;
-  padding:24px 20px;text-align:center;
-  transition:opacity .9s ease, visibility .9s;
-}
-#cover.gone{opacity:0;visibility:hidden;pointer-events:none;}
-.cover-frame{
-  position:relative;width:min(520px,100%);
-  padding:clamp(36px,9vw,60px) clamp(20px,6vw,42px);
-}
-/* Isi sampul menyesuaikan pihak tamu, jadi ditahan sebentar sampai
-   variannya diketahui. Tanpa JS, kelas .js tidak pernah dipasang dan
-   sampul tampil apa adanya. */
-.js .cover-frame{opacity:0;transition:opacity .5s ease;}
-.js .cover-frame.siap{opacity:1;}
-.corner{position:absolute;width:clamp(58px,16vw,84px);height:auto;}
-.c-tl{top:0;left:0;}
-.c-tr{top:0;right:0;transform:scaleX(-1);}
-.c-bl{bottom:0;left:0;transform:scaleY(-1);}
-.c-br{bottom:0;right:0;transform:scale(-1,-1);}
-
-.cover-basmalah{font-size:13px;letter-spacing:.2em;color:var(--kuningan);margin-bottom:20px;}
-.cover-label{margin-bottom:14px;}
-.cover-names{
-  font-family:var(--display);
-  font-size:clamp(30px,9vw,54px);
-  letter-spacing:.06em;line-height:1.15;margin:6px 0 4px;
-}
-.cover-names .amp{display:block;font-size:.72em;margin:2px 0;}
-.cover-date{
-  margin-top:18px;font-size:12px;letter-spacing:.3em;text-transform:uppercase;
-  color:rgba(237,231,217,.7);
-}
-.cover-to{
-  margin-top:34px;padding-top:22px;
-  border-top:1px solid rgba(195,154,92,.28);
-  font-size:12.5px;color:rgba(237,231,217,.66);letter-spacing:.04em;
-}
-.cover-guest{
-  display:block;margin-top:6px;font-family:var(--display);
-  font-size:clamp(18px,5vw,24px);color:var(--kapur);letter-spacing:.04em;
-}
-.btn-open{
-  margin-top:26px;
-  background:var(--kuningan);color:var(--nila-3);
-  border:none;border-radius:2px;
-  padding:15px 34px;
-  font-size:11.5px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;
-  cursor:pointer;transition:background .3s, transform .3s, box-shadow .3s;
-  box-shadow:0 10px 30px -12px rgba(195,154,92,.8);
-}
-.btn-open:hover{background:#D9AF6E;transform:translateY(-2px);}
-.btn-open:active{transform:translateY(0);}
-
-/* ============ SEKSI ============ */
-section{padding:clamp(64px,14vw,110px) var(--pad);position:relative;}
-.wrap{max-width:660px;margin:0 auto;}
-.center{text-align:center;}
-.on-paper{background:var(--kapur);color:var(--nila);}
-.on-paper .eyebrow{color:var(--kuningan-dim);}
-.on-paper::before{
-  content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
-  background:repeating-linear-gradient(94deg,transparent 0 3px,rgba(74,51,35,.028) 3px 4px);
-}
-.on-paper > *{position:relative;}
-
-.reveal{opacity:0;transform:translateY(26px);}
-.reveal.in{opacity:1;transform:none;transition:opacity .9s ease,transform .9s cubic-bezier(.22,.8,.3,1);}
-
-/* HERO ATAS */
-#mulai{
-  min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;
-  background:radial-gradient(110% 70% at 50% 100%, #22355A 0%, var(--nila) 55%, var(--nila-3) 100%);
-  text-align:center;
-}
-.hero-arabic{color:var(--kuningan);margin-bottom:26px;}
-.hero-salam{font-size:13.5px;letter-spacing:.06em;color:rgba(237,231,217,.75);max-width:520px;}
-.hero-verse{
-  font-family:var(--script);font-size:clamp(17px,4.4vw,21px);font-style:italic;font-weight:400;
-  line-height:1.75;margin:28px auto 14px;max-width:540px;color:var(--kapur);
-}
-.hero-source{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--kuningan);}
-
-/* MEMPELAI */
-.pair{display:grid;gap:clamp(38px,9vw,54px);margin-top:44px;}
-.person-name{
-  font-family:var(--display);font-size:clamp(24px,6.4vw,34px);
-  letter-spacing:.04em;line-height:1.2;margin-bottom:10px;
-}
-.person-role{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--kuningan-dim);margin-bottom:14px;}
-.person-parents{font-size:14px;line-height:1.85;color:rgba(19,30,51,.72);}
-.person-parents strong{font-weight:500;color:var(--nila);}
-.alm{font-size:11.5px;letter-spacing:.08em;color:var(--kuningan-dim);}
-.pair-amp{font-family:var(--script);font-style:italic;font-size:40px;color:var(--kuningan-dim);line-height:1;}
-
-/* COUNTDOWN */
-#hitung{background:linear-gradient(180deg,var(--nila-3),var(--nila));text-align:center;}
-.count-grid{
-  display:grid;grid-template-columns:repeat(4,1fr);
-  gap:clamp(6px,2.4vw,16px);margin:36px auto 0;max-width:480px;
-}
-.count-box{
-  border:1px solid rgba(195,154,92,.3);
-  padding:clamp(12px,3.4vw,18px) 4px;
-  background:rgba(195,154,92,.05);
-}
-.count-num{
-  font-family:var(--display);font-size:clamp(24px,7.4vw,38px);
-  color:var(--kuningan);line-height:1;font-variant-numeric:tabular-nums;
-}
-.count-lbl{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:rgba(237,231,217,.55);margin-top:8px;}
-.count-done{font-family:var(--display);font-size:clamp(20px,5.4vw,28px);color:var(--kuningan);margin-top:30px;}
-
-/* ACARA */
-.event{
-  border:1px solid rgba(74,51,35,.22);
-  padding:clamp(24px,6vw,34px);
-  text-align:center;background:rgba(255,255,255,.32);
-}
-.event + .event{margin-top:20px;}
-.event-name{font-family:var(--display);font-size:clamp(21px,5.6vw,27px);letter-spacing:.05em;}
-.event-line{width:34px;height:1px;background:var(--kuningan-dim);margin:14px auto;}
-.event-when{font-size:15px;font-weight:500;letter-spacing:.02em;}
-.event-time{font-size:14px;color:rgba(19,30,51,.7);margin-top:4px;}
-/* alamat menempel di kartu acara hanya bila acaranya tidak satu tempat */
-.event-tempat{
-  font-family:var(--display);font-size:clamp(16px,4.2vw,19px);
-  letter-spacing:.03em;margin-top:18px;
-}
-.event-alamat{font-size:13.5px;color:rgba(19,30,51,.7);max-width:320px;margin:6px auto 0;}
-.event .btn{margin-top:16px;}
-.place{margin-top:34px;text-align:center;}
-.place-name{font-family:var(--display);font-size:clamp(18px,4.8vw,22px);margin-bottom:8px;}
-.place-addr{font-size:14px;color:rgba(19,30,51,.72);max-width:340px;margin:0 auto;}
-.btn{
-  display:inline-block;border:1px solid var(--kuningan-dim);background:transparent;
-  color:var(--jati);text-decoration:none;border-radius:2px;
-  padding:13px 26px;margin-top:20px;
-  font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
-  cursor:pointer;transition:background .3s,color .3s;
-}
-.btn:hover{background:var(--jati);color:var(--kapur);border-color:var(--jati);}
-
-/* HADIAH */
-#hadiah .note{font-size:14px;color:rgba(237,231,217,.72);max-width:440px;margin:16px auto 0;}
-.rek{
-  border:1px solid rgba(195,154,92,.3);background:rgba(195,154,92,.05);
-  padding:22px clamp(18px,5vw,26px);margin-top:20px;text-align:center;
-}
-.rek-bank{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--kuningan);}
-.rek-no{
-  font-family:var(--display);font-size:clamp(21px,5.6vw,26px);letter-spacing:.09em;
-  margin:10px 0 6px;color:var(--kapur);
-}
-.rek-an{font-size:12.5px;color:rgba(237,231,217,.66);letter-spacing:.05em;}
-.btn-copy{
-  margin-top:16px;background:transparent;border:1px solid rgba(195,154,92,.5);
-  color:var(--kuningan);border-radius:2px;padding:10px 22px;
-  font-size:10.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
-  cursor:pointer;transition:background .3s,color .3s;
-}
-.btn-copy:hover{background:var(--kuningan);color:var(--nila-3);}
-.btn-copy.ok{background:var(--daun);border-color:var(--daun);color:var(--nila-3);}
-
-/* UCAPAN */
-.field{margin-top:16px;text-align:left;}
-.field label{display:block;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--kuningan-dim);margin-bottom:7px;}
-.field input,.field select,.field textarea{
-  width:100%;background:rgba(255,255,255,.5);
-  border:1px solid rgba(74,51,35,.25);border-radius:2px;
-  padding:12px 14px;font-size:15px;font-weight:300;color:var(--nila);
-  transition:border-color .25s, background .25s;
-}
-.field textarea{min-height:110px;resize:vertical;}
-.field input:focus,.field select:focus,.field textarea:focus{
-  outline:none;border-color:var(--kuningan-dim);background:#fff;
-}
-.field select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--jati) 50%),linear-gradient(135deg,var(--jati) 50%,transparent 50%);background-position:calc(100% - 19px) 21px,calc(100% - 14px) 21px;background-size:5px 5px;background-repeat:no-repeat;}
-.form-note{font-size:12px;color:rgba(19,30,51,.55);margin-top:12px;}
-.form-msg{font-size:13px;margin-top:12px;min-height:20px;}
-.form-msg.err{color:#9C3B2E;}
-.form-msg.ok{color:#4C6B3C;}
-
-.ucapan-list{margin-top:34px;display:grid;gap:14px;text-align:left;}
-.ucapan{border-left:2px solid var(--kuningan-dim);padding:2px 0 2px 16px;}
-.ucapan-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;}
-.ucapan-nama{font-family:var(--display);font-size:17px;letter-spacing:.03em;}
-.ucapan-tag{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--daun);border:1px solid rgba(124,139,99,.5);padding:2px 7px;border-radius:2px;}
-.ucapan-teks{font-size:14.5px;color:rgba(19,30,51,.78);margin-top:5px;white-space:pre-wrap;overflow-wrap:anywhere;}
-.ucapan-waktu{font-size:11px;color:rgba(19,30,51,.45);margin-top:5px;letter-spacing:.05em;}
-.state{font-size:13.5px;color:rgba(19,30,51,.55);margin-top:28px;text-align:center;}
-
-/* PENUTUP */
-#penutup{
-  background:radial-gradient(110% 80% at 50% 0%, #22355A 0%, var(--nila) 50%, var(--nila-3) 100%);
-  text-align:center;padding-bottom:clamp(70px,16vw,120px);
-}
-.close-text{font-size:14.5px;color:rgba(237,231,217,.75);max-width:480px;margin:0 auto;}
-.close-names{
-  font-family:var(--display);font-size:clamp(26px,7.4vw,40px);
-  letter-spacing:.06em;margin:26px 0 8px;
-}
-.credit{margin-top:44px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(237,231,217,.32);}
-
-/* ============ MUSIK LATAR ============ */
-#btnMusik{
-  position:fixed;right:clamp(14px,4vw,26px);bottom:clamp(14px,4vw,26px);z-index:50;
-  width:52px;height:52px;border-radius:50%;
-  background:var(--nila-3);border:1px solid rgba(195,154,92,.55);
-  display:none;align-items:center;justify-content:center;
-  cursor:pointer;padding:0;
-  box-shadow:0 8px 24px -8px rgba(0,0,0,.6);
-  transition:transform .3s, border-color .3s, opacity .5s;
-}
-#btnMusik.show{display:flex;}
-#btnMusik:hover{transform:scale(1.06);border-color:var(--kuningan);}
-#btnMusik svg{width:26px;height:26px;}
-#btnMusik .disc{stroke:var(--kuningan);fill:none;stroke-width:1.2;}
-#btnMusik .pin{fill:var(--kuningan);}
-#btnMusik .spin{transform-origin:50% 50%;animation:putar 9s linear infinite;animation-play-state:paused;}
-#btnMusik.on .spin{animation-play-state:running;}
-#btnMusik .bar{stroke:var(--kuningan);stroke-width:1.6;stroke-linecap:round;opacity:0;transition:opacity .3s;}
-#btnMusik.off .bar{opacity:1;}
-@keyframes putar{to{transform:rotate(360deg);}}
-@media (prefers-reduced-motion:reduce){#btnMusik .spin{animation:none;}}
-
-h2.title{
-  font-family:var(--display);font-weight:400;
-  font-size:clamp(25px,6.6vw,36px);letter-spacing:.05em;margin-top:12px;
-}
-.lead{font-size:14.5px;margin-top:14px;color:rgba(19,30,51,.7);max-width:470px;margin-left:auto;margin-right:auto;}
-#hitung .lead,#hadiah .lead{color:rgba(237,231,217,.7);}
-.gap{height:clamp(26px,7vw,40px);}
-
-@media (min-width:720px){
-  .pair{grid-template-columns:1fr auto 1fr;align-items:center;text-align:center;}
-  .rek-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
-  .rek-grid .rek{margin-top:0;}
-}
-@media (prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto;}
-  .reveal,.reveal.in{opacity:1;transform:none;transition:none;}
-  .js .draw,.js .draw.in{--ukir-off:0;--ukir-daun:.85;transition:none;}
-  .js .on-paper .draw,.js .on-paper .draw.in{--ukir-daun:.6;}
-  #cover,.js .cover-frame{transition:none;}
-}
-:focus-visible{outline:2px solid var(--kuningan);outline-offset:3px;}
-</style>
+<link rel="stylesheet" href="/tema/ukir-jepara/gaya.css" id="temaGaya">
 </head>
 <body class="locked">
 
@@ -374,8 +48,13 @@ h2.title{
 
     <p class="cover-basmalah">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
     <p class="eyebrow cover-label">Walimatul 'Ursy</p>
-    <h1 class="cover-names" id="coverNama">RIAN<span class="amp">&amp;</span>'AINI</h1>
-    <p class="cover-date" id="coverTanggal">Selasa · 15 September 2026</p>
+    <!-- Kerangka netral. Nama, tanggal, mempelai, acara, alamat, dan
+         dompet tidak ditulis di sini untuk pasangan mana pun: halaman ini
+         melayani semua pasangan, dan isi statis akan tampil di undangan
+         orang lain sebelum JS jalan, di sumber halaman, dan saat memuat
+         gagal. Semuanya diisi terapkanVarian() dari undangan_isi. -->
+    <h1 class="cover-names" id="coverNama">&nbsp;</h1>
+    <p class="cover-date" id="coverTanggal">&nbsp;</p>
 
     <div class="cover-to">
       Kepada Bapak/Ibu/Saudara/i
@@ -386,6 +65,14 @@ h2.title{
 </div>
 
 <!-- ====== TOMBOL MUSIK ====== -->
+<!-- ====== TOMBOL GULIR OTOMATIS ====== -->
+<button id="btnGulir" aria-label="Gulir otomatis" aria-pressed="false" title="Gulir otomatis">
+  <svg viewBox="0 0 32 32" aria-hidden="true">
+    <g class="ikon-main"><path d="M13 10.5 L22 16 L13 21.5 Z"/></g>
+    <g class="ikon-jeda"><rect x="12" y="10.5" width="3" height="11" rx="1"/><rect x="17" y="10.5" width="3" height="11" rx="1"/></g>
+  </svg>
+</button>
+
 <button id="btnMusik" class="off" aria-label="Nyalakan musik latar" title="Musik latar">
   <svg viewBox="0 0 32 32" aria-hidden="true">
     <g class="spin">
@@ -400,7 +87,10 @@ h2.title{
 
 <!-- ====== PEMBUKA ====== -->
 <section id="mulai">
-  <div class="wrap">
+  <!-- data-parallax: isi pembuka bergerak lebih lambat dari gulirannya.
+       Yang digeser wadahnya, bukan tiap paragraf, supaya cuma ada satu
+       lapisan yang dipindahkan. -->
+  <div class="wrap" data-parallax data-runtun>
     <p class="arabic hero-arabic reveal">وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا</p>
     <p class="hero-salam reveal">Assalamu'alaikum Warahmatullahi Wabarakatuh</p>
     <p class="hero-verse reveal">Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu pasangan hidup dari jenismu sendiri, supaya kamu merasa tenteram di sisinya, dan dijadikan-Nya di antaramu rasa kasih dan sayang.</p>
@@ -417,30 +107,8 @@ h2.title{
     <h2 class="title reveal">Kami yang berbahagia</h2>
     <p class="lead reveal">Dengan memohon rahmat dan ridha Allah Subhanahu wa Ta'ala, kami bermaksud menyelenggarakan pernikahan putra-putri kami.</p>
 
-    <!-- Urutan kartu mengikuti pihak tamu; isi di bawah adalah cadangan tanpa JS. -->
-    <div class="pair" id="pasangan">
-      <div class="reveal">
-        <p class="person-role">Mempelai Pria</p>
-        <h3 class="person-name">RIAN ADI SAPUTRO</h3>
-        <p class="person-parents">
-          Putra dari<br>
-          <strong>Bapak Joko Sudarno</strong> <span class="alm">(Alm)</span><br>
-          &amp; <strong>Ibu Sri Kanah</strong> <span class="alm">(Almh)</span>
-        </p>
-      </div>
-
-      <div class="pair-amp reveal">&amp;</div>
-
-      <div class="reveal">
-        <p class="person-role">Mempelai Wanita</p>
-        <h3 class="person-name">NURUL ZAKIYATUL 'AINI</h3>
-        <p class="person-parents">
-          Putri dari<br>
-          <strong>Bapak Surahmad</strong><br>
-          &amp; <strong>Ibu Robi'atun</strong> <span class="alm">(Almh)</span>
-        </p>
-      </div>
-    </div>
+    <!-- Urutan kartu mengikuti pihak tamu; diisi terapkanVarian(). -->
+    <div class="pair" id="pasangan" data-runtun></div>
 
     <div class="gap"></div>
     <svg class="ukir divider draw reveal" viewBox="0 0 240 40"><use href="#ukir-pemisah"/></svg>
@@ -448,13 +116,24 @@ h2.title{
 </section>
 
 <!-- ====== COUNTDOWN ====== -->
+<!-- ====== SILSILAH ====== -->
+<section id="silsilah" class="on-paper center" hidden>
+  <div class="wrap">
+    <p class="eyebrow reveal">Keluarga</p>
+    <h2 class="title reveal">Silsilah</h2>
+    <p class="lead reveal">Mereka yang membesarkan dan merestui kami.</p>
+    <div id="silsilahIsi"></div>
+    <svg class="ukir divider draw reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
+  </div>
+</section>
+
 <section id="hitung">
   <div class="wrap">
     <p class="eyebrow reveal">Menghitung Hari</p>
-    <h2 class="title reveal" id="hitungJudul">Selasa, 15 September 2026</h2>
+    <h2 class="title reveal" id="hitungJudul">&nbsp;</h2>
     <p class="lead reveal">Semoga Allah memudahkan langkah kami sampai pada hari itu.</p>
 
-    <div class="count-grid reveal" id="countGrid">
+    <div class="count-grid reveal" id="countGrid" data-runtun>
       <div class="count-box"><div class="count-num" id="cd-d">—</div><div class="count-lbl">Hari</div></div>
       <div class="count-box"><div class="count-num" id="cd-h">—</div><div class="count-lbl">Jam</div></div>
       <div class="count-box"><div class="count-num" id="cd-m">—</div><div class="count-lbl">Menit</div></div>
@@ -473,29 +152,15 @@ h2.title{
     <div class="gap"></div>
 
     <!-- Rangkaian acara dan alamat mengikuti sisi keluarga pengundang. -->
-    <div id="daftarAcara">
-      <div class="event reveal">
-        <p class="event-name">Akad Nikah</p>
-        <div class="event-line"></div>
-        <p class="event-when">Selasa, 15 September 2026</p>
-        <p class="event-time">Pukul 13.00 WIB</p>
-      </div>
-
-      <div class="event reveal">
-        <p class="event-name">Resepsi</p>
-        <div class="event-line"></div>
-        <p class="event-when">Selasa, 15 September 2026</p>
-        <p class="event-time">Pukul 16.00 WIB — selesai</p>
-      </div>
-    </div>
+    <div id="daftarAcara" data-runtun></div>
 
     <!-- Blok ini dipakai bila seluruh acara di satu tempat. Bila tidak,
          blok disembunyikan dan alamat pindah ke tiap kartu acara. -->
-    <div class="place reveal" id="tempatBersama">
+    <div class="place reveal" id="tempatBersama" hidden>
       <p class="eyebrow" style="margin-bottom:12px">Bertempat di</p>
-      <p class="place-name" id="tempatNama">Kediaman Mempelai Putri</p>
-      <p class="place-addr" id="tempatAlamat">Jalan Pesajen RT 03 / RW 04, Demaan, Jepara, Jawa Tengah</p>
-      <a class="btn" id="tempatMaps" href="https://maps.app.goo.gl/xSdwqbrQoHadeU2A6" target="_blank" rel="noopener">Buka Peta Lokasi</a>
+      <p class="place-name" id="tempatNama"></p>
+      <p class="place-addr" id="tempatAlamat"></p>
+      <a class="btn" id="tempatMaps" target="_blank" rel="noopener">Buka Peta Lokasi</a>
     </div>
 
     <div class="gap"></div>
@@ -504,28 +169,14 @@ h2.title{
 </section>
 
 <!-- ====== HADIAH ====== -->
-<section id="hadiah" class="center">
+<section id="hadiah" class="center" hidden>
   <div class="wrap">
     <p class="eyebrow reveal">Tanda Kasih</p>
     <h2 class="title reveal">Amplop Digital</h2>
     <p class="lead reveal">Doa restu Anda sudah lebih dari cukup bagi kami. Namun bila berkenan memberi tanda kasih, dapat dikirim melalui:</p>
 
     <!-- Urutan dompet digital mengikuti pihak tamu. -->
-    <div class="rek-grid" id="dompet">
-      <div class="rek reveal">
-        <p class="rek-bank">DANA</p>
-        <p class="rek-no">085727641452</p>
-        <p class="rek-an">a.n. Nurul Zakiyatul 'Aini</p>
-        <button class="btn-copy" data-copy="085727641452">Salin Nomor</button>
-      </div>
-
-      <div class="rek reveal">
-        <p class="rek-bank">DANA</p>
-        <p class="rek-no">085330794639</p>
-        <p class="rek-an">a.n. Rian Adi Saputro</p>
-        <button class="btn-copy" data-copy="085330794639">Salin Nomor</button>
-      </div>
-    </div>
+    <div class="rek-grid" id="dompet" data-runtun></div>
   </div>
 </section>
 
@@ -574,13 +225,14 @@ h2.title{
     <p class="hero-salam reveal" style="margin-top:26px">Wassalamu'alaikum Warahmatullahi Wabarakatuh</p>
 
     <p class="eyebrow reveal" id="ttdLabel">Kami yang berbahagia</p>
-    <h2 class="close-names reveal" id="ttdNama">RIAN <span class="amp">&amp;</span> 'AINI</h2>
+    <h2 class="close-names reveal" id="ttdNama">&nbsp;</h2>
     <p class="eyebrow reveal" id="ttdSub">Beserta Keluarga</p>
-    <p class="credit reveal">Jepara · 15 September 2026</p>
+    <p class="credit reveal" id="credit"></p>
   </div>
 </section>
 
 <script src="/assets/varian.js"></script>
+<script src="/assets/motion.js"></script>
 <script>
 (function(){
   'use strict';
@@ -598,14 +250,27 @@ h2.title{
      ========================================================= */
   var slugTamu = '', namaTamu = '', pihakTamu = null;
 
+  /* Nilai ?p= disimpan mentah dulu. Daftar pihak yang sah baru ada
+     sesudah M.muat() selesai, jadi memanggil pihakSah() di sini akan
+     selalu menjawab null — dan seluruh tamu jatuh ke varian bawaan. */
+  var pihakMentah = null;
+
+  /* Ditanyakan dari ALAMAT, bukan dari M.KONF.demo: yang ini sudah
+     pasti benar sejak baris pertama, sementara KONF.demo baru terisi
+     sesudah M.muat() selesai — dan beberapa hal di bawah berjalan lebih
+     dulu dari itu. */
+  var DEMO = M.jalurCoba();
+
   try{
     var q = new URLSearchParams(window.location.search);
-    pihakTamu = M.pihakSah(q.get('p'));
+    pihakMentah = q.get('p');
 
     var to = q.get('to');
-    var jalur = decodeURIComponent(window.location.pathname)
-                  .replace(/^\/+|\/+$/g,'').replace(/\.html$/i,'');
-    if(jalur && jalur.toLowerCase() !== 'index') slugTamu = M.siput(jalur);
+    /* Aturannya di assets/varian.js, bersama slugPasangan() — dua bentuk
+       alamat menaruh nama tamu di segmen yang berbeda, dan menyalin
+       aturannya ke sini berarti cepat atau lambat keduanya beda.
+       Di /coba tidak ada tamu sama sekali. */
+    if(!DEMO) slugTamu = M.slugTamuDari();
 
     if(to && to.trim())      namaTamu = to.trim().slice(0,60);
     else if(slugTamu)        namaTamu = slugTamu.replace(/-/g,' ');
@@ -745,6 +410,7 @@ h2.title{
   document.getElementById('btnOpen').addEventListener('click', function(){
     Musik.tampilkan();
     Musik.mulai();
+    tampilkanGulir();
     cover.classList.add('gone');
     document.body.classList.remove('locked');
     window.scrollTo(0,0);
@@ -763,23 +429,43 @@ h2.title{
   document.querySelectorAll('.reveal, .draw').forEach(function(el){ io.observe(el); });
 
   /* ---------- Hitung mundur ---------- */
-  var target = new Date(M.ACARA.wanita.mulai).getTime();
+  /* Diisi terapkanVarian() sesudah isinya turun dari database. Sampai
+     saat itu tick() tidak menampilkan apa-apa, bukan menampilkan salah. */
+  var target = 0;
   var eD=document.getElementById('cd-d'), eH=document.getElementById('cd-h'),
       eM=document.getElementById('cd-m'), eS=document.getElementById('cd-s'),
       grid=document.getElementById('countGrid'), done=document.getElementById('countDone');
   function pad(n){ return n<10 ? '0'+n : ''+n; }
   function tick(){
+    if(!target) return;
     var diff = target - Date.now();
     if(diff <= 0){ grid.hidden = true; done.hidden = false; return; }
     grid.hidden = false; done.hidden = true;
     var s = Math.floor(diff/1000);
-    eD.textContent = Math.floor(s/86400);
-    eH.textContent = pad(Math.floor(s%86400/3600));
-    eM.textContent = pad(Math.floor(s%3600/60));
-    eS.textContent = pad(s%60);
+    /* Motion.angka tidak mengerjakan apa pun bila nilainya tidak berubah,
+       jadi detik yang berjalan tetap murah: satu gulir pendek per detik,
+       dan itu pun berhenti begitu bagiannya keluar layar. */
+    Motion.angka(eD, Math.floor(s/86400));
+    Motion.angka(eH, pad(Math.floor(s%86400/3600)));
+    Motion.angka(eM, pad(Math.floor(s%3600/60)));
+    Motion.angka(eS, pad(s%60));
   }
   tick();
-  setInterval(tick, 1000);
+
+  /* Hitung mundur berhenti berdetak begitu keluar layar. Tanpa ini,
+     empat angka tetap bergulir tiap detik sepanjang tamu membaca bagian
+     lain — kerja yang tidak pernah dilihat siapa pun. */
+  var detak = null;
+  function mulaiDetak(){ if(!detak) detak = setInterval(tick, 1000); }
+  function henti(){ if(detak){ clearInterval(detak); detak = null; } }
+
+  if(window.IntersectionObserver){
+    new IntersectionObserver(function(masuk){
+      if(masuk[0].isIntersecting){ tick(); mulaiDetak(); } else henti();
+    }, {threshold:0}).observe(document.getElementById('hitung'));
+  }else{
+    mulaiDetak();
+  }
 
   /* ---------- Salin nomor rekening ---------- */
   function copyText(txt){
@@ -830,6 +516,60 @@ h2.title{
       +     '&amp; <strong>'+esc(m.ibu)+'</strong>'+(m.ibuKet ? ' <span class="alm">'+esc(m.ibuKet)+'</span>' : '')
       +   '</p>'
       + '</div>';
+  }
+
+  /* ---------- Silsilah ----------
+     Dua generasi per sisi, ditata sebagai grid — BUKAN pohon. Undangan
+     pernikahan menampilkan orang tua (dan kadang kakek-nenek), bukan
+     silsilah marga; pohon sungguhan justru lebih sulit dibaca di layar
+     selebar 400px dan tidak menambah apa pun yang dicari tamu.
+
+     Urutan sisinya mengikuti pihak tamu, sama seperti kartu mempelai. */
+  function kartuSilsilah(o){
+    var foto = o.kecil || o.foto;
+    var gbr = foto
+      ? '<img class="silsilah-foto" src="'+esc(M.fotoUrl(foto))+'" alt="'+esc(o.nama)+'"'
+        + ' loading="lazy" decoding="async">'
+      : '<div class="silsilah-foto silsilah-kosong" aria-hidden="true"></div>';
+    return '<figure class="silsilah-orang reveal">'
+      +   gbr
+      +   '<figcaption>'
+      +     '<span class="silsilah-peran">'+esc(o.peran)+'</span>'
+      +     '<span class="silsilah-nama">'+esc(o.nama)
+      +       (o.keterangan ? ' <span class="alm">'+esc(o.keterangan)+'</span>' : '')
+      +     '</span>'
+      +   '</figcaption>'
+      + '</figure>';
+  }
+
+  function gambarSilsilah(v){
+    var seksi = document.getElementById('silsilah');
+    var isi = document.getElementById('silsilahIsi');
+    var sumber = M.SILSILAH || {};
+
+    var blok = v.urutan.map(function(sisi){
+      var daftar = sumber[sisi];
+      if(!daftar || !daftar.length) return '';
+      var label = (M.MEMPELAI[sisi] && M.MEMPELAI[sisi].panggilan) || '';
+      return '<div class="silsilah-sisi">'
+        +   '<p class="silsilah-judul reveal">Keluarga '+esc(label)+'</p>'
+        +   '<div class="silsilah-grid" data-runtun>'+daftar.map(kartuSilsilah).join('')+'</div>'
+        + '</div>';
+    }).join('');
+
+    /* Tanpa satu pun baris, bagiannya tidak muncul sama sekali —
+       pasangan yang tidak mengisinya tidak melihat judul kosong. */
+    isi.innerHTML = blok;
+    seksi.hidden = !blok;
+  }
+
+  var BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli',
+                  'Agustus','September','Oktober','November','Desember'];
+
+  function tanggalTanpaHari(iso){
+    var p = String(iso || '').slice(0,10).split('-');
+    if(p.length !== 3) return '';
+    return Number(p[2]) + ' ' + BULAN_ID[Number(p[1]) - 1] + ' ' + p[0];
   }
 
   function terapkanVarian(pihak){
@@ -884,7 +624,22 @@ h2.title{
     document.getElementById('tempatAlamat').textContent = tempat.alamat;
     document.getElementById('tempatMaps').href          = tempat.maps;
 
-    /* dompet digital */
+    gambarSilsilah(v);
+
+    /* judul tab dan baris penutup — keduanya ikut isi database */
+    var namaPasangan = v.ttdNama[0] + " & " + v.ttdNama[1];
+    document.title = 'Undangan Pernikahan — ' + namaPasangan;
+    var kredit = document.getElementById('credit');
+    if(kredit){
+      /* Tanpa nama hari, supaya bunyinya sama seperti sebelum isinya
+         pindah ke database: "Jepara · 15 September 2026". */
+      kredit.textContent = [M.KONF.kota, tanggalTanpaHari(M.KONF.tanggalAcara)]
+        .filter(Boolean).join(' · ');
+    }
+
+    /* dompet digital — pasangan tanpa dompet tidak mendapat seksi
+       "Amplop Digital" yang kosong */
+    document.getElementById('hadiah').hidden = !v.dompet.length;
     document.getElementById('dompet').innerHTML = v.dompet.map(function(k){
       var d = M.DOMPET[k];
       return '<div class="rek reveal">'
@@ -898,6 +653,9 @@ h2.title{
     /* hitung mundur mengikuti acara sisi ini */
     target = new Date(acara.mulai).getTime();
     tick();
+
+    /* Anak yang baru digambar perlu dinomori ulang untuk runtun. */
+    Motion.runtun(document);
 
     /* elemen baru belum diamati IntersectionObserver */
     document.querySelectorAll('.reveal:not(.in), .draw:not(.in)').forEach(function(el){
@@ -929,40 +687,132 @@ h2.title{
     }
   }
 
-  /* Varian dari ?p= dipakai langsung supaya tidak ada jeda.
-     Bila tidak ada, tunggu jawaban database sebentar. */
-  terapkanVarian(pihakTamu);
-  pasangNamaTamu();
-  if(pihakTamu) bukaSampul();
+  /* ---------- Memuat ----------
+     Isi undangan dan data tamu ditanyakan BERBARENGAN, bukan berurutan.
+     Keduanya tidak saling bergantung, dan tamu membuka ini dari HP di
+     jaringan desa — satu perjalanan bolak-balik yang bisa dihemat
+     sebaiknya dihemat.
 
-  /* ---------- Tanya database: nama asli dan pihak tamu ---------- */
-  var SLUG_PASANGAN = 'rian-aini';
-  (function(){
-    if(!slugTamu) { bukaSampul(); return; }
-    fetch(M.SB.url + '/rest/v1/rpc/undangan_tamu', {
-      method: 'POST',
-      headers: {
-        'apikey': M.SB.key,
-        'Authorization': 'Bearer ' + M.SB.key,
-        'Content-Type': 'application/json'
-      },
-      /* Slug pasangan wajib disebut sejak migrasi 022 — slug tamu tidak
-         unik antar pasangan. Halaman ini memang cuma milik satu pasangan. */
-      body: JSON.stringify({ p_slug: slugTamu, p_pasangan: SLUG_PASANGAN })
-    }).then(function(r){
-      if(!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    }).then(function(baris){
-      var t = Array.isArray(baris) ? baris[0] : baris;
-      if(!t) return;
+     Sebelum tahap 2, isi undangan sudah tertanam di berkas ini sehingga
+     halaman langsung tampil. Sekarang ia menunggu jawaban database dulu.
+     Itu harga yang dibayar supaya satu halaman bisa melayani banyak
+     pasangan, dan sampulnya memang sengaja tidak dibuka sampai isinya
+     siap — lebih baik sampul tertutup sebentar daripada nama yang salah
+     sekejap. */
+  var janjiTamu = slugTamu
+    ? fetch(M.SB.url + '/rest/v1/rpc/undangan_tamu', {
+        method: 'POST',
+        headers: {
+          'apikey': M.SB.key,
+          'Authorization': 'Bearer ' + M.SB.key,
+          'Content-Type': 'application/json'
+        },
+        /* Slug pasangan ikut disebut. Slug tamu TIDAK unik secara
+           global — indeksnya (pasangan_id, slug) sejak migrasi 004 —
+           jadi tanpa ini "bapak-ahmad" bisa menjawab tamu pasangan
+           lain, berikut pihaknya. Dan pihak menentukan alamat acara
+           serta nomor dompet yang ditampilkan.
+
+           Tidak ada perjalanan bolak-balik tambahan: slugPasangan()
+           dihitung dari alamat, bukan ditanyakan. */
+        body: JSON.stringify({ p_slug: slugTamu, p_pasangan: M.slugPasangan() })
+      }).then(function(r){
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      }).catch(function(){ return null; })
+    : Promise.resolve(null);
+
+  M.muat().then(function(){
+    pihakTamu = M.pihakSah(pihakMentah);
+    terapkanVarian(pihakTamu);
+    Motion.pasang();
+    siapkanGulir();
+    pasangNamaTamu();
+    pasangKanonik();
+    return janjiTamu;
+  }).then(function(baris){
+    var t = Array.isArray(baris) ? baris[0] : baris;
+    if(t){
       if(t.nama){ namaTamu = t.nama; pasangNamaTamu(); }
       var p = M.pihakSah(t.pihak);
       /* ?p= di link tetap menang; database mengisi bila link tidak menyebut */
       if(p && !pihakTamu){ pihakTamu = p; terapkanVarian(p); }
-    }).catch(function(){
-      /* biarkan tampilan cadangan yang sudah terpasang */
-    }).then(bukaSampul);
-  })();
+    }
+    bukaSampul();
+    muat();
+  }).catch(function(e){
+    gagalMuat(e);
+  });
+
+  /* Alamat kanonik ditandai lewat <link rel="canonical">, bukan dengan
+     melempar pengunjung ke host lain. Undangan ini sudah tersebar ke
+     ratusan orang; sebuah pengalihan yang salah arah akan mematikan
+     semuanya sekaligus, sementara tag ini paling buruk cuma diabaikan.
+     Pengalihan 301 yang sebenarnya urusan lapisan server nanti. */
+  function pasangKanonik(){
+    if(!M.KONF.canonicalHost) return;
+    var el = document.querySelector('link[rel="canonical"]');
+    if(!el){
+      el = document.createElement('link');
+      el.rel = 'canonical';
+      document.head.appendChild(el);
+    }
+    el.href = 'https://' + M.KONF.canonicalHost + location.pathname + location.search;
+  }
+
+  /* Tombol gulir otomatis. Tombolnya baru dimunculkan kalau fiturnya
+     memang bisa jalan — kalau pengguna minta gerak dikurangi, tombolnya
+     tidak ditawarkan sama sekali. Menawarkan lalu tidak menjalankan
+     lebih membingungkan daripada tidak ada tombolnya. */
+  function siapkanGulir(){
+    var btn = document.getElementById('btnGulir');
+    if(!btn) return;
+
+    var bisa = Motion.gulir.pasang({
+      kabar: function(jalan){
+        btn.setAttribute('aria-pressed', jalan ? 'true' : 'false');
+        btn.setAttribute('aria-label', jalan ? 'Hentikan gulir otomatis' : 'Gulir otomatis');
+      }
+    });
+    if(!bisa) return;
+
+    btn.addEventListener('click', function(){ Motion.gulir.alih(); });
+
+    /* Klik pada tombolnya sendiri jangan dihitung sebagai "pengguna
+       ingin menggulir sendiri" — pointerdown-nya menyala lebih dulu
+       daripada click, jadi tanpa ini tombolnya mematikan dirinya
+       sendiri seketika setelah dinyalakan. */
+    btn.addEventListener('pointerdown', function(e){ e.stopPropagation(); });
+    btn.addEventListener('keydown', function(e){ e.stopPropagation(); });
+
+    /* Muncul bersamaan dengan tombol musik, yaitu waktu undangannya
+       benar-benar dibuka — bukan waktu sampulnya siap. Sampul yang siap
+       masih menutupi halaman, dan tombol gulir yang melayang di atasnya
+       tidak ada gunanya. */
+    gulirSiap = btn;
+    if(sudahDibuka) btn.classList.add('show');
+  }
+  var gulirSiap = null, sudahDibuka = false;
+
+  function tampilkanGulir(){
+    sudahDibuka = true;
+    if(gulirSiap) gulirSiap.classList.add('show');
+  }
+
+  function gagalMuat(e){
+    var kotak = document.getElementById('coverNama');
+    if(kotak){
+      kotak.textContent = e && e.tidakAktif
+        ? 'Undangan belum tersedia'
+        : 'Undangan belum bisa dimuat';
+    }
+    var sub = document.getElementById('coverSub');
+    if(sub) sub.textContent = 'Periksa sambungan internet, lalu muat ulang halaman.';
+    /* Tanpa isi, di balik sampul cuma ada kerangka kosong. Tombolnya
+       disembunyikan supaya tamu tidak membuka halaman tanpa nama. */
+    var buka = document.getElementById('btnOpen');
+    if(buka) buka.hidden = true;
+  }
 
   /* ---------- Buku ucapan (tersimpan & dibagikan) ---------- */
   var listEl  = document.getElementById('listUcapan');
@@ -1003,14 +853,28 @@ h2.title{
     }).join('');
   }
 
+  /* Di /coba tidak ada pasangan, jadi tidak ada yang bisa dibaca dan
+     tidak ada tempat menyimpan. Buku tamunya dijalankan di peramban
+     saja: yang diketik langsung muncul, lalu hilang begitu halaman
+     ditutup. Calon klien tetap merasakan alurnya sampai ujung —
+     mengetik, menekan kirim, melihat ucapannya muncul — tanpa satu pun
+     barisnya mendarat di server kami. */
+  var ucapanCoba = [];
+
   async function muat(){
+    if(DEMO){ render(ucapanCoba.slice()); return; }
     try{
-      /* Tabel ucapan tidak lagi boleh dibaca anon (migrasi 021) — dulu
-         policy-nya membuka ucapan SEMUA pasangan. Bacanya lewat RPC
-         yang menyaring pasangan dan menahan ucapan yang disembunyikan. */
+      /* Lewat RPC, bukan SELECT langsung ke tabel — sepola dengan cara
+         menulisnya. Sebabnya sama: pasangan_id. Pembacaan langsung dulu
+         berbunyi `?select=nama,hadir,pesan,created_at` TANPA saringan
+         pasangan sama sekali, dan kebijakan RLS-nya pun cuma
+         `using (tampil)` — jadi buku tamu pasangan A memuat ucapan
+         pasangan B. Sejak migrasi 021 jalan itu ditutup: ucapan_publik()
+         menyaring lewat slug, dan anon tidak bisa menyentuh tabelnya. */
       var r = await fetch(SB_URL + '/rest/v1/rpc/ucapan_publik', {
-        method:'POST', headers: sbHead,
-        body: JSON.stringify({ p_slug: SLUG_PASANGAN })
+        method: 'POST',
+        headers: sbHead,
+        body: JSON.stringify({ p_slug: M.KONF.slug })
       });
       if(!r.ok) throw new Error('HTTP ' + r.status);
       var data = await r.json();
@@ -1034,17 +898,33 @@ h2.title{
     btnKirim.disabled = true;
     var label = btnKirim.textContent;
     btnKirim.textContent = 'Mengirim…';
+
+    if(DEMO){
+      ucapanCoba.unshift({ nama:nama.slice(0,60), hadir:hadir,
+                           pesan:pesan.slice(0,800), ts:Date.now() });
+      msgEl.classList.add('ok');
+      msgEl.textContent = 'Terkirim — di undangan sungguhan, ini tersimpan dan bisa Anda balas.';
+      document.getElementById('inPesan').value = '';
+      render(ucapanCoba.slice());
+      btnKirim.disabled = false;
+      btnKirim.textContent = label;
+      return;
+    }
+
     try{
-      /* Tulis juga lewat RPC: tabel ucapan tidak lagi menerima INSERT
-         anon. ucapan_tulis memeriksa panjang dan nilai kehadiran
-         sendiri, dan mencocokkan pihak dengan pihak milik pasangan. */
+      /* Ditulis lewat RPC, bukan POST langsung ke tabel. Sebabnya
+         pasangan_id: kalau peramban yang menentukannya, sebuah tulisan
+         bisa dititipkan ke undangan pasangan lain. ucapan_tulis()
+         menetapkannya sendiri dari slug, dan sejak migrasi 012 jalan
+         menulis langsung ke tabel sudah ditutup sama sekali. */
       var r = await fetch(SB_URL + '/rest/v1/rpc/ucapan_tulis', {
-        method:'POST', headers: sbHead,
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type':'application/json' }, sbHead),
         body: JSON.stringify({
-          p_slug:  SLUG_PASANGAN,
-          p_nama:  nama.slice(0,40),
+          p_slug:  M.KONF.slug,
+          p_nama:  nama.slice(0,60),
           p_hadir: hadir,
-          p_pesan: pesan.slice(0,500),
+          p_pesan: pesan.slice(0,800),
           p_pihak: pihakTamu || null
         })
       });

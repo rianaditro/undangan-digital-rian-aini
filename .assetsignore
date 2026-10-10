@@ -1,0 +1,27 @@
+# Semua berkas di folder ini ikut terbit sebagai berkas publik di
+# Cloudflare, kecuali yang disebut di sini. Isinya cermin .vercelignore:
+# tanpa daftar ini, mengundang.id/docs/… menyajikan catatan internal —
+# termasuk email dan user_id admin, dan uraian lubang yang sudah ditambal.
+
+.git
+.github
+.gitignore
+.vercelignore
+.assetsignore
+.wrangler
+node_modules
+__pycache__
+
+# catatan rancangan dan operasi
+docs
+
+# migrasi dan edge function — dipasang lewat Supabase
+supabase
+
+# alat di komputer, uji otomatis, dan kode Worker itu sendiri
+alat
+uji
+cloudflare
+wrangler.jsonc
+vercel.json
+README.md
