@@ -19,6 +19,7 @@
 import http from 'node:http';
 import fs   from 'node:fs';
 import path from 'node:path';
+import { R2Tiruan } from './r2-tiruan.mjs';
 
 // Akar repo, satu tingkat di atas folder uji ini — bukan jalur absolut,
 // supaya suite jalan di komputer siapa pun yang meng-clone repo.
@@ -102,15 +103,23 @@ const ASSETS = {
   }
 };
 
-export function mulai(port){
+// R2 tiruan untuk /media/* (cloudflare/media.js). Uji peramban biasanya
+// mencegat /media/ sendiri lewat page.route; yang tidak dicegat sampai
+// ke sini dan dilayani dari memori.
+export const MEDIA = new R2Tiruan();
+export const MEDIA_KUNCI = 'kunci-media-uji';
+
+export function mulai(port, envTambahan = {}){
   const srv = http.createServer(async (req, res) => {
     const host = req.headers.host || ('127.0.0.1:' + port);
-    const permintaan = new Request('http://' + host + req.url, { method: req.method, headers: req.headers });
+    const adaBadan = !['GET', 'HEAD'].includes(req.method);
+    const permintaan = new Request('http://' + host + req.url, { method: req.method, headers: req.headers,
+      ...(adaBadan ? { body: req, duplex: 'half' } : {}) });
     const p = new URL(permintaan.url).pathname;
     let jwb;
     try {
       jwb = POLA_WORKER.some(re => re.test(p))
-        ? await pintu.fetch(permintaan, { ASSETS })
+        ? await pintu.fetch(permintaan, { ASSETS, MEDIA, MEDIA_KUNCI, ...envTambahan }, { waitUntil() {} })
         : await ASSETS.fetch(permintaan);
     } catch (e) {
       res.writeHead(500); return res.end(String(e));

@@ -13,10 +13,22 @@
 //
 // service_role tidak pernah keluar dari sini.
 //
-// POST   → unggah sepasang berkas (penuh + thumbnail), catat barisnya.
+// Sejak R2 (Oktober), isi berkas TIDAK lewat sini lagi:
+//
+// POST ?langkah=izin  (JSON: jenis + ukuran berkas dan thumbnail/poster)
+//        → semua pemeriksaan di bawah, lalu tiket bertanda tangan per
+//          berkas. Peramban mengirim isinya sendiri ke /media/<jalur> di
+//          Worker (cloudflare/media.js), yang menyimpannya di R2.
+// POST ?langkah=catat (JSON: jalur + lebar/tinggi/bab/…)
+//        → memastikan berkasnya sungguh ada di /media (HEAD, ukuran dan
+//          jenisnya dibaca dari sana, bukan dari peramban), lalu
+//          mencatat barisnya.
+// POST   multipart (jalan lama) → unggah sepasang berkas ke Supabase
+//          Storage, catat barisnya. Tetap ada untuk dasbor lama di
+//          peramban tamu dan sebagai cadangan kalau R2 belum disiapkan.
 //          Video (033): berkasnya apa adanya, `kecil` jadi posternya —
 //          wajib, dipotret peramban dari salah satu bingkainya.
-// DELETE → hapus berkasnya sekaligus barisnya
+// DELETE → hapus berkasnya (R2 dan Supabase Storage) sekaligus barisnya
 //
 // Dua tujuan, satu pintu. `untuk=acara` (bawaan) menaruh barisnya di
 // tabel `foto`; `untuk=silsilah&id=…` menempelkan fotonya ke satu baris
@@ -33,6 +45,10 @@ const BATAS_JUMLAH = 100;               // per pasangan, foto + video; penjaga k
 const BATAS_JUMLAH_VIDEO = 12;          // video jauh lebih berat; 12 × 20 MB sudah seperempat kuota
 const MIME_BOLEH   = ['image/webp', 'image/jpeg'];
 const MIME_VIDEO   = ['video/mp4', 'video/webm'];
+const TIKET_DETIK  = 30 * 60;           // tiket unggah berlaku 30 menit
+// Worker yang melayani /media/* (R2) dan rahasia bersama untuk tiketnya.
+const MEDIA_ASAL   = (Deno.env.get('MEDIA_ASAL') ?? 'https://mengundang.id').replace(/\/$/, '');
+const MEDIA_KUNCI  = Deno.env.get('MEDIA_KUNCI') ?? '';
 // Bab kenangan yang bukan baris acara (migrasi 033).
 const BAGIAN = ['sampul', 'pria', 'wanita', 'kedatangan', 'sungkem', 'keluarga', 'tamu', 'berdua'];
 
@@ -126,6 +142,9 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const langkah = url.searchParams.get('langkah');
+    if (req.method === 'POST' && langkah === 'izin')  return await izin(db, pasanganId!, req, untuk);
+    if (req.method === 'POST' && langkah === 'catat') return await catat(db, pasanganId!, req, untuk);
     if (req.method === 'POST')   return await unggah(db, pasanganId!, req, untuk);
     if (req.method === 'DELETE') return await hapus(db, pasanganId!, req, untuk);
     return jawab({ pesan: 'Metode tidak didukung' }, 405);
@@ -145,6 +164,183 @@ async function acaraSah(db: any, pasanganId: string, nilai: unknown): Promise<st
   const { data } = await db
     .from('acara').select('id').eq('id', id).eq('pasangan_id', pasanganId).maybeSingle();
   return data ? id : null;
+}
+
+// ---------------------------------------------------------------------------
+// Tiket /media — format sama persis dengan cloudflare/media.js
+// ---------------------------------------------------------------------------
+const enk = new TextEncoder();
+async function tandatangan(aksi: string, kunci: string, jenis: string, batas: string, kd: string) {
+  const k = await crypto.subtle.importKey('raw', enk.encode(MEDIA_KUNCI), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', k, enk.encode([aksi, kunci, jenis, batas, kd].join('\n')));
+  return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+async function tiket(aksi: string, kunci: string, jenis: string, batas: number) {
+  const kd = String(Math.floor(Date.now() / 1000) + TIKET_DETIK);
+  return {
+    'x-media-tanda': await tandatangan(aksi, kunci, jenis, String(batas), kd),
+    'x-media-batas': String(batas),
+    'x-media-kedaluwarsa': kd,
+  };
+}
+// Hapus dari R2 lewat Worker. Gagal di sini tidak menggagalkan apa pun:
+// paling buruk satu berkas yatim tertinggal di R2.
+async function hapusMedia(jalur: string[]) {
+  if (!MEDIA_KUNCI) return;
+  await Promise.all(jalur.map(async (j) => {
+    try {
+      await fetch(`${MEDIA_ASAL}/media/${j}`, { method: 'DELETE', headers: await tiket('hapus', j, '', 0) });
+    } catch (e) { console.error('hapus media gagal:', j, e); }
+  }));
+}
+async function hapusSemua(db: any, jalur: string[]) {
+  const ada = jalur.filter(Boolean);
+  if (!ada.length) return;
+  await Promise.all([db.storage.from('foto').remove(ada), hapusMedia(ada)]);
+}
+
+// Aturan jenis dan ukuran — satu tempat untuk jalan lama dan jalan tiket.
+type Periksa = { video: boolean; ext: string; extKecil: string } | Response;
+function periksaBerkas(jenis: string, bita: number, kecilJenis: string | null, kecilBita: number | null, untuk: string): Periksa {
+  const video = MIME_VIDEO.includes(jenis);
+  if (video && untuk !== 'acara') return jawab({ pesan: 'Video hanya untuk halaman kenangan' }, 415);
+  if (!video && !MIME_BOLEH.includes(jenis)) {
+    return jawab({ pesan: `Jenis berkas ${jenis || 'tidak dikenal'} tidak diterima` }, 415);
+  }
+  if (!(bita > 0)) return jawab({ pesan: 'Berkas kosong' }, 400);
+  if (bita > (video ? BATAS_VIDEO : BATAS_PENUH)) {
+    return jawab({ pesan: video ? 'Video lebih dari 20 MB' : 'Berkas terlalu besar, kecilkan dulu di peramban' }, 413);
+  }
+  if (kecilJenis !== null && (!MIME_BOLEH.includes(kecilJenis) || !(Number(kecilBita) > 0) || Number(kecilBita) > BATAS_KECIL)) {
+    return jawab({ pesan: 'Thumbnail tidak sah' }, 400);
+  }
+  if (video && kecilJenis === null) return jawab({ pesan: 'Video harus disertai poster' }, 400);
+  return {
+    video,
+    ext: video ? (jenis === 'video/webm' ? 'webm' : 'mp4') : jenis === 'image/jpeg' ? 'jpg' : 'webp',
+    extKecil: kecilJenis === 'image/jpeg' ? 'jpg' : 'webp',
+  };
+}
+
+async function kuotaAcara(db: any, pasanganId: string, video: boolean): Promise<Response | null> {
+  const { count } = await db.from('foto').select('id', { count: 'exact', head: true }).eq('pasangan_id', pasanganId);
+  if ((count ?? 0) >= BATAS_JUMLAH) return jawab({ pesan: `Sudah mencapai batas ${BATAS_JUMLAH} foto` }, 409);
+  if (video) {
+    const { count: nVideo } = await db
+      .from('foto').select('id', { count: 'exact', head: true })
+      .eq('pasangan_id', pasanganId).eq('jenis', 'video');
+    if ((nVideo ?? 0) >= BATAS_JUMLAH_VIDEO) {
+      return jawab({ pesan: `Sudah mencapai batas ${BATAS_JUMLAH_VIDEO} video` }, 409);
+    }
+  }
+  return null;
+}
+
+async function bacaJson(req: Request): Promise<any> {
+  try { return await req.json(); } catch { return null; }
+}
+
+// Langkah 1: izin. Tidak ada berkas yang lewat; yang dikirim cuma jenis
+// dan ukurannya, dan ukuran itu jadi batas tiket — Worker menolak isi
+// yang lebih besar dari yang diizinkan di sini.
+async function izin(db: any, pasanganId: string, req: Request, untuk: string) {
+  if (!MEDIA_KUNCI) {
+    return jawab({ pesan: 'Penyimpanan media belum disiapkan', jalanLama: true }, 503);
+  }
+  const b = await bacaJson(req);
+  if (!b?.berkas) return jawab({ pesan: 'Jenis dan ukuran berkas tidak disebut' }, 400);
+  const p = periksaBerkas(String(b.berkas.jenis ?? ''), Number(b.berkas.bita),
+                          b.kecil ? String(b.kecil.jenis ?? '') : null, b.kecil ? Number(b.kecil.bita) : null, untuk);
+  if (p instanceof Response) return p;
+  if (untuk === 'acara') {
+    const penuh = await kuotaAcara(db, pasanganId, p.video);
+    if (penuh) return penuh;
+  }
+  if (untuk === 'silsilah') {
+    const id = new URL(req.url).searchParams.get('id');
+    const { data } = await db.from('silsilah').select('id').eq('id', id ?? '').eq('pasangan_id', pasanganId).maybeSingle();
+    if (!data) return jawab({ pesan: 'Baris silsilah tidak ditemukan' }, 404);
+  }
+
+  const nama = crypto.randomUUID();
+  const jalur = `${pasanganId}/${nama}.${p.ext}`;
+  const jalurKecil = b.kecil ? `${pasanganId}/${nama}-kecil.${p.extKecil}` : null;
+  const unggahan = [{ jalur, url: `/media/${jalur}`, jenis: b.berkas.jenis,
+                      kepala: await tiket('unggah', jalur, b.berkas.jenis, Number(b.berkas.bita)) }];
+  if (jalurKecil) {
+    unggahan.push({ jalur: jalurKecil, url: `/media/${jalurKecil}`, jenis: b.kecil.jenis,
+                    kepala: await tiket('unggah', jalurKecil, b.kecil.jenis, Number(b.kecil.bita)) });
+  }
+  return jawab({ jalur, jalur_kecil: jalurKecil, unggah: unggahan });
+}
+
+// Berkas di /media: ukuran dan jenisnya menurut Worker (R2), bukan
+// menurut peramban.
+async function cekMedia(jalur: string): Promise<{ bita: number; jenis: string } | null> {
+  try {
+    const r = await fetch(`${MEDIA_ASAL}/media/${jalur}`, { method: 'HEAD' });
+    if (!r.ok) return null;
+    return { bita: Number(r.headers.get('content-length') ?? 0), jenis: (r.headers.get('content-type') ?? '').split(';')[0] };
+  } catch { return null; }
+}
+
+// Langkah 2: catat. Jalurnya harus berbentuk yang dibuat izin() untuk
+// pasangan INI — tiket Worker diikat ke kunci itu, jadi berkas yang ada
+// di jalur itu memang diunggah dengan izin dari sini.
+async function catat(db: any, pasanganId: string, req: Request, untuk: string) {
+  const b = await bacaJson(req);
+  const jalur = String(b?.jalur ?? '');
+  const awalan = pasanganId.replace(/[^0-9A-Za-z-]/g, '');
+  const m = jalur.match(new RegExp(`^${awalan}/([0-9a-f-]{36})\\.(webp|jpg|mp4|webm)$`));
+  if (!m) return jawab({ pesan: 'Jalur berkas tidak sah' }, 400);
+  const jalurKecil = b.jalur_kecil == null ? null : String(b.jalur_kecil);
+  if (jalurKecil !== null && !new RegExp(`^${awalan}/${m[1]}-kecil\\.(webp|jpg)$`).test(jalurKecil)) {
+    return jawab({ pesan: 'Jalur thumbnail tidak sah' }, 400);
+  }
+
+  const [utama, kecil] = await Promise.all([cekMedia(jalur), jalurKecil ? cekMedia(jalurKecil) : Promise.resolve(null)]);
+  if (!utama) return jawab({ pesan: 'Berkasnya belum sampai di penyimpanan. Coba unggah lagi.' }, 409);
+  const p = periksaBerkas(utama.jenis, utama.bita, kecil ? kecil.jenis : null, kecil ? kecil.bita : null, untuk);
+  if (p instanceof Response) { await hapusMedia([jalur, jalurKecil].filter(Boolean) as string[]); return p; }
+  const jalurKecilSah = kecil ? jalurKecil : null;
+
+  if (untuk === 'silsilah') {
+    const id = new URL(req.url).searchParams.get('id');
+    const { data: lama } = await db.from('silsilah').select('foto_jalur, foto_kecil')
+      .eq('id', id ?? '').eq('pasangan_id', pasanganId).maybeSingle();
+    const { data: barisS, error: gagalS } = await db.from('silsilah')
+      .update({ foto_jalur: jalur, foto_kecil: jalurKecilSah, lebar: angkaWajar(b.lebar), tinggi: angkaWajar(b.tinggi) })
+      .eq('id', id ?? '').eq('pasangan_id', pasanganId)
+      .select('id, peran, nama, foto_jalur, foto_kecil, lebar, tinggi').maybeSingle();
+    if (gagalS || !barisS) {
+      await hapusMedia([jalur, jalurKecil].filter(Boolean) as string[]);
+      return jawab({ pesan: 'Baris silsilah tidak ditemukan' }, 404);
+    }
+    if (lama?.foto_jalur) await hapusSemua(db, [lama.foto_jalur, lama.foto_kecil]);
+    return jawab({ silsilah: barisS }, 201);
+  }
+
+  // Kuota diperiksa lagi: dua tab bisa sama-sama mendapat izin.
+  const penuh = await kuotaAcara(db, pasanganId, p.video);
+  if (penuh) { await hapusMedia([jalur, jalurKecil].filter(Boolean) as string[]); return penuh; }
+  const { count } = await db.from('foto').select('id', { count: 'exact', head: true }).eq('pasangan_id', pasanganId);
+
+  const nilaiBagian = String(b.bagian ?? '').trim();
+  const bagian = BAGIAN.includes(nilaiBagian) ? nilaiBagian : null;
+  const { data: baris, error } = await db.from('foto').insert({
+    pasangan_id: pasanganId, jalur, jalur_kecil: jalurKecilSah,
+    lebar: angkaWajar(b.lebar), tinggi: angkaWajar(b.tinggi), bita: utama.bita,
+    urutan: count ?? 0,
+    keterangan: typeof b.keterangan === 'string' ? b.keterangan.slice(0, 280) || null : null,
+    acara_id: bagian ? null : await acaraSah(db, pasanganId, b.acara_id),
+    bagian,
+    jenis: p.video ? 'video' : 'foto',
+    durasi_ms: p.video ? durasiWajar(b.durasi_ms) : null,
+  })
+  .select('id, jalur, jalur_kecil, lebar, tinggi, bita, urutan, keterangan, tampil, acara_id, latar, bagian, jenis, durasi_ms')
+  .single();
+  if (error) { await hapusMedia([jalur, jalurKecil].filter(Boolean) as string[]); throw error; }
+  return jawab({ foto: baris, terpakai: (count ?? 0) + 1, batas: BATAS_JUMLAH }, 201);
 }
 
 async function unggah(db: any, pasanganId: string, req: Request, untuk: string) {
@@ -256,10 +452,7 @@ async function unggah(db: any, pasanganId: string, req: Request, untuk: string) 
       return jawab({ pesan: 'Baris silsilah tidak ditemukan' }, 404);
     }
 
-    if (lama?.foto_jalur) {
-      const buang = [lama.foto_jalur, lama.foto_kecil].filter(Boolean) as string[];
-      await db.storage.from('foto').remove(buang);
-    }
+    if (lama?.foto_jalur) await hapusSemua(db, [lama.foto_jalur, lama.foto_kecil]);
     return jawab({ silsilah: barisS }, 201);
   }
 
@@ -312,8 +505,7 @@ async function hapus(db: any, pasanganId: string, req: Request, untuk: string) {
       .eq('id', id).eq('pasangan_id', pasanganId).maybeSingle();
     if (!baris) return jawab({ pesan: 'Baris silsilah tidak ditemukan' }, 404);
 
-    const berkas = [baris.foto_jalur, baris.foto_kecil].filter(Boolean) as string[];
-    if (berkas.length) await db.storage.from('foto').remove(berkas);
+    await hapusSemua(db, [baris.foto_jalur, baris.foto_kecil]);
 
     // Barisnya tetap ada; yang dilepas cuma fotonya.
     await db.from('silsilah')
@@ -336,7 +528,7 @@ async function hapus(db: any, pasanganId: string, req: Request, untuk: string) {
   if (!baris) return jawab({ pesan: 'Foto tidak ditemukan' }, 404);
 
   const berkas = [baris.jalur, baris.jalur_kecil].filter(Boolean) as string[];
-  const buang = await db.storage.from('foto').remove(berkas);
+  const [buang] = await Promise.all([db.storage.from('foto').remove(berkas), hapusMedia(berkas)]);
   if (buang.error) throw buang.error;
 
   const { error: gagalHapus } = await db
@@ -345,3 +537,25 @@ async function hapus(db: any, pasanganId: string, req: Request, untuk: string) {
 
   return jawab({ dihapus: id });
 }
+
+// ---------------------------------------------------------------------------
+// Pemeriksaan sekali tiap fungsi menyala: apakah kunci tiket di sini sama
+// dengan yang dipasang di Worker? Tiket hapus untuk kunci yang tidak
+// pernah dipakai — tidak ada yang berubah — lalu jawabannya dicatat di
+// log fungsi (Supabase → Edge Functions → foto-unggah → Logs).
+// ---------------------------------------------------------------------------
+setTimeout(async () => {
+  if (!MEDIA_KUNCI) {
+    console.warn('periksa media: MEDIA_KUNCI belum dipasang di Supabase — unggahan memakai jalan lama');
+    return;
+  }
+  const uji = '00000000-0000-4000-8000-000000000000/00000000-0000-4000-8000-000000000000.webp';
+  try {
+    const r = await fetch(`${MEDIA_ASAL}/media/${uji}`, { method: 'DELETE', headers: await tiket('hapus', uji, '', 0) });
+    const arti = r.status === 204 ? 'kunci cocok' : r.status === 403 ? 'KUNCI BEDA dengan Worker'
+               : r.status === 503 ? 'kunci BELUM dipasang di Worker' : 'jawaban tak terduga';
+    console.log(`periksa media: Worker menjawab ${r.status} — ${arti}`);
+  } catch (e) {
+    console.error('periksa media: Worker tidak terjangkau', e);
+  }
+}, 0);

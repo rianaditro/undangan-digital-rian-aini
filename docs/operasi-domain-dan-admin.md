@@ -189,6 +189,50 @@ Sebelum langkah-langkah ini, konfirmasi pesanan **tetap jalan**: kalau
 email gagal terkirim, akun dibuat dengan sandi acak dan sandinya tampil
 di teks serah-terima untuk dikirim lewat WhatsApp.
 
+## 5. Foto dan video di Cloudflare R2
+
+Kuota gratis Supabase: 1 GB simpanan dan 5 GB egress per bulan. Satu
+halaman kenangan dengan video bisa puluhan MB per tamu, jadi berkas
+pasangan dipindah ke R2 (10 GB gratis, egress tidak dihitung).
+
+**Alurnya**
+
+```
+dasbor ──izin (jenis+ukuran)──▶ foto-unggah ── periksa pemilik, kuota, jenis
+   │                               └─ tiket HMAC per berkas
+   ├──PUT isi berkas──▶ /media/<jalur>  (Worker, cloudflare/media.js) ──▶ R2
+   └──catat──▶ foto-unggah ── HEAD /media/<jalur> (ukuran & jenis dari R2) ── baris foto
+tamu ──GET /media/<jalur>──▶ cache edge Cloudflare ──▶ R2
+```
+
+- Isi berkas tidak pernah lewat Supabase. Database hanya menyimpan
+  jalurnya; `M.fotoUrl()` merakit `/media/<jalur>` di host mana pun
+  halaman dibuka (mengundang.id, subdomain pasangan, workers.dev).
+- Berkas lama di Supabase Storage disalin ke R2 saat pertama dibuka. Tidak
+  ada skrip pindahan.
+- Hapus foto: `foto-unggah` membuang dari R2 (tiket `hapus`) dan dari
+  Supabase Storage.
+- Kalau R2 atau rahasia belum disiapkan, `izin` atau Worker menjawab 503
+  dan dasbor otomatis memakai jalan lama (multipart → Supabase Storage).
+
+**Menyiapkan (sekali)**
+
+1. Cloudflare → **R2 Object Storage** → aktifkan (meminta kartu pembayaran
+   walau pemakaian masih di jatah gratis).
+2. Bucket `mengundang-media` (dibuat Claude lewat MCP sesudah R2 aktif).
+   Binding-nya `MEDIA` di `wrangler.jsonc`. Bucket TIDAK perlu dibuat
+   publik dan tidak perlu domain sendiri: semua lewat Worker.
+3. Rahasia `MEDIA_KUNCI` (acak, 32+ karakter), nilai yang SAMA di dua tempat:
+   - Cloudflare → Workers & Pages → `mengundang` → Settings → Variables
+     and Secrets → Add → tipe *Secret*, nama `MEDIA_KUNCI`.
+   - Supabase → Edge Functions → Secrets → `MEDIA_KUNCI` (opsional
+     `MEDIA_ASAL`, bawaan `https://mengundang.id`).
+4. Deploy `foto-unggah` versi R2.
+
+Urutan aman: bucket dulu (tanpa bucket, build Worker gagal), baru merge,
+baru rahasia + deploy fungsi. Sebelum rahasia terpasang, unggahan tetap
+jalan lewat jalan lama.
+
 ## Urutan yang disarankan
 
 1. Masuk ke `/pemilik`, pastikan akunnya bekerja, ganti sandinya.

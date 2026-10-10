@@ -108,7 +108,20 @@ function isiKenangan(ubah = {}){
   }, ubah);
 }
 
-function layani(page, isi, fn = 'terimakasih_isi'){
+// Foto dan video halaman datang dari /media/ (Worker + R2); di uji
+// dilayani dari memori ini.
+function layaniMedia(page){
+  return page.route('**/media/**', r => {
+    const u = new URL(r.request().url());
+    if (u.pathname.endsWith('/p/klip.webm')) return r.fulfill({ status:200, contentType:'video/webm', body: VIDEO });
+    const berkas = Object.keys(FOTO).find(k => u.pathname.endsWith('/' + k));
+    if (berkas) return r.fulfill({ status:200, contentType:'image/jpeg', body: FOTO[berkas] });
+    return r.fulfill({ status:404, body:'' });
+  });
+}
+
+async function layani(page, isi, fn = 'terimakasih_isi'){
+  await layaniMedia(page);
   return page.route('**/*.supabase.co/**', r => {
     const u = new URL(r.request().url());
     if (u.pathname === '/rest/v1/rpc/' + fn)
@@ -410,6 +423,7 @@ async function tkPratinjau({ cari = '?pratinjau=1', sesi = true, jawab = 200, is
   page.on('pageerror', e => console.log('   [pageerror] ' + e.message));
   if (sesi) await page.addInitScript(() =>
     localStorage.setItem('dasbor-sesi', JSON.stringify({ akses:'JWT-pemilik', segar:'S' })));
+  await layaniMedia(page);
   await page.route('**/*.supabase.co/**', r => {
     const u = new URL(r.request().url());
     if (u.pathname.startsWith('/rest/v1/rpc/')) {

@@ -869,14 +869,10 @@ select{appearance:none;cursor:pointer;}
     toast('Mengecilkan foto…');
     try{
       var kecilan = await window.Gambar.siapkan(berkas);
-      var form = new FormData();
-      form.append('berkas', kecilan.penuh.blob, 'foto.webp');
-      form.append('kecil',  kecilan.kecil.blob, 'kecil.webp');
-      form.append('lebar',  kecilan.penuh.lebar);
-      form.append('tinggi', kecilan.penuh.tinggi);
-      var r = await fotoSilsilah('POST', id, form);
-      var jawab = null; try{ jawab = await r.json(); }catch(x){}
-      if(!r.ok) throw new Error((jawab && jawab.pesan) || ('Gagal mengunggah (HTTP ' + r.status + ')'));
+      await kirimBerkas('untuk=silsilah&id=' + encodeURIComponent(id), {
+        berkas: kecilan.penuh.blob, kecil: kecilan.kecil.blob,
+        lebar: kecilan.penuh.lebar, tinggi: kecilan.penuh.tinggi
+      }, {});
       toast('Foto tersimpan');
       await muatSilsilah();
     }catch(err){ toast(err.message, true); }
@@ -1066,38 +1062,81 @@ select{appearance:none;cursor:pointer;}
     return d ? Math.floor(d / 60) + ':' + ('0' + d % 60).slice(-2) : 'video';
   }
 
-  async function unggahSatuFoto(berkas, bab){
+  /* Mengirim satu berkas (+ thumbnail/poster) ke penyimpanan.
+
+     Jalan utama (R2): foto-unggah memeriksa dan memberi tiket
+     (?langkah=izin), isi berkas dikirim langsung ke /media/ di Worker —
+     asal yang sama dengan dasbor ini, jadi tanpa CORS dan tanpa lewat
+     Supabase — lalu foto-unggah mencatat barisnya (?langkah=catat).
+
+     Jalan lama (multipart ke foto-unggah, disimpan di Supabase Storage)
+     hanya dipakai kalau R2 belum disiapkan: izin menjawab 503 jalanLama,
+     atau Worker menjawab 503. Galat lain TIDAK jatuh ke jalan lama —
+     berkas yang ditolak karena kuota atau jenis tetap ditolak. */
+  async function kirimBerkas(cari, b, tambahan){
+    var FN = M.SB.url + '/functions/v1/foto-unggah';
+    var kepala = { 'Authorization': 'Bearer ' + (sesi && sesi.akses), 'apikey': M.SB.key };
+    async function baca(r){ var j = null; try{ j = await r.json(); }catch(e){} return j; }
+    function galat(r, j){ return new Error((j && j.pesan) || ('Gagal mengunggah (HTTP ' + r.status + ')')); }
+    var tanya = cari ? '&' + cari : '';
+
+    var r = await fetch(FN + '?langkah=izin' + tanya, {
+      method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, kepala),
+      body: JSON.stringify({ berkas: { jenis: b.berkas.type, bita: b.berkas.size },
+                             kecil: b.kecil ? { jenis: b.kecil.type, bita: b.kecil.size } : null })
+    });
+    var j = await baca(r);
+    var lama = r.status === 503 && j && j.jalanLama;
+    if(!r.ok && !lama) throw galat(r, j);
+
+    if(!lama){
+      var bagian = [{ u: j.unggah[0], isi: b.berkas }].concat(j.unggah[1] ? [{ u: j.unggah[1], isi: b.kecil }] : []);
+      for(var i = 0; i < bagian.length; i++){
+        var x = bagian[i];
+        var p = await fetch(x.u.url, { method: 'PUT', headers: Object.assign({ 'Content-Type': x.u.jenis }, x.u.kepala), body: x.isi });
+        if(p.status === 503){ lama = true; break; }
+        if(!p.ok) throw galat(p, await baca(p));
+      }
+    }
+    if(!lama){
+      r = await fetch(FN + '?langkah=catat' + tanya, {
+        method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, kepala),
+        body: JSON.stringify(Object.assign({ jalur: j.jalur, jalur_kecil: j.jalur_kecil,
+          lebar: b.lebar, tinggi: b.tinggi, durasi_ms: b.durasi_ms }, tambahan))
+      });
+      j = await baca(r);
+      if(!r.ok) throw galat(r, j);
+      return j;
+    }
+
     var form = new FormData();
-    if(bab && bab.indexOf('b:') === 0) form.append('bagian', bab.slice(2));
-    if(bab && bab.indexOf('a:') === 0) form.append('acara_id', bab.slice(2));
+    var eks = function(blob){ return { 'video/webm':'webm', 'video/mp4':'mp4', 'image/jpeg':'jpg' }[blob.type] || 'webp'; };
+    form.append('berkas', b.berkas, 'berkas.' + eks(b.berkas));
+    if(b.kecil) form.append('kecil', b.kecil, 'kecil.' + eks(b.kecil));
+    if(b.lebar) form.append('lebar', b.lebar);
+    if(b.tinggi) form.append('tinggi', b.tinggi);
+    if(b.durasi_ms != null) form.append('durasi_ms', b.durasi_ms);
+    Object.keys(tambahan).forEach(function(k){ if(tambahan[k] != null) form.append(k, tambahan[k]); });
+    r = await fetch(FN + (cari ? '?' + cari : ''), { method: 'POST', headers: kepala, body: form });
+    j = await baca(r);
+    if(!r.ok) throw galat(r, j);
+    return j;
+  }
+
+  async function unggahSatuFoto(berkas, bab){
+    var tambahan = {};
+    if(bab && bab.indexOf('b:') === 0) tambahan.bagian = bab.slice(2);
+    if(bab && bab.indexOf('a:') === 0) tambahan.acara_id = bab.slice(2);
     if(/^video\//.test(berkas.type) || /\.(mov|mp4|webm|m4v)$/i.test(berkas.name || '')){
       /* Video tidak diubah di sini — hanya diperiksa bisa diputar
          peramban, lalu satu bingkainya diambil jadi poster. */
       var v = await window.Gambar.siapkanVideo(berkas);
-      form.append('berkas', v.video, berkas.type === 'video/webm' ? 'video.webm' : 'video.mp4');
-      form.append('kecil',  v.poster.blob, 'poster.' + (v.poster.blob.type === 'image/jpeg' ? 'jpg' : 'webp'));
-      form.append('lebar',  v.lebar);
-      form.append('tinggi', v.tinggi);
-      form.append('durasi_ms', v.durasi_ms);
-    }else{
-      var kecilan = await window.Gambar.siapkan(berkas);
-      form.append('berkas', kecilan.penuh.blob, 'foto.webp');
-      form.append('kecil',  kecilan.kecil.blob, 'kecil.webp');
-      form.append('lebar',  kecilan.penuh.lebar);
-      form.append('tinggi', kecilan.penuh.tinggi);
+      return await kirimBerkas('', { berkas: v.video, kecil: v.poster.blob, lebar: v.lebar, tinggi: v.tinggi,
+                                     durasi_ms: v.durasi_ms }, tambahan);
     }
-
-    var r = await fetch(M.SB.url + '/functions/v1/foto-unggah', {
-      method: 'POST',
-      /* JWT pemilik, bukan anon key — itu yang ditukar foto-unggah jadi
-         pasangan lewat tabel pemilik. */
-      headers: { 'Authorization': 'Bearer ' + (sesi && sesi.akses), 'apikey': M.SB.key },
-      body: form
-    });
-    var jawab = null;
-    try{ jawab = await r.json(); }catch(e){}
-    if(!r.ok) throw new Error((jawab && jawab.pesan) || ('Gagal mengunggah (HTTP ' + r.status + ')'));
-    return jawab;
+    var kecilan = await window.Gambar.siapkan(berkas);
+    return await kirimBerkas('', { berkas: kecilan.penuh.blob, kecil: kecilan.kecil.blob,
+                                   lebar: kecilan.penuh.lebar, tinggi: kecilan.penuh.tinggi }, tambahan);
   }
 
   async function pilihFoto(e){
