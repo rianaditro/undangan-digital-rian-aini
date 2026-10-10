@@ -24,7 +24,7 @@
               kalau ada medianya ATAU pasangan menulis sesuatu untuknya
      'acara'  tempat babak acara disisipkan (bukan baris kenangan_blok)
      'vendor' daftar kenangan_vendor; tampil kalau ada isinya
-     'album'  foto yang tidak diberi bab mana pun
+     'album'  semua foto/video, urut bab, lalu yang tanpa bab
      'ucapan' pop-up ucapan tamu yang berputar
 */
 (function (global) {
@@ -68,7 +68,7 @@
       judul: 'Kami Berdua',
       teks:  'Dan inilah awal perjalanan kami. Terima kasih telah menjadi saksinya.' },
     { kunci: 'galeri', jenis: 'album',
-      nama: 'Album', guna: 'Foto yang tidak diberi bab mana pun. Tidak muncul kalau semua foto sudah punya bab.',
+      nama: 'Album', guna: 'Semua foto dan video, berurutan seperti bab-babnya, ditambah yang tanpa bab. Di sinilah tamu melihat satu per satu dan memperbesarnya.',
       judul: 'Album Hari Itu', teks: null },
     { kunci: 'vendor', jenis: 'vendor',
       nama: 'Terima kasih kepada', guna: 'Vendor, sponsor, atau brand yang terlibat. Tidak muncul kalau daftarnya kosong.',

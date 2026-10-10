@@ -249,3 +249,16 @@ kartu teks seperti sebelumnya.
 Urutan pasang di produksi: tempel `supabase/manual/2026-10-10_pasang-033.sql`
 dulu, baru deploy `foto-unggah` (ia menulis kolom baru dan memakai batas
 bucket 20 MB).
+
+## 14. Revisi tampilan 10 Oktober — HP dulu (migrasi 034)
+
+| Permintaan | Jadinya |
+|---|---|
+| Foto bisa diedit/crop, rasio pas di HP | Tombol **Atur** di tiap ubin kotak 8 membuka bingkai seukuran layar HP (390 × 844). Geser foto dan perbesar (1–3×). Disimpan sebagai `foto.fokus_x`, `fokus_y`, `zum`, bukan memotong berkasnya: bisa diatur ulang kapan saja, berlaku untuk video (lewat posternya), dan di layar lebar titik yang sama jadi pusat. Halaman memakainya sebagai `object-position` + pusat perbesaran. |
+| Tombol geser foto di setiap bagian | ‹ titik › di bawah tulisan tiap bab yang punya lebih dari satu berkas, ditambah usap mendatar. Usap tegak tetap menggulir halaman. |
+| Hapus "Lihat/Perbesar" | Dihapus dari bab. Melihat satu per satu dan memperbesar hanya di album paling bawah. |
+| Foto yang sudah tampil muncul lagi di galeri | Album memuat SEMUA foto/video, urut seperti bab-babnya, lalu yang tanpa bab. |
+| Ucapan tamu: bisa ditampilkan/disembunyikan, bawaan tampil, lebih kecil, transparan | Pop-up 260 px, latar tembus pandang, huruf lebih kecil. Tombol gelembung di atas tombol gulir untuk menyembunyikan/menampilkan; × juga menyembunyikan. Pilihan tamu diingat di perambannya. Pasangan tetap bisa mematikan ucapan untuk semua tamu di kotak 9. |
+
+Tombol mengambang di kanan bawah sekarang tiga (ucapan, gulir, musik);
+di HP tulisan bab menyisakan jalurnya supaya tidak tertutup.

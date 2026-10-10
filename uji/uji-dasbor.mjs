@@ -7,6 +7,7 @@
 import { chromium } from 'playwright';
 import { mulai } from './server.mjs';
 
+const GAMBAR_DATAR = 'iVBORw0KGgoAAAANSUhEUgAAACgAAAAUCAIAAABwJOjsAAAAJElEQVR4nGM4MS1lQBDDqMWjFo9aPGrxqMWjFo9aPGrxyLEYAIILfozXZrotAAAAAElFTkSuQmCC';
 const PORT = 4401, ASAL = 'http://127.0.0.1:' + PORT;
 let lulus = 0, gagal = 0;
 const cek = (n, ok, k) => ok ? (lulus++, console.log('OK    ' + n))
@@ -71,6 +72,11 @@ async function pasang(page, model) {
       body: JSON.stringify(isi)
     });
     if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, body: '' });
+    // Berkas foto: satu gambar mendatar 2:1, supaya editor potongan punya
+    // ruang geser yang sungguhan.
+    if (jalur.startsWith('/storage/')) {
+      return route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from(GAMBAR_DATAR, 'base64') });
+    }
 
     if (jalur === '/auth/v1/token') {
       return kirim({ access_token: 'JWT-pemilik', refresh_token: 'SEGAR' });
@@ -524,6 +530,46 @@ const browser = await chromium.launch();
   cek('19f baris dihapus: DELETE id=in.(…)', model.hapus.some(x => x.tabel === 'kenangan_vendor')
       && model.kenangan_vendor.length === 1 && model.kenangan_vendor[0].nama === 'Sekar');
   await page.locator('#panelKenangan').screenshot({ path: 'dasbor-kenangan-400.png' });
+  await ctx.close();
+}
+
+/* ---------- panel 8: potongan untuk layar HP ---------- */
+{
+  const model = bikinModel();
+  const { ctx, page } = await masuk(browser, model, 400);
+  const ubin = page.locator('#pustakaFoto [data-foto="f-1"]');
+  await ubin.locator('[data-aksi="potong"]').click();
+  const bingkai = page.locator('#potongBingkai');
+  await page.waitForFunction(() => document.getElementById('potongGambar').naturalWidth > 0, null, { timeout: 5000 });
+  const kotak = await bingkai.boundingBox();
+  cek('21a editor terbuka dengan bingkai layar HP (390:844)',
+      await page.locator('#potong').isVisible() && Math.abs(kotak.width / kotak.height - 390 / 844) < 0.02,
+      JSON.stringify(kotak));
+  // tarik gambar ke kanan → jendela ke kiri → fokus_x turun
+  await page.mouse.move(kotak.x + kotak.width / 2, kotak.y + kotak.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(kotak.x + kotak.width / 2 + 60, kotak.y + kotak.height / 2 + 40, { steps: 5 });
+  await page.mouse.up();
+  await page.locator('#potongZum').fill('1.6');
+  const pos = await page.locator('#potongGambar').evaluate(i => getComputedStyle(i).objectPosition);
+  model.patch.length = 0;
+  await page.locator('#potongSimpan').click();
+  await page.waitForFunction(() => document.getElementById('potong').hidden, null, { timeout: 5000 });
+  const p = model.patch.find(x => x.tabel === 'foto' && x.id === 'f-1');
+  cek('21b tarik + perbesar: satu PATCH fokus_x turun, fokus_y tetap (gambar mendatar tidak punya ruang tegak tanpa zum), zum 1.6',
+      p && p.badan.fokus_x < 50 && p.badan.fokus_x >= 0 && p.badan.fokus_y === 50 && p.badan.zum === 1.6
+      && Object.keys(p.badan).sort().join(',') === 'fokus_x,fokus_y,zum', JSON.stringify(p && p.badan) + ' ' + pos);
+  const gaya = await page.locator('#pustakaFoto [data-foto="f-1"] .gbr').getAttribute('style');
+  cek('21c ubin pustaka langsung memakai potongan baru', gaya.includes('--z:1.6') && gaya.includes('--fx:' + p.badan.fokus_x + '%'), gaya);
+  // Batal tidak menyimpan
+  await page.locator('#pustakaFoto [data-foto="f-2"] [data-aksi="potong"]').click();
+  await page.locator('#potongZum').fill('2.5');
+  model.patch.length = 0;
+  await page.locator('#potongBatal').click();
+  cek('21d Batal tidak mengirim apa pun', model.patch.length === 0 && await page.locator('#potong').isHidden());
+  await page.locator('#pustakaFoto [data-foto="f-1"] [data-aksi="potong"]').click();
+  await page.waitForTimeout(200);
+  await page.locator('#potong').screenshot({ path: 'dasbor-potong-400.png' });
   await ctx.close();
 }
 
