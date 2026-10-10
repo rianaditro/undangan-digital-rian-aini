@@ -32,6 +32,11 @@
   "workers_dev": true,
   "preview_urls": true,
 
+  // Workers Builds menjalankan `wrangler preview` untuk branch selain
+  // main (setiap PR), dan perintah itu menuntut blok ini ada — boleh
+  // kosong. Aset, rute, dan pengaturan lain tetap di tingkat atas.
+  "previews": {},
+
   // Apex dan semua subdomain. Rute hanya bekerja untuk nama yang
   // rekaman DNS-nya diproxy (awan oranye): AAAA @ 100:: dan AAAA * 100::.
   "routes": [

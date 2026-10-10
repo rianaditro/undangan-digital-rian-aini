@@ -116,6 +116,67 @@ undangan.
 `alat/periksa-dns.py` dibuat untuk rencana bertahap (zona abu-abu yang
 mencerminkan Hostinger) dan tidak dipakai di jalur ini.
 
+## 4. Owner, admin, dan reseller (migrasi 031)
+
+### Peran
+
+| Peran | Halaman | Boleh |
+|---|---|---|
+| Owner | `/admin` | semua, termasuk menambah admin, menambah reseller, mencatat pencairan |
+| Admin | `/admin` | membuka pasangan, mengonfirmasi pesanan, melihat statistik reseller |
+| Reseller | `/reseller` | tautan rujukan, mencatat pesanan, melihat status dan komisi |
+| Pengantin | `/dasbor` | mengisi dan menerbitkan undangannya sendiri |
+
+Admin pertama otomatis menjadi owner saat 031 dipasang. Owner tidak bisa
+dibuat atau dicabut dari halaman — hanya lewat SQL.
+
+Reseller **tidak pernah** melihat daftar tamu, RSVP, ucapan, atau amplop
+kliennya; `uji-reseller.mjs` memeriksa halaman itu tidak meminta satu
+pun.
+
+### Alur penjualan lewat reseller
+
+1. Reseller membagikan `https://mengundang.id/?r=<kode>`. Pengunjungnya
+   dicatat (satu peramban, satu kali sehari) dan kodenya ikut di pesan
+   WhatsApp dari halaman depan selama 90 hari.
+2. Klien setuju; reseller mencatat pesanan di `/reseller`
+   (status *menunggu pembayaran*). Penjualan yang masuk langsung lewat
+   WhatsApp dicatat owner/admin di `/admin` panel 4, dengan kode
+   reseller kalau pesannya membawa "Kode rujukan".
+3. Klien membayar ke rekening owner — satu pembayaran.
+4. Owner/admin di panel 4 mengisi nominal dan komisi, lalu **Lunas**:
+   akun klien dibuat, email undangan dikirim, pasangan langsung
+   **aktif**. Teks serah-terima (alamat, /dasbor, link panitia) muncul
+   untuk dikirim lewat WhatsApp juga.
+5. Klien membuka email, membuat sandinya sendiri di `/dasbor`, mengisi
+   undangannya.
+6. Kapan pun, owner mentransfer komisi yang belum cair ke rekening
+   reseller dan menekan **Catat Pencairan** dengan nomor transaksinya.
+   Semua komisi yang tertahan saat itu menjadi *cair* dengan nomor itu.
+
+Harga dan komisi belum ditetapkan, jadi keduanya diisi per pesanan saat
+konfirmasi.
+
+### Email undangan — perlu dipasang sekali
+
+Pengirim email bawaan Supabase hanya mengirim ke anggota tim proyek dan
+dibatasi beberapa email per jam. Untuk klien sungguhan:
+
+1. **Supabase → Authentication → URL Configuration**:
+   Site URL `https://mengundang.id`, dan tambahkan
+   `https://mengundang.id/dasbor` di Redirect URLs.
+2. **Supabase → Authentication → Emails → SMTP Settings**: pasang SMTP
+   sendiri (mis. Resend atau Brevo, ada paket gratisnya). Pengirim
+   `undangan@mengundang.id` butuh verifikasi domain di penyedia SMTP —
+   rekaman TXT/CNAME-nya ditambahkan di DNS Cloudflare (abu-abu).
+3. **Authentication → Emails → Templates → Invite user**: ganti teksnya
+   ke bahasa Indonesia, mis. "Undangan digital Anda sudah aktif — klik
+   untuk membuat kata sandi". `{{ .ConfirmationURL }}` tetap dipakai.
+
+Sebelum langkah-langkah ini, konfirmasi pesanan **tetap jalan**: kalau
+email gagal terkirim, akun dibuat dengan sandi acak dan sandinya tampil
+di teks serah-terima untuk dikirim lewat WhatsApp.
+
 ## Urutan yang disarankan
 
 1. Masuk ke `/admin`, pastikan akunnya bekerja, ganti sandinya.

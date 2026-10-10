@@ -22,7 +22,26 @@ function bikinModel(){
     { id:'t-3', nama:'Pengantin Pria',        token:'TOKP',  pihak:'pria',            aktif:true, terakhir_dipakai:null },
     { id:'t-4', nama:'Pengantin Wanita',      token:'TOKW',  pihak:'wanita',          aktif:true, terakhir_dipakai:null }
   ];
-  return { pasangan, token, panggilan: [], adminOk: true, hapusGagal: false };
+  const pesanan = [
+    { id:'s-1', nomor:7, status:'menunggu', reseller_kode:'123', reseller_nama:'Percetakan A',
+      pria:'Budi', wanita:'Sari', slug:'budi-sari', paket:'premium', tanggal:null, kota:null,
+      email_klien:'budi@contoh.com', catatan:null, nominal:null, komisi:null, cair:false,
+      pencairan_ref:null, dibuat:'2026-10-09T00:00:00Z', dikonfirmasi:null },
+    { id:'s-2', nomor:6, status:'lunas', reseller_kode:null, reseller_nama:null,
+      pria:'Eko', wanita:'Fitri', slug:'eko-fitri', paket:'standar', tanggal:null, kota:null,
+      email_klien:'eko@contoh.com', catatan:null, nominal:69000, komisi:0, cair:false,
+      pencairan_ref:null, dibuat:'2026-10-08T00:00:00Z', dikonfirmasi:'2026-10-08T00:00:00Z' }
+  ];
+  const reseller = [
+    { id:'r-1', kode:'123', nama:'Percetakan A', kontak:'0812', rekening:'BCA 999', aktif:true,
+      email:'a@contoh.com', dibuat:'2026-10-01T00:00:00Z', pengunjung:40, pengunjung_30h:12,
+      pesanan:5, lunas:2, omzet:318000, komisi_total:130000, komisi_cair:65000, komisi_tertahan:65000 }
+  ];
+  const admins = [
+    { user_id:'u-o', email:'owner@contoh.com', nama:'Owner', peran:'owner', dibuat:'2026-09-01T00:00:00Z' },
+    { user_id:'u-a', email:'staf@contoh.com', nama:'Staf', peran:'admin', dibuat:'2026-10-01T00:00:00Z' }
+  ];
+  return { pasangan, token, pesanan, reseller, admins, peran:'owner', panggilan: [], adminOk: true, hapusGagal: false };
 }
 
 async function pasang(page, model){
@@ -47,6 +66,23 @@ async function pasang(page, model){
       if (nama === 'is_admin')           return kirim(model.adminOk);
       if (!model.adminOk)                return kirim({ message:'Halaman ini hanya untuk admin' }, 400);
       if (nama === 'admin_daftar')       return kirim(model.pasangan);
+      if (nama === 'admin_peran')        return kirim(model.peran);
+      if (nama === 'admin_pesanan')      return kirim(model.pesanan);
+      if (nama === 'admin_reseller')     return kirim(model.reseller);
+      if (nama === 'admin_admin'){
+        if (model.peran !== 'owner') return kirim({ message:'Hanya owner' }, 403);
+        return kirim(model.admins);
+      }
+      if (nama === 'admin_pesan')        return kirim(8);
+      if (nama === 'admin_pencairan_catat'){
+        const r = model.reseller.find(x => x.id === arg.p_reseller);
+        const d = { nominal:r.komisi_tertahan, jumlah_pesanan:1 };
+        r.komisi_cair += r.komisi_tertahan; r.komisi_tertahan = 0;
+        return kirim(d);
+      }
+      if (nama === 'admin_admin_cabut'){
+        model.admins = model.admins.filter(a => a.user_id !== arg.p_user); return kirim(null);
+      }
       if (nama === 'admin_token')        return kirim(model.token);
       if (nama === 'admin_slug_dipakai') return kirim(model.pasangan.some(p => p.slug === arg.p_slug));
       if (nama === 'admin_token_ganti'){
@@ -69,6 +105,24 @@ async function pasang(page, model){
     if (jalur === '/functions/v1/admin-pasangan'){
       model.panggilan.push({ nama:'fn', arg, auth });
       if (arg.aksi === 'sandi') return kirim({ email:arg.email, diganti:true });
+      if (arg.aksi === 'konfirmasi'){
+        const s = model.pesanan.find(x => x.id === arg.pesanan_id);
+        s.status = 'lunas'; s.nominal = arg.nominal; s.komisi = arg.komisi;
+        return kirim({ pasangan_id:'p-9', nomor:s.nomor, slug:s.slug, email:s.email_klien,
+          pria:s.pria, wanita:s.wanita, akun_baru:true, diundang:model.diundang !== false,
+          sandi: model.diundang === false ? 'SandiCadangan9' : null,
+          canonical_host: s.paket === 'premium' ? s.slug + '.mengundang.id' : null,
+          token:[{ nama:'Pengantin (semua pihak)', token:'TOKBARU', pihak:null }] }, 201);
+      }
+      if (arg.aksi === 'reseller') return kirim({ email:arg.email, kode:arg.kode, nama:arg.nama, akun_baru:true }, 201);
+      if (arg.aksi === 'admin')    return kirim({ email:arg.email, nama:arg.nama, akun_baru:true }, 201);
+      if (arg.aksi === 'pemilik'){
+        const p = model.pasangan.find(x => x.slug === arg.slug);
+        if (!p) return kirim({ pesan:'tidak ada' }, 404);
+        p.pemilik = arg.email;
+        return kirim({ slug:p.slug, email:arg.email, akun_baru:true, sudah_pemilik:false,
+                       canonical_host:p.canonical_host }, 201);
+      }
       if (model.pasangan.some(p => p.slug === arg.slug))
         return kirim({ pesan:`Slug "${arg.slug}" sudah dipakai pasangan lain` }, 409);
       return kirim({ pasangan_id:'p-2', slug:arg.slug, email:arg.email, akun_baru:true,
@@ -309,6 +363,101 @@ const browser = await chromium.launch();
       fs2.arg.aksi === 'sandi' && fs2.arg.email === 'budi@contoh.com'
       && fs2.arg.sandi.length >= 12, JSON.stringify({...fs2.arg, sandi:'…'}));
 
+  await ctx.close();
+}
+
+/* ===== pasang akun ke pasangan lama ===== */
+{
+  const { ctx, page, model } = await halaman(browser);
+  model.pasangan[0].pemilik = null;
+  await page.locator('#inEmail').fill('admin@contoh.com');
+  await page.locator('#inSandi').fill('benar');
+  await page.locator('#btnMasuk').click();
+  await page.waitForSelector('.ps', { timeout:8000 });
+  const p0 = model.pasangan[0];
+
+  cek('16a pasangan tanpa pemilik punya tombol Pasang Akun',
+      await page.locator('.ps button[data-aksi="pemilik"]').count() === 1);
+  await page.locator('.ps button[data-aksi="pemilik"]').click();
+  await page.locator('.ps [data-isi="email"]').fill('pengantin@contoh.com');
+  await page.locator('.ps button[data-aksi="acakPemilik"]').click();
+  const sandiP = await page.locator('.ps [data-isi="sandi"]').inputValue();
+  await page.locator('.ps button[data-aksi="simpanPemilik"]').click();
+  await page.waitForSelector('.ps [data-isi="serah"]:not([hidden])', { timeout:5000 });
+  const fp = model.panggilan.filter(p => p.nama === 'fn').at(-1);
+  cek('16b memakai aksi pemilik dengan slug pasangan itu',
+      fp.arg.aksi === 'pemilik' && fp.arg.slug === p0.slug && fp.arg.email === 'pengantin@contoh.com'
+      && sandiP.length >= 12, JSON.stringify({...fp.arg, sandi:'…'}));
+  cek('16c token admin yang dikirim, bukan anon', fp.auth.startsWith('JWT-'), fp.auth);
+  const teks = await page.locator('.ps [data-isi="serah"]').inputValue();
+  cek('16d teks serah-terima memuat /dasbor, email, dan sandinya',
+      teks.includes('/dasbor') && teks.includes('pengantin@contoh.com') && teks.includes(sandiP), teks);
+
+  model.pasangan[0].pemilik = 'pengantin@contoh.com';
+  await page.locator('#btnSegarkan').click();
+  await page.waitForFunction(() => !document.querySelector('.ps button[data-aksi="pemilik"]'), null, { timeout:5000 });
+  cek('16e sesudah dimuat ulang tombolnya hilang', true);
+  await ctx.close();
+}
+
+/* ===== pesanan, reseller, admin — owner ===== */
+{
+  const { ctx, page, model } = await halaman(browser);
+  await page.locator('#inEmail').fill('owner@contoh.com');
+  await page.locator('#inSandi').fill('benar');
+  await page.locator('#btnMasuk').click();
+  await page.waitForSelector('#daftarPesanan .baris', { timeout:8000 });
+
+  cek('17a pesanan menunggu tampil dengan asal reseller-nya',
+      (await page.locator('#daftarPesanan .baris').first().textContent()).includes('reseller 123'));
+  cek('17b penjualan langsung tidak punya kotak komisi',
+      await page.locator('#daftarPesanan .baris').nth(1).locator('[data-isi="komisi"]').count() === 0);
+
+  page.on('dialog', d => d.accept(d.type() === 'prompt' ? 'TRX-555' : undefined));
+  const baris = page.locator('#daftarPesanan .baris').first();
+  await baris.locator('[data-isi="nominal"]').fill('159.000');
+  await baris.locator('[data-isi="komisi"]').fill('65000');
+  await baris.locator('button[data-aksi="lunas"]').click();
+  await page.waitForSelector('#serahPesanan:not([hidden])', { timeout:5000 });
+  const fk = model.panggilan.filter(p => p.nama === 'fn').at(-1);
+  cek('17c Lunas memanggil aksi konfirmasi dengan nominal dan komisi berupa angka',
+      fk.arg.aksi === 'konfirmasi' && fk.arg.pesanan_id === 's-1' && fk.arg.nominal === 159000 && fk.arg.komisi === 65000,
+      JSON.stringify(fk.arg));
+  const serah = await page.locator('#serahPesananTeks').inputValue();
+  cek('17d serah-terima: alamat premium, arahan email, link panitia',
+      serah.includes('budi-sari.mengundang.id') && serah.includes('buka email') && serah.includes('t=TOKBARU'), serah);
+
+  cek('17e statistik reseller: konversi 2/40 = 5.0%',
+      (await page.locator('#daftarReseller').textContent()).includes('5.0%'));
+  await page.locator('#daftarReseller button[data-aksi="cair"]').click();
+  await page.waitForFunction(() => document.querySelector('.toast').textContent.includes('Pencairan'), null, { timeout:5000 });
+  const pc = model.panggilan.filter(p => p.nama === 'admin_pencairan_catat').at(-1);
+  cek('17f Catat Pencairan mengirim nomor transaksinya', pc && pc.arg.p_ref === 'TRX-555' && pc.arg.p_reseller === 'r-1');
+
+  cek('17g owner melihat panel admin dan form reseller', await page.locator('#panelAdmin').isVisible());
+  await page.locator('#adNama').fill('Staf Dua');
+  await page.locator('#adEmail').fill('staf2@contoh.com');
+  await page.locator('#btnAcakAd').click();
+  await page.locator('#btnBuatAd').click();
+  await page.waitForFunction(() => document.querySelector('.toast').textContent.includes('Admin ditambahkan'), null, { timeout:5000 });
+  const fa = model.panggilan.filter(p => p.nama === 'fn').at(-1);
+  cek('17h Tambah Admin memakai aksi admin', fa.arg.aksi === 'admin' && fa.arg.email === 'staf2@contoh.com' && fa.arg.sandi.length >= 12);
+  await ctx.close();
+}
+
+/* ===== admin biasa tidak melihat bagian owner ===== */
+{
+  const { ctx, page, model } = await halaman(browser);
+  model.peran = 'admin';
+  await page.locator('#inEmail').fill('staf@contoh.com');
+  await page.locator('#inSandi').fill('benar');
+  await page.locator('#btnMasuk').click();
+  await page.waitForSelector('#daftarReseller .baris', { timeout:8000 });
+  cek('18a admin biasa: panel admin tersembunyi', await page.locator('#panelAdmin').isHidden());
+  cek('18b admin biasa: tidak ada tombol pencairan',
+      await page.locator('#daftarReseller button[data-aksi="cair"]').count() === 0);
+  cek('18c admin biasa tidak memanggil admin_admin',
+      !model.panggilan.some(p => p.nama === 'admin_admin'));
   await ctx.close();
 }
 

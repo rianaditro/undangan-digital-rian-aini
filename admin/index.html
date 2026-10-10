@@ -84,6 +84,25 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--kuningan
 .token div{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;}
 .token code{font-family:var(--mono);font-size:11.5px;color:var(--kuningan);overflow-wrap:anywhere;}
 .token .alat{display:flex;gap:6px;}
+.token.pemilik{gap:0;max-width:460px;}
+.token.pemilik label:first-child{margin-top:0;}
+.token.pemilik textarea{min-height:170px;margin-top:12px;font-family:var(--mono);font-size:12px;line-height:1.7;}
+/* pesanan dan reseller */
+.baris{border-bottom:1px solid var(--garis);padding:14px 0;display:grid;gap:8px 16px;}
+@media (min-width:820px){ .baris{grid-template-columns:minmax(220px,1fr) auto;align-items:start;} }
+.baris .judul{font-family:var(--display);font-size:16.5px;}
+.baris .ket{font-size:12.5px;color:rgba(237,231,217,.6);font-family:var(--mono);overflow-wrap:anywhere;}
+.baris .alat{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+@media (min-width:820px){ .baris .alat{justify-content:flex-end;max-width:440px;} }
+.baris .alat input{width:118px;padding:7px 10px;font-size:12.5px;}
+.cap.lunas{border-color:var(--daun);color:var(--daun);}
+.cap.batal{border-color:rgba(180,87,63,.5);color:var(--merah);}
+.angka-kisi{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px 14px;margin-top:6px;}
+.angka-kisi div{font-size:11px;color:rgba(237,231,217,.5);letter-spacing:.06em;}
+.angka-kisi b{display:block;font-family:var(--mono);font-weight:500;font-size:14px;color:var(--kapur);letter-spacing:0;}
+.lipat{margin-top:6px;}
+.lipat summary{cursor:pointer;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--kuningan);padding:6px 0;}
+
 /* Di layar sempit alamatnya sudah selebar layar, jadi satu barisnya
    dipatah bertumpuk — kalau dibiarkan mengalir, label, alamat, dan
    tombolnya berombak dan sulit ditelusuri baris per baris. */
@@ -235,12 +254,82 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   <div class="aksi"><button class="btn" id="btnGantiSandi">Ganti Sandi</button></div>
 </div>
 
+<!-- 4. PESANAN -->
+<div class="panel">
+  <h2>4 · Pesanan</h2>
+  <p class="hint">Pesanan dicatat reseller (atau Anda sendiri). Begitu pembayarannya masuk, isi nominal dan komisinya lalu tekan Lunas: akun klien dibuat, undangan masuk ke emailnya, dan pasangannya langsung aktif.</p>
+  <div id="daftarPesanan"><p class="memuat">Memuat…</p></div>
+  <details class="lipat">
+    <summary>Catat pesanan sendiri</summary>
+    <div class="kisi">
+      <div><label for="psPria">Mempelai pria</label><input id="psPria" maxlength="40"></div>
+      <div><label for="psWanita">Mempelai wanita</label><input id="psWanita" maxlength="40"></div>
+      <div><label for="psSlug">Slug</label><input id="psSlug" maxlength="40" autocomplete="off"></div>
+      <div><label for="psPaket">Paket</label>
+        <select id="psPaket"><option value="standar">Standar</option><option value="premium">Premium</option></select></div>
+      <div><label for="psEmail">Email klien</label><input id="psEmail" type="email" autocomplete="off"></div>
+      <div><label for="psKode">Kode reseller <span style="text-transform:none;letter-spacing:0">(kosong = penjualan langsung)</span></label><input id="psKode" maxlength="20" autocomplete="off"></div>
+      <div><label for="psTanggal">Tanggal acara</label><input id="psTanggal" type="date"></div>
+      <div><label for="psKota">Kota</label><input id="psKota" maxlength="40"></div>
+    </div>
+    <div class="aksi"><button class="btn" id="btnPesan">Catat Pesanan</button></div>
+  </details>
+  <div class="serah" id="serahPesanan" hidden>
+    <h3>Pesanan lunas — pasangan aktif</h3>
+    <textarea id="serahPesananTeks" readonly spellcheck="false"></textarea>
+    <div class="aksi">
+      <button class="btn solid" id="btnSalinPesanan">Salin Semuanya</button>
+      <button class="btn ghost kecil" id="btnTutupPesanan">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- 5. RESELLER -->
+<div class="panel">
+  <h2>5 · Reseller</h2>
+  <p class="hint">Pengunjung dihitung dari tautan <code>mengundang.id/?r=kode</code> — satu peramban satu kali per hari. Konversi = pesanan lunas ÷ pengunjung.</p>
+  <div id="daftarReseller"><p class="memuat">Memuat…</p></div>
+  <details class="lipat" data-owner hidden>
+    <summary>Tambah reseller</summary>
+    <div class="kisi">
+      <div><label for="rsNama">Nama</label><input id="rsNama" maxlength="80" placeholder="Percetakan Jepara"></div>
+      <div><label for="rsKode">Kode — jadi ?r=kode</label><input id="rsKode" maxlength="20" autocomplete="off" placeholder="jepara"></div>
+      <div><label for="rsEmail">Email — untuk masuk ke /reseller</label><input id="rsEmail" type="email" autocomplete="off"></div>
+      <div><label for="rsSandi">Kata sandi</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input id="rsSandi" autocomplete="off" style="flex:1" placeholder="minimal 10 huruf">
+          <button class="btn ghost kecil" id="btnAcakRs">Acak</button>
+        </div></div>
+      <div><label for="rsKontak">WhatsApp</label><input id="rsKontak" maxlength="40"></div>
+      <div><label for="rsRekening">Rekening pencairan</label><input id="rsRekening" maxlength="200" placeholder="BCA 1234567 a.n. …"></div>
+    </div>
+    <div class="aksi"><button class="btn" id="btnBuatRs">Buat Reseller</button></div>
+  </details>
+</div>
+
+<!-- 6. ADMIN -->
+<div class="panel" id="panelAdmin" data-owner hidden>
+  <h2>6 · Admin</h2>
+  <p class="hint">Hanya owner yang melihat panel ini. Admin bisa membuka pasangan dan mengonfirmasi pesanan; menambah admin, menambah reseller, dan mencatat pencairan hanya owner.</p>
+  <div id="daftarAdmin"><p class="memuat">Memuat…</p></div>
+  <div class="kisi">
+    <div><label for="adNama">Nama</label><input id="adNama" maxlength="60"></div>
+    <div><label for="adEmail">Email</label><input id="adEmail" type="email" autocomplete="off"></div>
+    <div class="lebar"><label for="adSandi">Kata sandi</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="adSandi" autocomplete="off" style="flex:1" placeholder="minimal 10 huruf">
+        <button class="btn ghost kecil" id="btnAcakAd">Acak</button>
+      </div></div>
+  </div>
+  <div class="aksi"><button class="btn" id="btnBuatAd">Tambah Admin</button></div>
+</div>
+
 <p class="catatan">
-  <strong>Admin pertama dibuat sekali, lewat Supabase.</strong>
+  <strong>Owner dibuat sekali, lewat Supabase.</strong>
   Authentication → Users → Add user, lalu di SQL Editor:
   <code>insert into public.admin (user_id, nama) select id, 'Nama' from auth.users where email = '…';</code>
-  Sengaja tidak ada tombol "jadikan admin" di halaman ini — pintu yang bisa
-  menambah pemegang kuncinya sendiri adalah pintu yang paling mahal kalau salah.
+  Admin pertama otomatis menjadi owner (migrasi 031). Owner menambah admin
+  lain dari panel 6; owner sendiri tidak bisa dibuat dari halaman ini.
 </p>
 
 </div>
@@ -534,12 +623,25 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
         +   '</div>'
         +   '<div class="ps-angka">'+esc(angka.join(' · '))+'</div>'
         +   '<div class="token" data-token hidden></div>'
+        +   (p.pemilik ? '' :
+              '<div class="token pemilik" data-pemilik hidden>'
+            +   '<label>Email pemilik — untuk masuk ke /dasbor</label>'
+            +   '<input type="email" data-isi="email" autocomplete="off" placeholder="nama@contoh.com">'
+            +   '<label>Kata sandi <span style="text-transform:none;letter-spacing:0">(diabaikan kalau emailnya sudah punya akun)</span></label>'
+            +   '<div style="display:flex;gap:8px;align-items:center">'
+            +     '<input data-isi="sandi" autocomplete="off" style="flex:1" placeholder="minimal 10 huruf">'
+            +     '<button class="btn ghost kecil" data-aksi="acakPemilik">Acak</button>'
+            +   '</div>'
+            +   '<div class="aksi"><button class="btn solid kecil" data-aksi="simpanPemilik">Pasang Akun</button></div>'
+            +   '<textarea data-isi="serah" readonly spellcheck="false" hidden></textarea>'
+            + '</div>')
         + '</div>'
         + '<div class="ps-alat">'
         +   '<select data-aksi="status" aria-label="Status">'+opsi+'</select>'
         +   '<select data-aksi="paket" aria-label="Paket">'+opsiPaket+'</select>'
         +   '<button class="btn kecil ghost" data-aksi="lihat">Undangan</button>'
         +   '<button class="btn kecil ghost" data-aksi="token">Link Panitia</button>'
+        +   (p.pemilik ? '' : '<button class="btn kecil" data-aksi="pemilik">Pasang Akun</button>')
         +   '<button class="btn kecil bahaya" data-aksi="hapus">Hapus</button>'
         + '</div>'
       + '</div>';
@@ -631,6 +733,43 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
       }catch(err){ toast(err.message, true); }
       return;
     }
+    if(aksi === 'pemilik'){
+      var f = kartu.querySelector('[data-pemilik]');
+      f.hidden = !f.hidden;
+      if(!f.hidden) f.querySelector('[data-isi="email"]').focus();
+      return;
+    }
+    if(aksi === 'acakPemilik'){
+      kartu.querySelector('[data-isi="sandi"]').value = sandiAcak();
+      return;
+    }
+    if(aksi === 'simpanPemilik'){
+      var email = kartu.querySelector('[data-isi="email"]').value;
+      var sandiP = kartu.querySelector('[data-isi="sandi"]').value;
+      tbl.disabled = true;
+      try{
+        var d = await fungsi({ aksi:'pemilik', slug:p.slug, email:email, sandi:sandiP });
+        var pas = { slug: d.slug, canonical_host: d.canonical_host || '' };
+        /* Teks serah-terima tinggal di kartu ini; muat() tidak dipanggil
+           sampai ditutup, karena menggambar ulang daftar akan
+           menghapusnya — dan sandinya hanya muncul sekali. */
+        var serah = kartu.querySelector('[data-isi="serah"]');
+        serah.value = [
+          'Undangan digital ' + (p.pria || '?') + ' & ' + (p.wanita || '?'),
+          '',
+          'Alamat undangan : ' + M.alamatUndangan(pas),
+          '',
+          'ISI SENDIRI DATANYA',
+          'Halaman  : ' + location.origin + '/dasbor',
+          'Email    : ' + d.email,
+          (d.akun_baru ? 'Sandi    : ' + sandiP : 'Sandi    : (memakai akun yang sudah ada)')
+        ].join('\n');
+        serah.hidden = false;
+        tbl.textContent = 'Terpasang';
+        toast(d.sudah_pemilik ? 'Akun itu sudah pemilik pasangan ini' : 'Akun terpasang — salin teksnya sebelum memuat ulang');
+      }catch(err){ toast(err.message, true); tbl.disabled = false; }
+      return;
+    }
     if(aksi === 'hapus'){
       if(!confirm('Hapus pasangan "' + p.slug + '"?\n\nHanya bisa kalau belum ada tamu, ucapan, atau foto.')) return;
       try{
@@ -653,6 +792,234 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   /* ============================================================
      Gerbang
      ============================================================ */
+  /* ============================================================
+     Pesanan, reseller, admin (031)
+     ============================================================ */
+  var peran = 'admin';
+  var pesananList = [];
+  var rp = function(n){ return n == null ? '—' : 'Rp' + Number(n).toLocaleString('id-ID'); };
+  var tgl = function(t){ return t ? new Date(t).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }) : ''; };
+
+  function gambarPesanan(){
+    if(!pesananList.length){
+      $('daftarPesanan').innerHTML = '<p class="kosongstate">Belum ada pesanan.</p>';
+      return;
+    }
+    $('daftarPesanan').innerHTML = pesananList.map(function(s){
+      var asal = s.reseller_kode ? 'reseller ' + s.reseller_kode + ' · ' + s.reseller_nama : 'penjualan langsung';
+      var alat = '';
+      if(s.status === 'menunggu'){
+        alat = '<input data-isi="nominal" inputmode="numeric" placeholder="nominal" aria-label="Nominal">'
+             + (s.reseller_kode ? '<input data-isi="komisi" inputmode="numeric" placeholder="komisi" aria-label="Komisi">' : '')
+             + '<button class="btn kecil solid" data-aksi="lunas">Lunas</button>'
+             + '<button class="btn kecil bahaya" data-aksi="batal">Batal</button>';
+      }else if(s.status === 'lunas'){
+        alat = '<span class="ket">' + rp(s.nominal) + (s.reseller_kode ? ' · komisi ' + rp(s.komisi)
+             + (s.cair ? ' · cair ' + esc(s.pencairan_ref) : ' · belum cair') : '') + '</span>';
+      }
+      return '<div class="baris" data-id="' + esc(s.id) + '">'
+        + '<div>'
+        +   '<div class="judul">#' + esc(s.nomor) + ' · ' + esc(s.pria) + ' &amp; ' + esc(s.wanita) + '</div>'
+        +   '<div class="ket">' + esc(s.slug) + ' · ' + esc(s.paket) + ' · ' + esc(s.email_klien) + '</div>'
+        +   '<div class="ps-meta"><span class="cap ' + esc(s.status) + '">' + esc(s.status) + '</span>'
+        +     '<span class="cap">' + esc(asal) + '</span><span class="cap">' + esc(tgl(s.dibuat)) + '</span></div>'
+        + '</div>'
+        + '<div class="alat">' + alat + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function tulisSerahPesanan(d){
+    var pas = { slug: d.slug, canonical_host: d.canonical_host || '' };
+    var baris = [
+      'Undangan digital ' + d.pria + ' & ' + d.wanita + ' sudah aktif',
+      '',
+      'Alamat undangan : ' + M.alamatUndangan(pas),
+      '',
+      'ISI SENDIRI DATANYA',
+      'Halaman  : ' + location.origin + '/dasbor',
+      'Email    : ' + d.email,
+      d.diundang ? 'Sandi    : buka email dari mengundang.id, klik tautannya, lalu buat sandi sendiri'
+      : d.sandi  ? 'Sandi    : ' + d.sandi
+      :            'Sandi    : (memakai akun yang sudah ada)',
+      '',
+      'LINK PANITIA — tidak perlu login, jangan disebar sembarangan'
+    ];
+    (d.token || []).forEach(function(t){
+      baris.push('- ' + t.nama + ':');
+      baris.push('  ' + M.alamatPlatform(pas, '/kirim', 't=' + t.token));
+    });
+    return baris.join('\n');
+  }
+
+  $('daftarPesanan').addEventListener('click', async function(e){
+    var tbl = e.target.closest('button[data-aksi]');
+    if(!tbl) return;
+    var kartu = tbl.closest('.baris');
+    var s = pesananList.filter(function(x){ return x.id === kartu.dataset.id; })[0];
+    if(tbl.dataset.aksi === 'batal'){
+      if(!confirm('Batalkan pesanan #' + s.nomor + '?')) return;
+      try{ await rpc('admin_pesanan_batal', { p_id: s.id }); toast('Dibatalkan'); await muatPesanan(); }
+      catch(err){ toast(err.message, true); }
+      return;
+    }
+    var angka = function(isi){
+      var el = kartu.querySelector('[data-isi="' + isi + '"]');
+      return el ? parseInt(String(el.value).replace(/\D/g, ''), 10) : 0;
+    };
+    var nominal = angka('nominal'), komisi = angka('komisi');
+    if(!(nominal >= 0) || isNaN(nominal)){ toast('Isi nominal pembayarannya', true); return; }
+    if(isNaN(komisi)){ toast('Isi komisi reseller (0 kalau tidak ada)', true); return; }
+    if(!confirm('Pesanan #' + s.nomor + ' lunas ' + rp(nominal)
+              + (s.reseller_kode ? ', komisi ' + rp(komisi) : '') + '?\n\n'
+              + 'Akun ' + s.email_klien + ' dibuat dan pasangannya langsung aktif.')) return;
+    tbl.disabled = true;
+    try{
+      var d = await fungsi({ aksi:'konfirmasi', pesanan_id:s.id, nominal:nominal, komisi:komisi });
+      $('serahPesananTeks').value = tulisSerahPesanan(d);
+      $('serahPesanan').hidden = false;
+      toast(d.diundang ? 'Lunas — undangan dikirim ke email klien' : 'Lunas — serahkan sandinya ke klien');
+      await muatPesanan(); await muat();
+    }catch(err){ toast(err.message, true); tbl.disabled = false; }
+  });
+  $('btnSalinPesanan').addEventListener('click', async function(){
+    await salin($('serahPesananTeks').value); toast('Tersalin');
+  });
+  $('btnTutupPesanan').addEventListener('click', function(){ $('serahPesanan').hidden = true; });
+
+  $('btnPesan').addEventListener('click', async function(){
+    var b = this; b.disabled = true;
+    try{
+      var n = await rpc('admin_pesan', {
+        p_reseller_kode: $('psKode').value || null, p_pria: $('psPria').value, p_wanita: $('psWanita').value,
+        p_slug: $('psSlug').value, p_paket: $('psPaket').value, p_tanggal: $('psTanggal').value || null,
+        p_kota: $('psKota').value || null, p_email: $('psEmail').value, p_catatan: null });
+      toast('Pesanan #' + n + ' dicatat');
+      ['psPria','psWanita','psSlug','psEmail','psKode','psTanggal','psKota'].forEach(function(id){ $(id).value = ''; });
+      await muatPesanan();
+    }catch(err){ toast(err.message, true); }
+    finally{ b.disabled = false; }
+  });
+
+  var resellerList = [];
+  function gambarReseller(){
+    if(!resellerList.length){
+      $('daftarReseller').innerHTML = '<p class="kosongstate">Belum ada reseller.</p>';
+      return;
+    }
+    $('daftarReseller').innerHTML = resellerList.map(function(r){
+      var konversi = r.pengunjung ? (100 * r.lunas / r.pengunjung).toFixed(1) + '%' : '—';
+      var alat = '<button class="btn kecil ghost" data-aksi="salinRef">Salin Tautan</button>';
+      if(peran === 'owner'){
+        alat += (r.komisi_tertahan > 0 ? '<button class="btn kecil solid" data-aksi="cair">Catat Pencairan</button>' : '')
+              + '<button class="btn kecil ' + (r.aktif ? 'bahaya' : '') + '" data-aksi="aktif">' + (r.aktif ? 'Nonaktifkan' : 'Aktifkan') + '</button>';
+      }
+      return '<div class="baris" data-id="' + esc(r.id) + '">'
+        + '<div>'
+        +   '<div class="judul">' + esc(r.nama) + ' <span class="cap">' + esc(r.kode) + '</span>'
+        +     (r.aktif ? '' : ' <span class="cap batal">nonaktif</span>') + '</div>'
+        +   '<div class="ket">' + esc(r.email || '') + (r.kontak ? ' · ' + esc(r.kontak) : '')
+        +     (r.rekening ? ' · ' + esc(r.rekening) : '') + '</div>'
+        +   '<div class="angka-kisi">'
+        +     '<div>Pengunjung<b>' + r.pengunjung + '</b></div>'
+        +     '<div>30 hari<b>' + r.pengunjung_30h + '</b></div>'
+        +     '<div>Pesanan<b>' + r.pesanan + '</b></div>'
+        +     '<div>Lunas<b>' + r.lunas + '</b></div>'
+        +     '<div>Konversi<b>' + konversi + '</b></div>'
+        +     '<div>Omzet<b>' + rp(r.omzet) + '</b></div>'
+        +     '<div>Komisi cair<b>' + rp(r.komisi_cair) + '</b></div>'
+        +     '<div>Belum cair<b>' + rp(r.komisi_tertahan) + '</b></div>'
+        +   '</div>'
+        + '</div>'
+        + '<div class="alat">' + alat + '</div>'
+        + '</div>';
+    }).join('');
+  }
+  $('daftarReseller').addEventListener('click', async function(e){
+    var tbl = e.target.closest('button[data-aksi]');
+    if(!tbl) return;
+    var r = resellerList.filter(function(x){ return x.id === tbl.closest('.baris').dataset.id; })[0];
+    if(tbl.dataset.aksi === 'salinRef'){
+      await salin('https://mengundang.id/?r=' + r.kode); toast('Tautan tersalin');
+      return;
+    }
+    if(tbl.dataset.aksi === 'aktif'){
+      try{ await rpc('admin_reseller_aktif', { p_id: r.id, p_aktif: !r.aktif }); await muatReseller(); }
+      catch(err){ toast(err.message, true); }
+      return;
+    }
+    var ref = prompt('Transfer ' + rp(r.komisi_tertahan) + ' ke ' + r.nama
+                   + (r.rekening ? ' (' + r.rekening + ')' : '') + '.\n\nNomor/ID transaksi transfernya:');
+    if(!ref) return;
+    try{
+      var d = await rpc('admin_pencairan_catat', { p_reseller: r.id, p_ref: ref, p_catatan: null });
+      toast('Pencairan ' + rp(d.nominal) + ' (' + d.jumlah_pesanan + ' pesanan) dicatat');
+      await muatReseller(); await muatPesanan();
+    }catch(err){ toast(err.message, true); }
+  });
+
+  $('btnAcakRs').addEventListener('click', function(){ $('rsSandi').value = sandiAcak(); });
+  $('btnBuatRs').addEventListener('click', async function(){
+    var b = this; b.disabled = true;
+    try{
+      var d = await fungsi({ aksi:'reseller', nama:$('rsNama').value, kode:$('rsKode').value,
+        email:$('rsEmail').value, sandi:$('rsSandi').value, kontak:$('rsKontak').value, rekening:$('rsRekening').value });
+      await salin('Akun reseller mengundang.id\n\nHalaman : ' + location.origin + '/reseller\nEmail   : ' + d.email
+        + (d.akun_baru ? '\nSandi   : ' + $('rsSandi').value : '\nSandi   : (memakai akun yang sudah ada)')
+        + '\n\nTautan Anda: https://mengundang.id/?r=' + d.kode).catch(function(){});
+      toast('Reseller dibuat — teks serah-terima tersalin');
+      ['rsNama','rsKode','rsEmail','rsSandi','rsKontak','rsRekening'].forEach(function(id){ $(id).value = ''; });
+      await muatReseller();
+    }catch(err){ toast(err.message, true); }
+    finally{ b.disabled = false; }
+  });
+
+  var adminList = [];
+  function gambarAdmin(){
+    $('daftarAdmin').innerHTML = adminList.map(function(a){
+      return '<div class="baris" data-id="' + esc(a.user_id) + '"><div>'
+        + '<div class="judul">' + esc(a.nama || a.email) + ' <span class="cap">' + esc(a.peran) + '</span></div>'
+        + '<div class="ket">' + esc(a.email) + '</div></div>'
+        + '<div class="alat">' + (a.peran === 'admin' ? '<button class="btn kecil bahaya" data-aksi="cabut">Cabut</button>' : '') + '</div>'
+        + '</div>';
+    }).join('');
+  }
+  $('daftarAdmin').addEventListener('click', async function(e){
+    var tbl = e.target.closest('button[data-aksi="cabut"]');
+    if(!tbl) return;
+    var a = adminList.filter(function(x){ return x.user_id === tbl.closest('.baris').dataset.id; })[0];
+    if(!confirm('Cabut hak admin ' + a.email + '? Akunnya tetap ada.')) return;
+    try{ await rpc('admin_admin_cabut', { p_user: a.user_id }); toast('Dicabut'); await muatAdmin(); }
+    catch(err){ toast(err.message, true); }
+  });
+  $('btnAcakAd').addEventListener('click', function(){ $('adSandi').value = sandiAcak(); });
+  $('btnBuatAd').addEventListener('click', async function(){
+    var b = this; b.disabled = true;
+    try{
+      var d = await fungsi({ aksi:'admin', nama:$('adNama').value, email:$('adEmail').value, sandi:$('adSandi').value });
+      await salin('Akun admin mengundang.id\n\nHalaman : ' + location.origin + '/admin\nEmail   : ' + d.email
+        + (d.akun_baru ? '\nSandi   : ' + $('adSandi').value : '\nSandi   : (memakai akun yang sudah ada)')).catch(function(){});
+      toast('Admin ditambahkan — teks serah-terima tersalin');
+      ['adNama','adEmail','adSandi'].forEach(function(id){ $(id).value = ''; });
+      await muatAdmin();
+    }catch(err){ toast(err.message, true); }
+    finally{ b.disabled = false; }
+  });
+
+  async function muatPesanan(){
+    try{ pesananList = (await rpc('admin_pesanan')) || []; gambarPesanan(); }
+    catch(e){ $('daftarPesanan').innerHTML = '<p class="kosongstate">Gagal memuat: ' + esc(e.message) + '</p>'; }
+  }
+  async function muatReseller(){
+    try{ resellerList = (await rpc('admin_reseller')) || []; gambarReseller(); }
+    catch(e){ $('daftarReseller').innerHTML = '<p class="kosongstate">Gagal memuat: ' + esc(e.message) + '</p>'; }
+  }
+  async function muatAdmin(){
+    if(peran !== 'owner') return;
+    try{ adminList = (await rpc('admin_admin')) || []; gambarAdmin(); }
+    catch(e){ $('daftarAdmin').innerHTML = '<p class="kosongstate">Gagal memuat: ' + esc(e.message) + '</p>'; }
+  }
+
   function gerbang(pesan){
     $('gerbang').classList.remove('pergi');
     $('isi').hidden = true;
@@ -673,7 +1040,9 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     }
     $('gerbang').classList.add('pergi');
     $('isi').hidden = false;
-    await muat();
+    try{ peran = (await rpc('admin_peran')) || 'admin'; }catch(e){ peran = 'admin'; }
+    document.querySelectorAll('[data-owner]').forEach(function(el){ el.hidden = peran !== 'owner'; });
+    await Promise.all([muat(), muatPesanan(), muatReseller(), muatAdmin()]);
   }
 
   async function cobaMasuk(){
@@ -697,7 +1066,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   $('btnKeluar').addEventListener('click', function(){
     simpanSesi(null); pasangan = []; gerbang('');
   });
-  $('btnSegarkan').addEventListener('click', muat);
+  $('btnSegarkan').addEventListener('click', function(){ muat(); muatPesanan(); muatReseller(); });
 
   (async function mulai(){
     /* varian.js dipakai untuk SB.url/key dan M.siput(); isinya undangan

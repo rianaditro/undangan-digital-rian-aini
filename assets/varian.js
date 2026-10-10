@@ -90,7 +90,7 @@
      pasangan. Itu yang membuat daftar di sini aman: bukan tebakan, tapi
      cermin dari aturan yang dijaga database. */
   var JALUR_PLATFORM = {
-    kirim: 1, dasbor: 1, terimakasih: 1, admin: 1, mulai: 1, coba: 1,
+    kirim: 1, dasbor: 1, terimakasih: 1, admin: 1, mulai: 1, coba: 1, reseller: 1,
     assets: 1, tema: 1
   };
 
