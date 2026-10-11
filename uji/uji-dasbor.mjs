@@ -227,7 +227,14 @@ async function pasang(page, model) {
   });
 }
 
-async function masuk(browser, model, lebar = 1100) {
+/* Dasbor terbagi per halaman (#acara, #foto, …); hanya halaman aktif
+   yang terlihat, jadi uji pindah dulu sebelum mengeklik. */
+async function ke(page, h) {
+  await page.evaluate(h => window.Panel.ke(h), h);
+  await page.waitForSelector(`.halaman.aktif[data-halaman="${h}"]`, { timeout: 4000 });
+}
+
+async function masuk(browser, model, lebar = 1100, halaman = 'acara') {
   const ctx = await browser.newContext({ viewport: { width: lebar, height: 1000 } });
   const page = await ctx.newPage();
   /* Galat halaman dikumpulkan dan DIHITUNG sebagai kegagalan di akhir.
@@ -241,7 +248,8 @@ async function masuk(browser, model, lebar = 1100) {
   await page.locator('#inEmail').fill('rian@contoh.com');
   await page.locator('#inSandi').fill('rahasia-sekali');
   await page.locator('#btnMasuk').click();
-  await page.waitForSelector('#formAcara .baris', { timeout: 8000 });
+  await page.waitForSelector('#formAcara .baris', { state: 'attached', timeout: 8000 });
+  await ke(page, halaman);
   return { ctx, page };
 }
 
@@ -291,7 +299,7 @@ const browser = await chromium.launch();
 
   /* --- gambar ulang: keadaan centang bertahan --- */
   await page.reload();
-  await page.waitForSelector('#formAcara .baris', { timeout: 8000 });
+  await page.waitForSelector('#formAcara .baris', { state: 'attached', timeout: 8000 });
   const c2 = page.locator('#formAcara .baris').first().locator('.centang input[type=checkbox]');
   cek('3a sesudah dimuat ulang, centang mengikuti data',
       !(await c2.nth(0).isChecked()) && (await c2.nth(1).isChecked()));
@@ -315,7 +323,7 @@ const browser = await chromium.launch();
 /* ---------- panel 8: pustaka foto ---------- */
 {
   const model = bikinModel();
-  const { ctx, page } = await masuk(browser, model);
+  const { ctx, page } = await masuk(browser, model, 1100, 'foto');
 
   const ubin = page.locator('#pustakaFoto .ubin');
   cek('6a pustaka menggambar tiap foto', (await ubin.count()) === 2);
@@ -382,7 +390,7 @@ const browser = await chromium.launch();
 {
   const model = bikinModel();
   model.pasangan[0].tanggal_acara = '2099-01-01';   // masih jauh
-  const { ctx, page } = await masuk(browser, model);
+  const { ctx, page } = await masuk(browser, model, 1100, 'foto');
   const hint = await page.locator('#hintFoto').textContent();
   cek('9a sebelum acara, panelnya tetap terlihat',
       await page.locator('#pustakaFoto').isVisible());
@@ -392,7 +400,7 @@ const browser = await chromium.launch();
 {
   const model = bikinModel();
   model.pasangan[0].tanggal_acara = '2020-01-01';   // sudah lewat
-  const { ctx, page } = await masuk(browser, model);
+  const { ctx, page } = await masuk(browser, model, 1100, 'foto');
   const hint = await page.locator('#hintFoto').textContent();
   cek('9c sesudah acara, keterangannya berubah',
       /foto dan video hari itu/i.test(hint), hint.slice(0, 60));
@@ -405,7 +413,7 @@ const browser = await chromium.launch();
   model.foto.push({ id: 'f-3', pasangan_id: 'p-1', jalur: 'p-1/c.webp', jalur_kecil: 'p-1/c-kecil.webp',
                     lebar: 1600, tinggi: 1067, bita: 150000, urutan: 2, keterangan: '', tampil: true,
                     acara_id: 'a-1', latar: false, diunggah: '2026-09-16T02:10:00Z' });
-  const { ctx, page } = await masuk(browser, model);
+  const { ctx, page } = await masuk(browser, model, 1100, 'kenangan');
   const babak = page.locator('#formBabak [data-babak]');
 
   cek('10a panel 9 ada, satu baris per acara yang jadi babak', (await babak.count()) === 2);
@@ -483,6 +491,7 @@ const browser = await chromium.launch();
 
   /* --- "Simpan Semua" di kotak 7 tidak menghapus ketikan kotak 9 --- */
   await babak.nth(1).locator('[data-kk="kenangan_teks"]').fill('Belum disimpan');
+  await ke(page, 'acara');
   await page.locator('#btnSimpan').click();
   await page.waitForFunction(() => document.querySelector('#toast').textContent === 'Tersimpan',
                              null, { timeout: 5000 });
@@ -490,15 +499,18 @@ const browser = await chromium.launch();
       (await page.locator('#formBabak [data-babak="a-2"] [data-kk="kenangan_teks"]').inputValue()) === 'Belum disimpan');
 
   /* --- foto diberi babak di kotak 8 → pilihan latar muncul di kotak 9 --- */
+  await ke(page, 'foto');
   await page.locator('#pustakaFoto [data-foto="f-1"] [data-f="bab"]').selectOption('a:a-2');
   await page.waitForFunction(() => document.querySelectorAll('#formBabak [data-babak="a-2"] .pilih-latar button').length === 1,
                              null, { timeout: 5000 });
   cek('15b memberi babak di kotak 8 langsung menyusun kotak 9', true);
 
   /* --- bab tetap: pilihan latarnya di baris bab itu --- */
+  await ke(page, 'kenangan');
   await page.locator('[data-kblok="sampul"] [data-kb="teks"]').fill('Ketikan sampul');
   cek('15c bab Keluarga tanpa foto menjelaskan dirinya',
       /Pilih bab Keluarga/i.test(await page.locator('[data-kblok="keluarga"]').textContent()));
+  await ke(page, 'foto');
   await page.locator('#pustakaFoto [data-foto="f-1"] [data-f="bab"]').selectOption('b:keluarga');
   await page.waitForFunction(() => document.querySelectorAll('[data-kblok="keluarga"] .pilih-latar button').length === 1,
                              null, { timeout: 5000 });
@@ -515,6 +527,7 @@ const browser = await chromium.launch();
                                    && !!document.querySelector('#pustakaFoto [data-foto="f-4"]'), null, { timeout: 5000 });
   cek('15e video di pustaka bertanda ▶ dan durasinya',
       (await page.locator('#pustakaFoto [data-foto="f-4"] .tanda-video').textContent()).includes('0:09'));
+  await ke(page, 'kenangan');
   await page.locator('[data-kblok="keluarga"] [data-latar="f-4"]').click();
   await page.waitForFunction(() => document.querySelector('[data-kblok="keluarga"] [data-latar="f-4"]')?.classList.contains('dipilih'),
                              null, { timeout: 5000 });
@@ -535,7 +548,7 @@ const browser = await chromium.launch();
   const model = bikinModel();
   model.pasangan[0].tanggal_acara = '2099-01-01';
   model.foto = [];
-  const { ctx, page } = await masuk(browser, model, 400);
+  const { ctx, page } = await masuk(browser, model, 400, 'kenangan');
   cek('17a sebelum acara: panel 9 tetap terlihat, dengan keterangan pra-acara, blok lengkap',
       await page.locator('#panelKenangan').isVisible()
       && (await page.locator('#formBlok [data-kblok]').count()) === 13
@@ -550,8 +563,10 @@ const browser = await chromium.launch();
     return keluar;
   });
   cek('17b panel 9 dan 10 bersih di 400px', buruk.length === 0, buruk.slice(0, 5).join(' ; '));
-  await page.locator('#panelTerbitKenangan').screenshot({ path: 'dasbor-terbit-kenangan-400.png' });
   await page.locator('#panelKenangan').screenshot({ path: 'dasbor-kenangan-400.png' });
+  await ke(page, 'beranda');
+  cek('17c beranda memuat kotak terbit halaman kenangan', await page.locator('#panelTerbitKenangan').isVisible());
+  await page.locator('#panelTerbitKenangan').screenshot({ path: 'dasbor-terbit-kenangan-400.png' });
   await ctx.close();
 }
 
@@ -559,14 +574,16 @@ const browser = await chromium.launch();
 {
   const model = bikinModel();
   model.kenangan_vendor = [{ id: 'v-1', pasangan_id: 'p-1', urutan: 0, peran: 'Fotografer', nama: 'Lensa', tautan: '@lensa' }];
-  const { ctx, page } = await masuk(browser, model, 400);
+  const { ctx, page } = await masuk(browser, model, 400, 'vendor');
+  cek('19 vendor punya halaman sendiri di menu', await page.locator('.menu nav a[href="#vendor"]').count() === 1
+      && await page.locator('#panelVendor').isVisible() && !(await page.locator('#panelKenangan').isVisible()));
   const baris = page.locator('#formVendor .vendor-baris');
   cek('19a vendor tersimpan tergambar', (await baris.count()) === 1
       && (await baris.nth(0).locator('[data-kv="nama"]').inputValue()) === 'Lensa');
 
   const simpan = async () => {
     await page.evaluate(() => { document.querySelector('#toast').textContent = ''; });
-    await page.locator('#btnSimpanKenangan').click();
+    await page.locator('#btnSimpanVendor').click();
     await page.waitForFunction(() => document.querySelector('#toast').textContent !== '', null, { timeout: 5000 });
     return page.locator('#toast').textContent();
   };
@@ -595,14 +612,14 @@ const browser = await chromium.launch();
   await simpan();
   cek('19f baris dihapus: DELETE id=in.(…)', model.hapus.some(x => x.tabel === 'kenangan_vendor')
       && model.kenangan_vendor.length === 1 && model.kenangan_vendor[0].nama === 'Sekar');
-  await page.locator('#panelKenangan').screenshot({ path: 'dasbor-kenangan-400.png' });
+  await page.locator('#panelVendor').screenshot({ path: 'dasbor-vendor-400.png' });
   await ctx.close();
 }
 
 /* ---------- panel 8: potongan untuk layar HP ---------- */
 {
   const model = bikinModel();
-  const { ctx, page } = await masuk(browser, model, 400);
+  const { ctx, page } = await masuk(browser, model, 400, 'foto');
   const ubin = page.locator('#pustakaFoto [data-foto="f-1"]');
   await ubin.locator('[data-aksi="potong"]').click();
   const bingkai = page.locator('#potongBingkai');
@@ -664,7 +681,7 @@ const browser = await chromium.launch();
 /* ---------- panel 8: impor dari Google Drive ---------- */
 {
   const model = bikinModel();
-  const { ctx, page } = await masuk(browser, model, 400);
+  const { ctx, page } = await masuk(browser, model, 400, 'foto');
   cek('22a panel impor tersembunyi sampai tombolnya ditekan', await page.locator('#drive').isHidden());
   await page.locator('#btnDrive').click();
   await page.locator('#inDrive').fill('https://drive.google.com/drive/folders/pribadi?usp=sharing');
@@ -704,7 +721,7 @@ const browser = await chromium.launch();
   const model = bikinModel();
   model.driveUbah = { terpakai: 99 };
   model.driveGagalD2 = false;
-  const { ctx, page } = await masuk(browser, model);
+  const { ctx, page } = await masuk(browser, model, 1100, 'foto');
   await page.locator('#btnDrive').click();
   await page.locator('#inDrive').fill('FOLDER1xxxxxx');
   await page.locator('#btnDriveLihat').click();
@@ -727,7 +744,7 @@ const browser = await chromium.launch();
 /* ---------- panel 8: unggah video ---------- */
 {
   const model = bikinModel();
-  const { ctx, page } = await masuk(browser, model);
+  const { ctx, page } = await masuk(browser, model, 1100, 'foto');
   const b64 = await page.evaluate(() => new Promise(selesai => {
     const c = document.createElement('canvas'); c.width = 320; c.height = 480;
     const g = c.getContext('2d');
@@ -763,7 +780,7 @@ const browser = await chromium.launch();
 {
   const model = bikinModel();
   model.r2Mati = true;
-  const { ctx, page } = await masuk(browser, model);
+  const { ctx, page } = await masuk(browser, model, 1100, 'foto');
   model.fn.length = 0;
   await page.locator('#inBerkasFoto').setInputFiles([{ name: 'a.png', mimeType: 'image/png', buffer: Buffer.from(GAMBAR_DATAR, 'base64') }]);
   await page.waitForFunction(() => /tersimpan/.test(document.querySelector('#toast').textContent), null, { timeout: 15000 });
@@ -778,7 +795,7 @@ const browser = await chromium.launch();
 /* ---------- panel 10: terbitkan halaman kenangan ---------- */
 {
   const model = bikinModel();
-  const { ctx, page } = await masuk(browser, model);
+  const { ctx, page } = await masuk(browser, model, 1100, 'beranda');
   cek('18a bawaan: draf, dengan ajakan memeriksa lewat pratinjau',
       (await page.locator('#lencanaKenangan').textContent()) === 'Draf'
       && /pratinjau/i.test(await page.locator('#hintTerbitKenangan').textContent())
@@ -807,7 +824,7 @@ const browser = await chromium.launch();
 {
   const model = bikinModel();
   model.pasangan[0].tanggal_acara = '2099-01-01';
-  const { ctx, page } = await masuk(browser, model);
+  const { ctx, page } = await masuk(browser, model, 1100, 'beranda');
   let ditanya = '';
   page.once('dialog', d => { ditanya = d.message(); d.dismiss(); });
   await page.locator('#btnTerbitKenangan').click();
@@ -822,7 +839,7 @@ const browser = await chromium.launch();
   const model = bikinModel();
   model.pasangan[0].terbit = false; model.pasangan[0].status = 'draf';
   model.pasangan[0].kenangan_terbit = true;
-  const { ctx, page } = await masuk(browser, model);
+  const { ctx, page } = await masuk(browser, model, 1100, 'beranda');
   cek('18g saklar menyala tapi undangan draf: dijelaskan bahwa tamu belum bisa membuka',
       /masih draf/i.test(await page.locator('#hintTerbitKenangan').textContent())
       && await page.locator('#alamatKenangan').isHidden());
@@ -832,7 +849,7 @@ const browser = await chromium.launch();
 /* ---------- kotak 1: silsilah keluarga (pindah dari /kirim) ---------- */
 {
   const model = bikinModel();
-  const { ctx, page } = await masuk(browser, model);
+  const { ctx, page } = await masuk(browser, model, 1100, 'pengantin');
   const kartu = page.locator('#silDaftar [data-sil]');
   cek('19a silsilah tergambar per sisi', (await kartu.count()) === 2
       && (await page.locator('#silDaftar h4').allTextContents()).join('|') === 'Keluarga pihak pria|Keluarga pihak wanita');
@@ -901,7 +918,7 @@ const browser = await chromium.launch();
   await page.locator('#inSandiBaru').fill('sandi-baru-panjang');
   await page.locator('#inSandiUlang').fill('sandi-baru-panjang');
   await page.locator('#btnSandiBaru').click();
-  await page.waitForSelector('#formAcara .baris', { timeout: 8000 });
+  await page.waitForSelector('#formAcara .baris', { state: 'attached', timeout: 8000 });
   cek('20d sandi disimpan lewat PUT /auth/v1/user dengan sesi dari tautan, lalu dasbor terbuka',
       model.sandiBaru && model.sandiBaru[0].isi.password === 'sandi-baru-panjang'
       && model.sandiBaru[0].auth === 'Bearer ' + jwt);
@@ -950,18 +967,24 @@ const browser = await chromium.launch();
 {
   const model = bikinModel();
   const { ctx, page } = await masuk(browser, model, 400);
-  const buruk = await page.evaluate(() => {
+  const buruk = [];
+  for (const h of ['beranda', 'pengantin', 'acara', 'hadiah', 'tampilan', 'foto', 'kenangan', 'vendor']) {
+    await ke(page, h);
+    buruk.push(...await page.evaluate(h => {
     const keluar = [];
-    document.querySelectorAll('#formAcara .centang label, .panel h2, #pustakaFoto .ubin .btn, .sil-tambah > *, .sil-kartu .btn').forEach(el => {
+    document.querySelectorAll('.menu, .kepala, .bilah-simpan, #formAcara .centang label, .panel h2, .panel .btn, #pustakaFoto .ubin .btn, .sil-tambah > *, .sil-kartu .btn').forEach(el => {
       if (!el.checkVisibility({ checkVisibilityCSS: true, contentVisibilityAuto: true })) return;
       const r = el.getBoundingClientRect();
       if (r.right > window.innerWidth + 1 || r.left < -1) {
-        keluar.push((el.textContent || '').trim().slice(0, 28) + ' @' + Math.round(r.right));
+        keluar.push(h + ': ' + (el.textContent || '').trim().slice(0, 28) + ' @' + Math.round(r.right));
       }
     });
     return keluar;
-  });
-  cek('5 tata letak 400px bersih', buruk.length === 0, buruk.join(' ; '));
+  }, h));
+  }
+  cek('5 tata letak 400px bersih di setiap halaman', buruk.length === 0, buruk.join(' ; '));
+  cek('5b lebar halaman tidak melebihi layar', await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+  await ke(page, 'acara');
   await page.locator('#formAcara .baris').first().screenshot({ path: 'dasbor-acara-400.png' });
   await ctx.close();
 }

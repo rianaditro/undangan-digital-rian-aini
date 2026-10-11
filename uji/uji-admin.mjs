@@ -78,6 +78,13 @@ async function masuk(page){
   await page.locator('#btnMasuk').click();
 }
 
+/* Meja admin terbagi per halaman (#ringkasan, #baru, #pesanan,
+   #pencairan); hanya halaman aktif yang terlihat. */
+async function ke(page, h){
+  await page.evaluate(h => window.Panel.ke(h), h);
+  await page.waitForSelector(`.halaman.aktif[data-halaman="${h}"]`, { timeout:4000 });
+}
+
 const srv = await mulai(PORT);
 const browser = await chromium.launch();
 
@@ -95,8 +102,11 @@ const browser = await chromium.launch();
 {
   const { ctx, page, model, galat } = await halaman(browser);
   await masuk(page);
-  await page.waitForSelector('#daftarPesanan .baris', { timeout:8000 });
+  await page.waitForSelector('#daftarPesanan .baris', { state:'attached', timeout:8000 });
 
+  cek('2a0 dibuka di Ringkasan: tautan dan angka saja, formulir dan daftar di halamannya sendiri',
+      await page.locator('#tautan').isVisible() && await page.locator('#angka').isVisible()
+      && await page.locator('#inPria').isHidden() && await page.locator('#daftarPesanan').isHidden());
   cek('2a tautan rujukan memakai kodenya', (await page.locator('#tautan').textContent()) === 'https://mengundang.id/?r=123');
   const angka = await page.locator('#angka').textContent();
   cek('2b ringkasan: pengunjung, konversi 5.0%, cair dan belum cair',
@@ -109,6 +119,8 @@ const browser = await chromium.launch();
   cek('2f riwayat pencairan', (await page.locator('#daftarCair').textContent()).includes('TRX-123'));
 
   /* pesanan baru: slug diusulkan dari nama */
+  await page.locator('.pintas a[href="#baru"]').click();
+  await page.waitForSelector('.halaman.aktif[data-halaman="baru"]', { timeout:4000 });
   await page.locator('#inPria').fill('Fajar');
   await page.locator('#inWanita').fill('Gita');
   cek('3a slug diusulkan dari kedua nama', (await page.locator('#inSlug').inputValue()) === 'fajar-gita');
@@ -124,6 +136,11 @@ const browser = await chromium.launch();
       p.arg.p_slug === 'fajar-gita' && p.arg.p_paket === 'premium' && p.arg.p_email === 'fajar@contoh.com'
       && p.auth === 'JWT-a@contoh.com', JSON.stringify(p.arg));
   cek('3e formulir dikosongkan', (await page.locator('#inPria').inputValue()) === '');
+  cek('3e2 sesudah dicatat, pindah ke daftar Pesanan dan pesanan barunya terlihat',
+      await page.locator('#daftarPesanan').isVisible()
+      && (await page.locator('.menu nav a[aria-current="page"]').getAttribute('href')) === '#pesanan');
+
+  await ke(page, 'baru');
 
   /* slug dipakai */
   await page.locator('#inPria').fill('Rian');
@@ -135,6 +152,7 @@ const browser = await chromium.launch();
   cek('3f slug yang dipakai: pesan dari database ditampilkan', true);
 
   /* batal */
+  await ke(page, 'pesanan');
   page.on('dialog', d => d.accept());
   await page.locator('#daftarPesanan button[data-batal="9"]').click();
   await page.waitForFunction(() => document.querySelector('#daftarPesanan').textContent.includes('batal'), null, { timeout:5000 });
@@ -173,9 +191,15 @@ const browser = await chromium.launch();
 {
   const { ctx, page } = await halaman(browser, { lebar:400 });
   await masuk(page);
-  await page.waitForSelector('#daftarPesanan .baris', { timeout:8000 });
-  const lebar = await page.evaluate(() => document.documentElement.scrollWidth);
-  cek('7 400px tanpa gulir mendatar', lebar <= 401, String(lebar));
+  await page.waitForSelector('#daftarPesanan .baris', { state:'attached', timeout:8000 });
+  const lebar = [];
+  for (const h of ['ringkasan', 'baru', 'pesanan', 'pencairan']) {
+    await ke(page, h);
+    const w = await page.evaluate(() => document.documentElement.scrollWidth);
+    if (w > 401) lebar.push(h + ' ' + w);
+  }
+  cek('7 400px tanpa gulir mendatar di setiap halaman', lebar.length === 0, lebar.join(' ; '));
+  await ke(page, 'pesanan');
   await page.screenshot({ path:'admin-400.png', fullPage:true });
   await ctx.close();
 }

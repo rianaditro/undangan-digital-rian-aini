@@ -7,101 +7,52 @@
 <title>Pemilik — mengundang.id</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Karla:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/panel.css">
 <style>
-:root{
-  --nila:#131E33; --nila-2:#1B2A46; --nila-3:#0D1626;
-  --kuningan:#C39A5C; --kuningan-dim:#8C6A3A;
-  --kapur:#EDE7D9; --daun:#7C8B63; --merah:#B4573F;
-  --garis:rgba(237,231,217,.14);
-  --display:'Marcellus',serif; --body:'Karla',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-[hidden]{display:none!important;}
-body{
-  font-family:var(--body);background:var(--nila);color:var(--kapur);
-  font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased;
-  padding:clamp(18px,4vw,40px) clamp(14px,4vw,32px) 80px;
-}
-.wrap{max-width:1000px;margin:0 auto;}
-button,input,textarea,select{font:inherit;color:inherit;}
-
-header{border-bottom:1px solid var(--garis);padding-bottom:22px;margin-bottom:30px;}
-.baris-atas{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;}
-.eyebrow{font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--kuningan);}
-h1{font-family:var(--display);font-weight:400;font-size:clamp(24px,5.5vw,34px);letter-spacing:.04em;margin-top:8px;}
-.sub{font-size:14px;color:rgba(237,231,217,.6);margin-top:8px;max-width:620px;}
-
-.panel{border:1px solid var(--garis);padding:clamp(16px,3.4vw,24px);margin-bottom:20px;background:rgba(195,154,92,.03);}
-.panel h2{font-family:var(--display);font-weight:400;font-size:19px;letter-spacing:.03em;margin-bottom:4px;}
-.hint{font-size:12.5px;color:rgba(237,231,217,.5);margin-bottom:14px;}
-label{display:block;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--kuningan-dim);margin:14px 0 6px;}
-input,select,textarea{
-  width:100%;background:rgba(0,0,0,.28);border:1px solid var(--garis);border-radius:2px;
-  padding:11px 13px;font-size:14px;transition:border-color .2s;
-}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--kuningan-dim);}
-.kisi{display:grid;gap:0 14px;}
-@media (min-width:720px){ .kisi{grid-template-columns:1fr 1fr;} .kisi .lebar{grid-column:1 / -1;} }
-
-.btn{
-  border:1px solid var(--kuningan-dim);background:transparent;color:var(--kuningan);
-  border-radius:2px;padding:11px 20px;cursor:pointer;
-  font-size:10.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
-  transition:background .2s,color .2s,opacity .2s;
-}
-.btn:hover{background:var(--kuningan);color:var(--nila-3);}
-.btn:disabled{opacity:.45;cursor:default;}
-.btn:disabled:hover{background:transparent;color:var(--kuningan);}
-.btn.solid{background:var(--kuningan);color:var(--nila-3);}
-.btn.ghost{border-color:var(--garis);color:rgba(237,231,217,.6);}
-.btn.ghost:hover{background:rgba(237,231,217,.08);color:var(--kapur);}
-.btn.bahaya{border-color:rgba(180,87,63,.5);color:var(--merah);}
-.btn.bahaya:hover{background:var(--merah);color:var(--kapur);}
-.btn.kecil{padding:8px 13px;font-size:9.5px;letter-spacing:.12em;}
-.aksi{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;align-items:center;}
+/* Gaya bersama (warna, panel, tombol, menu) ada di /assets/panel.css;
+   di sini hanya yang khas meja pemilik. */
+.utama{max-width:1080px;}
 
 /* serah terima */
-.serah{border:1px solid rgba(124,139,99,.5);background:rgba(124,139,99,.08);padding:16px 18px;margin-top:20px;}
-.serah h3{font-family:var(--display);font-weight:400;font-size:17px;margin-bottom:10px;color:var(--daun);}
-.serah textarea{min-height:230px;font-family:var(--mono);font-size:12px;line-height:1.7;}
+.serah{border:1px solid #a7f3d0;background:#f0fdf4;border-radius:var(--radius);padding:16px 18px;margin-top:20px;}
+.serah h3{font-size:15px;font-weight:600;margin-bottom:8px;color:#047857;}
+.serah textarea{min-height:230px;font-family:var(--mono);font-size:12px;line-height:1.7;background:#fff;}
 
 /* daftar pasangan */
 .ps{border-bottom:1px solid var(--garis);padding:16px 0;display:grid;gap:10px 16px;}
+.ps:last-child{border-bottom:0;}
 @media (min-width:820px){ .ps{grid-template-columns:minmax(220px,1fr) auto;align-items:start;} }
-.ps-nama{font-family:var(--display);font-size:18px;letter-spacing:.02em;}
+.ps-nama{font-size:16px;font-weight:600;}
 .ps-slug{font-family:var(--mono);font-size:12px;color:var(--kuningan);}
-.ps-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
-.cap{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--garis);padding:2px 8px;border-radius:2px;color:rgba(237,231,217,.55);}
-.cap.terbit{border-color:var(--daun);color:var(--daun);}
-.cap.draf{border-color:var(--kuningan-dim);color:var(--kuningan);}
-.ps-angka{font-size:12.5px;color:rgba(237,231,217,.6);margin-top:8px;font-family:var(--mono);}
+.ps-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.ps-angka{font-size:12.5px;color:var(--tinta-3);margin-top:8px;font-family:var(--mono);}
 .ps-alat{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-start;}
 @media (min-width:820px){ .ps-alat{justify-content:flex-end;max-width:420px;} }
-.ps-alat select{width:auto;padding:7px 10px;font-size:12px;}
+.ps-alat select{width:auto;padding:6px 30px 6px 10px;font-size:12.5px;background-position:right 8px center;}
+.ps:first-child,.baris:first-child{padding-top:0;}
+.cap.peringatan{background:#fef2f2;color:#b91c1c;border-color:#fecaca;}
 
 .token{margin-top:12px;display:grid;gap:6px;}
 .token div{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;}
-.token code{font-family:var(--mono);font-size:11.5px;color:var(--kuningan);overflow-wrap:anywhere;}
+.token code{font-size:11.5px;overflow-wrap:anywhere;}
 .token .alat{display:flex;gap:6px;}
 .token.pemilik{gap:0;max-width:460px;}
 .token.pemilik label:first-child{margin-top:0;}
 .token.pemilik textarea{min-height:170px;margin-top:12px;font-family:var(--mono);font-size:12px;line-height:1.7;}
-/* pesanan dan reseller */
+/* pesanan dan mitra */
 .baris{border-bottom:1px solid var(--garis);padding:14px 0;display:grid;gap:8px 16px;}
+.baris:last-child{border-bottom:0;}
 @media (min-width:820px){ .baris{grid-template-columns:minmax(220px,1fr) auto;align-items:start;} }
-.baris .judul{font-family:var(--display);font-size:16.5px;}
-.baris .ket{font-size:12.5px;color:rgba(237,231,217,.6);font-family:var(--mono);overflow-wrap:anywhere;}
+.baris .judul{font-size:15px;font-weight:600;}
+.baris .ket{font-size:12.5px;color:var(--tinta-3);font-family:var(--mono);overflow-wrap:anywhere;}
 .baris .alat{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
 @media (min-width:820px){ .baris .alat{justify-content:flex-end;max-width:440px;} }
-.baris .alat input{width:118px;padding:7px 10px;font-size:12.5px;}
-.cap.lunas{border-color:var(--daun);color:var(--daun);}
-.cap.batal{border-color:rgba(180,87,63,.5);color:var(--merah);}
+.baris .alat input{width:118px;padding:6px 10px;font-size:12.5px;}
 .angka-kisi{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:6px 14px;margin-top:6px;}
-.angka-kisi div{font-size:11px;color:rgba(237,231,217,.5);letter-spacing:.06em;}
-.angka-kisi b{display:block;font-family:var(--mono);font-weight:500;font-size:14px;color:var(--kapur);letter-spacing:0;}
-.lipat{margin-top:6px;}
-.lipat summary{cursor:pointer;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--kuningan);padding:6px 0;}
+.angka-kisi div{font-size:11.5px;color:var(--tinta-3);}
+.angka-kisi b{display:block;font-family:var(--mono);font-weight:600;font-size:14px;color:var(--kapur);}
+.label-ket{text-transform:none;letter-spacing:0;font-weight:400;color:var(--tinta-3);}
 
 /* Di layar sempit alamatnya sudah selebar layar, jadi satu barisnya
    dipatah bertumpuk — kalau dibiarkan mengalir, label, alamat, dan
@@ -110,24 +61,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--kuningan
   .token div{flex-direction:column;align-items:flex-start;gap:5px;
              padding-bottom:10px;border-bottom:1px solid var(--garis);}
 }
-
-#gerbang{position:fixed;inset:0;z-index:40;background:var(--nila);display:flex;align-items:center;justify-content:center;padding:24px;}
-#gerbang.pergi{display:none;}
-.gerbang-kotak{width:100%;max-width:340px;border:1px solid var(--garis);padding:30px 26px;background:rgba(195,154,92,.03);}
-.pesan-salah{margin-top:12px;color:var(--merah);font-size:12.5px;min-height:18px;}
-
-.toast{
-  position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);
-  background:var(--kuningan);color:var(--nila-3);padding:11px 22px;border-radius:2px;
-  font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
-  opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:60;max-width:90vw;text-align:center;
-}
-.toast.on{opacity:1;transform:translate(-50%,0);}
-.toast.galat{background:var(--merah);color:var(--kapur);}
-.memuat,.kosongstate{font-size:13.5px;color:rgba(237,231,217,.45);padding:22px 0;text-align:center;}
-.catatan{font-size:12.5px;color:rgba(237,231,217,.5);border-left:2px solid var(--kuningan-dim);padding-left:14px;margin-top:16px;line-height:1.75;}
-code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
-:focus-visible{outline:2px solid var(--kuningan);outline-offset:2px;}
+@media (min-width:900px){ #btnKeluarHp{display:none;} }
 </style>
 </head>
 <body>
@@ -135,19 +69,19 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
 <div id="gerbang">
   <div class="gerbang-kotak" id="kotakMasuk">
     <p class="eyebrow">mengundang.id</p>
-    <h1 style="font-size:26px;margin:10px 0 6px">Pemilik</h1>
-    <p class="sub" style="margin-bottom:18px">Meja pemilik platform: pasangan, pesanan, admin, dan komisi. Admin (mitra penjual) masuk lewat <a href="/admin" style="color:var(--kuningan)">/admin</a>.</p>
+    <h1>Meja Pemilik</h1>
+    <p class="sub" style="margin-bottom:8px">Pasangan, pesanan, admin, dan komisi. Admin (mitra penjual) masuk lewat <a href="/admin">/admin</a>.</p>
     <label for="inEmail">Email</label>
     <input id="inEmail" type="email" autocomplete="username">
     <label for="inSandi">Kata sandi</label>
     <input id="inSandi" type="password" autocomplete="current-password">
     <button class="btn solid" id="btnMasuk" style="margin-top:16px;width:100%">Masuk</button>
-    <button class="btn ghost" id="btnLupa" style="margin-top:10px;width:100%;font-size:9.5px">Lupa sandi?</button>
+    <button class="btn ghost kecil" id="btnLupa" style="margin-top:10px;width:100%">Lupa sandi?</button>
     <p class="pesan-salah" id="pesanMasuk"></p>
   </div>
   <div class="gerbang-kotak" id="kotakSandiBaru" hidden>
     <p class="eyebrow">mengundang.id</p>
-    <h1 style="font-size:24px;margin:10px 0 6px">Buat kata sandi baru</h1>
+    <h1>Buat kata sandi baru</h1>
     <p class="sub" style="margin-bottom:14px">Untuk <b id="emailSandiBaru"></b></p>
     <label for="inSandiBaru">Kata sandi baru</label>
     <input id="inSandiBaru" type="password" autocomplete="new-password">
@@ -158,23 +92,32 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   </div>
 </div>
 
-<div class="wrap" id="isi" hidden>
-
-<header>
-  <div class="baris-atas">
+<div class="app" id="isi" hidden>
+  <aside class="menu">
+    <div class="menu-merek"><span class="logo">m</span><div><b>Meja Pemilik</b><small id="siapa">mengundang.id</small></div></div>
+    <nav aria-label="Menu pemilik">
+      <div class="grup"><p class="grup-judul">Undangan</p><a href="#pasangan"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M3.5 20c.6-3.4 3-5.4 5.5-5.4s4.9 2 5.5 5.4"/><path d="M14.5 15c2.6-.4 5 1.3 5.8 4.6"/></svg><span>Pasangan</span></a><a href="#baru"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span>Buka pasangan baru</span></a><a href="#akun"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg><span>Akun klien</span></a></div>
+      <div class="grup"><p class="grup-judul">Penjualan</p><a href="#pesanan"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><span>Pesanan</span></a><a href="#mitra"><svg viewBox="0 0 24 24"><path d="M3 12l4-4 5 3 5-3 4 4"/><path d="M7 8v9l5 3 5-3V8"/></svg><span>Admin &amp; komisi</span></a></div>
+    </nav>
+    <div class="menu-kaki"><button class="btn ghost kecil" id="btnKeluar" style="width:100%">Keluar</button></div>
+  </aside>
+  <main class="utama">
+  <header class="kepala">
     <div>
-      <p class="eyebrow">mengundang.id</p>
-      <h1>Meja Pemilik</h1>
-      <p class="sub" id="siapa"></p>
+      <p class="eyebrow">mengundang.id · pemilik</p>
+      <h1 id="judulHalaman">Pasangan</h1>
     </div>
-    <button class="btn ghost kecil" id="btnKeluar">Keluar</button>
-  </div>
-</header>
+    <div class="alat">
+      <button class="btn ghost kecil" id="btnSegarkan">Muat Ulang</button>
+      <button class="btn ghost kecil" id="btnKeluarHp" onclick="document.getElementById('btnKeluar').click()">Keluar</button>
+    </div>
+  </header>
 
-<!-- 1. PASANGAN BARU -->
+
+  <section class="halaman" data-halaman="baru" data-judul="Buka pasangan baru">
+    <p class="halaman-sub">Satu tombol menggantikan tujuh tabel yang dulu diisi tangan: pasangan, dua mempelai, dua tempat, keempat baris pihak, lima link panitia, dan akun pengantin yang memegang undangannya.</p>
 <div class="panel">
-  <h2>1 · Buka pasangan baru</h2>
-  <p class="hint">Satu tombol menggantikan tujuh tabel yang dulu diisi tangan: pasangan, dua mempelai, dua tempat, keempat baris pihak, lima link panitia, dan akun pengantin yang memegang undangannya.</p>
+  <h2>Data pasangan</h2>
 
   <div class="kisi">
     <div>
@@ -199,11 +142,11 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
       <p class="hint" id="hintPaket" style="margin:6px 0 0"></p>
     </div>
     <div>
-      <label for="inTanggal">Tanggal acara <span style="text-transform:none;letter-spacing:0">(boleh kosong)</span></label>
+      <label for="inTanggal">Tanggal acara <span class="label-ket">(boleh kosong)</span></label>
       <input id="inTanggal" type="date">
     </div>
     <div>
-      <label for="inKota">Kota <span style="text-transform:none;letter-spacing:0">(boleh kosong)</span></label>
+      <label for="inKota">Kota <span class="label-ket">(boleh kosong)</span></label>
       <input id="inKota" maxlength="40" placeholder="Semarang">
     </div>
     <div>
@@ -226,7 +169,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
 
   <div class="serah" id="serah" hidden>
     <h3>Siap diserahkan</h3>
-    <p class="hint" style="margin-bottom:10px">Salin seluruhnya lalu kirim ke klien. Kata sandinya hanya muncul sekali di layar ini — sesudah halaman ditutup, satu-satunya jalan adalah menggantinya di kotak 3.</p>
+    <p class="hint" style="margin-bottom:10px">Salin seluruhnya lalu kirim ke klien. Kata sandinya hanya muncul sekali di layar ini — sesudah halaman ditutup, satu-satunya jalan adalah menggantinya di <a href="#akun">Akun klien</a>.</p>
     <textarea id="serahTeks" readonly spellcheck="false"></textarea>
     <div class="aksi">
       <button class="btn solid" id="btnSalinSerah">Salin Semuanya</button>
@@ -236,19 +179,20 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   </div>
 </div>
 
-<!-- 2. DAFTAR -->
+</section>
+
+  <section class="halaman" data-halaman="pasangan" data-judul="Pasangan">
+    <p class="halaman-sub">Semua undangan di platform. Angkanya dihitung saat halaman dimuat, bukan disimpan.</p>
+<div class="aksi" style="margin:0 0 16px"><a class="btn solid" href="#baru">+ Buka pasangan baru</a></div>
 <div class="panel">
-  <h2>2 · Pasangan</h2>
-  <p class="hint">Angkanya dihitung saat halaman dimuat, bukan disimpan.</p>
-  <div class="aksi" style="margin-top:0">
-    <button class="btn ghost kecil" id="btnSegarkan">Muat Ulang</button>
-  </div>
   <div id="daftar"><p class="memuat">Memuat…</p></div>
 </div>
+</section>
 
-<!-- 3. GANTI SANDI -->
+  <section class="halaman" data-halaman="akun" data-judul="Akun klien">
+    <p class="halaman-sub">Akses pengantin ke /dasbor.</p>
 <div class="panel">
-  <h2>3 · Ganti kata sandi klien</h2>
+  <h2>Ganti kata sandi klien</h2>
   <p class="hint">Untuk klien yang lupa sandinya. Tidak ada surel yang dikirim — Anda yang menyerahkan sandi barunya.</p>
   <div class="kisi">
     <div>
@@ -266,10 +210,19 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   <div class="aksi"><button class="btn" id="btnGantiSandi">Ganti Sandi</button></div>
 </div>
 
-<!-- 4. PESANAN -->
+<p class="catatan">
+  <strong>Pemilik dibuat sekali, lewat Supabase.</strong>
+  Authentication → Users → Add user, lalu di SQL Editor:
+  <code>insert into public.admin (user_id, nama, peran) select id, 'Nama', 'owner' from auth.users where email = '…';</code>
+  Halaman ini sengaja tidak bisa menambah pemilik — pintu yang bisa
+  menambah pemegang kuncinya sendiri adalah pintu yang paling mahal kalau salah.
+</p>
+</section>
+
+  <section class="halaman" data-halaman="pesanan" data-judul="Pesanan">
+    <p class="halaman-sub">Pesanan dicatat admin (atau Anda sendiri). Begitu pembayarannya masuk, isi nominal dan komisinya lalu tekan Lunas: akun klien dibuat, undangan masuk ke emailnya, dan pasangannya langsung aktif.</p>
 <div class="panel">
-  <h2>4 · Pesanan</h2>
-  <p class="hint">Pesanan dicatat admin (atau Anda sendiri). Begitu pembayarannya masuk, isi nominal dan komisinya lalu tekan Lunas: akun klien dibuat, undangan masuk ke emailnya, dan pasangannya langsung aktif.</p>
+  <h2>Daftar pesanan</h2>
   <div id="daftarPesanan"><p class="memuat">Memuat…</p></div>
   <details class="lipat">
     <summary>Catat pesanan sendiri</summary>
@@ -280,7 +233,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
       <div><label for="psPaket">Paket</label>
         <select id="psPaket"><option value="standar">Standar</option><option value="premium">Premium</option></select></div>
       <div><label for="psEmail">Email klien</label><input id="psEmail" type="email" autocomplete="off"></div>
-      <div><label for="psKode">Kode admin <span style="text-transform:none;letter-spacing:0">(kosong = penjualan langsung)</span></label><input id="psKode" maxlength="20" autocomplete="off"></div>
+      <div><label for="psKode">Kode admin <span class="label-ket">(kosong = penjualan langsung)</span></label><input id="psKode" maxlength="20" autocomplete="off"></div>
       <div><label for="psTanggal">Tanggal acara</label><input id="psTanggal" type="date"></div>
       <div><label for="psKota">Kota</label><input id="psKota" maxlength="40"></div>
     </div>
@@ -296,9 +249,12 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   </div>
 </div>
 
-<!-- 5. RESELLER -->
+</section>
+
+  <section class="halaman" data-halaman="mitra" data-judul="Admin &amp; komisi">
+    <p class="halaman-sub">Mitra penjual: tautan, pengunjung, penjualan, dan komisinya.</p>
 <div class="panel">
-  <h2>5 · Admin</h2>
+  <h2>Daftar admin</h2>
   <p class="hint">Pengunjung dihitung dari tautan <code>mengundang.id/?r=kode</code> — satu peramban satu kali per hari. Konversi = pesanan lunas ÷ pengunjung.</p>
   <div id="daftarReseller"><p class="memuat">Memuat…</p></div>
   <details class="lipat">
@@ -319,20 +275,16 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
   </details>
 </div>
 
-<p class="catatan">
-  <strong>Pemilik dibuat sekali, lewat Supabase.</strong>
-  Authentication → Users → Add user, lalu di SQL Editor:
-  <code>insert into public.admin (user_id, nama, peran) select id, 'Nama', 'owner' from auth.users where email = '…';</code>
-  Halaman ini sengaja tidak bisa menambah pemilik — pintu yang bisa
-  menambah pemegang kuncinya sendiri adalah pintu yang paling mahal kalau salah.
-</p>
+</section>
 
+  </main>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script src="/assets/varian.js"></script>
 <script src="/assets/akun.js"></script>
+<script src="/assets/panel.js"></script>
 <script>
 (function(){
   'use strict';
@@ -615,7 +567,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
         +     '<span class="cap">'+esc(p.status)+'</span>'
         +     '<span class="cap">'+esc(p.tema)+'</span>'
         +     (p.tanggal_acara ? '<span class="cap">'+esc(p.tanggal_acara)+'</span>' : '')
-        +     (p.pemilik ? '<span class="cap">'+esc(p.pemilik)+'</span>' : '<span class="cap" style="color:var(--merah);border-color:rgba(180,87,63,.5)">belum ada akun pengantin</span>')
+        +     (p.pemilik ? '<span class="cap">'+esc(p.pemilik)+'</span>' : '<span class="cap peringatan">belum ada akun pengantin</span>')
         +   '</div>'
         +   '<div class="ps-angka">'+esc(angka.join(' · '))+'</div>'
         +   '<div class="token" data-token hidden></div>'
@@ -623,7 +575,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
               '<div class="token pemilik" data-pemilik hidden>'
             +   '<label>Email pengantin — untuk masuk ke /dasbor</label>'
             +   '<input type="email" data-isi="email" autocomplete="off" placeholder="nama@contoh.com">'
-            +   '<label>Kata sandi <span style="text-transform:none;letter-spacing:0">(diabaikan kalau emailnya sudah punya akun)</span></label>'
+            +   '<label>Kata sandi <span class="label-ket">(diabaikan kalau emailnya sudah punya akun)</span></label>'
             +   '<div style="display:flex;gap:8px;align-items:center">'
             +     '<input data-isi="sandi" autocomplete="off" style="flex:1" placeholder="minimal 10 huruf">'
             +     '<button class="btn ghost kecil" data-aksi="acakPemilik">Acak</button>'
@@ -997,6 +949,7 @@ code{font-family:var(--mono);font-size:.92em;color:var(--kuningan);}
     }
     $('gerbang').classList.add('pergi');
     $('isi').hidden = false;
+    Panel.pasang({ bawaan: 'pasangan' });
     await Promise.all([muat(), muatPesanan(), muatReseller()]);
   }
 

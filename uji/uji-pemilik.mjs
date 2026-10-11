@@ -145,6 +145,13 @@ async function halaman(browser, { admin = true, lebar = 1100 } = {}){
   return { ctx, page, model };
 }
 
+/* Meja pemilik terbagi per halaman (#pasangan, #baru, #pesanan, …);
+   hanya halaman aktif yang terlihat. */
+async function ke(page, h){
+  await page.evaluate(h => window.Panel.ke(h), h);
+  await page.waitForSelector(`.halaman.aktif[data-halaman="${h}"]`, { timeout:4000 });
+}
+
 const srv = await mulai(PORT);
 const browser = await chromium.launch();
 
@@ -190,6 +197,15 @@ const browser = await chromium.launch();
       kartu.replace(/\s+/g,' ').slice(0,120));
   cek('3c rpc dikirim memakai JWT admin, bukan anon key',
       model.panggilan.filter(p => p.nama === 'admin_daftar').at(-1).auth === 'JWT-admin@contoh.com');
+
+  cek('3d halaman pertama = daftar pasangan saja; formulir pasangan baru di halamannya sendiri',
+      await page.locator('#daftar').isVisible() && await page.locator('#inPria').isHidden()
+      && await page.locator('#daftarPesanan').isHidden() && await page.locator('#inEmailGanti').isHidden());
+  await page.locator('.halaman.aktif a[href="#baru"]').click();
+  await page.waitForSelector('.halaman.aktif[data-halaman="baru"]', { timeout:4000 });
+  cek('3e tombol "Buka pasangan baru" membuka formulirnya, menu menandai halamannya',
+      await page.locator('#inPria').isVisible() && await page.locator('#daftar').isHidden()
+      && (await page.locator('.menu nav a[aria-current="page"]').getAttribute('href')) === '#baru');
 
   /* --- slug diusulkan --- */
   await page.locator('#inPria').fill('Budi');
@@ -277,6 +293,7 @@ const browser = await chromium.launch();
   cek('9b serah terima disembunyikan', await page.locator('#serah').isHidden());
 
   /* --- token --- */
+  await ke(page, 'pasangan');
   await page.locator('.ps button[data-aksi="token"]').first().click();
   await page.waitForFunction(() =>
     document.querySelectorAll('.token div').length === 5, null, { timeout:5000 });
@@ -353,6 +370,7 @@ const browser = await chromium.launch();
   cek('13b pasangannya masih di layar', (await page.locator('.ps').count()) === 1);
 
   /* --- ganti sandi klien --- */
+  await ke(page, 'akun');
   await page.locator('#inEmailGanti').fill('budi@contoh.com');
   await page.locator('#btnAcak2').click();
   await page.locator('#btnGantiSandi').click();
@@ -406,7 +424,8 @@ const browser = await chromium.launch();
   await page.locator('#inEmail').fill('owner@contoh.com');
   await page.locator('#inSandi').fill('benar');
   await page.locator('#btnMasuk').click();
-  await page.waitForSelector('#daftarPesanan .baris', { timeout:8000 });
+  await page.waitForSelector('#daftarPesanan .baris', { state:'attached', timeout:8000 });
+  await ke(page, 'pesanan');
 
   cek('17a pesanan menunggu tampil dengan asal admin-nya',
       (await page.locator('#daftarPesanan .baris').first().textContent()).includes('admin 123'));
@@ -427,6 +446,7 @@ const browser = await chromium.launch();
   cek('17d serah-terima: alamat premium, arahan email, link panitia',
       serah.includes('budi-sari.mengundang.id') && serah.includes('buka email') && serah.includes('t=TOKBARU'), serah);
 
+  await ke(page, 'mitra');
   cek('17e statistik reseller: konversi 2/40 = 5.0%',
       (await page.locator('#daftarReseller').textContent()).includes('5.0%'));
   await page.locator('#daftarReseller button[data-aksi="cair"]').click();
@@ -518,6 +538,13 @@ const browser = await chromium.launch();
   });
   cek('15 tata letak 400px bersih', buruk.length === 0, buruk.join(' ; '));
   await page.screenshot({ path:'admin-400.png', clip:{x:0,y:0,width:400,height:1000} });
+  const lebarnya = [];
+  for (const h of ['baru', 'akun', 'pesanan', 'mitra']) {
+    await ke(page, h);
+    const w = await page.evaluate(() => document.documentElement.scrollWidth);
+    if (w > 401) lebarnya.push(h + ' ' + w);
+  }
+  cek('15b setiap halaman muat di 400px tanpa gulir mendatar', lebarnya.length === 0, lebarnya.join(' ; '));
   await ctx.close();
 }
 
