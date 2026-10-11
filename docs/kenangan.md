@@ -229,7 +229,7 @@ Permintaan pemilik platform, dan jawabannya di halaman:
 |---|---|
 | Ucapan tamu jadi pop-up | Satu ucapan muncul di pojok bawah (kiri/kanan bergantian di layar lebar), 7 dtk, pudar, berikutnya — berurutan dari yang pertama masuk, berputar selama halaman dibuka. × menyembunyikannya. Tidak ada daftar ucapan lagi. |
 | Sampul bisa diisi | Bab `sampul`: foto/video sendiri (bergiliran), judul kecil, satu kalimat. Nama, tanggal · kota otomatis. |
-| Banyak foto per bagian | **Latar bergilir**: tiap bab menumpuk sampai 8 foto/video yang berganti pelan (6,5 dtk; video selama durasinya, 6,5–15 dtk). Titik untuk melompat, "Lihat semua" membuka penampil. Hanya bab yang terlihat yang bergerak. |
+| Banyak foto per bagian | **Latar bergilir**: tiap bab menumpuk sampai 8 foto/video yang berganti tiap 6 dtk (video selama durasinya, 6–15 dtk). Titik untuk melompat, "Lihat semua" membuka penampil. Hanya bab yang terlihat yang bergerak. |
 | Foto keluarga, pasangan, dll. | Bab tetap baru, urutan hari itu: mempelai pria → mempelai wanita → kedatangan keluarga → [akad, resepsi, … dari kotak 3] → sungkem → keluarga → para tamu → kami berdua. |
 | Tipografi suara pengantin | Semua tulisan bawaan ditulis ulang sebagai "kami" kepada "Anda" (`assets/kenangan.js`). Penutup ditandatangani "Kami yang berbahagia". |
 | Hapus "Dalam Angka" | Tidak digambar lagi. Kunci `angka` tetap dikirim database dan tetap boleh ada di `kenangan_blok`, supaya halaman lama yang masih tersimpan di peramban tidak patah. |
@@ -258,7 +258,7 @@ bucket 20 MB).
 | Tombol geser foto di setiap bagian | ‹ titik › di bawah tulisan tiap bab yang punya lebih dari satu berkas, ditambah usap mendatar. Usap tegak tetap menggulir halaman. |
 | Hapus "Lihat/Perbesar" | Dihapus dari bab. Melihat satu per satu dan memperbesar hanya di album paling bawah. |
 | Foto yang sudah tampil muncul lagi di galeri | Album memuat SEMUA foto/video, urut seperti bab-babnya, lalu yang tanpa bab. |
-| Ucapan tamu: bisa ditampilkan/disembunyikan, bawaan tampil, lebih kecil, transparan | Pop-up 260 px, latar tembus pandang, huruf lebih kecil. Tombol gelembung di atas tombol gulir untuk menyembunyikan/menampilkan; × juga menyembunyikan. Pilihan tamu diingat di perambannya. Pasangan tetap bisa mematikan ucapan untuk semua tamu di kotak 9. |
+| Ucapan tamu: bisa ditampilkan/disembunyikan, bawaan tampil, lebih kecil, transparan | Pop-up 170 px (separuh ukuran awal), dua baris, latar tembus pandang, huruf kecil. Tombol gelembung di atas tombol gulir untuk menyembunyikan/menampilkan; × juga menyembunyikan. Pilihan tamu diingat di perambannya. Pasangan tetap bisa mematikan ucapan untuk semua tamu di kotak 9. |
 
 Tombol mengambang di kanan bawah sekarang tiga (ucapan, gulir, musik);
 di HP tulisan bab menyisakan jalurnya supaya tidak tertutup.
