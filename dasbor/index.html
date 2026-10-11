@@ -7,84 +7,21 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/panel.css">
 <style>
-:root{
-  --nila:#131E33; --nila-2:#1B2A46; --nila-3:#0D1626;
-  --kuningan:#C39A5C; --kuningan-dim:#8C6A3A; --kapur:#EDE7D9;
-  --daun:#7C8B63; --merah:#B4573F;
-  --garis:rgba(195,154,92,.22);
-  --display:'Marcellus',serif; --body:'Karla',system-ui,sans-serif;
-  --mono:ui-monospace,'SF Mono',Menlo,monospace;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--nila);color:var(--kapur);font-family:var(--body);font-weight:300;line-height:1.65;-webkit-font-smoothing:antialiased;}
-[hidden]{display:none!important;}
-img{display:block;max-width:100%;}
-button{font:inherit;color:inherit;}
-
-.bungkus{max-width:860px;margin:0 auto;padding:clamp(18px,4vw,34px);}
-header.atas{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:22px;}
-.eyebrow{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--kuningan);}
-h1{font-family:var(--display);font-weight:400;font-size:clamp(22px,5vw,30px);letter-spacing:.03em;margin-top:6px;}
-.sub{font-size:12.5px;color:rgba(237,231,217,.55);margin-top:4px;}
-
-.panel{border:1px solid var(--garis);background:rgba(195,154,92,.03);padding:clamp(15px,3.4vw,22px);margin-bottom:18px;}
-.panel h2{font-family:var(--display);font-weight:400;font-size:18px;letter-spacing:.03em;margin-bottom:3px;}
-.hint{font-size:12.5px;color:rgba(237,231,217,.5);margin-bottom:12px;}
-label{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--kuningan-dim);margin:13px 0 5px;}
-input,textarea,select{
-  width:100%;background:rgba(0,0,0,.28);border:1px solid var(--garis);border-radius:2px;
-  color:var(--kapur);padding:10px 12px;font:inherit;font-size:14px;transition:border-color .2s;
-}
-input:focus,textarea:focus,select:focus{outline:none;border-color:var(--kuningan-dim);}
-textarea{resize:vertical;min-height:70px;}
-select{appearance:none;cursor:pointer;}
-.duo{display:grid;gap:12px;}
-@media(min-width:640px){.duo{grid-template-columns:1fr 1fr;}}
-.trio{display:grid;gap:12px;}
-/* Centang mewarisi input{width:100%} kalau tidak ditahan di sini —
-   kotaknya melar selebar panel dan barisnya jadi tidak terbaca. */
-.centang{display:flex;gap:20px;flex-wrap:wrap;margin-top:15px;padding-top:13px;border-top:1px solid var(--garis);}
-.centang label{display:flex;align-items:center;gap:8px;margin:0;font-size:12.5px;letter-spacing:.02em;
-  text-transform:none;color:rgba(237,231,217,.72);cursor:pointer;}
-.centang input{width:16px;height:16px;flex:none;padding:0;accent-color:var(--kuningan);cursor:pointer;}
-@media(min-width:640px){.trio{grid-template-columns:1fr 1fr 1fr;}}
-
-.btn{border:1px solid var(--kuningan-dim);background:transparent;color:var(--kuningan);border-radius:2px;
-  padding:10px 18px;cursor:pointer;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
-  transition:background .2s,color .2s,opacity .2s;}
-.btn:hover{background:var(--kuningan);color:var(--nila-3);}
-.btn:disabled{opacity:.45;cursor:default;}
-.btn:disabled:hover{background:transparent;color:var(--kuningan);}
-.btn.solid{background:var(--kuningan);color:var(--nila-3);}
-.btn.ghost{border-color:var(--garis);color:rgba(237,231,217,.6);}
-.btn.ghost:hover{background:rgba(237,231,217,.08);color:var(--kapur);}
-.btn.bahaya{border-color:rgba(180,87,63,.5);color:var(--merah);}
-.btn.kecil{padding:7px 12px;font-size:9.5px;letter-spacing:.1em;}
-.aksi{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px;}
-
-/* gerbang masuk */
-#gerbang{min-height:100svh;display:grid;place-items:center;padding:24px;}
-.kotak-masuk{width:min(380px,100%);border:1px solid var(--garis);padding:28px;background:rgba(195,154,92,.03);}
-.pesan{font-size:12.5px;margin-top:10px;min-height:1.2em;}
-.pesan.err{color:var(--merah);} .pesan.ok{color:var(--daun);}
-
-/* status terbit */
-.status{display:inline-flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
-  padding:5px 11px;border-radius:99px;border:1px solid currentColor;}
-.status.draf{color:var(--kuningan);} .status.terbit{color:var(--daun);}
-
-.baris{border:1px solid var(--garis);padding:12px;margin-top:10px;background:rgba(0,0,0,.18);}
+/* Aturan umum (huruf, kartu, isian, tombol, gerbang) ada di /assets/panel.css.
+   Di bawah ini hanya komponen khusus dasbor pengantin. */
+.baris{border:1px solid var(--garis);border-radius:8px;padding:12px 14px;margin-top:10px;background:#fafbfc;}
 .baris-kepala{display:flex;justify-content:space-between;align-items:center;gap:10px;}
 .baris-judul{font-family:var(--display);font-size:15px;}
-.kosongstate{font-size:13px;color:rgba(237,231,217,.45);padding:12px 0;}
+.kosongstate{font-size:13px;color:rgba(17,24,39,.45);padding:12px 0;}
 .berkas{display:inline-block;cursor:pointer;}
-.kuota{font-size:12px;color:rgba(237,231,217,.45);margin-top:10px;}
-.maju{height:3px;background:rgba(195,154,92,.15);margin-top:12px;overflow:hidden;}
+.kuota{font-size:12px;color:rgba(17,24,39,.45);margin-top:10px;}
+.maju{height:3px;background:rgba(79,70,229,.15);margin-top:12px;overflow:hidden;}
 .maju i{display:block;height:100%;width:0;background:var(--kuningan);transition:width .25s;}
 .pustaka{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px;margin-top:16px;}
-.ubin{border:1px solid var(--garis);background:rgba(0,0,0,.2);padding:8px;}
+.ubin{border:1px solid var(--garis);border-radius:10px;background:#fff;padding:8px;box-shadow:var(--bayang);}
 .ubin.samar{opacity:.45;}
 .ubin img{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--nila-2);display:block;}
 .ubin .gbr,.pilih-latar .gbr{position:relative;display:block;overflow:hidden;}
@@ -95,7 +32,7 @@ select{appearance:none;cursor:pointer;}
 .ubin .alat .btn[data-aksi="potong"]{flex:1 1 90px;min-width:90px;}
 /* ---------- editor potongan (kotak 8) ---------- */
 /* ---------- impor Google Drive (kotak 8) ---------- */
-.drive{border:1px solid var(--garis);background:rgba(0,0,0,.18);padding:14px;margin-top:12px;}
+.drive{border:1px solid var(--garis);border-radius:10px;background:#fafbfc;padding:14px;margin-top:12px;}
 .drive-baris{display:flex;gap:8px;flex-wrap:wrap;}
 .drive-baris input{flex:1 1 220px;min-width:0;}
 .drive-alat{display:flex;gap:10px 16px;align-items:center;flex-wrap:wrap;margin-top:12px;}
@@ -105,25 +42,25 @@ select{appearance:none;cursor:pointer;}
 .drive-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:12px;max-height:440px;overflow:auto;}
 .drive-ubin{position:relative;display:block;margin:0;border:2px solid transparent;background:var(--nila-2);cursor:pointer;font-size:10px;line-height:1.3;}
 .drive-ubin input{position:absolute;top:5px;left:5px;width:18px;height:18px;margin:0;z-index:1;}
-.drive-ubin .gb{display:block;aspect-ratio:1;background:rgba(237,231,217,.06);overflow:hidden;}
+.drive-ubin .gb{display:block;aspect-ratio:1;background:rgba(17,24,39,.06);overflow:hidden;}
 .drive-ubin img{width:100%;height:100%;object-fit:cover;display:block;}
-.drive-ubin .nama{display:block;padding:4px 5px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(237,231,217,.8);}
-.drive-ubin .ket{display:block;padding:0 5px 5px;color:rgba(237,231,217,.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.drive-ubin .nama{display:block;padding:4px 5px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(17,24,39,.8);}
+.drive-ubin .ket{display:block;padding:0 5px 5px;color:rgba(17,24,39,.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .drive-ubin:has(input:checked){border-color:var(--kuningan);}
 .drive-ubin.mati{opacity:.45;cursor:not-allowed;}
 .drive-ubin.selesai .ket{color:var(--kuningan);}
-.potong{position:fixed;inset:0;z-index:80;background:rgba(9,14,24,.92);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto;}
-.potong-kotak{background:var(--nila);border:1px solid var(--garis);padding:18px;width:min(420px,100%);}
+.potong{position:fixed;inset:0;z-index:80;background:rgba(17,24,39,.55);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto;}
+.potong-kotak{background:#fff;border:1px solid var(--garis);border-radius:14px;box-shadow:0 20px 50px -20px rgba(0,0,0,.35);padding:20px;width:min(420px,100%);}
 .potong-bingkai{position:relative;width:min(240px,62vw);aspect-ratio:390/844;margin:14px auto 0;overflow:hidden;
   border:2px solid var(--kuningan);border-radius:18px;background:var(--nila-2);touch-action:none;cursor:grab;}
 .potong-bingkai:active{cursor:grabbing;}
 .potong-bingkai img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none;user-select:none;-webkit-user-drag:none;pointer-events:none;
   object-position:var(--fx,50%) var(--fy,50%);transform:scale(var(--z,1));transform-origin:var(--fx,50%) var(--fy,50%);}
 .potong input[type=range]{width:100%;margin-top:6px;padding:0;}
-.potong-mode{display:flex;gap:0;margin-top:14px;border:1px solid var(--garis);}
-.potong-mode button{flex:1;padding:9px 6px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;background:none;border:0;
-  color:rgba(237,231,217,.6);cursor:pointer;}
-.potong-mode button[aria-checked="true"]{background:var(--kuningan);color:var(--nila);font-weight:700;}
+.potong-mode{display:flex;gap:0;margin-top:14px;border:1px solid var(--garis-2);border-radius:8px;overflow:hidden;}
+.potong-mode button{flex:1;padding:9px 6px;font-size:13px;font-weight:500;background:none;border:0;
+  color:rgba(17,24,39,.6);cursor:pointer;}
+.potong-mode button[aria-checked="true"]{background:var(--kuningan);color:#fff;font-weight:600;}
 .potong-bingkai .buram{display:none;}
 /* Pratinjau "tampil utuh" — aturan yang sama dengan halaman kenangan. */
 .potong-bingkai.utuh{cursor:default;}
@@ -160,7 +97,7 @@ select{appearance:none;cursor:pointer;}
   font-size:9px;letter-spacing:.14em;text-transform:uppercase;background:rgba(13,22,38,.82);color:var(--kuningan);}
 .blok-kepala{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
 .blok-kepala .centang{margin:0;padding:0;border:0;}
-.wajib{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(237,231,217,.4);}
+.wajib{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(17,24,39,.4);}
 .baris.mati input:not([type=checkbox]),.baris.mati textarea,.baris.mati .pilih-latar{opacity:.45;}
 .vendor-baris{display:grid;gap:6px;grid-template-columns:1fr 1fr;align-items:end;}
 .vendor-baris input[data-kv="tautan"]{grid-column:1 / -1;}
@@ -179,20 +116,20 @@ select{appearance:none;cursor:pointer;}
 }
 .sil-tambah .btn{white-space:nowrap;}
 .sil-sisi{margin-top:18px;}
-.sil-sisi h4{font-family:var(--display);font-weight:400;font-size:14px;letter-spacing:.04em;margin-bottom:10px;color:var(--kuningan);}
+.sil-sisi h4{font-weight:600;font-size:13.5px;margin-bottom:10px;color:var(--kapur);}
 .sil-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
-.sil-kartu{border:1px solid var(--garis);background:rgba(0,0,0,.22);padding:8px;}
-.sil-kartu .gbr{width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;background:rgba(237,231,217,.06);max-width:96px;margin:0 auto 8px;display:block;}
-.sil-kartu .kosong{display:grid;place-items:center;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(237,231,217,.3);}
+.sil-kartu{border:1px solid var(--garis);border-radius:10px;background:#fff;padding:10px;}
+.sil-kartu .gbr{width:100%;aspect-ratio:1;object-fit:cover;border-radius:50%;background:rgba(17,24,39,.06);max-width:96px;margin:0 auto 8px;display:block;}
+.sil-kartu .kosong{display:grid;place-items:center;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(17,24,39,.3);}
 .sil-kartu .peran{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--kuningan-dim);text-align:center;}
 .sil-kartu .nama{font-family:var(--display);font-size:13.5px;text-align:center;margin-top:3px;line-height:1.35;}
 .sil-kartu .alat{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
 .sil-kartu .alat .btn{padding:5px 7px;font-size:9px;letter-spacing:.06em;flex:1 1 66px;min-width:66px;}
-.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);z-index:80;
-  background:var(--nila-2);border:1px solid var(--garis);padding:11px 18px;font-size:13px;
-  opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:92vw;}
-.toast.on{opacity:1;transform:translate(-50%,0);}
-.toast.galat{border-color:rgba(180,87,63,.6);color:#E8B4A4;}
+@media (min-width:900px){ #btnKeluarHp{display:none;} }
+.ringkas-status{display:grid;gap:14px;}
+@media (min-width:760px){.ringkas-status{grid-template-columns:1fr 1fr;}}
+.ringkas-status .panel{margin-bottom:0;}
+.vendor-baris{background:#fafbfc;}
 </style>
 </head>
 <body>
@@ -222,23 +159,72 @@ select{appearance:none;cursor:pointer;}
   </div>
 </div>
 
-<div class="bungkus" id="isi" hidden>
-  <header class="atas">
+<div class="app" id="isi" hidden>
+  <aside class="menu">
+    <div class="menu-merek"><span class="logo">m</span><div><b>Dasbor Pengantin</b><small id="menuPasangan">mengundang.id</small></div></div>
+    <nav aria-label="Menu dasbor">
+      <div class="grup"><a href="#beranda"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Beranda</a></div>
+      <div class="grup"><p class="grup-judul">Undangan</p><a href="#pengantin"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M3.5 20c.6-3.4 3-5.4 5.5-5.4s4.9 2 5.5 5.4"/><path d="M14.5 15c2.6-.4 5 1.3 5.8 4.6"/></svg>Pengantin</a><a href="#acara"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Acara & tempat</a><a href="#hadiah"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M3 12h18M12 8v13"/><path d="M12 8c-1.5-3-5-3.5-5-1s3 1 5 1c2 0 5 1.5 5-1s-3.5-2-5 1z"/></svg>Hadiah</a><a href="#tampilan"><svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 16l4-10 4 10"/><path d="M7.5 12.5h5"/><path d="M16 9h4M18 7v4"/></svg>Penutup & tampilan</a></div>
+      <div class="grup"><p class="grup-judul">Halaman kenangan</p><a href="#foto"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>Foto & video</a><a href="#kenangan"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>Isi halaman</a><a href="#vendor"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.6-7 10-7 10z"/></svg>Vendor & pendukung</a></div>
+    </nav>
+    <div class="menu-kaki"><button class="btn ghost kecil" id="btnKeluar" style="width:100%">Keluar</button></div>
+  </aside>
+  <main class="utama">
+  <header class="kepala">
     <div>
-      <p class="eyebrow">Dasbor Pengantin</p>
+      <p class="eyebrow" id="judulHalaman">Beranda</p>
       <h1 id="judulPasangan">&nbsp;</h1>
       <p class="sub" id="alamatUndangan"></p>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <div class="alat">
       <span class="status draf" id="lencanaStatus">Draf</span>
       <button class="btn ghost kecil" id="btnPratinjau">Pratinjau</button>
-      <button class="btn ghost kecil" id="btnKeluar">Keluar</button>
+      <button class="btn ghost kecil" id="btnKeluarHp" onclick="document.getElementById('btnKeluar').click()">Keluar</button>
     </div>
   </header>
 
+  <section class="halaman" data-halaman="beranda" data-judul="Beranda">
+    <h2 class="halaman-judul">Beranda</h2>
+    <p class="halaman-sub">Status undangan dan halaman kenangan Anda, dan jalan pintas ke bagian yang paling sering dibuka.</p>
+    <div class="ringkas-status">
+  <!-- 7 -->
+  <div class="panel">
+    <h2>Undangan</h2>
+    <p class="hint" id="hintTerbit"></p>
+    <div class="aksi">
+      <button class="btn solid" id="btnTerbit">Terbitkan</button>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="panel" id="panelTerbitKenangan">
+    <div class="blok-kepala">
+      <h2>Halaman kenangan</h2>
+      <span class="status draf" id="lencanaKenangan">Draf</span>
+    </div>
+    <p class="hint" id="hintTerbitKenangan"></p>
+    <p class="sub" id="alamatKenangan" hidden></p>
+    <div class="aksi">
+      <button class="btn" id="btnTerbitKenangan">Terbitkan Halaman Kenangan</button>
+      <button class="btn ghost" id="btnPratinjauKenangan">Pratinjau</button>
+    </div>
+  </div>
+    </div>
+    <h3 class="subjudul">Jalan pintas</h3>
+    <div class="pintas">
+      <a href="#pengantin"><b>Pengantin</b><span>Nama, orang tua, silsilah keluarga</span></a>
+      <a href="#acara"><b>Acara &amp; tempat</b><span>Akad, resepsi, alamat, peta</span></a>
+      <a href="#foto"><b>Foto &amp; video</b><span>Unggah, impor Drive, atur potongan</span></a>
+      <a href="#vendor"><b>Vendor &amp; pendukung</b><span>Fotografer, dekorasi, katering, MUA</span></a>
+    </div>
+  </section>
+
+  <section class="halaman" data-halaman="pengantin" data-judul="Pengantin">
+    <h2 class="halaman-judul">Pengantin</h2>
+    <p class="halaman-sub">Nama kedua mempelai dan keluarga yang ditampilkan di undangan.</p>
   <!-- 1 -->
   <div class="panel">
-    <h2>1 · Mempelai</h2>
+    <h2>Mempelai</h2>
     <p class="hint">Nama panggilan dipakai di sampul dan tanda tangan. Nama lengkap dipakai di kartu mempelai.</p>
     <div id="formMempelai" class="duo"></div>
 
@@ -258,40 +244,48 @@ select{appearance:none;cursor:pointer;}
     <input id="berkasSilsilah" type="file" accept="image/*" hidden>
   </div>
 
+  </section>
+
+  <section class="halaman" data-halaman="acara" data-judul="Acara & tempat">
+    <h2 class="halaman-judul">Acara & tempat</h2>
+    <p class="halaman-sub">Alamat dan rangkaian acara — dipakai undangan, dan jadi urutan babak di halaman kenangan.</p>
   <!-- 2 -->
   <div class="panel">
-    <h2>2 · Tempat</h2>
-    <p class="hint">Tamu pihak pria diarahkan ke alamat pria, tamu pihak wanita ke alamat wanita — kecuali acaranya dikunci ke satu tempat di kotak 3.</p>
+    <h2>Tempat</h2>
+    <p class="hint">Tamu pihak pria diarahkan ke alamat pria, tamu pihak wanita ke alamat wanita — kecuali acaranya dikunci ke satu tempat di daftar acara di bawah.</p>
     <div id="formTempat"></div>
   </div>
 
   <!-- 3 -->
   <div class="panel">
-    <h2>3 · Rangkaian acara</h2>
+    <h2>Rangkaian acara</h2>
     <p class="hint">Acara yang <strong>dikunci</strong> ke satu tempat ditampilkan sama untuk semua tamu. Yang dibiarkan <em>mengikuti pihak tamu</em> berpindah alamat sesuai undangan yang dibuka.</p>
     <p class="hint">Daftar ini dipakai dua halaman. Undangan memakainya untuk memberi tahu acaranya; halaman kenangan memakainya sebagai urutan babak sesudah acara selesai. Dua centang di tiap baris menentukan di mana ia muncul — jadi <em>salam-salaman</em> boleh ada di kenangan tanpa ikut di undangan, dan acara yang batal bisa dimatikan tanpa dihapus.</p>
     <div id="formAcara"></div>
     <div class="aksi"><button class="btn ghost kecil" id="btnAcaraBaru">Tambah Acara</button></div>
   </div>
 
+  </section>
+
+  <section class="halaman" data-halaman="hadiah" data-judul="Hadiah">
+    <h2 class="halaman-judul">Hadiah</h2>
+    <p class="halaman-sub">Dompet digital dan rekening untuk tamu yang ingin mengirim hadiah.</p>
   <!-- 4 -->
   <div class="panel">
-    <h2>4 · Dompet digital</h2>
+    <h2>Dompet digital</h2>
     <p class="hint">Urutannya mengikuti pihak tamu sendiri — dompet sisi tamu ditampilkan lebih dulu. Tidak perlu diatur.</p>
     <div id="formDompet"></div>
     <div class="aksi"><button class="btn ghost kecil" id="btnDompetBaru">Tambah Dompet</button></div>
   </div>
 
-  <!-- 5 -->
-  <div class="panel">
-    <h2>5 · Penutup</h2>
-    <p class="hint">Kalimat tanda tangan di bagian bawah undangan, berbeda untuk tamu pengantin dan tamu keluarga.</p>
-    <div id="formPihak"></div>
-  </div>
+  </section>
 
+  <section class="halaman" data-halaman="tampilan" data-judul="Penutup & tampilan">
+    <h2 class="halaman-judul">Penutup & tampilan</h2>
+    <p class="halaman-sub">Tanggal, kota, tema, dan kalimat tanda tangan di akhir undangan.</p>
   <!-- 6 -->
   <div class="panel">
-    <h2>6 · Acara &amp; tampilan</h2>
+    <h2>Acara &amp; tampilan</h2>
     <div class="trio">
       <div><label for="inTanggal">Tanggal acara</label><input id="inTanggal" type="date"></div>
       <div><label for="inKota">Kota</label><input id="inKota" type="text" maxlength="60" placeholder="Jepara"></div>
@@ -302,19 +296,21 @@ select{appearance:none;cursor:pointer;}
     <p class="hint" style="margin-top:6px">Dipakai kalau link tamu tidak menyebut pihaknya.</p>
   </div>
 
-  <!-- 7 -->
+  <!-- 5 -->
   <div class="panel">
-    <h2>7 · Terbitkan</h2>
-    <p class="hint" id="hintTerbit"></p>
-    <div class="aksi">
-      <button class="btn solid" id="btnSimpan">Simpan Semua</button>
-      <button class="btn" id="btnTerbit">Terbitkan</button>
-    </div>
+    <h2>Penutup</h2>
+    <p class="hint">Kalimat tanda tangan di bagian bawah undangan, berbeda untuk tamu pengantin dan tamu keluarga.</p>
+    <div id="formPihak"></div>
   </div>
 
+  </section>
+
+  <section class="halaman" data-halaman="foto" data-judul="Foto & video">
+    <h2 class="halaman-judul">Foto & video</h2>
+    <p class="halaman-sub">Semua foto dan video hari itu. Beri tiap berkas bab-nya, atur potongan untuk layar HP.</p>
   <!-- 8 -->
   <div class="panel">
-    <h2>8 · Foto &amp; video acara</h2>
+    <h2>Foto &amp; video acara</h2>
     <p class="hint" id="hintFoto"></p>
     <div class="aksi" style="margin-top:0">
       <label class="btn ghost berkas" for="inBerkasFoto">Pilih Foto / Video</label>
@@ -336,23 +332,23 @@ select{appearance:none;cursor:pointer;}
     <div class="pustaka" id="pustakaFoto"></div>
   </div>
 
+  </section>
+
+  <section class="halaman" data-halaman="kenangan" data-judul="Isi halaman kenangan">
+    <h2 class="halaman-judul">Isi halaman kenangan</h2>
+    <p class="halaman-sub">Bab-bab halaman kenangan: tampil atau tidak, tulisan, dan foto pembukanya.</p>
   <!-- 9 -->
   <div class="panel" id="panelKenangan">
-    <h2>9 · Halaman kenangan</h2>
+    <h2>Halaman kenangan</h2>
     <p class="hint" id="hintKenangan"></p>
 
     <h3 class="subjudul">Bab-bab halaman</h3>
-    <p class="hint">Urutannya mengikuti hari itu dan tetap — sampul selalu pertama, penutup selalu terakhir. Yang bisa diatur: bab mana yang tampil, tulisannya, dan foto/video mana yang membuka giliran latarnya. Isi tiap bab dipilih lewat kolom <em>Bab</em> di kotak 8. Kotak yang dibiarkan kosong memakai tulisan yang terlihat samar di dalamnya.</p>
+    <p class="hint">Urutannya mengikuti hari itu dan tetap — sampul selalu pertama, penutup selalu terakhir. Yang bisa diatur: bab mana yang tampil, tulisannya, dan foto/video mana yang membuka giliran latarnya. Isi tiap bab dipilih lewat kolom <em>Bab</em> di halaman <a href="#foto">Foto &amp; video</a>. Kotak yang dibiarkan kosong memakai tulisan yang terlihat samar di dalamnya.</p>
     <div id="formBlok"></div>
 
     <h3 class="subjudul">Babak acara</h3>
-    <p class="hint">Satu babak untuk setiap acara yang dicentang <em>jadi babak di halaman kenangan</em> di kotak 3, dalam urutan yang sama.</p>
+    <p class="hint">Satu babak untuk setiap acara yang dicentang <em>jadi babak di halaman kenangan</em> di halaman <a href="#acara">Acara &amp; tempat</a>, dalam urutan yang sama.</p>
     <div id="formBabak"></div>
-
-    <h3 class="subjudul">Terima kasih kepada</h3>
-    <p class="hint">Vendor, sponsor, atau brand yang ikut membantu — misalnya fotografer, dekorasi, katering, MUA. Tautan boleh alamat situs (https://…) atau akun Instagram (@nama). Kosong = bagian ini tidak muncul.</p>
-    <div id="formVendor"></div>
-    <div class="aksi" style="margin-top:8px"><button class="btn ghost" id="btnTambahVendor" type="button">+ Tambah</button></div>
 
     <div class="aksi">
       <button class="btn solid" id="btnSimpanKenangan">Simpan Halaman Kenangan</button>
@@ -360,19 +356,29 @@ select{appearance:none;cursor:pointer;}
     </div>
   </div>
 
-  <!-- 10 -->
-  <div class="panel" id="panelTerbitKenangan">
-    <div class="blok-kepala">
-      <h2>10 · Terbitkan halaman kenangan</h2>
-      <span class="status draf" id="lencanaKenangan">Draf</span>
-    </div>
-    <p class="hint" id="hintTerbitKenangan"></p>
-    <p class="sub" id="alamatKenangan" hidden></p>
+  </section>
+
+  <section class="halaman" data-halaman="vendor" data-judul="Vendor & pendukung">
+    <h2 class="halaman-judul">Vendor & pendukung</h2>
+    <p class="halaman-sub">Ucapan terima kasih untuk vendor, sponsor, atau brand yang membantu hari Anda — muncul di halaman kenangan sebagai bagian "Terima Kasih Kepada".</p>
+  <div class="panel" id="panelVendor">
+    <h2>Terima kasih kepada</h2>
+    <p class="hint">Vendor, sponsor, atau brand yang ikut membantu — misalnya fotografer, dekorasi, katering, MUA. Tautan boleh alamat situs (https://…) atau akun Instagram (@nama). Kosong = bagian ini tidak muncul.</p>
+    <div id="formVendor"></div>
+    <div class="aksi" style="margin-top:8px"><button class="btn ghost" id="btnTambahVendor" type="button">+ Tambah</button></div>
+
     <div class="aksi">
-      <button class="btn" id="btnTerbitKenangan">Terbitkan Halaman Kenangan</button>
-      <button class="btn ghost" id="btnPratinjauKenangan">Pratinjau</button>
+      <button class="btn solid" id="btnSimpanVendor" type="button">Simpan Vendor</button>
+      <button class="btn ghost" id="btnLihatVendor" type="button">Pratinjau</button>
     </div>
   </div>
+  </section>
+
+  <div class="bilah-simpan" data-tampil-di="pengantin acara hadiah tampilan" hidden>
+    <span class="ket">Perubahan di bagian undangan disimpan bersama.</span>
+    <button class="btn solid" id="btnSimpan">Simpan Semua</button>
+  </div>
+  </main>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -403,6 +409,7 @@ select{appearance:none;cursor:pointer;}
 <script src="/assets/akun.js"></script>
 <script src="/assets/gambar.js"></script>
 <script src="/assets/kenangan.js"></script>
+<script src="/assets/panel.js"></script>
 <script>
 (function(){
   'use strict';
@@ -512,6 +519,7 @@ select{appearance:none;cursor:pointer;}
 
   function gambar(){
     $('judulPasangan').textContent = data.mempelai.map(function(m){return m.panggilan;}).join(' & ') || pasangan.slug;
+    $('menuPasangan').textContent = $('judulPasangan').textContent;
     /* Paket standar tidak punya subdomain. Menuliskannya seolah punya
        berarti klien menyalin alamat yang sertifikatnya tidak ada. */
     $('alamatUndangan').textContent = M.alamatUndangan(pasangan).replace(/^https?:\/\//, '');
@@ -1481,7 +1489,7 @@ select{appearance:none;cursor:pointer;}
 
     $('hintKenangan').textContent = acaraLewat()
       ? 'Halaman yang dibuka tamu sesudah acara: hari itu diceritakan babak demi babak, dengan foto kalian sebagai latarnya. Semua yang tidak diisi memakai bawaan yang masuk akal — halaman ini tidak pernah kosong.'
-      : 'Belum perlu diisi sekarang. Sesudah acara, halaman ini bercerita babak demi babak memakai foto dari kotak 8. Tulisannya sudah bisa disiapkan dari sekarang kalau mau; yang dibiarkan kosong memakai bawaan.';
+      : 'Belum perlu diisi sekarang. Sesudah acara, halaman ini bercerita babak demi babak memakai foto dari halaman Foto & video. Tulisannya sudah bisa disiapkan dari sekarang kalau mau; yang dibiarkan kosong memakai bawaan.';
 
     var babak = (data.acara || []).filter(function(a){ return a.di_terimakasih !== false; });
     var bukan = (data.acara || []).filter(function(a){ return a.di_terimakasih === false; });
@@ -1494,7 +1502,7 @@ select{appearance:none;cursor:pointer;}
       var pilihan = foto.length
         ? pilihLatarHtml(foto)
         : '<p class="kosongstate">Belum ada foto untuk babak ini, jadi ia tampil sebagai kartu teks. Pilih bab <em>'
-          + esc(a.nama || 'ini') + '</em> pada foto di kotak 8.</p>';
+          + esc(a.nama || 'ini') + '</em> pada foto di halaman <a href="#foto">Foto &amp; video</a>.</p>';
       return '<div class="baris" data-babak="'+esc(a.id)+'">'
         + '<p class="baris-judul">'+(i+1)+' · '+esc(a.nama || 'Acara')+'</p>'
         + '<label>Satu kalimat untuk babak ini (kosong = kalimat yang terlihat samar)</label>'
@@ -1538,7 +1546,7 @@ select{appearance:none;cursor:pointer;}
           + '<p class="hint" style="margin:4px 0 0">'
           + (babak.length ? babak.length + ' babak: ' + babak.map(function(a){ return esc(a.nama || 'Acara'); }).join(', ')
                             + '. Kalimat dan latarnya diatur di <em>Babak acara</em> di bawah.'
-                          : 'Belum ada acara yang dicentang jadi babak di kotak 3.')
+                          : 'Belum ada acara yang dicentang jadi babak di halaman Acara & tempat.')
           + '</p></div>';
       }
       var s = simpanan[b.kunci] || {};
@@ -1556,7 +1564,7 @@ select{appearance:none;cursor:pointer;}
       if(b.jenis === 'media'){
         var foto = (data.foto || []).filter(function(f){ return f.bagian === b.kunci && f.tampil; });
         media = foto.length ? pilihLatarHtml(foto)
-          : '<p class="kosongstate">Belum ada foto/video. Pilih bab <em>'+esc(b.nama)+'</em> pada berkas di kotak 8.'
+          : '<p class="kosongstate">Belum ada foto/video. Pilih bab <em>'+esc(b.nama)+'</em> pada berkas di halaman <a href="#foto">Foto &amp; video</a>.'
             + (b.wajib ? '' : ' Tanpa foto, bab ini hanya muncul kalau judul atau tulisannya diisi.') + '</p>';
       }
       return '<div class="baris'+(tampil?'':' mati')+'" data-kblok="'+b.kunci+'">' + kepala
@@ -1646,8 +1654,10 @@ select{appearance:none;cursor:pointer;}
     e.target.closest('[data-kblok]').classList.toggle('mati', !e.target.checked);
   });
 
-  async function simpanKenangan(){
-    var btn = $('btnSimpanKenangan');
+  /* Satu penyimpanan untuk halaman "Isi halaman" dan "Vendor": tombol
+     mana pun yang ditekan, semua yang berubah di keduanya ikut tersimpan. */
+  async function simpanKenangan(e){
+    var btn = (e && e.currentTarget) || $('btnSimpanKenangan'), labelAwal = btn.textContent;
     btn.disabled = true; btn.textContent = 'Menyimpan…';
     try{
       var tugas = tugasVendor(), adaVendor = tugas.length > 0;
@@ -1697,7 +1707,7 @@ select{appearance:none;cursor:pointer;}
       }
       toast(tugas.length ? 'Halaman kenangan tersimpan' : 'Tidak ada yang berubah');
     }catch(e){ toast(e.message, true); }
-    finally{ btn.disabled = false; btn.textContent = 'Simpan Halaman Kenangan'; }
+    finally{ btn.disabled = false; btn.textContent = labelAwal; }
   }
 
   $('panelKenangan').addEventListener('click', async function(e){
@@ -1714,6 +1724,7 @@ select{appearance:none;cursor:pointer;}
   });
 
   $('btnSimpanKenangan').addEventListener('click', simpanKenangan);
+  $('btnSimpanVendor').addEventListener('click', simpanKenangan);
   /* Pratinjau selalu di asal dasbor ini: sesinya ada di localStorage
      asal ini, bukan di subdomain pasangan. */
   function bukaPratinjau(){
@@ -1721,6 +1732,7 @@ select{appearance:none;cursor:pointer;}
   }
   $('btnLihatKenangan').addEventListener('click', bukaPratinjau);
   $('btnPratinjauKenangan').addEventListener('click', bukaPratinjau);
+  $('btnLihatVendor').addEventListener('click', bukaPratinjau);
 
   /* ============================================================
      10 · Terbitkan halaman kenangan
@@ -1740,7 +1752,7 @@ select{appearance:none;cursor:pointer;}
 
     var hint;
     if(nyala && !pasangan.terbit){
-      hint = 'Sudah dinyalakan, tapi undangannya masih draf — tamu baru bisa membukanya sesudah undangan diterbitkan di kotak 7.';
+      hint = 'Sudah dinyalakan, tapi undangannya masih draf — tamu baru bisa membukanya sesudah undangan diterbitkan (kotak Undangan di atas).';
     }else if(nyala){
       hint = 'Tamu sudah bisa membuka halaman kenangan di alamat di bawah. Menariknya membuat alamat itu menjawab “belum tersedia”, tanpa menghapus apa pun.';
     }else if(!acaraLewat()){
@@ -1793,6 +1805,7 @@ select{appearance:none;cursor:pointer;}
     await muat();
     $('gerbang').hidden = true;
     $('isi').hidden = false;
+    Panel.pasang({ bawaan: 'beranda' });
   }
 
   /* Tautan dari email undangan (konfirmasi pesanan, migrasi 031) atau

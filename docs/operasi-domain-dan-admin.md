@@ -145,10 +145,10 @@ kliennya; `uji-admin.mjs` memeriksa halaman itu tidak meminta satu pun.
    WhatsApp dari halaman depan selama 90 hari.
 2. Klien setuju; admin mencatat pesanan di `/admin`
    (status *menunggu pembayaran*). Penjualan yang masuk langsung lewat
-   WhatsApp dicatat pemilik di `/pemilik` panel 4, dengan kode admin
+   WhatsApp dicatat pemilik di `/pemilik#pesanan`, dengan kode admin
    kalau pesannya membawa "Kode rujukan".
 3. Klien membayar ke rekening pemilik — satu pembayaran.
-4. Pemilik di panel 4 mengisi nominal dan komisi, lalu **Lunas**:
+4. Pemilik di halaman *Pesanan* mengisi nominal dan komisi, lalu **Lunas**:
    akun klien dibuat, email undangan dikirim, pasangan langsung
    **aktif**. Teks serah-terima (alamat, /dasbor, link panitia) muncul
    untuk dikirim lewat WhatsApp juga.
@@ -232,6 +232,27 @@ tamu ──GET /media/<jalur>──▶ cache edge Cloudflare ──▶ R2
 Urutan aman: bucket dulu (tanpa bucket, build Worker gagal), baru merge,
 baru rahasia + deploy fungsi. Sebelum rahasia terpasang, unggahan tetap
 jalan lewat jalan lama.
+
+## 6. Tampilan tiga dasbor
+
+`/dasbor`, `/pemilik`, dan `/admin` memakai gaya panel kerja yang sama,
+terpisah dari gaya undangan: latar putih/abu muda, huruf Inter, aksen
+nila. Gayanya di `assets/panel.css`, navigasinya di `assets/panel.js`.
+
+Isinya tidak lagi satu halaman panjang. Tiap fungsi punya halamannya
+sendiri; menu samping di layar lebar, tab yang bisa digeser di HP.
+Alamatnya ikut (`/dasbor#vendor`), jadi tombol Kembali dan tautan
+langsung bekerja.
+
+| Dasbor | Halaman |
+|---|---|
+| `/dasbor` (pengantin) | Beranda (status terbit undangan + halaman kenangan) · Pengantin · Acara & tempat · Hadiah · Penutup & tampilan · Foto & video · Isi halaman · **Vendor & pendukung** |
+| `/pemilik` | Pasangan · Buka pasangan baru · Akun klien · Pesanan · Admin & komisi |
+| `/admin` | Ringkasan · Pesanan baru · Pesanan · Pencairan |
+
+Di `/dasbor`, tombol **Simpan Semua** hanya muncul di empat halaman
+undangan (Pengantin, Acara, Hadiah, Penutup) dan menyimpan keempatnya
+sekaligus. Halaman kenangan dan vendor punya tombol simpannya sendiri.
 
 ## Urutan yang disarankan
 
