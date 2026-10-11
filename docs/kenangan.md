@@ -326,7 +326,7 @@ diunduh/dibagikan — tidak disimpan di server.
 |---|---|
 | Durasi | 60 dtk (pas satu story IG) atau 90 dtk (WA, TikTok; IG membaginya jadi dua). Kalau fotonya sedikit, video dipendekkan — satu foto paling lama 6 dtk. |
 | Susunan | Sampul (5 dtk: foto sampul, nama, tanggal · kota) → bab demi bab dalam urutan halaman, judul bab di foto pertamanya → penutup (6,5 dtk: kalimat terima kasih, nama, alamat halaman kenangan). |
-| Pemilihan foto | Foto latar tiap bab dulu, lalu bergiliran antarbab sampai durasinya habis. Titik fokus dan zum dari editor *Atur* dipakai; foto "tampil utuh" tampil utuh dengan latar buram. Berkas video dilewati (foto saja). Perlu ≥ 3 foto. |
+| Pemilihan foto | Foto latar tiap bab dulu, lalu bergiliran antarbab sampai durasinya habis. Titik fokus dan zum dari editor *Atur* dipakai; foto landscape ("tampil utuh") jadi **layar terbelah atas–bawah**: dipasangkan dengan foto landscape lain di bab yang sama, atau kalau sendirian, bagian bawahnya potongan dekat foto yang sama. Berkas video dilewati (foto saja). Perlu ≥ 3 foto. |
 | Musik | Musik undangan (`assets/backsound.mp3`), diulang, masuk 1 dtk dan keluar 2,5 dtk memudar. |
 | Perekaman | `assets/cerita-video.js`. Jalan cepat: WebCodecs H.264 + AAC dibungkus MP4 (`assets/mp4-muxer.js`, MIT) — Chrome/Edge desktop & Android, Safari 26. Selain itu MediaRecorder dari canvas, waktu nyata (layar harus tetap menyala); Safari lama tetap menghasilkan MP4. |
 | Data | `terimakasih_pratinjau` — sama persis dengan yang dibaca halaman, jadi judul dan urutan bab tidak bisa berbeda dari halamannya. |

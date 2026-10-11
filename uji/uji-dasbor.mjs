@@ -1012,6 +1012,23 @@ const browser = await chromium.launch();
       urut.nama === "Rian & 'Aini" && urut.sampul
       && urut.bab.join('|') === 'Rian:1/Mempelai pria|Akad Nikah:1|Akar Tempat Kami Tumbuh:1|Akhirnya, Kita:1', JSON.stringify(urut));
 
+  const belah = await page.evaluate(() => {
+    const D = (n, utuh) => ({ jalur: n, utuh });
+    const r = CeritaVideo.susun({ nama: 'A & B', tanggal: '', alamat: '', sampul: null, bab: [
+      { judul: 'Satu', foto: [D('d1', true), D('t1', false), D('d2', true), D('d3', true)] }] }, { durasi: 90 });
+    return r.adegan.filter(a => a.jenis === 'foto').map(a => a.foto.jalur + (a.foto2 ? '+' + a.foto2.jalur : ''))
+      .concat([String(CeritaVideo.jumlahFoto(r))]);
+  });
+  cek('25e2 foto landscape jadi layar terbelah: dipasangkan dengan landscape lain di bab yang sama, yang sendirian dengan dirinya sendiri',
+      belah.join('|') === 'd1+d2|t1|d3+d3|4', belah.join('|'));
+  const keluarga = await page.evaluate(async () => {
+    const r = await fetch(MENGUNDANG.SB.url + '/rest/v1/rpc/terimakasih_pratinjau', { method: 'POST', body: '{}' }).then(x => x.json());
+    const rr = CeritaVideo.susun(CeritaVideo.dariData(r, window.Kenangan, 'x'), { durasi: 60 });
+    const a = rr.adegan.find(x => x.judul === 'Akar Tempat Kami Tumbuh');
+    return !!a && a.foto.utuh && a.foto2 === a.foto;
+  });
+  cek('25e3 data sungguhan: satu foto landscape di bab Keluarga → atas utuh, bawah potongan dekatnya', keluarga);
+
   /* Chromium uji tidak membawa pengode H.264/AAC (Chrome sungguhan
      membawanya), jadi jalurnya diuji dengan VP9 + Opus dalam MP4 yang
      sama, dan durasinya dipendekkan ke 2 dtk. */
