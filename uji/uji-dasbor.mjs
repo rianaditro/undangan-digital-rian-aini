@@ -439,6 +439,9 @@ const browser = await chromium.launch();
       (await page.locator('#formBabak [data-latar="f-2"]').getAttribute('class')) === '');
 
   /* --- placeholder = tulisan bawaan halaman, dari satu sumber --- */
+  cek('12c placeholder kalimat babak = kalimat bawaan halaman sesuai nama acara',
+      /dua hidup resmi menjadi satu/.test(await babak.nth(0).locator('[data-kk="kenangan_teks"]').getAttribute('placeholder'))
+      && /menemukan rumahnya/.test(await babak.nth(1).locator('[data-kk="kenangan_teks"]').getAttribute('placeholder')));
   const ph = await page.locator('[data-kblok="sampul"] [data-kb="judul"]').getAttribute('placeholder');
   const bawaan = await page.evaluate(() => window.Kenangan.MENURUT.sampul.judul);
   cek('12a placeholder sama dengan bawaan halaman (assets/kenangan.js)', ph === bawaan && ph === 'Terima Kasih', ph);
