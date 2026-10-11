@@ -233,7 +233,7 @@ Permintaan pemilik platform, dan jawabannya di halaman:
 | Foto keluarga, pasangan, dll. | Bab tetap baru, urutan hari itu: mempelai pria → mempelai wanita → kedatangan keluarga → [akad, resepsi, … dari kotak 3] → sungkem → keluarga → para tamu → kami berdua. |
 | Tipografi suara pengantin | Semua tulisan bawaan ditulis ulang sebagai "kami" kepada "Anda" (`assets/kenangan.js`). Penutup ditandatangani "Kami yang berbahagia". |
 | Hapus "Dalam Angka" | Tidak digambar lagi. Kunci `angka` tetap dikirim database dan tetap boleh ada di `kenangan_blok`, supaya halaman lama yang masih tersimpan di peramban tidak patah. |
-| Terima kasih kepada | Tabel `kenangan_vendor` (peran, nama, tautan https:// atau @akun Instagram), diisi di kotak 9. |
+| Terima kasih kepada | Tabel `kenangan_vendor` (peran, nama, tautan https:// atau @akun Instagram), diisi di dasbor halaman *Vendor & pendukung*. Tampil sebagai **pita yang berjalan menyamping** (satu baris, berhenti saat disentuh supaya tautannya bisa diketuk) — tidak menambah panjang halaman. |
 | Musik + gulir otomatis | Tombol "Putar kenangan" di sampul: musik latar menyala, halaman bergulir sendiri. Tombol musik dan gulir mengambang seperti di undangan. |
 | Video | MP4/WebM ≤ 20 MB (maks. 12 video), tidak di-transcode: dasbor memeriksa bisa diputar dan mengambil satu bingkai jadi poster. MOV iPhone ditolak dengan petunjuk "Paling Kompatibel". |
 

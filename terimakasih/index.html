@@ -179,13 +179,27 @@ section{position:relative;}
 .tanda-video path{fill:var(--kapur);}
 
 /* ---------- Terima kasih kepada ---------- */
-#vendor{background:var(--nila-2);padding:clamp(80px,17vw,130px) var(--pad);text-align:center;border-top:1px solid rgba(195,154,92,.14);}
-#vendor .kalimat{color:rgba(237,231,217,.86);max-width:540px;margin-inline:auto;}
-.vendor{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:28px 24px;margin-top:46px;text-align:center;}
-.vendor div{padding-top:16px;border-top:1px solid rgba(195,154,92,.28);}
-.vendor .peran{font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--kuningan);}
-.vendor .nama{font-family:var(--display);font-size:19px;letter-spacing:.03em;margin-top:6px;}
-.vendor a{display:inline-block;margin-top:4px;font-size:13px;color:rgba(237,231,217,.7);text-decoration:none;border-bottom:1px solid rgba(237,231,217,.25);}
+/* Vendor: satu pita yang berjalan menyamping, bukan daftar yang harus
+   digulir. Isinya digandakan supaya putarannya menyambung tanpa jeda;
+   salinan kedua disembunyikan dari pembaca layar. Berhenti saat disentuh
+   atau ditunjuk, supaya tautannya bisa diketuk. */
+#vendor{background:var(--nila-2);padding:clamp(40px,8vw,64px) 0;text-align:center;
+  border-top:1px solid rgba(195,154,92,.14);border-bottom:1px solid rgba(195,154,92,.14);}
+#vendor .judul{font-size:clamp(20px,4.6vw,28px);padding-inline:var(--pad);}
+#vendor .kalimat{font-size:clamp(14px,3.4vw,16.5px);color:rgba(237,231,217,.72);max-width:540px;margin:10px auto 0;padding-inline:var(--pad);}
+.vendor{margin-top:28px;overflow:hidden;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent);
+          mask-image:linear-gradient(90deg,transparent,#000 9%,#000 91%,transparent);}
+.vendor-jalur{display:flex;width:max-content;animation:pita var(--durasi,30s) linear infinite;}
+.vendor:hover .vendor-jalur,.vendor:active .vendor-jalur,.vendor:focus-within .vendor-jalur{animation-play-state:paused;}
+.vendor-isi{display:flex;align-items:center;flex:none;min-width:100vw;justify-content:space-around;list-style:none;margin:0;padding:0;}
+.vendor-isi li{display:flex;align-items:baseline;gap:10px;padding:10px 28px;white-space:nowrap;position:relative;}
+.vendor-isi li::after{content:"";position:absolute;right:-3px;top:50%;width:6px;height:6px;transform:translateY(-50%) rotate(45deg);
+  border:1px solid rgba(195,154,92,.55);}
+.vendor .peran{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--kuningan);}
+.vendor .nama{font-family:var(--display);font-size:17px;letter-spacing:.03em;}
+.vendor a{font-size:12.5px;color:rgba(237,231,217,.65);text-decoration:none;border-bottom:1px solid rgba(237,231,217,.22);}
+@keyframes pita{to{transform:translateX(-50%);}}
 
 /* ---------- Penutup ---------- */
 .tanda-tangan{margin-top:34px;}
@@ -273,6 +287,9 @@ section{position:relative;}
   .lapis img,.latar.balik .lapis img{animation:none;transform:scale(var(--z,1));}
   #btnMusik .spin{animation:none;}
   .ucap{transition:none;}
+  .vendor{overflow-x:auto;-webkit-mask-image:none;mask-image:none;}
+  .vendor-jalur{animation:none;}
+  .vendor-isi[aria-hidden]{display:none;}
 
 }
 /* ---------- Tampil utuh (035) ----------
@@ -593,21 +610,31 @@ section{position:relative;}
         return;
       }
 
+      function pitaVendor(v){
+        function isi(salinan){
+          var luar = salinan ? ' tabindex="-1"' : '';
+          return '<ul class="vendor-isi"' + (salinan ? ' aria-hidden="true"' : '') + '>' + v.map(function(x){
+            var tautan = '';
+            if (/^@/.test(x.tautan || '')) tautan = '<a href="https://instagram.com/' + esc(x.tautan.slice(1)) + '" target="_blank" rel="noopener"' + luar + '>' + esc(x.tautan) + '</a>';
+            else if (/^https?:\/\//.test(x.tautan || '')){
+              var host = x.tautan.replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '');
+              tautan = '<a href="' + esc(x.tautan) + '" target="_blank" rel="noopener"' + luar + '>' + esc(host) + '</a>';
+            }
+            return '<li><span class="peran">' + esc(x.peran) + '</span><span class="nama">' + esc(x.nama) + '</span>' + tautan + '</li>';
+          }).join('') + '</ul>';
+        }
+        // ±5 dtk per nama, paling cepat 24 dtk satu putaran
+        return '<div class="vendor"><div class="vendor-jalur" style="--durasi:' + Math.max(24, v.length * 5) + 's">'
+          + isi(false) + isi(true) + '</div></div>';
+      }
+
       if (def.jenis === 'vendor'){
         var v = d.vendor || [];
         if (!v.length) return;
         html.push('<section id="vendor"><div class="wrap-lebar">'
           + '<h2 class="judul reveal">' + esc(b.judul) + '</h2>'
           + (b.teks ? '<p class="kalimat reveal">' + esc(b.teks) + '</p>' : '')
-          + '<div class="vendor">' + v.map(function(x){
-              var tautan = '';
-              if (/^@/.test(x.tautan || '')) tautan = '<a href="https://instagram.com/' + esc(x.tautan.slice(1)) + '" target="_blank" rel="noopener">' + esc(x.tautan) + '</a>';
-              else if (/^https?:\/\//.test(x.tautan || '')){
-                var host = x.tautan.replace(/^https?:\/\/(www\.)?/, '').replace(/\/.*$/, '');
-                tautan = '<a href="' + esc(x.tautan) + '" target="_blank" rel="noopener">' + esc(host) + '</a>';
-              }
-              return '<div class="reveal"><p class="peran">' + esc(x.peran) + '</p><p class="nama">' + esc(x.nama) + '</p>' + tautan + '</div>';
-            }).join('') + '</div></div></section>');
+          + '</div>' + pitaVendor(v) + '</section>');
         return;
       }
 

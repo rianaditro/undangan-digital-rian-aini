@@ -191,12 +191,25 @@ const urutanBab = page => page.evaluate(() =>
   cek('tk-8 album: SEMUA foto (yang sudah tampil di bab ikut), urut bab, yang tanpa bab di akhir',
       albumSrc.length === 11 && albumSrc[0] === 'sampul.jpg' && albumSrc[2] === 'akad.jpg'
       && await page.locator('[data-bab="galeri"] .tanda-video').count() === 2, albumSrc.join(','));
-  const vendor = page.locator('#vendor .vendor > div');
+  const vendor = page.locator('#vendor .vendor-isi:not([aria-hidden]) li');
   cek('tk-9 terima kasih kepada: @akun → Instagram, https → nama situs, tanpa tautan tetap tampil',
       await vendor.count() === 3
-      && await page.locator('#vendor a[href="https://instagram.com/lensajepara"]').count() === 1
-      && (await teks(page, '#vendor .vendor > div >> nth=1')).includes('sekar.example')
-      && await page.locator('#vendor .vendor > div >> nth=2').locator('a').count() === 0);
+      && await page.locator('#vendor .vendor-isi:not([aria-hidden]) a[href="https://instagram.com/lensajepara"]').count() === 1
+      && (await vendor.nth(1).textContent()).includes('sekar.example')
+      && await vendor.nth(2).locator('a').count() === 0);
+  /* Pita berjalan: isi digandakan untuk putaran tanpa sambungan; salinannya
+     tidak dibaca pembaca layar dan tidak bisa dicapai Tab. Bagiannya pendek. */
+  const pita = await page.locator('#vendor').evaluate(sec => {
+    const jalur = sec.querySelector('.vendor-jalur'), salin = sec.querySelector('.vendor-isi[aria-hidden="true"]');
+    return { anim: getComputedStyle(jalur).animationName, durasi: getComputedStyle(jalur).animationDuration,
+             salin: salin ? salin.querySelectorAll('li').length : 0,
+             tab: [...(salin ? salin.querySelectorAll('a') : [])].every(a => a.tabIndex === -1),
+             semuaSebaris: new Set([...sec.querySelectorAll('.vendor-isi li')].map(li => Math.round(li.getBoundingClientRect().top))).size === 1,
+             tinggi: Math.round(sec.getBoundingClientRect().height) };
+  });
+  cek('tk-9b vendor jadi pita berjalan menyamping: satu baris, isi digandakan (salinan tersembunyi), bagian pendek',
+      pita.anim === 'pita' && pita.durasi === '24s' && pita.salin === 3 && pita.tab && pita.semuaSebaris && pita.tinggi < 340,
+      JSON.stringify(pita));
   cek('tk-10 penutup bertanda tangan kalian berdua',
       (await teks(page, '[data-bab="penutup"] .tanda-tangan')).includes("Rian & 'Aini"));
   cek('tk-11 tombol putar, musik, gulir, dan ucapan siap',
