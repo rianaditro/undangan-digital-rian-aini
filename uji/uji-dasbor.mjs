@@ -223,6 +223,16 @@ async function pasang(page, model) {
         return kirim(baru, 201);
       }
     }
+    // isi halaman kenangan untuk pemilik — dipakai Video story
+    if (jalur === '/rest/v1/rpc/terimakasih_pratinjau') {
+      (model.rpcVideo = model.rpcVideo || []).push({ arg: JSON.parse(req.postData() || '{}'), auth: req.headers()['authorization'] });
+      const m = s => model.mempelai.find(x => x.sisi === s) || {};
+      return kirim({ aktif: true, pratinjau: true, tanggal_acara: model.pasangan[0].tanggal_acara, kota: model.pasangan[0].kota,
+        mempelai: { pria: { panggilan: m('pria').panggilan }, wanita: { panggilan: m('wanita').panggilan } },
+        foto: model.foto.map(f => ({ ...f, jenis: f.jenis || 'foto' })),
+        babak: model.acara.filter(a => a.di_terimakasih).map(a => ({ id: a.id, nama: a.nama })),
+        blok: model.kenangan_blok || [], vendor: [], ucapan: [] });
+    }
     return kirim({ message: 'tidak distub: ' + req.method() + ' ' + jalur }, 500);
   });
 }
@@ -963,12 +973,81 @@ const browser = await chromium.launch();
   await ctx2.close();
 }
 
+/* ---------- Video story ---------- */
+{
+  const model = bikinModel();
+  const { ctx, page } = await masuk(browser, model, 400, 'video');
+  await page.waitForFunction(() => /foto|Belum cukup/.test(document.getElementById('ringkasVideo').textContent), null, { timeout: 8000 });
+  cek('25a dua foto saja: tombol mati, diminta menambah foto',
+      await page.locator('#btnBuatVideo').isDisabled() && /setidaknya 3 foto/.test(await page.locator('#ringkasVideo').textContent()));
+  cek('25b data dibaca dari terimakasih_pratinjau dengan JWT pemilik',
+      model.rpcVideo.length >= 1 && model.rpcVideo[0].arg.p_slug === 'rian-aini' && model.rpcVideo[0].auth === 'Bearer JWT-pemilik');
+  await ctx.close();
+}
+{
+  const model = bikinModel();
+  for (const [i, bagian, w, h] of [[3, 'sampul', 1004, 1504], [4, 'pria', 1004, 1504], [5, 'keluarga', 1600, 1067], [6, 'berdua', 1004, 1504]])
+    model.foto.push({ id: 'f-' + i, pasangan_id: 'p-1', jalur: 'p-1/v' + i + '.webp', jalur_kecil: 'p-1/v' + i + '-kecil.webp', lebar: w, tinggi: h,
+                      bita: 100000, urutan: i, keterangan: '', tampil: true, acara_id: null, bagian, latar: false, diunggah: '2026-09-16T03:00:00Z' });
+  model.foto.push({ id: 'f-9', pasangan_id: 'p-1', jalur: 'p-1/klip.mp4', jalur_kecil: 'p-1/klip-poster.webp', jenis: 'video', durasi_ms: 8000,
+                    lebar: 720, tinggi: 1280, bita: 900000, urutan: 9, keterangan: '', tampil: true, acara_id: null, bagian: 'tamu', latar: false,
+                    diunggah: '2026-09-16T03:00:00Z' });
+  const { ctx, page } = await masuk(browser, model, 400, 'video');
+  await page.waitForFunction(() => / foto · /.test(document.getElementById('ringkasVideo').textContent), null, { timeout: 8000 });
+  const ringkas60 = await page.locator('#ringkasVideo').textContent();
+  const dtk60 = Number((ringkas60.match(/(\d+) detik/) || [])[1]);
+  cek('25c cukup foto: ringkasan menyebut jumlah foto, durasi, 1080 × 1920; video (berkas bergerak) tidak ikut; foto sedikit = video dipendekkan',
+      /^5 foto · \d+ detik · 1080 × 1920$/.test(ringkas60.trim()) && dtk60 > 20 && dtk60 < 60 && await page.locator('#btnBuatVideo').isEnabled(), ringkas60);
+  await page.locator('.pilih-durasi input[value="90"]').check();
+  await page.waitForFunction(() => /90 detik|\d+ detik/.test(document.getElementById('ringkasVideo').textContent), null, { timeout: 4000 });
+  const ringkas90 = await page.locator('#ringkasVideo').textContent();
+  cek('25d 90 detik dengan foto sedikit: sama pendeknya — foto tidak diam lebih dari 6 dtk',
+      ringkas90.trim() === ringkas60.trim(), ringkas90);
+  const urut = await page.evaluate(async () => {
+    const r = await fetch(MENGUNDANG.SB.url + '/rest/v1/rpc/terimakasih_pratinjau', { method: 'POST', body: '{}' }).then(x => x.json());
+    const isi = CeritaVideo.dariData(r, window.Kenangan, 'rian-aini.mengundang.id/terimakasih');
+    return { nama: isi.nama, sampul: !!isi.sampul, bab: isi.bab.filter(b => b.foto.length).map(b => b.judul + ':' + b.foto.length + (b.atas ? '/' + b.atas : '')) };
+  });
+  cek('25e urutan dan judul bab mengikuti halaman kenangan',
+      urut.nama === "Rian & 'Aini" && urut.sampul
+      && urut.bab.join('|') === 'Rian:1/Mempelai pria|Akad Nikah:1|Akar Tempat Kami Tumbuh:1|Akhirnya, Kita:1', JSON.stringify(urut));
+
+  /* Chromium uji tidak membawa pengode H.264/AAC (Chrome sungguhan
+     membawanya), jadi jalurnya diuji dengan VP9 + Opus dalam MP4 yang
+     sama, dan durasinya dipendekkan ke 2 dtk. */
+  await page.locator('.pilih-durasi input[value="60"]').check();
+  await page.evaluate(() => {
+    CeritaVideo.KODEK.video.push({ codec: 'vp09.00.10.08', mux: 'vp9' });
+    CeritaVideo.KODEK.audio.push({ codec: 'opus', mux: 'opus' });
+    const asli = CeritaVideo.susun;
+    CeritaVideo.susun = (i, o) => { const r = asli(i, o); r.total = 2; return r; };
+  });
+  await page.locator('#btnBuatVideo').click();
+  await page.waitForSelector('#videoHasil:not([hidden])', { timeout: 90000 });
+  const hasil = await page.evaluate(async () => {
+    const v = document.getElementById('hasilVideo');
+    if (!(v.duration > 0)) await new Promise(r => v.addEventListener('loadedmetadata', r, { once: true }));
+    const buf = new Uint8Array(await (await fetch(v.src)).arrayBuffer());
+    const teks = new TextDecoder('latin1').decode(buf);
+    return { durasi: v.duration, lebar: v.videoWidth, tinggi: v.videoHeight, bita: buf.length,
+             ftyp: teks.slice(4, 8), vp9: teks.includes('vp09'), opus: teks.includes('Opus'), mdat: teks.includes('mdat'),
+             unduh: document.getElementById('btnUnduhVideo').download, info: document.getElementById('infoHasilVideo').textContent };
+  });
+  cek('25f video MP4 tegak 1080×1920 jadi, dengan trek gambar dan suara (musik undangan), bisa diputar',
+      hasil.ftyp === 'ftyp' && hasil.vp9 && hasil.opus && hasil.mdat && hasil.lebar === 1080 && hasil.tinggi === 1920
+      && Math.abs(hasil.durasi - 2) < 0.3 && hasil.bita > 10000, JSON.stringify(hasil));
+  cek('25g nama unduhan dan keterangan hasil',
+      hasil.unduh === 'kenangan-rian-aini-2dtk.mp4' && /MP4/.test(hasil.info) && !/tanpa musik/.test(hasil.info), hasil.unduh + ' / ' + hasil.info);
+  await page.locator('#panelVideo').screenshot({ path: 'dasbor-video-400.png' });
+  await ctx.close();
+}
+
 /* ---------- tata letak HP ---------- */
 {
   const model = bikinModel();
   const { ctx, page } = await masuk(browser, model, 400);
   const buruk = [];
-  for (const h of ['beranda', 'pengantin', 'acara', 'hadiah', 'tampilan', 'foto', 'kenangan', 'vendor']) {
+  for (const h of ['beranda', 'pengantin', 'acara', 'hadiah', 'tampilan', 'foto', 'kenangan', 'vendor', 'video']) {
     await ke(page, h);
     buruk.push(...await page.evaluate(h => {
     const keluar = [];
