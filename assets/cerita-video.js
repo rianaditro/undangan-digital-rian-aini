@@ -23,7 +23,21 @@
   function susun(isi, opsi) {
     var durasi = (opsi && opsi.durasi) || 60;
     var anggaran = durasi - LAMA_SAMPUL - LAMA_PENUTUP;
-    var bab = isi.bab.filter(function (b) { return b.foto && b.foto.length; });
+    /* Foto landscape tampil sebagai layar terbelah atas–bawah supaya
+       layar tegak tidak kosong: dipasangkan dengan foto landscape lain
+       di bab yang sama; kalau tidak ada, bagian bawahnya potongan dekat
+       foto yang sama. Satu "satuan" = satu adegan (satu atau dua foto). */
+    var bab = isi.bab.filter(function (b) { return b.foto && b.foto.length; }).map(function (b) {
+      var sisa = b.foto.slice(), satuan = [];
+      while (sisa.length) {
+        var f = sisa.shift();
+        if (!f.utuh) { satuan.push({ foto: f }); continue; }
+        var j = -1;
+        for (var x = 0; x < sisa.length; x++) if (sisa[x].utuh) { j = x; break; }
+        satuan.push({ foto: f, foto2: j >= 0 ? sisa.splice(j, 1)[0] : f });
+      }
+      return { judul: b.judul, atas: b.atas, foto: satuan };
+    });
 
     // giliran: foto ke-1 semua bab, lalu foto ke-2 semua bab, dst.
     var ambil = bab.map(function () { return 0; }), dipakai = 0, ada = true;
@@ -48,7 +62,7 @@
     bab.forEach(function (b, i) {
       for (var k = 0; k < ambil[i]; k++) {
         var lama = (k === 0 ? LAMA_JUDUL : LAMA_FOTO) + tambah;
-        adegan.push({ jenis: 'foto', mulai: t, lama: lama, foto: b.foto[k],
+        adegan.push({ jenis: 'foto', mulai: t, lama: lama, foto: b.foto[k].foto, foto2: b.foto[k].foto2 || null,
                       judul: k === 0 ? b.judul : null, atas: k === 0 ? b.atas : null, ke: adegan.length });
         t += lama;
       }
@@ -112,6 +126,29 @@
     }
     sampul(ctx, img, iw, ih, f.fx == null ? 0.5 : f.fx, f.fy == null ? 0.5 : f.fy, zum, geser);
   }
+  /* Layar terbelah: dua foto landscape memenuhi separuh atas dan separuh
+     bawah, bergeser berlawanan arah, dipisah garis emas tipis. Kalau
+     bawahnya foto yang sama, ia diperbesar ke titik lain — rinciannya. */
+  function lukisBelah(ctx, f1, f2, p, arah) {
+    var celah = 4, h = (T - celah) / 2;
+    separuh(ctx, f1, 0, h, p, arah, 1);
+    separuh(ctx, f2, h + celah, h, p, !arah, f1 === f2 ? 1.7 : 1);
+    ctx.fillStyle = WARNA.nila3; ctx.fillRect(0, h, L, celah);
+    ctx.save(); ctx.globalAlpha = 0.55; ctx.fillStyle = WARNA.kuningan; ctx.fillRect(L * 0.3, h + 1, L * 0.4, 2); ctx.restore();
+  }
+  function separuh(ctx, f, y0, h, p, arah, dekat) {
+    if (!f || !f.img) { ctx.fillStyle = WARNA.nila; ctx.fillRect(0, y0, L, h); return; }
+    var img = f.img, iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+    var zum = (dekat > 1 ? dekat : (f.zum || 1)) * (1.04 + 0.06 * p);
+    var s = Math.max(L / iw, h / ih) * zum, w = iw * s, hh = ih * s;
+    var fx = f.fx == null ? 0.5 : f.fx, fy = f.fy == null ? 0.5 : f.fy;
+    if (dekat > 1) { fx = fx < 0.5 ? 0.72 : 0.28; fy = 0.42; }   // titik lain dari foto yang sama
+    var x = (L - w) * fx + (arah ? 1 : -1) * (p - 0.5) * 0.05 * L, y = y0 + (h - hh) * fy;
+    x = Math.min(0, Math.max(L - w, x)); y = Math.min(y0, Math.max(y0 + h - hh, y));
+    ctx.save(); ctx.beginPath(); ctx.rect(0, y0, L, h); ctx.clip();
+    ctx.drawImage(img, x, y, w, hh);
+    ctx.restore();
+  }
   function buramkan(img, iw, ih) {
     var k = document.createElement('canvas'); k.width = 27; k.height = 48;
     var c = k.getContext('2d'), s = Math.max(27 / iw, 48 / ih);
@@ -145,7 +182,8 @@
   /* ---------- adegan ---------- */
   function lukisSampul(ctx, a, u, isi) {
     var p = u / a.lama;
-    if (a.foto) lukisFoto(ctx, a.foto, p, true);
+    if (a.foto && a.foto.utuh) lukisBelah(ctx, a.foto, a.foto, p, true);
+    else if (a.foto) lukisFoto(ctx, a.foto, p, true);
     else { ctx.fillStyle = WARNA.nila; ctx.fillRect(0, 0, L, T); }
     gelapBawah(ctx, 1);
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
@@ -162,7 +200,8 @@
   }
 
   function lukisFotoAdegan(ctx, a, u) {
-    lukisFoto(ctx, a.foto, u / a.lama, a.ke % 2 === 0);
+    if (a.foto2) lukisBelah(ctx, a.foto, a.foto2, u / a.lama, a.ke % 2 === 0);
+    else lukisFoto(ctx, a.foto, u / a.lama, a.ke % 2 === 0);
     gelapBawah(ctx, a.judul ? 1 : 0.55);
     if (!a.judul) return;
     // judul bab: naik pelan, bertahan, lalu pudar sebelum foto berikutnya
@@ -274,12 +313,18 @@
              sampul: (bagian.sampul || [])[0] || null, bab: bab };
   }
   function jumlahFoto(rencana) {
-    return rencana.adegan.filter(function (a) { return a.foto; }).length;
+    var n = 0;
+    rencana.adegan.forEach(function (a) { if (a.foto) n++; if (a.foto2 && a.foto2 !== a.foto) n++; });
+    return n;
   }
 
   /* Hanya foto yang benar-benar dipakai rencana yang diunduh. */
   function muatGambar(rencana, alamatFoto) {
-    var perlu = rencana.adegan.filter(function (a) { return a.foto; }).map(function (a) { return a.foto; });
+    var perlu = [];
+    rencana.adegan.forEach(function (a) {
+      if (a.foto && perlu.indexOf(a.foto) < 0) perlu.push(a.foto);
+      if (a.foto2 && perlu.indexOf(a.foto2) < 0) perlu.push(a.foto2);
+    });
     return Promise.all(perlu.map(function (f) {
       return new Promise(function (selesai) {
         var img = new Image();
