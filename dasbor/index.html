@@ -1497,8 +1497,8 @@ select{appearance:none;cursor:pointer;}
           + esc(a.nama || 'ini') + '</em> pada foto di kotak 8.</p>';
       return '<div class="baris" data-babak="'+esc(a.id)+'">'
         + '<p class="baris-judul">'+(i+1)+' · '+esc(a.nama || 'Acara')+'</p>'
-        + '<label>Satu kalimat untuk babak ini</label>'
-        + '<input data-kk="kenangan_teks" maxlength="200" value="'+esc(a.id in ketikan ? ketikan[a.id] : (a.kenangan_teks || ''))+'" placeholder="Kosongkan kalau tidak perlu kalimat">'
+        + '<label>Satu kalimat untuk babak ini (kosong = kalimat yang terlihat samar)</label>'
+        + '<input data-kk="kenangan_teks" maxlength="200" value="'+esc(a.id in ketikan ? ketikan[a.id] : (a.kenangan_teks || ''))+'" placeholder="'+esc(window.Kenangan.teksBabak(a.nama))+'">'
         + pilihan
         + '</div>';
     }).join('') : '<p class="kosongstate">Belum ada acara yang dicentang jadi babak. Tanpa babak, halaman kenangan tetap utuh: sampul, pesan, bab-bab berfoto, penutup.</p>')

@@ -571,7 +571,7 @@ section{position:relative;}
       if (def.jenis === 'acara'){
         (d.babak || []).forEach(function(a){
           var waktu = [a.tanggal, a.jam].filter(Boolean).join(' · ');
-          html.push(babMedia('acara-' + a.id, waktu || null, a.nama || 'Acara', a.teks, null, menurutAcara[a.id] || []));
+          html.push(babMedia('acara-' + a.id, waktu || null, a.nama || 'Acara', a.teks || K.teksBabak(a.nama), null, menurutAcara[a.id] || []));
         });
         return;
       }

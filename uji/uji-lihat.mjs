@@ -166,6 +166,10 @@ const urutanBab = page => page.evaluate(() =>
   const pria = await teks(page, '[data-bab="pria"]');
   cek('tk-4 bab mempelai pria: nama panggilan dan orang tua dari silsilah',
       /Rian/i.test(pria) && pria.toLowerCase().includes('bapak joko sudarno & ibu sri kanah'), pria);
+  cek('tk-5b babak tanpa kalimat memakai kalimat bawaan sesuai namanya (Resepsi), babak bernama lain memakai kalimat umum',
+      (await teks(page, '[data-bab="acara-A2"] .kalimat')).includes('menemukan rumahnya')
+      && await page.evaluate(() => window.Kenangan.teksBabak('Salam-salaman') === 'Satu lagi bab dari hari yang tak akan pernah kami lupakan.'
+                                   && /dua hidup resmi menjadi satu/.test(window.Kenangan.teksBabak('Akad Nikah'))));
   cek('tk-5 babak acara tanpa foto jadi kartu teks',
       await page.locator('[data-bab="acara-A3"]').evaluate(el => el.classList.contains('polos') && !el.querySelector('.latar'))
       && (await teks(page, '[data-bab="acara-A3"]')).includes('Antrean panjang'));
