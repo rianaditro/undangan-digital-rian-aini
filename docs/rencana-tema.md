@@ -51,7 +51,8 @@ Celah kedua: pemilih tema di dasbor masih daftar keras `['ukir-jepara']`
 
 ```
 tema/<kode>/
-├── gaya.css      ← wajib. Semua tampilan.
+├── gaya.css      ← wajib. Tampilan halaman undangan.
+├── kenangan.css  ← wajib. Tampilan halaman terima kasih (lihat docs/halaman-khusus.md bagian 5).
 ├── tema.json     ← wajib. Manifest, dibaca dasbor dan uji.
 ├── tata.js       ← opsional. Perilaku khusus tema.
 └── aset/         ← opsional. SVG ornamen, tekstur.
@@ -157,7 +158,7 @@ Tanpa server, tanpa pustaka.
 
 | Tahap | Isi | Kenapa di urutan ini |
 |---|---|---|
-| **A. Fondasi** | migrasi 036, slot di `index.html`, `undangan_isi` + foto, peran foto & pemilih tema di dasbor, `tema.json` + `daftar.json`, `uji-tema.mjs`, `ukir-jepara` diberi manifest dan gaya untuk slot baru, token bersama + palet & gaya teks per tema (`docs/variasi-tema.md`) | semua tema bergantung padanya; langsung menambah nilai ke tema yang sudah ada |
+| **A. Fondasi** | migrasi 036, slot di `index.html`, `undangan_isi` + foto, peran foto & pemilih tema di dasbor, `tema.json` + `daftar.json`, `uji-tema.mjs`, `ukir-jepara` diberi manifest dan gaya untuk slot baru, token bersama + palet & gaya teks per tema (`docs/variasi-tema.md`), gaya `/terimakasih` dipindah ke `tema/ukir-jepara/kenangan.css` dan dimuat menurut tema pasangan | semua tema bergantung padanya; langsung menambah nilai ke tema yang sudah ada |
 | **B. Dua Bingkai** | tema + mode foto/siluet/monogram per mempelai + aset SVG mihrab & siluet | celah pasar paling jelas; menguji setelan per tema; jalan dengan 0 foto |
 | **C. Monokrom** | tema + `grayscale` + grid majalah | paling sederhana; membuktikan satu HTML bisa berganti susunan total lewat CSS |
 | **D. Senja di Alam** | tema + ekstraksi palet (2.4) | menguji palet dari foto, yang lalu bisa dipakai tema lain |
@@ -165,6 +166,9 @@ Tanpa server, tanpa pustaka.
 | **F. Studio Anggun** | tema | tidak ada fitur baru; tema "aman" untuk katalog |
 | **G. Dokumenter** | tema + `tata.js` pertama (strip film, polaroid) | menguji kontrak JS tema |
 | **H. Kisah** | migrasi 037, editor bab di dasbor, tema | satu-satunya yang butuh tabel dan editor baru; paling banyak kerja dasbor |
+
+Setiap tema masuk bersama `kenangan.css`-nya: halaman terima kasih selalu
+mengikuti template undangannya.
 
 Setiap tahap = satu PR kecil ke `main`, dengan uji hijau
 dan tangkapan layar di deskripsinya.

@@ -1,8 +1,16 @@
-# Halaman khusus: jalan keluar dari template
+# Full Custom: jalan keluar dari template
 
-Disusun 12 Oktober 2026. Untuk paket tertinggi: pemilik platform sendiri
-yang membuat tampilan undangan per pasangan, dengan bantuan AI (sesi Claude
-Code di repo ini).
+Disusun 12 Oktober 2026, keputusan pemilik ditambahkan hari yang sama.
+Untuk paket tertinggi, **Full Custom**: pemilik platform sendiri yang membuat
+tampilan undangan per pasangan, dengan bantuan AI (sesi Claude Code di repo
+ini), bebas revisi.
+
+| Keputusan (12 Okt) | |
+|---|---|
+| Nama paket | **Full Custom** (kode `full_custom`) — subdomain seperti premium, plus halaman khusus |
+| Revisi | **tanpa batas** |
+| Halaman terima kasih | **mengikuti template undangannya** — berlaku untuk semua tema, katalog maupun custom |
+| Pakai ulang | hasil custom disimpan sebagai **katalog kategori custom**: dijual ulang dengan harga custom tanpa kerja ulang, **tidak** tampil di daftar template |
 
 ---
 
@@ -16,9 +24,9 @@ Code di repo ini).
 - Tema = folder. Halaman undangan satu `index.html`, isinya dari
   `undangan_isi(slug)`.
 
-> **Nama paket bertabrakan.** "Premium" sudah dipakai untuk paket
-> subdomain. Paket baru ini perlu nama lain, misalnya **`eksklusif`**:
-> semua yang premium punya, ditambah halaman khusus. Lihat bagian 7.
+Paket `premium` yang ada tetap berarti subdomain sendiri. `full_custom`
+ditambahkan sebagai nilai ketiga; pemicu alamat di 023 sudah memperlakukan
+semua yang bukan `standar` sebagai subdomain, jadi tidak perlu diubah.
 
 ---
 
@@ -30,51 +38,57 @@ anak tangga kedua, yang jauh lebih murah dikerjakan dan dirawat.
 | | Apa yang bisa diubah | Fitur bawaan (nama tamu, acara, ucapan, RSVP, hadiah, musik) | Waktu kerja kira-kira |
 |---|---|---|---|
 | **1. Tema + variasi** | palet, gaya teks, setelan tema | otomatis jalan | menit, oleh pasangan sendiri |
-| **2. Tema khusus** | seluruh tampilan: warna bebas, huruf bebas, ornamen dan ilustrasi buatan, animasi, susunan bagian, perilaku kecil lewat JS | otomatis jalan | beberapa jam |
-| **3. Halaman khusus** | struktur HTML bebas: bagian baru, alur baru (misal undangan berbentuk surat yang dibuka, peta interaktif, mini game) | dipakai lewat **kit**, wajib lulus kontrak | sekitar sehari |
+| **2. Tema custom** | seluruh tampilan: warna bebas, huruf bebas, ornamen dan ilustrasi buatan, animasi, susunan bagian, perilaku kecil lewat JS | otomatis jalan | beberapa jam |
+| **3. Halaman custom** | struktur HTML bebas: bagian baru, alur baru (misal undangan berbentuk surat yang dibuka, peta interaktif, mini game) | dipakai lewat **kit**, wajib lulus kontrak | sekitar sehari |
 
 Aturan praktis: mulai dari anak tangga 2. Naik ke 3 hanya bila yang diminta
 memang tidak bisa dicapai dengan menata ulang bagian yang sudah ada.
 
 ---
 
-## 2. Anak tangga 2 — tema khusus
+## 2. Anak tangga 2 — tema custom
 
 ```
-tema/khusus/<slug>/
-├── gaya.css
-├── tema.json     ← "khusus": "<slug>", tanpa palet/huruf pilihan
+tema/custom/<kode>/
+├── gaya.css      ← halaman undangan
+├── kenangan.css  ← halaman terima kasih (wajib, lihat bagian 5)
+├── tema.json     ← "kategori": "custom", "asal": "<slug pemesan pertama>"
 ├── tata.js       ← opsional
-└── aset/
+└── aset/         ← ornamen dan ilustrasi saja, TIDAK ADA foto pasangan
 ```
 
-- Dipasang dengan `pasangan.tema = 'khusus/<slug>'`. `gantiTema()` sudah
-  memuat `/tema/<nama>/gaya.css`, jadi cukup diperketat: nama harus cocok
-  `^(khusus/)?[a-z0-9-]+$`.
-- Tidak masuk `tema/daftar.json`, jadi tidak muncul di pemilih tema
-  pasangan lain. Di dasbor pasangan pemiliknya tampil sebagai satu kartu
-  "Tema khusus kalian" yang tidak bisa disetel.
+- Folder dinamai **kode tema** (misal `custom/teras-jati`), bukan slug
+  pasangan, karena tema ini akan dipakai ulang (bagian 6).
+- Dipasang dengan `pasangan.tema = 'custom/<kode>'`. Tidak butuh terbit
+  ulang: mengganti kolom sudah cukup. `gantiTema()` sudah memuat
+  `/tema/<nama>/gaya.css`, jadi cukup diperketat: nama harus cocok
+  `^(custom/)?[a-z0-9-]+$`.
+- Tidak masuk `tema/daftar.json`, jadi tidak muncul di pemilih tema. Di
+  dasbor pasangan pemakainya tampil sebagai satu kartu "Tema custom kalian"
+  yang tidak bisa disetel.
 - Semua penjaga berlaku: `periksa-gerak.mjs`, `periksa-palet.mjs` (untuk
   token yang dipakai), dan `uji-tema.mjs` (0/1/banyak foto, 360px/1280px).
 
 Karena HTML-nya sama, setiap perbaikan platform di `index.html` (misal
-perbaikan ucapan) otomatis sampai ke tema khusus.
+perbaikan ucapan) otomatis sampai ke tema custom.
 
 ---
 
-## 3. Anak tangga 3 — halaman khusus
+## 3. Anak tangga 3 — halaman custom
 
 ### 3.1 Bentuk
 
 ```
-khusus/<slug>/
-├── index.html    ← bebas
+custom/<kode>/
+├── index.html             ← undangan, bebas
+├── terimakasih/index.html ← halaman terima kasih, wajib (bagian 5)
 ├── gaya.css
 ├── halaman.js
-└── aset/
+├── halaman.json           ← "asal", dan versi kit yang dipakai
+└── aset/                  ← tanpa foto pasangan
 ```
 
-Hanya untuk paket bersubdomain. Alasannya keamanan: di subdomain sendiri,
+Hanya untuk paket bersubdomain (`premium`, `full_custom`). Alasannya keamanan: di subdomain sendiri,
 halaman khusus punya **origin** yang berbeda dari `mengundang.id/dasbor`,
 jadi skrip apa pun di dalamnya tidak bisa menyentuh sesi login dasbor.
 Di paket standar (domain bersama) origin-nya sama, sehingga kesalahan
@@ -83,7 +97,7 @@ login.
 
 ### 3.2 Kit — bagian yang tidak dibuat ulang
 
-Halaman khusus **tidak** berbicara langsung ke Supabase. Ia memakai kit,
+Halaman custom **tidak** berbicara langsung ke Supabase. Ia memakai kit,
 yaitu permukaan publik `assets/varian.js` yang dibakukan dan diberi versi:
 
 ```js
@@ -91,6 +105,7 @@ const u = await Kit.muat();          // isi undangan + nama tamu dari alamat
 u.mempelai, u.acara, u.tempat, u.foto, u.dompet, u.khusus
 Kit.tamu()                           // nama tamu, sudah di-escape
 Kit.ucapan.daftar() / .kirim({...})  // buku tamu + RSVP
+Kit.kenangan()                       // isi halaman terima kasih: babak, foto, blok, angka hadir
 Kit.musik(tombol)                    // musik latar + tombolnya
 Kit.fotoUrl(f, 'kecil')              // alamat foto dari R2
 Kit.gerak.runtun(el) / .parallax(el) // dari motion.js, sudah hormati gerak dikurangi
@@ -105,8 +120,8 @@ ini menaikkan versi, dan halaman lama tetap memakai versi lamanya.
 
 ### 3.3 Kontrak — syarat terbit
 
-Diperiksa oleh `uji/uji-khusus.mjs`, yang menjalankan **setiap** folder di
-`khusus/` dengan data stub:
+Diperiksa oleh `uji/uji-custom.mjs`, yang menjalankan **setiap** folder di
+`custom/` dengan data stub:
 
 1. Nama tamu dari alamat tampil.
 2. Semua acara dan tempatnya tampil, dengan tautan peta.
@@ -117,10 +132,16 @@ Diperiksa oleh `uji/uji-khusus.mjs`, yang menjalankan **setiap** folder di
 7. Skrip luar hanya dari daftar izin (Google Fonts, cdnjs). Tidak ada
    pelacak pihak ketiga.
 8. Ukuran total halaman pertama (tanpa foto) ≤ 500 KB.
+9. **Siap dipakai ulang:** dijalankan dua kali, dengan data pemesan asal dan
+   dengan data pasangan rekaan. Pada jalan kedua, tidak boleh ada nama,
+   tanggal, alamat, atau foto pemesan asal yang tampil, dan berkas di
+   folder tidak boleh memuat teks itu. Tema custom (anak tangga 2) ikut
+   diperiksa dengan cara yang sama di `uji-tema.mjs`.
+10. Halaman terima kasihnya ada dan lulus butir 5–8.
 
 Karena uji ini jalan di setiap PR, **perubahan platform yang mematahkan
-halaman khusus mana pun langsung merah**. Inilah yang membuat halaman
-khusus tetap bisa dirawat bertahun-tahun.
+halaman custom mana pun langsung merah**. Inilah yang membuat halaman
+custom tetap bisa dirawat bertahun-tahun, dan tetap bisa dijual ulang.
 
 ### 3.4 Rute
 
@@ -131,107 +152,172 @@ Worker.
 Perubahannya:
 
 - `run_worker_first` diperluas ke navigasi halaman, dengan pengecualian
-  untuk folder berkas (`!/assets/*`, `!/tema/*`, `!/khusus/*`, …), supaya
+  untuk folder berkas (`!/assets/*`, `!/tema/*`, `!/custom/*`, …), supaya
   satu kunjungan tamu = satu panggilan Worker, bukan belasan. Pola
   pengecualian `!` perlu dipastikan didukung versi wrangler yang dipakai;
   bila tidak, semua permintaan lewat Worker dan kuota gratis (100 ribu/hari)
   tetap cukup untuk skala sekarang.
 - Worker membaca slug dari subdomain, atau dari segmen pertama jalur di
-  alamat pratinjau, lalu mencoba `/khusus/<slug>/index.html` dari lapisan
-  aset. Ada → disajikan. Tidak ada → `index.html` seperti biasa.
+  alamat pratinjau, lalu mencarinya di **`custom/peta.json`**
+  (`{ "budi-sari": "surat-merpati" }`), yang dibundel ke dalam Worker.
+  Ada → `/custom/<kode>/index.html` (atau `/custom/<kode>/terimakasih/`
+  untuk jalur `/terimakasih`). Tidak ada → halaman template seperti biasa.
 
-Tidak perlu peta atau kolom database untuk rute: keberadaan folder
-adalah sakelarnya. Menghapus folder = kembali ke template.
+Peta dibutuhkan karena satu halaman custom bisa dipakai banyak pasangan.
+Memasang halaman custom yang sudah ada untuk pembeli baru = satu baris di
+`peta.json` + satu PR kecil. Menghapus barisnya = kembali ke template.
 
 ---
 
 ## 4. Isi khusus tanpa migrasi
 
-Halaman khusus sering butuh isi yang tidak punya kolom: kutipan favorit,
+Halaman custom sering butuh isi yang tidak punya kolom: kutipan favorit,
 lirik lagu, daftar "10 hal tentang kami", tautan siaran langsung.
 
 - Kolom baru `pasangan.khusus jsonb not null default '{}'`.
 - Dikirim apa adanya oleh `undangan_isi` sebagai kunci `khusus`.
 - Diisi pemilik dari `/pemilik` (editor JSON sederhana dengan validasi
   sintaks), bukan oleh pasangan. Bentuk isinya ditentukan halaman
-  khususnya sendiri.
+  custom-nya sendiri, dan dicatat di `tema.json` / `halaman.json` sebagai
+  `isi_khusus` supaya pembeli berikutnya tahu apa yang perlu diisi.
 
 Satu kolom, satu migrasi, untuk semua kebutuhan isi aneh selamanya.
 
 ---
 
-## 5. Alur kerja pemilik + AI
+## 5. Halaman terima kasih mengikuti template
 
-### 5.1 Brief dari pasangan
+Berlaku untuk **semua** tema, bukan hanya Full Custom. Tamu yang membuka
+halaman terima kasih harus merasa berada di "undangan yang sama".
 
-Di dasbor paket eksklusif muncul panel **Brief halaman khusus**:
+Sekarang `/terimakasih/index.html` membawa ±340 baris gaya sendiri di dalam
+`<style>` dan huruf `ukir-jepara` yang ditulis keras. Perubahannya:
+
+- Gaya itu dipindah ke `tema/ukir-jepara/kenangan.css`. Halaman terima
+  kasih memuat `kenangan.css` milik tema pasangan, dengan `gantiTema()` yang
+  sama (palet + gaya teks ikut).
+- **Setiap folder tema wajib punya `kenangan.css`.** `uji-tema.mjs` membuka
+  halaman terima kasih untuk setiap tema, dengan dan tanpa foto.
+- Tema katalog baru (Dua Bingkai, Monokrom, …) menambah `kenangan.css`
+  sebagai bagian dari tahapnya masing-masing di `docs/rencana-tema.md`.
+- Halaman custom (anak tangga 3) membuat `terimakasih/index.html` sendiri
+  lewat `Kit.kenangan()`.
+
+---
+
+## 6. Katalog custom — dijual ulang tanpa kerja ulang
+
+Setiap tema dan halaman custom yang selesai otomatis menjadi barang katalog
+**kategori custom**.
+
+- **Tidak tampil** di pemilih tema dasbor maupun di halaman depan. Tidak ada
+  di `tema/daftar.json`.
+- Tercatat di `tema/custom.json` (dibangkitkan dari manifest, sama seperti
+  `daftar.json`) dan hanya ditampilkan di **`/pemilik`**: tangkapan layar,
+  kode, anak tangga (2/3), `isi_khusus` yang dibutuhkan, berapa kali sudah
+  dipakai.
+- **Harga custom** tetap berlaku saat dijual ulang. Pemilik menawarkannya ke
+  calon pembeli Full Custom sebagai titik awal ("pilih dari karya kami, atau
+  buat dari nol").
+- **Memasang untuk pembeli baru:**
+  - tema custom → ganti `pasangan.tema` di `/pemilik`, tidak perlu terbit;
+  - halaman custom → satu baris di `custom/peta.json`, satu PR.
+- **Revisi pembeli kedua** yang mengubah tampilan dibuat sebagai **turunan**
+  (`custom/teras-jati-2`, dengan `"turunan": "teras-jati"` di manifest),
+  supaya pemakai pertama tidak ikut berubah. Turunan itu sendiri masuk
+  katalog juga.
+- Butir 9 kontrak (bagian 3.3) yang menjamin tidak ada sisa data pemesan
+  asal di dalam tema.
+
+**Izin pemesan asal** dimasukkan ke syarat paket Full Custom: desain boleh
+dipakai ulang, data dan foto mereka tidak pernah ikut. Kolom
+`tema.json → izin_ulang` (bawaan `true`) memberi jalan bila ada pemesan
+yang menolak; tema seperti itu tidak muncul di katalog custom.
+
+---
+
+## 7. Alur kerja pemilik + AI
+
+### 7.1 Brief dari pasangan
+
+Di dasbor paket Full Custom muncul panel **Brief desain**:
+
+- titik awal: dari nol, atau dari salah satu katalog custom yang ditawarkan
+  pemilik
 
 - referensi (tautan Pinterest/Instagram, unggah tangkapan layar)
 - foto acuan dari pustaka foto mereka
 - warna, suasana, hal yang **tidak** diinginkan
 - tenggat
 
-Disimpan di tabel `brief_khusus` (pasangan_id, isi jsonb, status: `baru` →
-`dikerjakan` → `pratinjau` → `revisi` → `terbit`, riwayat revisi). Pemilik
-melihat antreannya di `/pemilik`.
+Disimpan di tabel `brief_custom` (pasangan_id, isi jsonb, status: `baru` →
+`dikerjakan` → `pratinjau` → `revisi` → `terbit`). Pemilik melihat antreannya
+di `/pemilik`, **diurutkan menurut tanggal acara** (yang paling dekat paling
+atas).
 
-### 5.2 Mengerjakan
+### 7.2 Mengerjakan
 
-Repo diberi skill `.claude/skills/halaman-khusus/SKILL.md`, supaya setiap
+Repo diberi skill `.claude/skills/full-custom/SKILL.md`, supaya setiap
 sesi AI bekerja dengan cara yang sama:
 
 1. Baca brief (lewat Supabase MCP, atau ditempel).
-2. Putuskan anak tangga 2 atau 3, beserta alasannya.
-3. Salin kerangka `tema/khusus/_contoh/` atau `khusus/_contoh/`.
+2. Putuskan anak tangga 2 atau 3, beserta alasannya; bila brief memilih
+   katalog custom, mulai dari tema itu (atau turunannya).
+3. Salin kerangka `tema/custom/_contoh/` atau `custom/_contoh/`.
 4. Ambil data pasangan sungguhan sebagai stub uji (pola `uji/undangan-isi.json`).
-5. Bangun, jalankan `periksa-gerak`, `periksa-palet`, `uji-tema` /
-   `uji-khusus`, ambil tangkapan layar HP dan desktop.
+5. Bangun undangan **dan** halaman terima kasihnya, jalankan
+   `periksa-gerak`, `periksa-palet`, `uji-tema` / `uji-custom` (termasuk
+   uji pakai ulang), ambil tangkapan layar HP dan desktop.
 6. Buka PR dengan tangkapan layar. Workers Builds memberi alamat pratinjau.
 
-### 5.3 Revisi dan terbit
+### 7.3 Revisi dan terbit — bebas revisi
+
+Karena revisi tidak dibatasi, setiap putaran harus murah bagi kedua pihak:
 
 - Pemilik mengirim alamat pratinjau ke pasangan (status `pratinjau`).
-- Revisi = komit baru di PR yang sama. Batas putaran revisi ditentukan
-  di paket (usul: 2 putaran).
+- Pasangan menulis permintaan revisi **di dasbor**, bukan di WhatsApp:
+  satu catatan per permintaan, boleh dengan tangkapan layar. Disimpan di
+  tabel `revisi_custom` (brief_id, isi, status `baru`/`selesai`, komit).
+  Satu tempat, satu riwayat, tidak ada permintaan yang tenggelam di chat.
+- Sesi AI membaca semua catatan `baru` sekaligus, mengerjakannya dalam satu
+  komit di PR yang sama, lalu menandainya `selesai` dengan hash komitnya.
+  Alamat pratinjau yang sama langsung menampilkan versi terbaru.
 - Gabung ke `main` → terbit. Untuk anak tangga 2, sekaligus mengisi
-  `pasangan.tema = 'khusus/<slug>'`.
+  `pasangan.tema = 'custom/<kode>'`.
+- Revisi sesudah terbit tetap diterima: PR baru, alur yang sama.
 
-### 5.4 Yang sengaja tidak dibuat
+### 7.4 Yang sengaja tidak dibuat
 
 **Unggah HTML lewat web.** Kelihatannya lebih cepat, tetapi kode AI masuk
 ke produksi tanpa uji, tanpa riwayat, tanpa pratinjau, dan tanpa ada yang
 tahu kalau perubahan platform berikutnya mematahkannya. Lewat repo, setiap
-halaman khusus punya PR, riwayat, uji yang terus jalan, dan bisa dikembalikan
+halaman custom punya PR, riwayat, uji yang terus jalan, dan bisa dikembalikan
 dengan satu `git revert`.
 
 ---
 
-## 6. Urutan kerja
+## 8. Urutan kerja
 
-Halaman khusus bergantung pada Tahap A di `docs/rencana-tema.md` (slot foto,
-token, manifest). Sesudahnya:
+Full Custom bergantung pada Tahap A di `docs/rencana-tema.md` (slot foto,
+token, manifest, `kenangan.css`). Sesudahnya:
 
 | Tahap | Isi |
 |---|---|
-| **K1** | tema khusus: validasi nama `khusus/…`, kerangka `_contoh`, pengecualian dari `daftar.json`, kartu di dasbor |
-| **K2** | migrasi: paket `eksklusif`, kolom `pasangan.khusus`, tabel `brief_khusus`; panel brief di dasbor, antrean di `/pemilik` |
-| **K3** | skill `halaman-khusus` + satu tema khusus percontohan (misal untuk Rian & 'Aini) |
-| **K4** | kit v1 (dibakukan dari `varian.js`), rute di Worker, `uji-khusus.mjs`, kerangka `khusus/_contoh/` |
+| **K1** | tema custom: validasi nama `custom/…`, kerangka `_contoh` (dengan `kenangan.css`), `tema/custom.json`, uji pakai ulang di `uji-tema.mjs`, kartu di dasbor |
+| **K2** | migrasi: paket `full_custom`, kolom `pasangan.khusus`, tabel `brief_custom` + `revisi_custom`; panel brief & revisi di dasbor; antrean dan katalog custom di `/pemilik` |
+| **K3** | skill `full-custom` + satu tema custom percontohan (misal untuk Rian & 'Aini) |
+| **K4** | kit v1 (dibakukan dari `varian.js`, termasuk `Kit.kenangan()`), `custom/peta.json` + rute di Worker, `uji-custom.mjs`, kerangka `custom/_contoh/` |
 
 K1–K3 sudah cukup untuk mulai menjual paket. K4 menyusul saat ada
 permintaan yang memang butuh struktur HTML sendiri.
 
 ---
 
-## 7. Yang perlu diputuskan
+## 9. Masih terbuka
 
-1. **Nama paket**: `eksklusif`, atau nama lain? Paket `premium` yang ada
-   tetap berarti subdomain sendiri.
-2. **Batas revisi** per pesanan (usul 2 putaran), dan apa yang terjadi
-   sesudahnya (biaya tambahan per putaran?).
-3. **Halaman kenangan** (`/terimakasih`) ikut dibuat khusus, atau tetap
-   template? Usul: tetap template, dengan palet dan huruf diambil dari tema
-   khususnya.
-4. **Hak pakai ulang**: boleh tidak sebuah tema khusus, setelah acara,
-   dijadikan tema katalog (dengan izin pasangan)? Ini cara murah menambah
-   katalog dari pekerjaan yang sudah dibayar.
+1. **Harga** paket Full Custom, dan harga katalog custom bila dijual ulang
+   tanpa perubahan (sama dengan buat baru, atau lebih rendah?).
+2. **Turunan**: revisi pembeli kedua yang kecil (ganti satu warna) tetap
+   jadi turunan baru, atau cukup lewat `pasangan.khusus`/palet? Usul: bila
+   perubahannya bisa dinyatakan sebagai data, pakai data; bila menyentuh
+   CSS/HTML, buat turunan.
