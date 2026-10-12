@@ -150,6 +150,20 @@ const teks = (page, sel) => page.locator(sel).innerText().then(t => t.replace(/\
 const urutanBab = page => page.evaluate(() =>
   [...document.querySelectorAll('#cerita > section')].map(s => s.dataset.bab || s.id));
 
+/* --- bab "Di balik layar" (036) --- */
+{
+  const isi = isiKenangan();
+  isi.foto = isi.foto.concat([f('p/rias.jpg', { bagian:'bts', latar:true }), f('p/gaun.jpg', { bagian:'bts' })]);
+  const { ctx, page } = await tk(isi);
+  const urut = await urutanBab(page);
+  cek('tk-42 bab Di balik layar: muncul kalau ada fotonya, sesudah para tamu dan sebelum kami berdua, dengan judul dan kalimat bawaan',
+      urut.join('|') === 'pembuka|pria|acara-A1|acara-A2|acara-A3|keluarga|bts|galeri|vendor|penutup'
+      && (await teks(page, '[data-bab="bts"] .judul')) === 'Di Balik Layar'
+      && /tak sempat dilihat tamu/.test(await teks(page, '[data-bab="bts"] .kalimat'))
+      && await page.locator('[data-bab="bts"] .lapis').count() === 2, urut.join('|'));
+  await ctx.close();
+}
+
 /* --- halaman penuh --- */
 {
   const { ctx, page } = await tk(isiKenangan());

@@ -350,7 +350,7 @@ const browser = await chromium.launch();
   cek('6d foto berbabak: pilihannya terpasang', (await pilih1.inputValue()) === 'a:a-1');
   const opsi = (await pilih0.locator('option').allTextContents()).join('|');
   cek('6e daftar bab mengikuti hari itu: bab tetap, babak acara di tempatnya',
-      opsi === 'Tanpa bab (album)|Sampul|Mempelai pria|Mempelai wanita|Kedatangan keluarga|Akad Nikah|Resepsi|Sungkem|Keluarga|Para tamu|Kami berdua', opsi);
+      opsi === 'Tanpa bab (album)|Sampul|Mempelai pria|Mempelai wanita|Kedatangan keluarga|Akad Nikah|Resepsi|Sungkem|Keluarga|Para tamu|Di balik layar|Kami berdua', opsi);
 
   /* --- memberi babak --- */
   await pilih0.selectOption('a:a-2');
@@ -432,7 +432,7 @@ const browser = await chromium.launch();
      lebih dulu menyembunyikannya. */
   const jmlBlok = await page.evaluate(() => window.Kenangan.BLOK.filter(b => b.jenis !== 'acara').length);
   cek('10a2 semua bab tergambar sejak halaman dimuat, tanpa "Dalam Angka"',
-      (await page.locator('#formBlok [data-kblok]').count()) === jmlBlok && jmlBlok === 13
+      (await page.locator('#formBlok [data-kblok]').count()) === jmlBlok && jmlBlok === 14
       && (await page.locator('#formBlok [data-kblok="angka"]').count()) === 0
       && (await page.locator('#formBlok [data-info="acara"]').textContent()).includes('Akad Nikah, Resepsi'));
   cek('10b sesudah acara, keterangannya bercerita tentang halaman',
@@ -561,7 +561,7 @@ const browser = await chromium.launch();
   const { ctx, page } = await masuk(browser, model, 400, 'kenangan');
   cek('17a sebelum acara: panel 9 tetap terlihat, dengan keterangan pra-acara, blok lengkap',
       await page.locator('#panelKenangan').isVisible()
-      && (await page.locator('#formBlok [data-kblok]').count()) === 13
+      && (await page.locator('#formBlok [data-kblok]').count()) === 14
       && /belum perlu diisi/i.test(await page.locator('#hintKenangan').textContent()));
   const buruk = await page.evaluate(() => {
     const keluar = [];
@@ -971,6 +971,64 @@ const browser = await chromium.launch();
   cek('21b tautan pemulihan: kotak sandi baru, judulnya bukan "undangan aktif"',
       (await page2.locator('#judulSandiBaru').textContent()) === 'Buat kata sandi baru');
   await ctx2.close();
+}
+
+/* ---------- Pratinjau langsung (layar lebar) ---------- */
+{
+  const model = bikinModel();
+  model.foto.push({ id: 'f-7', pasangan_id: 'p-1', jalur: 'p-1/kel.webp', jalur_kecil: 'p-1/kel-kecil.webp', lebar: 1004, tinggi: 1504,
+                    bita: 100000, urutan: 7, keterangan: '', tampil: true, acara_id: null, bagian: 'keluarga', latar: false, diunggah: '2026-09-16T03:00:00Z' });
+  const { ctx, page } = await masuk(browser, model, 1440, 'kenangan');
+  await page.waitForSelector('#pratinjauLangsung:not([hidden])', { timeout: 5000 });
+  const bingkai = page.frameLocator('#plFrame');
+  await page.waitForFunction(() => document.getElementById('plFrame').contentDocument?.body?.dataset.siap === 'isi', null, { timeout: 10000 });
+  const src = await page.locator('#plFrame').getAttribute('src');
+  cek('26a layar lebar: pratinjau HP tampil di samping Bab & tulisan, dimuat dalam mode tertanam',
+      /\/terimakasih\?pasangan=rian-aini&pratinjau=1&tanam=1$/.test(src)
+      && await page.locator('.halaman.aktif .tab-kenangan a[aria-current="page"]').getAttribute('href') === '#kenangan', src);
+  cek('26b bingkai tidak membaca server sendiri; pita pratinjau tidak dipasang di dalamnya',
+      await bingkai.locator('#pita').isHidden() && (await bingkai.locator('[data-bab="keluarga"]').count()) === 1);
+
+  // mengetik judul sampul, BELUM disimpan → tampil di pratinjau
+  model.patch.length = 0; model.post.length = 0;
+  await page.locator('[data-kblok="sampul"] [data-kb="judul"]').fill('Matur Nuwun Sanget');
+  await page.waitForFunction(() => document.getElementById('plFrame').contentDocument?.getElementById('sampulJudul')?.textContent === 'Matur Nuwun Sanget',
+                             null, { timeout: 8000 });
+  cek('26c ketikan yang belum disimpan langsung tampil di pratinjau, tanpa menulis ke server',
+      model.post.length === 0 && model.patch.length === 0);
+
+  // menyunting bab Keluarga → pratinjau digulir ke bab itu
+  await page.locator('[data-kblok="keluarga"] [data-kb="judul"]').fill('Akar Kami');
+  await page.waitForFunction(() => {
+    const d = document.getElementById('plFrame').contentDocument;
+    const el = d && d.querySelector('[data-bab="keluarga"]');
+    return el && /Akar Kami/.test(el.textContent) && Math.abs(el.getBoundingClientRect().top) < 40;
+  }, null, { timeout: 8000 });
+  cek('26d bab yang sedang disunting digulir ke layar pratinjau', true);
+
+  // pindah ke Foto & video: pratinjau tetap ada; memberi bab menulis ke server → dibaca ulang
+  await page.locator('.halaman.aktif .tab-kenangan a[href="#foto"]').click();
+  await page.waitForSelector('.halaman.aktif[data-halaman="foto"]');
+  cek('26e tab Foto & video: pratinjau tetap tampil', await page.locator('#pratinjauLangsung').isVisible());
+  const sebelum = (model.rpcVideo || []).length;
+  await page.locator('#pustakaFoto [data-foto="f-1"] [data-f="bab"]').selectOption('b:keluarga');
+  await page.waitForFunction(() => document.getElementById('plFrame').contentDocument?.querySelectorAll('[data-bab="keluarga"] .lapis').length === 2,
+                             null, { timeout: 8000 });
+  cek('26f foto diberi bab → isi dibaca ulang dari server, pratinjau ikut berubah', (model.rpcVideo || []).length > sebelum);
+  await page.screenshot({ path: 'dasbor-pratinjau-1440.png' });
+
+  await page.locator('.menu nav a[href="#hadiah"]').click();
+  await page.waitForSelector('.halaman.aktif[data-halaman="hadiah"]');
+  cek('26g halaman lain: pratinjau disembunyikan', await page.locator('#pratinjauLangsung').isHidden());
+  await ctx.close();
+}
+{
+  const model = bikinModel();
+  const { ctx, page } = await masuk(browser, model, 1100, 'kenangan');
+  await page.waitForTimeout(300);
+  cek('26h layar < 1280 px: tanpa pratinjau samping, bingkai tidak dimuat',
+      await page.locator('#pratinjauLangsung').isHidden() && !(await page.locator('#plFrame').getAttribute('src')));
+  await ctx.close();
 }
 
 /* ---------- Video story ---------- */

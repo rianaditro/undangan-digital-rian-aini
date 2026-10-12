@@ -330,3 +330,29 @@ diunduh/dibagikan — tidak disimpan di server.
 | Musik | Musik undangan (`assets/backsound.mp3`), diulang, masuk 1 dtk dan keluar 2,5 dtk memudar. |
 | Perekaman | `assets/cerita-video.js`. Jalan cepat: WebCodecs H.264 + AAC dibungkus MP4 (`assets/mp4-muxer.js`, MIT) — Chrome/Edge desktop & Android, Safari 26. Selain itu MediaRecorder dari canvas, waktu nyata (layar harus tetap menyala); Safari lama tetap menghasilkan MP4. |
 | Data | `terimakasih_pratinjau` — sama persis dengan yang dibaca halaman, jadi judul dan urutan bab tidak bisa berbeda dari halamannya. |
+
+## 18. Pratinjau langsung dan "Di balik layar" (12 Oktober)
+
+**Pratinjau langsung.** Di layar ≥ 1280 px, halaman dasbor *Foto & video*,
+*Bab & tulisan*, dan *Vendor* punya kolom kanan berisi halaman kenangan
+seukuran HP (390×844, diperkecil). Ketiga halaman itu juga punya tab di
+atasnya, jadi berpindah antara foto dan tulisan tidak menghilangkan
+pratinjau.
+
+- Ketikan yang **belum disimpan** langsung tampil (±0,7 dtk sesudah
+  berhenti mengetik); tamu baru melihatnya sesudah Simpan.
+- Bab yang sedang disunting — atau bab dari ubin foto yang dipegang —
+  digulir ke layar pratinjau.
+- Sesudah apa pun ditulis ke server (bab foto, latar, Atur, unggahan,
+  simpan), isinya dibaca ulang dan pratinjau ikut berubah.
+- Cara kerjanya: bingkai `/terimakasih?pratinjau=1&tanam=1` tidak membaca
+  server sendiri; dasbor mengirim isinya (jawaban `terimakasih_pratinjau`
+  ditimpa isi formulir) lewat `postMessage`, hanya dari asal yang sama.
+- Di layar lebih sempit (HP, tablet) tidak ada kolom ini; tombol
+  *Pratinjau* tetap membuka tab baru.
+
+**Bab "Di balik layar"** (`bts`, migrasi 036): bab media opsional
+sesudah *Para tamu* dan sebelum *Kami berdua* — rias, gaun, dekorasi,
+tawa gugup sebelum acara — jadi "Kami berdua" tetap penutup ceritanya. Seperti bab media lain, ia hanya muncul kalau ada
+foto yang diberi bab ini (atau pasangan menulisinya), dan bisa dimatikan.
+Ikut masuk video story.
