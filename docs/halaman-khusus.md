@@ -216,16 +216,20 @@ Setiap tema dan halaman custom yang selesai otomatis menjadi barang katalog
   `daftar.json`) dan hanya ditampilkan di **`/pemilik`**: tangkapan layar,
   kode, anak tangga (2/3), `isi_khusus` yang dibutuhkan, berapa kali sudah
   dipakai.
-- **Harga custom** tetap berlaku saat dijual ulang. Pemilik menawarkannya ke
+- **Harga custom** tetap berlaku penuh saat dijual ulang (sama dengan membuat dari nol). Pemilik menawarkannya ke
   calon pembeli Full Custom sebagai titik awal ("pilih dari karya kami, atau
   buat dari nol").
 - **Memasang untuk pembeli baru:**
   - tema custom → ganti `pasangan.tema` di `/pemilik`, tidak perlu terbit;
   - halaman custom → satu baris di `custom/peta.json`, satu PR.
-- **Revisi pembeli kedua** yang mengubah tampilan dibuat sebagai **turunan**
-  (`custom/teras-jati-2`, dengan `"turunan": "teras-jati"` di manifest),
-  supaya pemakai pertama tidak ikut berubah. Turunan itu sendiri masuk
-  katalog juga.
+- **Revisi pembeli kedua**: yang bisa dinyatakan sebagai data (palet,
+  `pasangan.khusus`, setelan) cukup lewat data. Yang menyentuh CSS/HTML
+  dibuat sebagai **turunan** (`custom/teras-jati-2`, dengan
+  `"turunan": "teras-jati"` di manifest), supaya pemakai pertama tidak ikut
+  berubah. Turunan itu sendiri masuk katalog juga.
+- Supaya jalur data itu ada, tema custom **boleh** memakai token palet
+  (`docs/variasi-tema.md`) alih-alih warna tertulis langsung. Skill
+  `full-custom` menyarankannya sebagai bawaan.
 - Butir 9 kontrak (bagian 3.3) yang menjamin tidak ada sisa data pemesan
   asal di dalam tema.
 
@@ -313,11 +317,11 @@ permintaan yang memang butuh struktur HTML sendiri.
 
 ---
 
-## 9. Masih terbuka
+## 9. Keputusan lanjutan (12 Okt)
 
-1. **Harga** paket Full Custom, dan harga katalog custom bila dijual ulang
-   tanpa perubahan (sama dengan buat baru, atau lebih rendah?).
-2. **Turunan**: revisi pembeli kedua yang kecil (ganti satu warna) tetap
-   jadi turunan baru, atau cukup lewat `pasangan.khusus`/palet? Usul: bila
-   perubahannya bisa dinyatakan sebagai data, pakai data; bila menyentuh
-   CSS/HTML, buat turunan.
+1. **Harga katalog custom = harga Full Custom.** Dijual ulang tanpa
+   perubahan pun harganya sama dengan membuat dari nol.
+2. **Perubahan pembeli kedua:** bila bisa dinyatakan sebagai data (palet,
+   `pasangan.khusus`, setelan tema), pakai data dan temanya tetap sama.
+   Bila menyentuh CSS/HTML, buat turunan (`custom/<kode>-2`, dengan
+   `"turunan": "<kode>"` di manifest).
