@@ -350,7 +350,7 @@ const browser = await chromium.launch();
   cek('6d foto berbabak: pilihannya terpasang', (await pilih1.inputValue()) === 'a:a-1');
   const opsi = (await pilih0.locator('option').allTextContents()).join('|');
   cek('6e daftar bab mengikuti hari itu: bab tetap, babak acara di tempatnya',
-      opsi === 'Tanpa bab (album)|Sampul|Mempelai pria|Mempelai wanita|Di balik layar|Kedatangan keluarga|Akad Nikah|Resepsi|Sungkem|Keluarga|Para tamu|Kami berdua', opsi);
+      opsi === 'Tanpa bab (album)|Sampul|Mempelai pria|Mempelai wanita|Kedatangan keluarga|Akad Nikah|Resepsi|Sungkem|Keluarga|Para tamu|Kami berdua|Di balik layar', opsi);
 
   /* --- memberi babak --- */
   await pilih0.selectOption('a:a-2');

@@ -351,8 +351,9 @@ pratinjau.
 - Di layar lebih sempit (HP, tablet) tidak ada kolom ini; tombol
   *Pratinjau* tetap membuka tab baru.
 
-**Bab "Di balik layar"** (`bts`, migrasi 036): bab media opsional sesudah
-mempelai wanita, sebelum kedatangan keluarga — rias, gaun, dekorasi, tawa
-gugup sebelum acara. Seperti bab media lain, ia hanya muncul kalau ada
+**Bab "Di balik layar"** (`bts`, migrasi 036): bab media opsional di
+akhir — sesudah album, sebelum vendor, seperti cuplikan di balik layar
+sebelum daftar kredit film: rias, gaun, dekorasi, tawa gugup sebelum
+acara. "Kami berdua" tetap puncaknya. Seperti bab media lain, ia hanya muncul kalau ada
 foto yang diberi bab ini (atau pasangan menulisinya), dan bisa dimatikan.
 Ikut masuk video story.

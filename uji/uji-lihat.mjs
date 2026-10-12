@@ -156,8 +156,8 @@ const urutanBab = page => page.evaluate(() =>
   isi.foto = isi.foto.concat([f('p/rias.jpg', { bagian:'bts', latar:true }), f('p/gaun.jpg', { bagian:'bts' })]);
   const { ctx, page } = await tk(isi);
   const urut = await urutanBab(page);
-  cek('tk-42 bab Di balik layar: muncul kalau ada fotonya, sesudah mempelai dan sebelum acara, dengan judul dan kalimat bawaan',
-      urut.join('|') === 'pembuka|pria|bts|acara-A1|acara-A2|acara-A3|keluarga|galeri|vendor|penutup'
+  cek('tk-42 bab Di balik layar: muncul kalau ada fotonya, di akhir sesudah album dan sebelum vendor, dengan judul dan kalimat bawaan',
+      urut.join('|') === 'pembuka|pria|acara-A1|acara-A2|acara-A3|keluarga|galeri|bts|vendor|penutup'
       && (await teks(page, '[data-bab="bts"] .judul')) === 'Di Balik Layar'
       && /tak sempat dilihat tamu/.test(await teks(page, '[data-bab="bts"] .kalimat'))
       && await page.locator('[data-bab="bts"] .lapis').count() === 2, urut.join('|'));
