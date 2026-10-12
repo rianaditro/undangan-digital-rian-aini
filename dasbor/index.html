@@ -128,6 +128,26 @@
 .sil-kartu .alat{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
 .sil-kartu .alat .btn{padding:5px 7px;font-size:9px;letter-spacing:.06em;flex:1 1 66px;min-width:66px;}
 @media (min-width:900px){ #btnKeluarHp{display:none;} }
+/* pratinjau langsung — hanya di layar lebar */
+.tab-kenangan{display:flex;gap:4px;padding:4px;margin:0 0 16px;background:var(--nila-2);border-radius:10px;width:max-content;max-width:100%;overflow-x:auto;}
+.tab-kenangan a{padding:7px 14px;border-radius:7px;font-size:13.5px;font-weight:500;color:var(--tinta-2);text-decoration:none;white-space:nowrap;}
+.tab-kenangan a[aria-current="page"]{background:#fff;color:var(--kapur);box-shadow:var(--bayang);}
+.pratinjau-langsung{display:none;}
+@media (min-width:1280px){
+  .app.ada-pratinjau .utama{padding-right:calc(var(--lebar-pl) + 36px);max-width:none;}
+  .app.ada-pratinjau .bilah-simpan{right:var(--lebar-pl);}
+  .pratinjau-langsung:not([hidden]){display:flex;flex-direction:column;position:fixed;top:0;right:0;bottom:0;width:var(--lebar-pl);
+    background:#fff;border-left:1px solid var(--garis);padding:16px 18px;z-index:20;}
+}
+:root{--lebar-pl:420px;}
+.pl-kepala{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px;}
+.pl-kepala b{display:block;font-size:14px;}
+.pl-kepala small{display:block;font-size:12px;color:var(--tinta-3);margin-top:2px;}
+.pl-bingkai{flex:1;display:flex;justify-content:center;align-items:flex-start;overflow:hidden;padding:10px 0;}
+.pl-kepala .btn{white-space:nowrap;flex:none;}
+.pl-bingkai iframe{width:390px;height:844px;border:0;border-radius:28px;background:#0d1626;transform-origin:top center;flex:none;
+  box-shadow:0 0 0 8px #111827,0 18px 40px -12px rgba(0,0,0,.35);transition:opacity .25s;}
+.pl-bingkai.memuat iframe{opacity:.55;}
 /* video story */
 .pilih-durasi{display:grid;gap:10px;margin-top:6px;}
 @media (min-width:640px){ .pilih-durasi{grid-template-columns:1fr 1fr;} }
@@ -322,6 +342,7 @@
   </section>
 
   <section class="halaman" data-halaman="foto" data-judul="Foto & video">
+    <nav class="tab-kenangan" aria-label="Bagian halaman kenangan"><a href="#foto">Foto &amp; video</a><a href="#kenangan">Bab &amp; tulisan</a><a href="#vendor">Vendor</a></nav>
     <h2 class="halaman-judul">Foto & video</h2>
     <p class="halaman-sub">Semua foto dan video hari itu. Beri tiap berkas bab-nya, atur potongan untuk layar HP.</p>
   <!-- 8 -->
@@ -351,6 +372,7 @@
   </section>
 
   <section class="halaman" data-halaman="kenangan" data-judul="Isi halaman kenangan">
+    <nav class="tab-kenangan" aria-label="Bagian halaman kenangan"><a href="#foto">Foto &amp; video</a><a href="#kenangan">Bab &amp; tulisan</a><a href="#vendor">Vendor</a></nav>
     <h2 class="halaman-judul">Isi halaman kenangan</h2>
     <p class="halaman-sub">Bab-bab halaman kenangan: tampil atau tidak, tulisan, dan foto pembukanya.</p>
   <!-- 9 -->
@@ -375,6 +397,7 @@
   </section>
 
   <section class="halaman" data-halaman="vendor" data-judul="Vendor & pendukung">
+    <nav class="tab-kenangan" aria-label="Bagian halaman kenangan"><a href="#foto">Foto &amp; video</a><a href="#kenangan">Bab &amp; tulisan</a><a href="#vendor">Vendor</a></nav>
     <h2 class="halaman-judul">Vendor & pendukung</h2>
     <p class="halaman-sub">Ucapan terima kasih untuk vendor, sponsor, atau brand yang membantu hari Anda — muncul di halaman kenangan sebagai bagian "Terima Kasih Kepada".</p>
   <div class="panel" id="panelVendor">
@@ -431,6 +454,16 @@
     <button class="btn solid" id="btnSimpan">Simpan Semua</button>
   </div>
   </main>
+
+  <!-- Pratinjau langsung: tampil di samping halaman Foto, Bab, dan
+       Vendor di layar lebar. Ketikan yang belum disimpan ikut tampil. -->
+  <aside class="pratinjau-langsung" id="pratinjauLangsung" aria-label="Pratinjau langsung halaman kenangan" hidden>
+    <div class="pl-kepala">
+      <div><b>Pratinjau langsung</b><small id="plKabar">Seperti yang dilihat tamu di HP.</small></div>
+      <button class="btn ghost kecil" type="button" id="plTab" title="Buka di tab baru">Buka ↗</button>
+    </div>
+    <div class="pl-bingkai" id="plBingkai"><iframe id="plFrame" title="Pratinjau halaman kenangan" tabindex="-1"></iframe></div>
+  </aside>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -525,6 +558,8 @@
     }));
     var teks = await r.text();
     if(r.status === 401){ simpanSesi(null); location.reload(); throw new Error('Sesi habis'); }
+    if(r.ok && opsi.method && opsi.method !== 'GET' && /^(foto|kenangan_blok|kenangan_vendor|acara|mempelai|silsilah)\b/.test(jalur)
+       && window.PratinjauLangsung) PratinjauLangsung.segarkan(true);
     if(!r.ok){
       var pesan = teks;
       try{ pesan = JSON.parse(teks).message || teks; }catch(e){}
@@ -989,7 +1024,7 @@
        keterangannya berbeda, karena sebelum acara memang belum ada yang
        bisa diunggah. */
     $('hintFoto').textContent = acaraLewat()
-      ? 'Foto dan video hari itu. Beri tiap berkas bab-nya — sampul, mempelai, kedatangan, akad, resepsi, sungkem, keluarga, para tamu, kami berdua — dan ia ikut bergiliran jadi latar bab itu. Yang tanpa bab masuk album.'
+      ? 'Foto dan video hari itu. Beri tiap berkas bab-nya — sampul, mempelai, di balik layar, kedatangan, akad, resepsi, sungkem, keluarga, para tamu, kami berdua — dan ia ikut bergiliran jadi latar bab itu. Yang tanpa bab masuk album.'
       : 'Belum perlu diisi sekarang — kotak ini untuk foto dan video SESUDAH acara. Yang masuk ke sini nanti menyusun halaman kenangan, bab demi bab.';
 
     var jmlVideo = daftar.filter(function(f){ return f.jenis === 'video'; }).length;
@@ -1277,6 +1312,7 @@
     data.foto = await api('foto?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,diunggah');
     gambarFoto();
     gambarKenangan();
+    if(window.PratinjauLangsung) PratinjauLangsung.segarkan(true);   // unggahan baru lewat foto-unggah
   }
 
   $('inBerkasFoto').addEventListener('change', pilihFoto);
@@ -1782,6 +1818,130 @@
   function bukaPratinjau(){
     window.open(M.alamatPratinjau(pasangan, '/terimakasih'), '_blank', 'noopener');
   }
+  /* ============================================================
+     Pratinjau langsung — halaman kenangan di samping penyunting.
+
+     Bingkai /terimakasih?pratinjau=1&tanam=1 tidak membaca server
+     sendiri: dasbor mengirim isinya (jawaban terimakasih_pratinjau,
+     ditimpa ketikan yang belum disimpan) lewat postMessage. Tiap isinya
+     berubah bingkainya dimuat ulang lalu digulir ke bab yang sedang
+     disunting. Sesudah apa pun ditulis ke server, isinya dibaca ulang.
+     Hanya di layar ≥ 1280 px; di HP tetap tombol Pratinjau biasa.
+     ============================================================ */
+  var PratinjauLangsung = window.PratinjauLangsung = (function(){
+    var HALAMAN = ['foto', 'kenangan', 'vendor'], LEBAR = matchMedia('(min-width:1280px)');
+    var dasar = null, mintaDasar = null, sasaran = null, jam = null, nyala = false, dimuat = false;
+    var frame = $('plFrame'), bingkai = $('plBingkai');
+
+    function ambilDasar(){
+      if(dasar) return Promise.resolve(dasar);
+      if(!mintaDasar) mintaDasar = fetch(M.SB.url + '/rest/v1/rpc/terimakasih_pratinjau', {
+          method:'POST', headers:{ apikey:M.SB.key, Authorization:'Bearer ' + (sesi && sesi.akses), 'Content-Type':'application/json' },
+          body: JSON.stringify({ p_slug: pasangan.slug })
+        }).then(function(r){ if(!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+          .then(function(d){ dasar = d; return d; })
+          .finally(function(){ mintaDasar = null; });
+      return mintaDasar;
+    }
+    /* Ketikan di formulir menimpa yang tersimpan — pratinjau menunjukkan
+       apa yang AKAN dilihat tamu sesudah Simpan. */
+    function isi(){
+      var d = JSON.parse(JSON.stringify(dasar));
+      d.blok = d.blok || {};
+      document.querySelectorAll('#formBlok [data-kblok]').forEach(function(el){
+        var cb = el.querySelector('[data-kb="tampil"]'), j = el.querySelector('[data-kb="judul"]'), t = el.querySelector('[data-kb="teks"]');
+        d.blok[el.dataset.kblok] = { tampil: cb ? cb.checked : true, judul: (j && j.value.trim()) || null, teks: (t && t.value.trim()) || null };
+      });
+      document.querySelectorAll('#formBabak [data-babak]').forEach(function(el){
+        var a = (d.babak || []).find(function(x){ return x.id === el.dataset.babak; });
+        var t = el.querySelector('[data-kk="kenangan_teks"]');
+        if(a && t) a.teks = t.value.trim() || null;
+      });
+      var vendor = [];
+      document.querySelectorAll('#formVendor .vendor-baris').forEach(function(el){
+        var v = function(k){ var x = el.querySelector('[data-kv="' + k + '"]'); return x ? x.value.trim() : ''; };
+        if(v('nama')) vendor.push({ peran: v('peran'), nama: v('nama'), tautan: v('tautan') || null });
+      });
+      if(document.querySelector('#formVendor .vendor-baris')) d.vendor = vendor;
+      return d;
+    }
+    function kirim(pesan){
+      if(frame.contentWindow) frame.contentWindow.postMessage(Object.assign({ jenis:'mengundang-pratinjau' }, pesan), location.origin);
+    }
+    addEventListener('message', function(e){
+      if(e.origin !== location.origin || e.source !== frame.contentWindow || !e.data || e.data.jenis !== 'mengundang-pratinjau-siap') return;
+      ambilDasar().then(function(){
+        kirim({ isi: isi(), gulir: sasaran });
+        bingkai.classList.remove('memuat'); $('plKabar').textContent = 'Seperti yang dilihat tamu di HP. Ketikan yang belum disimpan ikut tampil.';
+      }).catch(function(err){ $('plKabar').textContent = 'Pratinjau belum bisa dimuat: ' + err.message; bingkai.classList.remove('memuat'); });
+    });
+    function ukur(){
+      var w = bingkai.clientWidth, h = bingkai.clientHeight;
+      if(!w || !h) return;
+      var s = Math.min(1, (w - 28) / 390, (h - 28) / 844);
+      // dibuat seukuran HP sungguhan (390×844) lalu diperkecil seutuhnya
+      frame.style.transform = 'scale(' + s.toFixed(3) + ')';
+      frame.style.margin = '0 ' + (-(390 * (1 - s) / 2)).toFixed(0) + 'px ' + (-(844 * (1 - s))).toFixed(0) + 'px';
+    }
+    function muatUlang(){
+      bingkai.classList.add('memuat');
+      if(!dimuat){ dimuat = true; frame.src = M.alamatPratinjau(pasangan, '/terimakasih') + '&tanam=1'; }
+      else frame.contentWindow.location.reload();
+    }
+    function segarkan(bacaUlang){
+      if(bacaUlang) dasar = null;
+      if(!nyala) return;
+      clearTimeout(jam);
+      jam = setTimeout(muatUlang, bacaUlang ? 250 : 700);
+    }
+    function gulir(kunci){
+      if(!kunci || kunci === sasaran) return;
+      sasaran = kunci;
+      if(nyala && dimuat) kirim({ gulir: kunci });
+    }
+    function atur(h){
+      var mau = HALAMAN.indexOf(h) >= 0 && LEBAR.matches && !!pasangan;
+      document.querySelectorAll('.tab-kenangan a').forEach(function(a){
+        if(a.getAttribute('href') === '#' + h) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+      });
+      $('isi').classList.toggle('ada-pratinjau', mau);
+      $('pratinjauLangsung').hidden = !mau;
+      nyala = mau;
+      if(!mau) return;
+      if(h === 'vendor') gulir('vendor');
+      requestAnimationFrame(ukur);
+      if(!dimuat) muatUlang();
+    }
+    Panel.saatPindah(atur);
+    LEBAR.addEventListener && LEBAR.addEventListener('change', function(){ atur(Panel.sekarang()); });
+    addEventListener('resize', function(){ if(nyala) ukur(); });
+    $('plTab').addEventListener('click', function(){ window.open(M.alamatPratinjau(pasangan, '/terimakasih'), '_blank', 'noopener'); });
+
+    /* bab yang sedang disunting → digulir ke layar */
+    function kunciDari(el){
+      var b = el.closest('[data-kblok]'); if(b) return b.dataset.kblok;
+      var a = el.closest('[data-babak]'); if(a) return 'acara-' + a.dataset.babak;
+      if(el.closest('#formVendor')) return 'vendor';
+      return null;
+    }
+    ['formBlok', 'formBabak', 'formVendor'].forEach(function(id){
+      var w = $(id);
+      w.addEventListener('focusin', function(e){ gulir(kunciDari(e.target)); });
+      w.addEventListener('input', function(e){ gulir(kunciDari(e.target)); segarkan(false); });
+      w.addEventListener('change', function(e){ if(e.target.type === 'checkbox') segarkan(false); });
+    });
+    // memegang satu ubin foto → pratinjau menunjukkan bab foto itu
+    function gulirUbin(e){
+      var ubin = e.target.closest && e.target.closest('[data-foto]');
+      var pilih = ubin && ubin.querySelector('[data-f="bab"]'), v = pilih ? pilih.value : '';
+      if(v) gulir(v.slice(0, 2) === 'a:' ? 'acara-' + v.slice(2) : v.slice(2));
+    }
+    $('pustakaFoto').addEventListener('change', gulirUbin);
+    $('pustakaFoto').addEventListener('focusin', gulirUbin);
+    $('pustakaFoto').addEventListener('pointerdown', gulirUbin);
+    return { segarkan: segarkan, gulir: gulir, atur: atur, isi: function(){ return dasar ? isi() : null; } };
+  })();
+
   /* ============================================================
      Video story — halaman kenangan jadi video tegak 60/90 dtk.
      Penggambaran dan perekaman di assets/cerita-video.js; dibuat di

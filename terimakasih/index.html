@@ -280,6 +280,7 @@ section{position:relative;}
   .bab.kanan .isi{margin-left:auto;}
   .bab.kanan .alat-bab{justify-content:flex-end;}
 }
+.tertanam{scroll-behavior:auto!important;}
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto;}
   .reveal,.reveal.in{opacity:1;transform:none;transition:none;}
@@ -963,10 +964,33 @@ section{position:relative;}
     bukan: 'Akun yang sedang masuk bukan pemilik undangan ini.'
   };
 
-  minta()
+  /* Pratinjau tertanam di dasbor (?pratinjau=1&tanam=1): isinya dikirim
+     dasbor lewat postMessage — termasuk ketikan yang belum disimpan —
+     bukan dibaca dari server. Hanya dari asal yang sama. Dasbor memuat
+     ulang bingkainya tiap isinya berubah, lalu meminta bab yang sedang
+     disunting digulir ke layar. */
+  var tanam = pratinjau && new URLSearchParams(location.search).get('tanam') === '1' && window.parent !== window;
+  function gulirKe(kunci){
+    if (!kunci) return;
+    var el = kunci === 'vendor' ? $('vendor') : document.querySelector('[data-bab="' + CSS.escape(kunci) + '"]');
+    if (el){ el.scrollIntoView({ block: 'start', behavior: 'instant' }); document.querySelectorAll('.reveal').forEach(function(r){ r.classList.add('in'); }); }
+  }
+  function mintaTanam(){
+    return new Promise(function(selesai){
+      addEventListener('message', function(e){
+        if (e.origin !== location.origin || !e.data || e.data.jenis !== 'mengundang-pratinjau') return;
+        if (e.data.isi && !document.body.dataset.siap){ selesai(e.data.isi); setTimeout(function(){ gulirKe(e.data.gulir); }, 60); }
+        else if (e.data.gulir) gulirKe(e.data.gulir);
+      });
+      window.parent.postMessage({ jenis: 'mengundang-pratinjau-siap' }, location.origin);
+    });
+  }
+  if (tanam) document.documentElement.classList.add('tertanam');
+
+  (tanam ? mintaTanam() : minta())
   .then(function(d){
     if (!d || d.aktif !== true){ belumAda('Halaman ini belum tersedia.'); return; }
-    if (d.pratinjau) pasangPita(d);
+    if (d.pratinjau && !tanam) pasangPita(d);
     bangun(d);
     pasangGiliran();
     aturTengah();
