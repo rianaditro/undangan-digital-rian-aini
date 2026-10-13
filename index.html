@@ -656,9 +656,20 @@
 
     var g = M.FOTO.galeri || [];
     var seksi = document.getElementById('galeri');
+    /* Di HP galeri dua kolom; foto mendatar mengambil satu baris penuh.
+       Foto tegak yang tidak punya pasangan sebelum foto mendatar (atau di
+       ujung) meninggalkan petak kosong — ia ditandai .sendiri supaya tema
+       bisa melebarkannya. */
+    var tegakDi = g.map(function(f){ return f.lebar && f.tinggi ? f.tinggi >= f.lebar : true; });
+    var sendiri = {}, deret = 0;
+    tegakDi.concat([false]).forEach(function(t, i){
+      if(t){ deret++; return; }
+      if(deret % 2) sendiri[i - 1] = true;
+      deret = 0;
+    });
     document.getElementById('galeriIsi').innerHTML = g.map(function(f, i){
-      var tegak = f.lebar && f.tinggi ? f.tinggi >= f.lebar : true;
-      return '<button type="button" class="galeri-item reveal'+(tegak ? '' : ' mendatar')+'"'
+      var tegak = tegakDi[i];
+      return '<button type="button" class="galeri-item reveal'+(tegak ? '' : ' mendatar')+(sendiri[i] ? ' sendiri' : '')+'"'
         +   ' data-i="'+i+'" style="'+gayaFoto(f)+'" aria-label="Buka foto '+(i + 1)+'">'
         +   '<img src="'+esc(M.fotoUrl(f.kecil || f.jalur))+'" alt="'+esc(f.keterangan || '')+'"'
         +   ' loading="lazy" decoding="async">'

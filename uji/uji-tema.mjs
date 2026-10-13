@@ -52,6 +52,8 @@ const foto = (jalur, lain = {}) => Object.assign({
   jalur, kecil: jalur, lebar: 1000, tinggi: 1400, keterangan: null,
   fokus_x: 50, fokus_y: 50, zum: 1, tampilan: null }, lain);
 const KOSONG = { sampul: null, pria: null, wanita: null, galeri: [] };
+const GANJIL = { ...KOSONG, galeri: [foto('u/tegak.jpg'), foto('u/datar.jpg', { lebar: 1600, tinggi: 1000 }),
+  foto('u/tegak.jpg'), foto('u/tegak.jpg'), foto('u/tegak.jpg')] };
 const SATU   = { ...KOSONG, sampul: foto('u/sampul.jpg', { lebar: 1200, tinggi: 1600 }) };
 const BANYAK = {
   sampul: foto('u/sampul.jpg', { lebar: 1200, tinggi: 1600, fokus_y: 40 }),
@@ -146,6 +148,16 @@ for (const tema of DAFTAR) {
         cek(`${label}: sesudah hari-H kotak hitung mundur benar-benar hilang`, h.kotak === 0 && h.kalimat > 0, JSON.stringify(h));
       }
       if (nama === '1') cek(`${label}: sampul tampil, galeri tidak`, sampul && !s.galeri && s.potret === 0, JSON.stringify(s));
+      if (nama === 'banyak' && lebar === 360) {
+        /* galeri: datar, tegak×4, datar — pasangan rapi; tidak boleh ada
+           foto tegak yang sendirian di barisnya kecuali ditandai .sendiri */
+        const lubang = await page.evaluate(() => {
+          const kotak = [...document.querySelectorAll('#galeriIsi .galeri-item')].map(b => b.getBoundingClientRect());
+          const lebar = document.getElementById('galeriIsi').getBoundingClientRect().width;
+          return kotak.filter(k => k.width < lebar * 0.7 && !kotak.some(l => l !== k && Math.abs(l.top - k.top) < 2)).length;
+        });
+        cek(`${label}: galeri tanpa petak kosong`, lubang === 0, 'foto tegak sendirian: ' + lubang);
+      }
       if (nama === 'banyak') cek(`${label}: sampul, 2 potret, 6 galeri (2 mendatar)`,
         sampul && s.galeri && s.item === 6 && s.potret === 2 && s.mendatar === 2, JSON.stringify(s));
       await ctx.close();
@@ -179,6 +191,21 @@ for (const tema of DAFTAR) {
       (bawaan ? !h.tautan : h.tautan.includes(g.google.split('&')[0])), JSON.stringify(h));
     await ctx.close();
   }
+}
+
+/* ---------- galeri dengan foto tegak berjumlah ganjil ---------- */
+for (const tema of DAFTAR) {
+  const r = await buka(isiDengan(GANJIL, { tema: tema.kode }), { lebar: 360 });
+  await bukaUndangan(r.page);
+  const h = await r.page.evaluate(() => {
+    const el = [...document.querySelectorAll('#galeriIsi .galeri-item')];
+    const lebar = document.getElementById('galeriIsi').getBoundingClientRect().width;
+    return { sendiri: el.map((e, i) => e.classList.contains('sendiri') ? i : -1).filter(i => i >= 0),
+             penuh: el.filter(e => e.getBoundingClientRect().width > lebar * 0.9).length };
+  });
+  cek(`${tema.kode}: galeri tegak ganjil — yang tak berpasangan dilebarkan (tanpa petak kosong)`,
+    JSON.stringify(h.sendiri) === '[0,4]' && h.penuh === 3, JSON.stringify(h));
+  await r.ctx.close();
 }
 
 /* ---------- pilihan tak dikenal jatuh ke bawaan ---------- */

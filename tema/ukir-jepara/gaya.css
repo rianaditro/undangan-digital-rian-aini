@@ -209,6 +209,8 @@ section{padding:clamp(64px,14vw,110px) var(--pad);position:relative;}
 /* Parallax hanya menggeser; `will-change` memberinya lapisan sendiri
    supaya menggesernya tidak memaksa peramban mengecat ulang tetangganya. */
 [data-parallax]{will-change:transform;}
+/* foto tegak tanpa pasangan di galeri dua kolom (index.html menandainya) */
+@media (max-width:719px){ .galeri-item.sendiri{grid-column:1 / -1;aspect-ratio:4/3;} }
 @media (prefers-reduced-motion:reduce){
   [data-parallax]{will-change:auto;transform:none!important;}
 }
@@ -429,7 +431,7 @@ section{padding:clamp(64px,14vw,110px) var(--pad);position:relative;}
 /* Galeri: dua kolom di HP, tiga di layar lebar. Foto mendatar mengambil
    satu baris penuh supaya tidak terpotong jadi potret. */
 .galeri-grid{
-  display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(6px,2vw,12px);
+  display:grid;grid-template-columns:repeat(2,1fr);grid-auto-flow:row dense;gap:clamp(6px,2vw,12px);
   margin-top:clamp(28px,7vw,40px);
 }
 .galeri-item{
