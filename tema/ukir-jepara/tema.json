@@ -9,36 +9,89 @@
   "paket_min": "standar",
   "palet_foto": false,
   "palet": [
-    { "kode": "nila-kuningan", "nama": "Nila Kuningan",
-      "latar": "#131E33", "teks": "#EDE7D9", "aksen": "#C39A5C",
-      "latar_2": "#22355A", "latar_3": "#0D1626", "aksen_terang": "#D9AF6E", "aksen_redup": "#8C6A3A",
-      "kertas": "#EDE7D9", "kertas_2": "#E2DAC7", "kertas_teks": "#131E33", "kertas_aksen": "#8C6A3A", "ornamen": "#4A3323" },
-    { "kode": "sogan", "nama": "Sogan",
-      "latar": "#3B2416", "teks": "#F1E7D3", "aksen": "#CDA162", "latar_2": "#563724",
-      "kertas": "#F1E7D3", "kertas_teks": "#3B2416", "kertas_aksen": "#87602D", "ornamen": "#5A3A22" },
-    { "kode": "marun-keraton", "nama": "Marun Keraton",
-      "latar": "#4A1520", "teks": "#F5ECE2", "aksen": "#D4AF6A", "latar_2": "#6A2330",
-      "kertas": "#F5ECE2", "kertas_teks": "#4A1520", "kertas_aksen": "#8C6A33", "ornamen": "#5E2A2F" },
-    { "kode": "hijau-pupus", "nama": "Hijau Pupus",
-      "latar": "#1F3A2C", "teks": "#F2EEDF", "aksen": "#C8A456", "latar_2": "#2E5440",
-      "kertas": "#F2EEDF", "kertas_teks": "#1F3A2C", "kertas_aksen": "#80662B", "ornamen": "#3A4A2E" }
+    {
+      "kode": "nila-kuningan",
+      "nama": "Nila Kuningan",
+      "latar": "#131E33",
+      "teks": "#EDE7D9",
+      "aksen": "#C39A5C",
+      "latar_2": "#22355A",
+      "latar_3": "#0D1626",
+      "latar_tengah": "#1B2A46",
+      "bayang": "#090E18",
+      "aksen_terang": "#D9AF6E",
+      "aksen_redup": "#8C6A3A",
+      "kertas": "#EDE7D9",
+      "kertas_2": "#E2DAC7",
+      "kertas_teks": "#131E33",
+      "kertas_aksen": "#8C6A3A",
+      "ornamen": "#4A3323"
+    },
+    {
+      "kode": "sogan",
+      "nama": "Sogan",
+      "latar": "#3B2416",
+      "teks": "#F1E7D3",
+      "aksen": "#CDA162",
+      "latar_2": "#563724",
+      "kertas": "#F1E7D3",
+      "kertas_teks": "#3B2416",
+      "kertas_aksen": "#87602D",
+      "ornamen": "#5A3A22"
+    },
+    {
+      "kode": "marun-keraton",
+      "nama": "Marun Keraton",
+      "latar": "#4A1520",
+      "teks": "#F5ECE2",
+      "aksen": "#D4AF6A",
+      "latar_2": "#6A2330",
+      "kertas": "#F5ECE2",
+      "kertas_teks": "#4A1520",
+      "kertas_aksen": "#8C6A33",
+      "ornamen": "#5E2A2F"
+    },
+    {
+      "kode": "hijau-pupus",
+      "nama": "Hijau Pupus",
+      "latar": "#1F3A2C",
+      "teks": "#F2EEDF",
+      "aksen": "#C8A456",
+      "latar_2": "#2E5440",
+      "kertas": "#F2EEDF",
+      "kertas_teks": "#1F3A2C",
+      "kertas_aksen": "#80662B",
+      "ornamen": "#3A4A2E"
+    }
   ],
   "huruf": [
-    { "kode": "keraton", "nama": "Keraton",
+    {
+      "kode": "keraton",
+      "nama": "Keraton",
       "judul": "'Marcellus', 'Times New Roman', serif",
       "naskah": "'Cormorant', Georgia, serif",
       "isi": "'Karla', 'Helvetica Neue', Arial, sans-serif",
-      "google": "family=Marcellus&family=Cormorant:ital,wght@0,400;0,500;1,300;1,400&family=Karla:wght@300;400;500;700" },
-    { "kode": "prasasti", "nama": "Prasasti",
+      "google": "family=Marcellus&family=Cormorant:ital,wght@0,400;0,500;1,300;1,400&family=Karla:wght@300;400;500;700"
+    },
+    {
+      "kode": "prasasti",
+      "nama": "Prasasti",
       "judul": "'Cinzel', 'Times New Roman', serif",
       "naskah": "'EB Garamond', Georgia, serif",
       "isi": "'EB Garamond', Georgia, serif",
-      "google": "family=Cinzel:wght@400;500&family=EB+Garamond:ital,wght@0,400;0,500;1,400" },
-    { "kode": "sastra", "nama": "Sastra",
+      "google": "family=Cinzel:wght@400;500&family=EB+Garamond:ital,wght@0,400;0,500;1,400"
+    },
+    {
+      "kode": "sastra",
+      "nama": "Sastra",
       "judul": "'Cormorant Garamond', Georgia, serif",
       "naskah": "'Cormorant Garamond', Georgia, serif",
       "isi": "'Lora', Georgia, serif",
-      "google": "family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Lora:wght@400;500" }
+      "google": "family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Lora:wght@400;500"
+    }
   ],
-  "bawaan": { "palet": "nila-kuningan", "huruf": "keraton" }
+  "bawaan": {
+    "palet": "nila-kuningan",
+    "huruf": "keraton"
+  }
 }

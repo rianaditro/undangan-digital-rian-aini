@@ -229,6 +229,80 @@ for (const tema of DAFTAR) {
   await ctx.close();
 }
 
+/* ---------- halaman terima kasih mengikuti tema undangannya ---------- */
+async function bukaKenangan(isi, lebar = 430){
+  const ctx = await browser.newContext({ viewport: { width: lebar, height: 900 } });
+  const page = await ctx.newPage();
+  const galat = [];
+  page.on('pageerror', e => { galat.push(e.message); console.log('   [pageerror] ' + e.message); });
+  await page.route('**/fonts.googleapis.com/**', r => r.fulfill({ status: 200, contentType: 'text/css', body: '' }));
+  await page.route('**/media/**', r => {
+    const k = Object.keys(BERKAS).find(x => new URL(r.request().url()).pathname.endsWith('/' + x));
+    return k ? r.fulfill({ status: 200, contentType: 'image/jpeg', body: BERKAS[k] }) : r.fulfill({ status: 404, body: '' });
+  });
+  await page.route('**/*.supabase.co/**', r => {
+    if (r.request().method() === 'OPTIONS') return r.fulfill({ status: 204, body: '' });
+    return r.fulfill({ status: 200, contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(isi) });
+  });
+  await page.goto(ASAL + '/terimakasih?pasangan=rian-aini');
+  await page.waitForFunction(() => document.body.dataset.siap === 'isi', null, { timeout: 8000 });
+  return { ctx, page, galat };
+}
+const kenangan = (lain = {}) => ({
+  slug: 'rian-aini', aktif: true, tanggal_acara: '2026-09-15', kota: 'jepara', hadir: null,
+  mempelai: ISI.mempelai, tema: 'ukir-jepara', tema_setel: {},
+  foto: [{ id: 'k1', jenis: 'foto', jalur: 'u/sampul.jpg', kecil: 'u/sampul.jpg', lebar: 1200, tinggi: 1600,
+           keterangan: null, acara_id: null, bagian: 'sampul', latar: true }],
+  babak: [{ id: 'A1', nama: 'Akad Nikah', tanggal: 'Selasa, 15 September 2026', jam: '08.00 WIB',
+            teks: 'Pagi yang hening.', jumlah_foto: 0, latar: null }],
+  blok: {}, vendor: [], angka: { hadir: null, ucapan: null, foto: 1, babak: 1 }, ucapan: [], ...lain });
+
+for (const tema of DAFTAR) {
+  const k = tema.kode;
+  for (const lebar of [360, 1280]) {
+    const { ctx, page, galat } = await bukaKenangan(kenangan({ tema: k }), lebar);
+    const h = await page.evaluate(() => ({ href: document.getElementById('temaGaya').getAttribute('href'),
+      lebih: document.documentElement.scrollWidth - document.documentElement.clientWidth }));
+    await page.waitForTimeout(1800);   // isi sampul memudar masuk
+    await page.screenshot({ path: `tema-${k}-kenangan-${lebar}.png` });
+    cek(`${k} kenangan @${lebar}: memuat kenangan.css temanya, tanpa galat, tidak melebar`,
+      h.href === `/tema/${k}/kenangan.css` && !galat.length && h.lebih <= 0, JSON.stringify(h) + galat.join('; '));
+    await ctx.close();
+  }
+  for (const p of tema.palet) {
+    const { ctx, page } = await bukaKenangan(kenangan({ tema: k, tema_setel: { palet: p.kode } }));
+    const latar = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    const rgb = 'rgb(' + [1, 3, 5].map(i => parseInt(p.latar.slice(i, i + 2), 16)).join(', ') + ')';
+    cek(`${k} kenangan palet ${p.kode}: palet undangan ikut terpasang`, latar === rgb, latar);
+    await ctx.close();
+  }
+  const lain = tema.huruf.find(h => h.kode !== tema.bawaan.huruf);
+  if (lain) {
+    const { ctx, page } = await bukaKenangan(kenangan({ tema: k, tema_setel: { huruf: lain.kode } }));
+    const h = await page.evaluate(() => ({ f: getComputedStyle(document.querySelector('.nama-besar')).fontFamily,
+      t: (document.getElementById('temaHuruf') || {}).href || '' }));
+    cek(`${k} kenangan gaya teks ${lain.kode}: hurufnya ikut terpasang`,
+      h.f.includes(lain.judul.split(',')[0].replace(/'/g, '').trim()) && h.t.includes('fonts.googleapis.com'), JSON.stringify(h));
+    await ctx.close();
+  }
+}
+{
+  const { ctx, page, galat } = await bukaKenangan(kenangan({ tema: 'tidak-ada-tema' }));
+  const h = await page.evaluate(() => ({ latar: getComputedStyle(document.body).backgroundColor,
+    href: document.getElementById('temaGaya').getAttribute('href') }));
+  cek('kenangan dengan tema yang tidak ada: tetap kenangan.css bawaan', h.latar === 'rgb(19, 30, 51)' &&
+    h.href === '/tema/ukir-jepara/kenangan.css' && !galat.length, JSON.stringify(h));
+  await ctx.close();
+}
+{
+  const lama = kenangan(); delete lama.tema; delete lama.tema_setel;
+  const { ctx, page, galat } = await bukaKenangan(lama);
+  cek('jawaban terimakasih_isi lama (tanpa tema) tetap jalan', !galat.length &&
+    await page.evaluate(() => getComputedStyle(document.body).backgroundColor) === 'rgb(19, 30, 51)', galat.join('; '));
+  await ctx.close();
+}
+
 await browser.close();
 console.log(`\n${lulus} lulus, ${gagal} gagal`);
 process.exit(gagal ? 1 : 0);

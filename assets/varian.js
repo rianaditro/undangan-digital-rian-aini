@@ -468,6 +468,8 @@
   var TURUNAN = [
     ['latar_2',      function (p) { return campur(p.latar, p.teks, 0.1); }],
     ['latar_3',      function (p) { return campur(p.latar, '#000000', 0.3); }],
+    ['latar_tengah', function (p) { return campur(p.latar, p.latar_2, 0.5); }],
+    ['bayang',       function (p) { return campur(p.latar_3, '#000000', 0.3); }],
     ['aksen_terang', function (p) { return campur(p.aksen, '#FFFFFF', 0.2); }],
     ['aksen_redup',  function (p) { return campur(p.aksen, p.latar, 0.35); }],
     ['kertas',       function (p) { return p.teks; }],
@@ -510,7 +512,7 @@
   function tokenPalet(p) {
     var l = paletLengkap(p), t = {};
     Object.keys(l).forEach(function (k) { t['--' + k.replace(/_/g, '-')] = l[k]; });
-    ['latar', 'teks', 'aksen', 'kertas_teks', 'ornamen'].forEach(function (k) {
+    ['latar', 'latar_3', 'bayang', 'teks', 'aksen', 'kertas_teks', 'ornamen'].forEach(function (k) {
       t['--' + k.replace(/_/g, '-') + '-rgb'] = hexRgb(l[k]).join(',');
     });
     return t;

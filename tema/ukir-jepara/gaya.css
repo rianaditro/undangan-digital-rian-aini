@@ -30,7 +30,9 @@
   /* permukaan gelap */
   --latar:#131E33;       --latar-rgb:19,30,51;
   --latar-2:#22355A;
-  --latar-3:#0D1626;
+  --latar-tengah:#1B2A46;
+  --latar-3:#0D1626;     --latar-3-rgb:13,22,38;
+  --bayang:#090E18;      --bayang-rgb:9,14,24;
   --teks:#EDE7D9;        --teks-rgb:237,231,217;
   --aksen:#C39A5C;       --aksen-rgb:195,154,92;
   --aksen-terang:#D9AF6E;
