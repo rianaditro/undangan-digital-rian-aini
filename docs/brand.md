@@ -29,7 +29,7 @@ Akibatnya:
 
 - Pembanding kita **undangan cetak dan repotnya panitia**, bukan undangan
   digital 60 ribu. Cetak 300–500 lembar di Rp 5–15 ribu per lembar
-  sudah Rp 1,5–7,5 juta, belum termasuk mengantarnya; Rp 329 ribu terasa
+  sudah Rp 1,5–7,5 juta, belum termasuk mengantarnya; Rp 99–249 ribu terasa
   wajar di sebelahnya.
 - Kita tidak tampil di katalog bersama template 60 ribu. Begitu sejajar,
   orang membandingkan harga dan kita kalah.
@@ -91,35 +91,55 @@ Jangan menyebut nama fitur tanpa hasilnya.
 
 ## 6. Paket dan harga
 
-Tiga paket. Paket tengah yang paling ingin dijual, dan diberi tanda.
+Diputuskan pemilik 13 Oktober 2026. Tiga paket; **Premium** yang paling
+ingin dijual dan diberi tanda.
 
 | Paket | Harga | Isi |
 |---|---|---|
-| **Undangan** | Rp 179.000 | Undangan dengan nama tiap tamu, acara dan peta, buku tamu, konfirmasi hadir, dompet digital, alamat `mengundang.id/nama` |
-| **Mengundang** ⭐ | Rp 329.000 | Semua di Undangan + varian per pihak, sebar lewat WhatsApp terlacak, halaman panitia per pihak keluarga, pelacak berkat, rekap amplop dan barang ke Excel |
-| **Kenangan** | Rp 549.000 | Semua di Mengundang + halaman kenangan, video story, alamat `nama.mengundang.id` |
+| **Mengundang** | Rp 99.000 | Undangan dengan nama tiap tamu + pelacak pengiriman: sebar lewat WhatsApp terlacak, halaman panitia per pihak keluarga, varian per pihak, pelacak berkat, buku tamu, konfirmasi hadir, rekap amplop. Alamat `mengundang.id/nama` |
+| **Premium** ⭐ | Rp 249.000 | Semua di Mengundang + halaman terima kasih (kenangan) + video story + alamat `nama.mengundang.id` |
+| **Full Custom** | Rp 549.000 | Semua di Premium + desain dibuat khusus sesuai permintaan, revisi tanpa batas |
 
-Tambahan untuk paket Undangan dan Mengundang:
+Tambahan untuk **Mengundang**:
 
-- Halaman kenangan + video story sesudah acara: **Rp 249.000.**
-  Ditawarkan **sesudah** acara, saat foto sudah ada dan emosinya masih
-  tinggi. Ini momen penjualan terbaik.
-- Alamat `nama.mengundang.id`: **Rp 50.000.**
+- Alamat `nama.mengundang.id`: **Rp 50.000**
+- Halaman terima kasih + video story: **Rp 100.000**. Paling tepat
+  ditawarkan **sesudah** acara, saat foto sudah ada dan emosinya masih
+  tinggi.
+
+Tambahan untuk **Premium**:
+
+- Tema turunan, yaitu tema yang ada diubah jadi versi baru (warna,
+  ornamen, susunan): **Rp 50.000**
+
+Hitungan yang perlu dijaga: Mengundang + kedua tambahannya = Rp 249.000,
+sama persis dengan Premium. Jadi Premium tidak pernah lebih mahal dari
+merakit sendiri, dan orang yang ragu tinggal diarahkan ke Premium.
 
 Aturan harga:
 
-1. **Paket Undangan sengaja dua kali harga pasar.** Ia pintu masuk, bukan
-   pesaing template 60 ribu.
+1. **Mengundang (Rp 99.000) sudah di atas pasar 60–70 ribu, dan harus
+   dijual dengan alasannya:** pelacak pengiriman dan halaman panitia, yang
+   tidak ada di undangan 60 ribu. Jangan dijual sebagai "undangan murah".
 2. **Tidak ada diskon publik.** Kalau perlu dorongan, beri tambahan
-   (misalnya video story), jangan potong harga.
-3. Harga ditulis lengkap (`Rp 329.000`), bukan `329k`.
+   (misalnya alamat subdomain), jangan potong harga.
+3. Harga ditulis lengkap (`Rp 249.000`), bukan `249k`.
+4. Di halaman publik kata **template** tetap tidak dipakai (bagian 5).
+   Full Custom disebut "desain khusus", tambahan Premium disebut "tema
+   turunan".
 
-Catatan teknis: kolom `paket` di database saat ini cuma mengenal
-`standar` (alamat path) dan `premium` (alamat subdomain), dan semua fitur
-terbuka untuk semua pasangan. Pemetaan tiga paket ke database dan
-pembatasan fitur per paket **belum dikerjakan**. Sampai itu jadi, paket
-dicatat manual oleh admin; `premium` dipakai untuk Kenangan atau yang
-membeli tambahan alamat.
+Catatan teknis: kolom `paket` di database mengenal `standar` (alamat path)
+dan `premium` (alamat subdomain), dan semua fitur terbuka untuk semua
+pasangan. Pemetaannya sementara:
+
+| Paket jual | `paket` di database |
+|---|---|
+| Mengundang | `standar` |
+| Mengundang + tambahan subdomain | `premium` |
+| Premium, Full Custom | `premium` |
+
+Pembatasan halaman terima kasih dan video story untuk Mengundang tanpa
+tambahan **belum dikerjakan**; sampai itu jadi, admin mengaturnya manual.
 
 ## 7. Jalur B2B: tertutup
 
@@ -139,8 +159,8 @@ komunikasi tertutup: WhatsApp pribadi dan satu dokumen tawaran.
   rekap membuat klien WO terlihat rapi, dan WO-nya terlihat profesional.
 - **Harga jual minimum wajib.** Mitra tidak boleh menjual di bawah harga
   publik di bagian 6. Margin mitra datang dari harga mitra, bukan dari
-  banting harga. Satu mitra yang menjual 75 ribu merusak posisi seluruh
-  brand.
+  banting harga. Satu mitra yang menjual di bawah Rp 99.000 merusak posisi
+  seluruh brand.
 - Kode rujukan (`mengundang.id/?r=kode`) sudah ada dan ikut di pesan
   WhatsApp; itu cukup untuk mencatat penjualan mitra tanpa halaman publik.
 
@@ -162,7 +182,8 @@ komunikasi tertutup: WhatsApp pribadi dan satu dokumen tawaran.
 
 1. ~~Tulis ulang `/mulai` dengan posisi "mengurus proses mengundang",
    pelacak pengiriman di layar kedua.~~ Selesai 12 Oktober 2026.
-2. Petakan tiga paket ke database dan dasbor (bagian 6, catatan teknis).
+2. Batasi halaman terima kasih dan video story per paket di dasbor
+   (bagian 6, catatan teknis).
 3. Buat 3–5 video pendek dari halaman panitia dan halaman kenangan.
 4. Sepuluh klien pertama dengan harga penuh, plus izin dijadikan studi
    kasus.
