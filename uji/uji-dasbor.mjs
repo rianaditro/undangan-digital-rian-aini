@@ -1110,6 +1110,22 @@ const browser = await chromium.launch();
   cek('tema-8 Simpan Semua tidak menimpa tema_setel', model.pasangan[0].tema === 'ukir-jepara' &&
       JSON.stringify(model.pasangan[0].tema_setel) === '{"palet":"sogan","huruf":"prasasti"}', JSON.stringify(model.pasangan[0]));
 
+  /* ganti tema: pilihan warna/gaya tema lama dibuang, setelan khas tema baru muncul */
+  await page.click('#pilihTema [data-tema="dua-bingkai"]');
+  await page.waitForSelector('#setelanTema [data-setelan="mode_wanita"]', { timeout: 4000 });
+  const pt = model.patch.filter(x => x.tabel === 'pasangan').at(-1);
+  cek('tema-12 ganti tema: tema baru, tema_setel dikosongkan',
+      JSON.stringify(pt.badan) === '{"tema":"dua-bingkai","tema_setel":{}}', JSON.stringify(pt.badan));
+  const st = await page.evaluate(() => [...document.querySelectorAll('#setelanTema [data-setelan]')]
+    .map(b => b.dataset.setelan + '=' + b.dataset.nilai + ':' + b.getAttribute('aria-checked')));
+  cek('tema-13 setelan potret tiap mempelai, bawaan "Foto"',
+      st.length === 6 && st.includes('mode_pria=foto:true') && st.includes('mode_wanita=foto:true'), st.join(' '));
+  await page.click('#setelanTema [data-setelan="mode_wanita"][data-nilai="siluet"]');
+  await page.waitForFunction(() => document.querySelector('#setelanTema [data-setelan="mode_wanita"][data-nilai="siluet"]').getAttribute('aria-checked') === 'true');
+  const ps = model.patch.filter(x => x.tabel === 'pasangan').at(-1);
+  cek('tema-14 setelan tersimpan di tema_setel', JSON.stringify(ps.badan) === '{"tema_setel":{"mode_wanita":"siluet"}}', JSON.stringify(ps.badan));
+  await page.locator('#panelTema').screenshot({ path: 'dasbor-tema-dua-bingkai-1100.png' });
+
   /* peran foto di pustaka */
   await ke(page, 'foto');
   await page.waitForSelector('#pustakaFoto [data-foto="f-1"] [data-f="peran"]');

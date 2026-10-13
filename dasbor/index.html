@@ -25,6 +25,7 @@
 .bulatan{display:flex;align-items:center;gap:8px;border:1px solid var(--garis);border-radius:999px;padding:5px 12px 5px 6px;background:#fff;cursor:pointer;font:inherit;font-size:12.5px;color:inherit;}
 .bulatan i{display:flex;width:42px;height:22px;border-radius:999px;overflow:hidden;border:1px solid rgba(0,0,0,.12);}
 .bulatan i b{flex:1;}
+.bulatan.polos{padding:7px 14px;}
 .pilih-huruf{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
 .kartu-huruf{border:1px solid var(--garis);border-radius:10px;padding:10px 12px;background:#fff;cursor:pointer;font:inherit;color:inherit;text-align:left;}
 .kartu-huruf .nama{display:block;font-size:20px;line-height:1.25;}
@@ -335,6 +336,8 @@
     <div class="pilih-palet" id="pilihPalet" role="radiogroup" aria-label="Warna"></div>
     <p class="sub-tema">Gaya tulisan</p>
     <div class="pilih-huruf" id="pilihHuruf" role="radiogroup" aria-label="Gaya tulisan"></div>
+    <!-- setelan khas tema (tema.json → setelan), misal potret Dua Bingkai -->
+    <div id="setelanTema"></div>
     <div class="contoh-tema" id="contohTema" aria-hidden="true"></div>
     <p class="hint" id="hintTema" style="margin-top:10px"></p>
   </div>
@@ -1094,7 +1097,7 @@
           + '<span>'+esc(t.untuk || '')+'</span></button>';
       }).join('') || '<p class="kosongstate">Daftar tema belum bisa dimuat.</p>';
 
-      if(!m){ $('pilihPalet').innerHTML = ''; $('pilihHuruf').innerHTML = ''; $('contohTema').innerHTML = ''; return; }
+      if(!m){ $('pilihPalet').innerHTML = ''; $('pilihHuruf').innerHTML = ''; $('setelanTema').innerHTML = ''; $('contohTema').innerHTML = ''; return; }
       var p = M.tema.pilihan(m, setel());
       muatHuruf(m);
 
@@ -1114,11 +1117,21 @@
           + '<span class="label">'+esc(h.nama)+'</span></button>';
       }).join('');
 
+      $('setelanTema').innerHTML = (m.setelan || []).map(function(st){
+        return '<p class="sub-tema">'+esc(st.nama)+'</p>'
+          + '<div class="pilih-palet" role="radiogroup" aria-label="'+esc(st.nama)+'">'
+          + (st.pilihan || []).map(function(pl){
+              return '<button type="button" class="bulatan polos" role="radio" data-setelan="'+esc(st.kode)+'"'
+                + ' data-nilai="'+esc(pl.kode)+'" aria-checked="'+(p.setelan[st.kode] === pl.kode)+'">'+esc(pl.nama)+'</button>';
+            }).join('')
+          + '</div>';
+      }).join('');
+
       contoh(p);
     }
 
     $('panelTema').addEventListener('click', async function(e){
-      var b = e.target.closest('[data-tema],[data-palet],[data-huruf]');
+      var b = e.target.closest('[data-tema],[data-palet],[data-huruf],[data-setelan]');
       if(!b || b.getAttribute('aria-checked') === 'true') return;
       var badan;
       if(b.dataset.tema){
@@ -1129,6 +1142,7 @@
         var s = Object.assign({}, setel());
         if(b.dataset.palet) s.palet = b.dataset.palet;
         if(b.dataset.huruf) s.huruf = b.dataset.huruf;
+        if(b.dataset.setelan) s[b.dataset.setelan] = b.dataset.nilai;
         badan = { tema_setel: s };
       }
       b.disabled = true;

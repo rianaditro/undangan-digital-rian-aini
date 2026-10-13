@@ -537,10 +537,42 @@
     return '--fx:'+fx+'%;--fy:'+fy+'%;--z:'+z;
   }
 
+  /* Siluet untuk mempelai yang tidak memajang foto (tema Dua Bingkai):
+     wajah tidak tampak, warnanya dari tema (currentColor). */
+  var SILUET = {
+    pria: '<svg viewBox="0 0 100 120" aria-hidden="true"><g fill="currentColor">'
+      + '<rect x="34" y="20" width="32" height="11" rx="2"/>'
+      + '<circle cx="50" cy="42" r="16"/>'
+      + '<path d="M8 120C10 90 28 74 50 74S90 90 92 120Z"/></g></svg>',
+    wanita: '<svg viewBox="0 0 100 120" aria-hidden="true"><g fill="currentColor">'
+      + '<path d="M50 18C32 18 24 33 24 48c0 13 5 21 10 26C20 80 10 96 8 120h84c-2-24-12-40-26-46 5-5 10-13 10-26 0-15-8-30-26-30Z"/></g></svg>'
+  };
+
+  function hurufAwal(nama){
+    var h = String(nama || '').match(/\p{L}/u);
+    return h ? h[0].toUpperCase() : '';
+  }
+
+  /* Potret mempelai. Tema yang menyediakan setelan mode_pria/mode_wanita
+     (tema.json → setelan) membiarkan tiap mempelai memilih foto, siluet,
+     atau huruf awal; "foto" tanpa foto jatuh ke huruf awal, supaya kedua
+     bingkai tetap seimbang. Tema tanpa setelan itu cukup menampilkan foto
+     bila ada. */
   function potret(sisi, m){
     var f = M.FOTO[sisi];
-    if(!f) return '';
-    return '<div class="person-foto" style="'+gayaFoto(f)+'">'
+    var st = (M.tema && M.tema.AKTIF && M.tema.AKTIF.setelan) || {};
+    var kunci = 'mode_' + sisi, punyaMode = Object.prototype.hasOwnProperty.call(st, kunci);
+    var mode = punyaMode ? st[kunci] : 'foto';
+    if(mode === 'foto' && !f){
+      if(!punyaMode) return '';
+      mode = 'monogram';
+    }
+    if(mode === 'siluet' && SILUET[sisi])
+      return '<div class="person-foto siluet" data-mode="siluet" aria-hidden="true"><div class="isi">'+SILUET[sisi]+'</div></div>';
+    if(mode === 'monogram')
+      return '<div class="person-foto monogram" data-mode="monogram" aria-hidden="true"><div class="isi">'
+        + esc(hurufAwal(m.panggilan || m.lengkap)) + '</div></div>';
+    return '<div class="person-foto" data-mode="foto" style="'+gayaFoto(f)+'">'
       +   '<img src="'+esc(M.fotoUrl(f.kecil || f.jalur))+'" alt="'+esc(m.panggilan || m.lengkap || '')+'"'
       +   ' loading="lazy" decoding="async"'
       +   (f.lebar && f.tinggi ? ' width="'+f.lebar+'" height="'+f.tinggi+'"' : '')+'>'

@@ -192,13 +192,8 @@ atas, dan kenapa:
 
 ### Urutan terbit ke produksi
 
-1. Tempel `supabase/migrations/036_tema_foto_setel.sql` di SQL editor
-   Supabase. Aman untuk `main` yang sedang tayang: `db/kompat.mjs`
-   memastikan kode `main` masih sah terhadap skema 036, dan kunci baru
-   `undangan_isi` diabaikan halaman lama.
-2. Baru gabungkan cabang ini. Urutan ini penting: dasbor baru menulis
-   `foto.peran` dan `pasangan.tema_setel`, yang belum ada sebelum 036.
-3. `db/banding.sh` untuk memastikan produksi = repo.
+Dipindah ke bagian **Langkah manual** di bawah — satu daftar untuk semua
+tahap yang belum terbit.
 
 ### Menambah tema berikutnya (Tahap B dst.)
 
@@ -209,6 +204,58 @@ atas, dan kenapa:
    `node tema/periksa-gerak.mjs`.
 4. `cd uji && node semua.mjs tema` — tema baru otomatis diuji dengan 0/1/
    banyak foto, setiap palet, setiap gaya teks, dan halaman terima kasihnya.
+
+---
+
+## 3b. Tahap B — Dua Bingkai, selesai (13 Oktober 2026)
+
+`tema/dua-bingkai/`: tema terang pertama. 4 palet (Sage, Krem Biru, Mawar
+Debu, Zamrud Malam), 3 gaya teks (Teduh, Anggun, Kaligrafi), ornamen
+geometri sendiri, halaman terima kasih sendiri. Tidak butuh migrasi —
+setelannya tinggal di `pasangan.tema_setel` (036).
+
+Yang ditambahkan ke mesin tema, dan sekarang tersedia untuk tema
+berikutnya:
+
+| Tambahan | Gunanya |
+|---|---|
+| Token `--gelap` / `--terang` (+ `-rgb`) | teks di atas foto pada tema berlatar terang: foto diredam `gelap`, tulisannya `terang`. Syarat kontrasnya ≥ 7:1 ikut diperiksa |
+| `tema.json → setelan` | setelan khas tema yang tampil otomatis di dasbor. Dua Bingkai: potret pria / wanita = foto, siluet, atau huruf awal — dipilih tiap mempelai sendiri. "Foto" tanpa foto jatuh ke huruf awal |
+| `tema.json → ornamen` | tema menunjuk berkas ornamennya (`ornamen.svg#pemisah`); `<use href="#ukir-…">` di halaman ditukar ke sana, juga ornamen yang digambar belakangan di halaman terima kasih |
+
+Ditemukan sambil jalan, ikut diperbaiki: **sesudah hari-H, kotak hitung
+mundur tetap tampil berisi "—"** di samping "hari bahagia telah tiba".
+`display:grid` tema mengalahkan atribut `hidden`. Ini juga terjadi di
+undangan Rian & 'Aini yang sedang tayang; perbaikannya (`[hidden]{display:
+none!important}` di kedua tema) ikut terbit bersama cabang ini, dan
+`uji-tema` sekarang memeriksanya untuk setiap tema.
+
+Belum: `paket_min` di manifest belum dipakai untuk membatasi pilihan
+tema per paket (Dua Bingkai bertanda `standar`, jadi tidak ada yang
+terbatas sekarang).
+
+---
+
+## Langkah manual — dikumpulkan sampai siap terbit
+
+Semua yang tidak bisa dikerjakan dari repo, untuk seluruh tahap yang
+belum terbit. Dikerjakan sekali, berurutan, waktu cabang ini akan
+digabung.
+
+1. **Migrasi 036** — tempel `supabase/migrations/036_tema_foto_setel.sql`
+   di SQL editor Supabase. Aman untuk `main` yang sedang tayang:
+   `db/kompat.mjs` memastikan kode `main` masih sah terhadap skema 036,
+   dan kunci baru `undangan_isi` diabaikan halaman lama.
+2. **Gabungkan cabang ini ke `main`** — sesudah langkah 1, bukan sebelum:
+   dasbor baru menulis `foto.peran` dan `pasangan.tema_setel`.
+3. **Cocokkan produksi dengan repo** — `PGURL=… uji/db/banding.sh >
+   /tmp/banding.sql`, jalankan isinya di SQL editor; hasil kosong = sama.
+4. **Periksa sekali di HP** — buka undangan Rian & 'Aini: tampilannya
+   harus sama seperti sebelumnya, kecuali kotak hitung mundur yang kini
+   hilang (acaranya sudah lewat).
+
+Tahap A dan B tidak butuh langkah manual lain (tidak ada edge function,
+rahasia, atau DNS yang berubah).
 
 ---
 

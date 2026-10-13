@@ -1,5 +1,141 @@
 [
   {
+    "kode": "dua-bingkai",
+    "nama": "Dua Bingkai",
+    "kategori": "katalog",
+    "konsep": "dua-bingkai",
+    "untuk": "Foto terpisah tanpa bersentuhan, atau tanpa foto sama sekali — teduh dan santun",
+    "foto_min": 0,
+    "paket_min": "standar",
+    "palet_foto": false,
+    "palet": [
+      {
+        "kode": "sage",
+        "nama": "Sage",
+        "latar": "#F1F2EB",
+        "teks": "#2B3326",
+        "aksen": "#6F805A",
+        "latar_2": "#E6E9DC",
+        "kertas": "#FBFBF7",
+        "kertas_2": "#E6E9DC",
+        "kertas_teks": "#2B3326",
+        "kertas_aksen": "#5E6E4B",
+        "ornamen": "#8A9A73"
+      },
+      {
+        "kode": "krem-biru",
+        "nama": "Krem Biru",
+        "latar": "#F4F1E8",
+        "teks": "#1F2A44",
+        "aksen": "#9C7B4A",
+        "latar_2": "#EAE5D6",
+        "kertas": "#FFFDF8",
+        "kertas_2": "#EAE5D6",
+        "kertas_teks": "#1F2A44",
+        "kertas_aksen": "#86683B",
+        "ornamen": "#9C7B4A"
+      },
+      {
+        "kode": "mawar-debu",
+        "nama": "Mawar Debu",
+        "latar": "#F6EEEC",
+        "teks": "#3E2A2E",
+        "aksen": "#A0646E",
+        "latar_2": "#EEDFDB",
+        "kertas": "#FFFAF9",
+        "kertas_2": "#EEDFDB",
+        "kertas_teks": "#3E2A2E",
+        "kertas_aksen": "#8E5560",
+        "ornamen": "#A0646E"
+      },
+      {
+        "kode": "zamrud-malam",
+        "nama": "Zamrud Malam",
+        "latar": "#10261F",
+        "teks": "#EDE6D3",
+        "aksen": "#C8A96A",
+        "latar_2": "#173329",
+        "kertas": "#173329",
+        "kertas_2": "#1E3F33",
+        "kertas_teks": "#EDE6D3",
+        "kertas_aksen": "#C8A96A",
+        "ornamen": "#C8A96A"
+      }
+    ],
+    "huruf": [
+      {
+        "kode": "teduh",
+        "nama": "Teduh",
+        "judul": "'Amiri', Georgia, serif",
+        "naskah": "'Amiri', Georgia, serif",
+        "isi": "'Lato', 'Helvetica Neue', Arial, sans-serif",
+        "google": "family=Amiri:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700"
+      },
+      {
+        "kode": "anggun",
+        "nama": "Anggun",
+        "judul": "'Cormorant Garamond', Georgia, serif",
+        "naskah": "'Cormorant Garamond', Georgia, serif",
+        "isi": "'Karla', 'Helvetica Neue', Arial, sans-serif",
+        "google": "family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Karla:wght@300;400;500;700"
+      },
+      {
+        "kode": "kaligrafi",
+        "nama": "Kaligrafi",
+        "judul": "'Lora', Georgia, serif",
+        "naskah": "'Alex Brush', 'Brush Script MT', cursive",
+        "isi": "'Lora', Georgia, serif",
+        "google": "family=Alex+Brush&family=Lora:ital,wght@0,400;0,500;1,400"
+      }
+    ],
+    "setelan": [
+      {
+        "kode": "mode_pria",
+        "nama": "Potret mempelai pria",
+        "pilihan": [
+          {
+            "kode": "foto",
+            "nama": "Foto"
+          },
+          {
+            "kode": "siluet",
+            "nama": "Siluet"
+          },
+          {
+            "kode": "monogram",
+            "nama": "Huruf awal"
+          }
+        ]
+      },
+      {
+        "kode": "mode_wanita",
+        "nama": "Potret mempelai wanita",
+        "pilihan": [
+          {
+            "kode": "foto",
+            "nama": "Foto"
+          },
+          {
+            "kode": "siluet",
+            "nama": "Siluet"
+          },
+          {
+            "kode": "monogram",
+            "nama": "Huruf awal"
+          }
+        ]
+      }
+    ],
+    "ornamen": {
+      "ukir-pemisah": "ornamen.svg#pemisah",
+      "ukir-sudut": "ornamen.svg#sudut"
+    },
+    "bawaan": {
+      "palet": "sage",
+      "huruf": "teduh"
+    }
+  },
+  {
     "kode": "ukir-jepara",
     "nama": "Ukir Jepara",
     "kategori": "katalog",

@@ -68,6 +68,20 @@ for (const { kode, dir, m } of daftar) {
     if (kel.length > 3) s(`gaya teks "${h.kode}" memuat ${kel.length} keluarga huruf (maks. 3)`);
   }
 
+  for (const st of m.setelan || []) {
+    if (!/^[a-z0-9]+([_-][a-z0-9]+)*$/.test(st.kode || '') || ['palet', 'huruf', 'palet_foto'].includes(st.kode)) s(`setelan "${st.kode}" tidak sah`);
+    if (!st.nama) s(`setelan "${st.kode}" tanpa nama`);
+    if (!(st.pilihan || []).length) s(`setelan "${st.kode}" tanpa pilihan`);
+    for (const pl of st.pilihan || []) if (!kodeSah.test(pl.kode || '') || !pl.nama) s(`setelan "${st.kode}": pilihan "${pl.kode}" tidak sah`);
+  }
+  for (const [dari, ke] of Object.entries(m.ornamen || {})) {
+    const [berkas, id] = String(ke).split('#');
+    if (!/^[a-z0-9-]+\.svg$/.test(berkas || '') || !id) { s(`ornamen "${dari}" → "${ke}" bukan berkas.svg#id`); continue; }
+    const f = path.join(dir, berkas);
+    if (!fs.existsSync(f)) s(`ornamen: ${berkas} tidak ada`);
+    else if (!new RegExp(`id=["']${id}["']`).test(fs.readFileSync(f, 'utf8'))) s(`ornamen: ${berkas} tidak punya #${id}`);
+  }
+
   const b = m.bawaan || {};
   const pb = palet.find(p => p.kode === b.palet), hb = huruf.find(h => h.kode === b.huruf);
   if (!pb) s(`palet bawaan "${b.palet}" tidak ada`);

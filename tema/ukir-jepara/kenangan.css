@@ -29,6 +29,9 @@
   --kertas-teks:#131E33; --kertas-teks-rgb:19,30,51;
   --kertas-aksen:#8C6A3A;
   --ornamen:#4A3323;     --ornamen-rgb:74,51,35;
+  /* teks di atas foto, apa pun terang-gelapnya palet */
+  --gelap:#0C1421;       --gelap-rgb:12,20,33;
+  --terang:#EDE7D9;      --terang-rgb:237,231,217;
 
   /* khas tema, bukan bagian palet */
   --daun:#7C8B63;

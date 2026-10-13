@@ -164,6 +164,12 @@ kata. Foto tetap hitam putih.
 
 ### 3.4 Dua Bingkai — syar'i, teduh · *Dari foto: tidak (foto bisa tidak ada)*
 
+> **Terpasang (13 Okt).** Palet dan gaya teks seperti tabel di bawah,
+> dengan tiga perbedaan: tiap palet juga menulis warna kartu (`kertas`,
+> `kertas_aksen`) karena tema ini berlatar terang; gaya teks Kaligrafi
+> memakai Lora untuk judul dan isi, Alex Brush untuk nama; dan Amiri
+> selalu ikut dimuat untuk ayat apa pun gaya teksnya.
+
 | Palet | Latar | Teks | Aksen | Kontras |
 |---|---|---|---|---|
 | Sage (bawaan) | `#F1F2EB` | `#2B3326` | `#6F805A` | 11.6 / 3.8 |

@@ -709,6 +709,8 @@
     if (!d || d.aktif !== true){ belumAda('Halaman ini belum tersedia.'); return; }
     if (d.pratinjau) pasangPita(d);
     bangun(d);
+    /* ornamen yang baru digambar bangun() ikut ornamen temanya */
+    M.tema.pasangOrnamen();
     pasangGiliran();
     aturTengah();
     addEventListener('resize', aturTengah);

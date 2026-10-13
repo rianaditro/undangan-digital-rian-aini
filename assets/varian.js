@@ -476,7 +476,15 @@
     ['kertas_teks',  function (p) { return p.latar; }],
     ['kertas_2',     function (p) { return campur(p.kertas, p.kertas_teks, 0.06); }],
     ['kertas_aksen', function (p) { return campur(p.aksen, p.kertas_teks, 0.35); }],
-    ['ornamen',      function (p) { return p.kertas_aksen; }]
+    ['ornamen',      function (p) { return p.kertas_aksen; }],
+    /* Pasangan untuk teks di atas FOTO, apa pun terang-gelapnya palet:
+       foto diredam dengan `gelap`, tulisannya `terang`. Tema berlatar
+       terang (Dua Bingkai, Monokrom, …) tidak bisa memakai latar/teks
+       di sana — teks gelap di atas foto yang diredam tidak terbaca. */
+    ['gelap',        function (p) {
+      var x = luminans(p.latar) < luminans(p.teks) ? p.latar : p.teks;
+      return campur(x, '#000000', 0.35); }],
+    ['terang',       function (p) { return luminans(p.latar) < luminans(p.teks) ? p.teks : p.latar; }]
   ];
 
   function paletLengkap(p) {
@@ -492,7 +500,8 @@
      tidak boleh dipakai untuk teks kecil di tema mana pun. */
   var SYARAT_KONTRAS = [
     ['teks', 'latar', 7], ['kertas_teks', 'kertas', 7],
-    ['aksen', 'latar', 3], ['kertas_aksen', 'kertas', 3]
+    ['aksen', 'latar', 3], ['kertas_aksen', 'kertas', 3],
+    ['terang', 'gelap', 7]
   ];
 
   function periksaPalet(p) {
@@ -512,7 +521,7 @@
   function tokenPalet(p) {
     var l = paletLengkap(p), t = {};
     Object.keys(l).forEach(function (k) { t['--' + k.replace(/_/g, '-')] = l[k]; });
-    ['latar', 'latar_3', 'bayang', 'teks', 'aksen', 'kertas_teks', 'ornamen'].forEach(function (k) {
+    ['latar', 'latar_3', 'bayang', 'teks', 'aksen', 'kertas_teks', 'ornamen', 'gelap', 'terang'].forEach(function (k) {
       t['--' + k.replace(/_/g, '-') + '-rgb'] = hexRgb(l[k]).join(',');
     });
     return t;
@@ -544,7 +553,32 @@
     }
     palet = palet || cariKode(m.palet, setel.palet) || cariKode(m.palet, bawaan.palet) || (m.palet || [])[0] || null;
     var huruf = cariKode(m.huruf, setel.huruf) || cariKode(m.huruf, bawaan.huruf) || (m.huruf || [])[0] || null;
-    return { palet: palet, huruf: huruf, hurufBawaan: (huruf && huruf.kode === bawaan.huruf) };
+
+    /* Setelan khas tema (misal mode potret Dua Bingkai): nilai yang
+       tidak ada di daftar pilihannya jatuh ke pilihan pertama. */
+    var setelan = {};
+    (m.setelan || []).forEach(function (st) {
+      var ada = cariKode(st.pilihan, setel[st.kode]);
+      setelan[st.kode] = ada ? ada.kode : ((st.pilihan || [])[0] || {}).kode;
+    });
+    return { palet: palet, huruf: huruf, setelan: setelan,
+             hurufBawaan: (huruf && huruf.kode === bawaan.huruf) };
+  }
+
+  /* Ornamen milik tema. Halaman menggambar ornamen lewat
+     <use href="#ukir-pemisah"> dan kawan-kawan; tema yang punya ornamen
+     sendiri menunjuknya di manifest:
+       "ornamen": { "ukir-pemisah": "ornamen.svg#pemisah", … }
+     dan rujukannya ditukar ke berkas tema itu. Dipanggil lagi oleh
+     halaman sesudah menggambar ornamen baru. */
+  function pasangOrnamen(akar) {
+    var m = TEMA_AKTIF.manifest, doc = global.document;
+    if (!doc || !m || !m.ornamen) return;
+    (akar || doc).querySelectorAll('use').forEach(function (u) {
+      var h = u.getAttribute('href') || '';
+      var ke = h.charAt(0) === '#' && m.ornamen[h.slice(1)];
+      if (ke && /^[a-z0-9-]+\.svg#[a-z0-9-]+$/.test(ke)) u.setAttribute('href', '/tema/' + TEMA_AKTIF.kode + '/' + ke);
+    });
   }
 
   var MANIFEST = {};
@@ -644,7 +678,7 @@
     return { nama: KODE_TEMA.test(t || '') ? t : nama, setel: s };
   }
 
-  var TEMA_AKTIF = { kode: '', palet: '', huruf: '' };
+  var TEMA_AKTIF = { kode: '', palet: '', huruf: '', setelan: {}, manifest: null };
 
   /* Memasang tema lengkap: berkas, palet, gaya teks. Selesai = boleh
      membuka sampul. Apa pun yang gagal di sini jatuh ke bawaan; tidak
@@ -679,8 +713,11 @@
     }
 
     function pasangPilihan(m) {
+      TEMA_AKTIF.manifest = m || null;
       if (!m) return;
       var p = pilihanTema(m, setel);
+      TEMA_AKTIF.setelan = p.setelan;
+      pasangOrnamen();
       if (p.palet) { pasangToken(tokenPalet(p.palet)); TEMA_AKTIF.palet = p.palet.kode; }
       if (p.huruf) { pasangToken(tokenHuruf(p.huruf)); TEMA_AKTIF.huruf = p.huruf.kode; }
       if (root) {
@@ -926,6 +963,7 @@
       tokenPalet: tokenPalet,
       tokenHuruf: tokenHuruf,
       pilihan: pilihanTema,
+      pasangOrnamen: pasangOrnamen,
       manifest: muatManifest
     },
     slugPasangan: slugPasangan,

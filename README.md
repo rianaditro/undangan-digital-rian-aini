@@ -19,6 +19,7 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 │   │   ├── gaya.css      ← SELURUH tampilan undangan ada di sini
 │   │   ├── kenangan.css  ← tampilan halaman terima kasih, tema yang sama
 │   │   └── tema.json     ← palet dan gaya teks pilihan, bawaannya
+│   ├── dua-bingkai/      ← tema terang: gaya, kenangan, tema.json, ornamen.svg
 │   ├── daftar.json       ← dibangun bangun-daftar.mjs, dibaca dasbor
 │   ├── bangun-daftar.mjs
 │   ├── periksa-palet.mjs ← penjaga: palet terbaca, manifest sah

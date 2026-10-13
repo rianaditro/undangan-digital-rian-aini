@@ -43,6 +43,9 @@
   --kertas-teks:#131E33; --kertas-teks-rgb:19,30,51;
   --kertas-aksen:#8C6A3A;
   --ornamen:#4A3323;     --ornamen-rgb:74,51,35;
+  /* teks di atas foto, apa pun terang-gelapnya palet */
+  --gelap:#0C1421;       --gelap-rgb:12,20,33;
+  --terang:#EDE7D9;      --terang-rgb:237,231,217;
 
   /* khas tema, bukan bagian palet */
   --daun:#7C8B63;
@@ -63,6 +66,10 @@
 }
 
 *{box-sizing:border-box;margin:0;padding:0;}
+/* Atribut hidden harus menang atas display tema: tanpa ini kotak hitung
+   mundur (.count-grid{display:grid}) tetap tampil berisi "—" sesudah
+   hari-H, di samping kalimat "hari bahagia telah tiba". */
+[hidden]{display:none!important;}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
 body{
   font-family:var(--isi);
@@ -440,7 +447,6 @@ section{padding:clamp(64px,14vw,110px) var(--pad);position:relative;}
   position:fixed;inset:0;z-index:80;background:rgba(var(--latar-rgb),.94);
   display:flex;align-items:center;justify-content:center;padding:clamp(12px,4vw,32px);
 }
-#lihatFoto[hidden]{display:none;}
 #lihatFoto img{max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 20px 60px -20px rgba(0,0,0,.7);}
 #lihatTutup{
   position:absolute;top:clamp(10px,3vw,20px);right:clamp(10px,3vw,20px);

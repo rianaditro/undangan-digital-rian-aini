@@ -93,14 +93,21 @@ async function buka(isi, { lebar = 430, jalur = '/', reduced = false } = {}){
 
 async function bukaUndangan(page){
   await page.click('#btnOpen');
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(1100);   // sampul memudar keluar (.9 detik)
   // semua .reveal ditampilkan supaya tangkapan layar penuh terbaca
   await page.evaluate(() => document.querySelectorAll('.reveal, .draw').forEach(e => e.classList.add('in')));
-  // foto lazy tidak pernah turun di luar layar; dipaksa turun, ditunggu paling lama 4 detik
+  await page.waitForTimeout(1000);   // transisi .reveal selesai
+  await tungguGambar(page);
+}
+
+// foto lazy tidak pernah turun di luar layar; dipaksa turun, ditunggu paling lama 4 detik
+async function tungguGambar(page){
   await page.evaluate(() => Promise.race([
     Promise.all([...document.images].filter(i => i.src).map(i => {
       i.loading = 'eager';
-      return i.complete ? null : new Promise(s => { i.onload = i.onerror = s; });
+      // decode(): termuat belum berarti sudah tergambar (decoding="async")
+      const dekode = () => i.decode ? i.decode().catch(() => {}) : null;
+      return i.complete ? dekode() : new Promise(s => { i.onload = i.onerror = s; }).then(dekode);
     })),
     new Promise(s => setTimeout(s, 4000))]));
 }
@@ -132,6 +139,12 @@ for (const tema of DAFTAR) {
       const label = `${k} ${nama} foto @${lebar}`;
       cek(`${label}: tanpa galat, tidak melebar ke samping`, !galat.length && lebih <= 0, galat.join('; ') + ' lebih=' + lebih);
       if (nama === '0') cek(`${label}: sampul, galeri, potret tidak tampil`, !sampul && !s.galeri && s.potret === 0, JSON.stringify(s));
+      if (nama === '0') {
+        // acara di data uji sudah lewat: kotak hitung mundur tersembunyi, kalimat penggantinya tampil
+        const h = await page.evaluate(() => ({ kotak: document.getElementById('countGrid').getClientRects().length,
+          kalimat: document.getElementById('countDone').getClientRects().length }));
+        cek(`${label}: sesudah hari-H kotak hitung mundur benar-benar hilang`, h.kotak === 0 && h.kalimat > 0, JSON.stringify(h));
+      }
       if (nama === '1') cek(`${label}: sampul tampil, galeri tidak`, sampul && !s.galeri && s.potret === 0, JSON.stringify(s));
       if (nama === 'banyak') cek(`${label}: sampul, 2 potret, 6 galeri (2 mendatar)`,
         sampul && s.galeri && s.item === 6 && s.potret === 2 && s.mendatar === 2, JSON.stringify(s));
@@ -301,6 +314,67 @@ for (const tema of DAFTAR) {
   cek('jawaban terimakasih_isi lama (tanpa tema) tetap jalan', !galat.length &&
     await page.evaluate(() => getComputedStyle(document.body).backgroundColor) === 'rgb(19, 30, 51)', galat.join('; '));
   await ctx.close();
+}
+
+/* ---------- Dua Bingkai: potret, ornamen, teks di atas foto ---------- */
+if (DAFTAR.some(t => t.kode === 'dua-bingkai')) {
+  const potretnya = page => page.evaluate(() => [...document.querySelectorAll('#pasangan .person-foto')]
+    .map(e => e.dataset.mode + ':' + (e.querySelector('img') ? 'img' : e.textContent.trim() || (e.querySelector('svg') ? 'svg' : ''))));
+
+  let r = await buka(isiDengan(KOSONG, { tema: 'dua-bingkai' }));
+  await bukaUndangan(r.page);
+  let pt = await potretnya(r.page);
+  cek('dua-bingkai tanpa foto: kedua bingkai tetap terisi huruf awal', pt.join(' ') === "monogram:A monogram:R", pt.join(' '));
+  const orn = await r.page.evaluate(() => ({
+    use: [...document.querySelectorAll('use')].map(u => u.getAttribute('href')),
+    ok: [...document.querySelectorAll('svg.divider')].every(s => s.getBoundingClientRect().height > 0)
+  }));
+  cek('dua-bingkai: ornamen ditukar ke berkas temanya', orn.use.length > 0 &&
+    orn.use.every(h => h.startsWith('/tema/dua-bingkai/ornamen.svg#')), orn.use.slice(0, 3).join(' '));
+  await r.page.locator('#mempelai').screenshot({ path: 'tema-dua-bingkai-0-mempelai.png' });
+  await r.ctx.close();
+
+  r = await buka(isiDengan(BANYAK, { tema: 'dua-bingkai', tema_setel: { mode_wanita: 'siluet', mode_pria: 'foto' } }));
+  await bukaUndangan(r.page);
+  pt = await potretnya(r.page);
+  cek('dua-bingkai: tiap mempelai memilih sendiri — wanita siluet, pria foto', pt.join(' ') === 'siluet:svg foto:img', pt.join(' '));
+  await tungguGambar(r.page);
+  cek('dua-bingkai: foto potret benar-benar termuat', await r.page.evaluate(() =>
+    document.querySelector('#pasangan .person-foto img').naturalWidth > 0));
+  await r.page.locator('#mempelai').screenshot({ path: 'tema-dua-bingkai-campur-mempelai.png' });
+  await r.ctx.close();
+
+  r = await buka(isiDengan(BANYAK, { tema: 'dua-bingkai', tema_setel: { mode_pria: 'tidak-ada', mode_wanita: 'monogram' } }));
+  await bukaUndangan(r.page);
+  pt = await potretnya(r.page);
+  cek('dua-bingkai: mode tak dikenal → pilihan pertama (foto); monogram tetap monogram walau ada foto',
+    pt.join(' ') === 'monogram:A foto:img', pt.join(' '));
+  await r.ctx.close();
+
+  r = await buka(isiDengan(KOSONG, { tema: 'ukir-jepara', tema_setel: { mode_pria: 'siluet' } }));
+  await bukaUndangan(r.page);
+  pt = await potretnya(r.page);
+  cek('ukir-jepara tidak punya setelan mode: tanpa foto, tanpa bingkai (seperti sebelumnya)', pt.length === 0, pt.join(' '));
+  await r.ctx.close();
+
+  /* kenangan: tulisan bab berfoto memakai --terang, bukan --teks */
+  const k = await bukaKenangan(kenangan({ tema: 'dua-bingkai',
+    babak: [{ id: 'A1', nama: 'Akad Nikah', tanggal: 'Selasa', jam: '08.00', teks: 'Pagi.', jumlah_foto: 1, latar: null }],
+    foto: [{ id: 'k1', jenis: 'foto', jalur: 'u/sampul.jpg', kecil: 'u/sampul.jpg', lebar: 1200, tinggi: 1600, keterangan: null, acara_id: null, bagian: 'sampul', latar: true },
+           { id: 'k2', jenis: 'foto', jalur: 'u/datar.jpg', kecil: 'u/datar.jpg', lebar: 1600, tinggi: 1000, keterangan: null, acara_id: 'A1', bagian: null, latar: true }] }));
+  await k.page.waitForTimeout(1800);
+  const w = await k.page.evaluate(() => ({
+    sampul: getComputedStyle(document.getElementById('namaBesar')).color,
+    bab: (() => { const j = document.querySelector('.bab:not(.polos) .judul'); return j ? getComputedStyle(j).color : ''; })(),
+    use: [...document.querySelectorAll('use')].map(u => u.getAttribute('href')).filter(h => !h.startsWith('/tema/dua-bingkai/')
+      && !h.startsWith('#ikon'))
+  }));
+  const terang = 'rgb(241, 242, 235)';
+  cek('dua-bingkai kenangan: nama di sampul berfoto dan judul bab berfoto berwarna terang',
+    w.sampul === terang && w.bab === terang, JSON.stringify(w));
+  cek('dua-bingkai kenangan: ornamen yang digambar sesudah memuat ikut ditukar', w.use.length === 0, w.use.join(' '));
+  await k.page.screenshot({ path: 'tema-dua-bingkai-kenangan-berfoto.png' });
+  await k.ctx.close();
 }
 
 await browser.close();

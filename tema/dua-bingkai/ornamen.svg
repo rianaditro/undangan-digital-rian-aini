@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Ornamen tema Dua Bingkai: geometri bintang delapan, bukan ukiran.
+       Dipanggil halaman lewat <use href="/tema/dua-bingkai/ornamen.svg#…">
+       (manifest → "ornamen"). Warna lewat custom property yang sama dengan
+       ukir-jepara (--ukir-garis, --ukir-isi), supaya halaman tidak perlu
+       tahu tema mana yang aktif. -->
+  <g id="pemisah">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke" d="M18 20 H98 M142 20 H222"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke;opacity:.55" d="M40 24 H98 M142 24 H200"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;vector-effect:non-scaling-stroke;stroke-linejoin:round" d="M110 10 H130 V30 H110 Z"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;vector-effect:non-scaling-stroke;stroke-linejoin:round" d="M120 5.9 L134.1 20 L120 34.1 L105.9 20 Z"/>
+    <circle style="fill:var(--ukir-isi)" cx="120" cy="20" r="2.6"/>
+    <circle style="fill:var(--ukir-isi)" cx="102" cy="20" r="1.5"/>
+    <circle style="fill:var(--ukir-isi)" cx="138" cy="20" r="1.5"/>
+  </g>
+  <g id="sudut">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke" d="M8 112 V26 Q8 8 26 8 H112"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke;opacity:.55" d="M16 112 V32 Q16 16 32 16 H112"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke;stroke-linejoin:round" d="M26 26 H40 V40 H26 Z M33 23.1 L42.9 33 L33 42.9 L23.1 33 Z"/>
+    <circle style="fill:var(--ukir-isi)" cx="33" cy="33" r="1.8"/>
+  </g>
+</svg>
