@@ -1126,6 +1126,38 @@ const browser = await chromium.launch();
   cek('tema-14 setelan tersimpan di tema_setel', JSON.stringify(ps.badan) === '{"tema_setel":{"mode_wanita":"siluet"}}', JSON.stringify(ps.badan));
   await page.locator('#panelTema').screenshot({ path: 'dasbor-tema-dua-bingkai-1100.png' });
 
+  /* Senja di Alam: palet "Dari foto" baru bisa dipilih sesudah ada sampul */
+  await page.click('#pilihTema [data-tema="senja-alam"]');
+  await page.waitForSelector('#pilihPalet [data-palet="foto"]', { timeout: 4000 });
+  cek('tema-15 "Dari foto" ada, tapi mati selama belum ada foto sampul',
+      await page.locator('#pilihPalet [data-palet="foto"]').isDisabled());
+  await ke(page, 'foto');
+  await page.waitForSelector('#pustakaFoto [data-foto="f-1"] [data-f="peran"]');
+  await page.selectOption('#pustakaFoto [data-foto="f-1"] [data-f="peran"]', 'sampul');
+  await page.waitForTimeout(400);
+  await ke(page, 'tampilan');
+  await page.waitForFunction(() => !document.querySelector('#pilihPalet [data-palet="foto"]').disabled, null, { timeout: 4000 });
+  await page.click('#pilihPalet [data-palet="foto"]');
+  await page.waitForFunction(() => document.querySelector('#pilihPalet [data-palet="foto"]').getAttribute('aria-checked') === 'true', null, { timeout: 6000 });
+  const pfp = model.patch.filter(x => x.tabel === 'pasangan').at(-1).badan;
+  const hex = /^#[0-9A-F]{6}$/;
+  cek('tema-16 "Dari foto": warna diambil dari foto sampul dan disimpan',
+      pfp.tema_setel.palet === 'foto' && ['latar', 'teks', 'aksen', 'kertas', 'kertas_aksen'].every(k => hex.test(pfp.tema_setel.palet_foto[k] || '')),
+      JSON.stringify(pfp));
+  const lulusKontras = await page.evaluate(p => window.MENGUNDANG.tema.periksaPalet(p).length === 0, pfp.tema_setel.palet_foto);
+  cek('tema-17 warna dari foto lulus syarat kontras', lulusKontras);
+  await page.locator('#panelTema').screenshot({ path: 'dasbor-tema-senja-1100.png' });
+
+  const n1 = model.patch.length;
+  await ke(page, 'foto');
+  await page.selectOption('#pustakaFoto [data-foto="f-2"] [data-f="peran"]', 'sampul');
+  await page.waitForTimeout(1000);
+  const ikut = model.patch.slice(n1).filter(x => x.tabel === 'pasangan' && x.badan.tema_setel && x.badan.tema_setel.palet_foto);
+  cek('tema-18 sampul diganti: warna "Dari foto" ikut diperbarui', ikut.length === 1, JSON.stringify(model.patch.slice(n1).map(x => x.tabel)));
+  await ke(page, 'tampilan');
+  await page.click('#pilihTema [data-tema="ukir-jepara"]');
+  await page.waitForTimeout(300);
+
   /* peran foto di pustaka */
   await ke(page, 'foto');
   await page.waitForSelector('#pustakaFoto [data-foto="f-1"] [data-f="peran"]');

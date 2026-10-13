@@ -256,6 +256,106 @@
     }
   },
   {
+    "kode": "senja-alam",
+    "nama": "Senja di Alam",
+    "kategori": "katalog",
+    "konsep": "senja-alam",
+    "untuk": "Prewed outdoor — pantai, hutan pinus, sawah, ilalang — dengan cahaya sore yang hangat",
+    "foto_min": 3,
+    "paket_min": "premium",
+    "palet_foto": true,
+    "palet": [
+      {
+        "kode": "senja-pantai",
+        "nama": "Senja Pantai",
+        "latar": "#F6EDE3",
+        "teks": "#3A2A20",
+        "aksen": "#C0612F",
+        "latar_2": "#EFE1D1",
+        "kertas": "#FBF6F0",
+        "kertas_2": "#EFE1D1",
+        "kertas_teks": "#3A2A20",
+        "kertas_aksen": "#A5521F",
+        "ornamen": "#C0612F"
+      },
+      {
+        "kode": "hutan-pinus",
+        "nama": "Hutan Pinus",
+        "latar": "#ECEEE6",
+        "teks": "#22301F",
+        "aksen": "#5E7A4A",
+        "latar_2": "#E1E5D8",
+        "kertas": "#F6F7F2",
+        "kertas_2": "#E1E5D8",
+        "kertas_teks": "#22301F",
+        "kertas_aksen": "#556F43",
+        "ornamen": "#5E7A4A"
+      },
+      {
+        "kode": "sawah",
+        "nama": "Sawah",
+        "latar": "#F3F0DE",
+        "teks": "#2E3320",
+        "aksen": "#8A7A2E",
+        "latar_2": "#E9E4CC",
+        "kertas": "#FAF8EE",
+        "kertas_2": "#E9E4CC",
+        "kertas_teks": "#2E3320",
+        "kertas_aksen": "#766926",
+        "ornamen": "#8A7A2E"
+      },
+      {
+        "kode": "ilalang",
+        "nama": "Ilalang",
+        "latar": "#F2EADB",
+        "teks": "#3A3226",
+        "aksen": "#A07B4C",
+        "latar_2": "#E8DDC8",
+        "kertas": "#F9F4EA",
+        "kertas_2": "#E8DDC8",
+        "kertas_teks": "#3A3226",
+        "kertas_aksen": "#87663D",
+        "ornamen": "#A07B4C"
+      }
+    ],
+    "huruf": [
+      {
+        "kode": "organik",
+        "nama": "Organik",
+        "judul": "'Cormorant Garamond', Georgia, serif",
+        "naskah": "'Cormorant Garamond', Georgia, serif",
+        "isi": "'Karla', 'Helvetica Neue', Arial, sans-serif",
+        "google": "family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400;1,500&family=Karla:wght@300;400;500;700&family=Amiri"
+      },
+      {
+        "kode": "petualang",
+        "nama": "Petualang",
+        "judul": "'DM Serif Display', Georgia, serif",
+        "naskah": "'DM Serif Display', Georgia, serif",
+        "isi": "'DM Sans', 'Helvetica Neue', Arial, sans-serif",
+        "kapital": true,
+        "jarak": ".03em",
+        "google": "family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;700"
+      },
+      {
+        "kode": "hangat",
+        "nama": "Hangat",
+        "judul": "'Fraunces', Georgia, serif",
+        "naskah": "'Fraunces', Georgia, serif",
+        "isi": "'Nunito Sans', 'Helvetica Neue', Arial, sans-serif",
+        "google": "family=Fraunces:ital,wght@0,400;0,600;1,400&family=Nunito+Sans:wght@300;400;600;700"
+      }
+    ],
+    "ornamen": {
+      "ukir-pemisah": "ornamen.svg#pemisah",
+      "ukir-sudut": "ornamen.svg#sudut"
+    },
+    "bawaan": {
+      "palet": "senja-pantai",
+      "huruf": "organik"
+    }
+  },
+  {
     "kode": "ukir-jepara",
     "nama": "Ukir Jepara",
     "kategori": "katalog",

@@ -1101,10 +1101,21 @@
       var p = M.tema.pilihan(m, setel());
       muatHuruf(m);
 
-      $('pilihPalet').innerHTML = (m.palet || []).map(function(pl){
-        var l = M.tema.paletLengkap(pl);
-        return '<button type="button" class="bulatan" role="radio" data-palet="'+esc(pl.kode)+'"'
-          + ' aria-checked="'+(!!p.palet && p.palet.kode === pl.kode)+'">'
+      var daftarPalet = (m.palet || []).slice();
+      /* "Dari foto": hanya untuk tema yang mengizinkan, dan baru bisa
+         dipilih kalau ada foto sampul. Bulatannya memakai warna terakhir
+         yang diambil dari foto, kalau sudah pernah. */
+      if(m.palet_foto){
+        var pf = setel().palet_foto;
+        daftarPalet.push(Object.assign({ kode:'foto', nama:'Dari foto', latar:'#EEEEEE', teks:'#333333', aksen:'#999999' }, pf || {},
+                                       { kode:'foto', nama:'Dari foto' }));
+      }
+      var adaSampul = !!fotoSampul();
+      $('pilihPalet').innerHTML = daftarPalet.map(function(pl){
+        var l = M.tema.paletLengkap(pl), foto = pl.kode === 'foto';
+        return '<button type="button" class="bulatan'+(foto ? ' dari-foto' : '')+'" role="radio" data-palet="'+esc(pl.kode)+'"'
+          + ' aria-checked="'+(!!p.palet && p.palet.kode === pl.kode)+'"'
+          + (foto && !adaSampul ? ' disabled title="Pilih dulu foto sampul di Foto & video"' : '')+'>'
           + '<i aria-hidden="true"><b style="background:'+esc(l.latar)+'"></b><b style="background:'+esc(l.aksen)+'"></b>'
           + '<b style="background:'+esc(l.kertas)+'"></b></i>'+esc(pl.nama)+'</button>';
       }).join('');
@@ -1130,6 +1141,46 @@
       contoh(p);
     }
 
+    function fotoSampul(){
+      return (data.foto || []).find(function(f){ return f.peran === 'sampul' && f.tampil !== false && f.jenis !== 'video'; }) || null;
+    }
+
+    /* Warna dari foto sampul: dikecilkan ke 48×48 di canvas, lalu
+       M.tema.paletDariPiksel — rumus yang sama diuji di uji/uji-palet.mjs.
+       Fotonya dari /media/ di asal yang sama, jadi canvas tidak ternoda. */
+    function dariFoto(){
+      var f = fotoSampul();
+      if(!f) return Promise.resolve(null);
+      return new Promise(function(selesai){
+        var img = new Image();
+        img.onload = function(){
+          try{
+            var c = document.createElement('canvas'); c.width = 48; c.height = 48;
+            var g = c.getContext('2d'); g.drawImage(img, 0, 0, 48, 48);
+            selesai(M.tema.paletDariPiksel(g.getImageData(0, 0, 48, 48).data));
+          }catch(err){ selesai(null); }
+        };
+        img.onerror = function(){ selesai(null); };
+        img.src = window.Gambar.url(f.jalur_kecil || f.jalur);
+      });
+    }
+
+    /* Sampul diganti sementara warnanya "Dari foto": warnanya ikut foto
+       yang baru. Dipanggil pustaka foto sesudah peran sampul berubah. */
+    async function sampulBerubah(){
+      var s = setel();
+      if(s.palet !== 'foto' || !pasangan) return;
+      var pf = await dariFoto();
+      if(!pf) return;
+      var badan = { tema_setel: Object.assign({}, s, { palet_foto: pf }) };
+      try{
+        await api('pasangan?id=eq.'+pasangan.id, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify(badan) });
+        Object.assign(pasangan, badan);
+        await gambar();
+        toast('Warna tema mengikuti foto sampul yang baru');
+      }catch(err){ toast(err.message, true); }
+    }
+
     $('panelTema').addEventListener('click', async function(e){
       var b = e.target.closest('[data-tema],[data-palet],[data-huruf],[data-setelan]');
       if(!b || b.getAttribute('aria-checked') === 'true') return;
@@ -1141,6 +1192,11 @@
       }else{
         var s = Object.assign({}, setel());
         if(b.dataset.palet) s.palet = b.dataset.palet;
+        if(b.dataset.palet === 'foto'){
+          var pf = await dariFoto();
+          if(!pf){ toast('Foto sampul belum bisa dibaca. Coba lagi sebentar.', true); return; }
+          s.palet_foto = pf;
+        }
         if(b.dataset.huruf) s.huruf = b.dataset.huruf;
         if(b.dataset.setelan) s[b.dataset.setelan] = b.dataset.nilai;
         badan = { tema_setel: s };
@@ -1154,7 +1210,7 @@
       }catch(err){ toast(err.message, true); b.disabled = false; }
     });
 
-    return { gambar: gambar };
+    return { gambar: gambar, sampulBerubah: sampulBerubah };
   })();
 
   /* Peran foto di halaman undangan (migrasi 036). Satu sampul dan satu
@@ -1650,6 +1706,9 @@
       if(f) Object.assign(f, badan);
       if(el.dataset.f === 'bab') gambarKenangan();
       if(badan.peran && badan.peran !== 'galeri') await muatFoto();
+      /* "Dari foto" di panel tema hidup-mati mengikuti ada tidaknya sampul. */
+      if(el.dataset.f === 'peran') Tema.gambar();
+      if(badan.peran === 'sampul') Tema.sampulBerubah();
       toast('Tersimpan');
     }catch(err){ toast(err.message, true); }
   });

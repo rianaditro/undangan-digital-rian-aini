@@ -518,6 +518,82 @@
     return salah;
   }
 
+  /* ---------- Palet dari foto (docs/rencana-tema.md 2.4) ----------
+     Dari piksel foto sampul (RGBA, sudah dikecilkan di canvas) ke palet
+     tema terang yang PASTI lulus periksaPalet:
+       · rona utama = rona yang paling banyak dan paling hidup di foto
+       · latar & kertas = rona itu, sangat terang dan pucat (kertas pasir
+         untuk foto senja, kertas lumut untuk foto hutan)
+       · teks = rona itu, sangat gelap
+       · aksen = rona paling hidup, digelapkan sampai kontrasnya cukup
+     Foto hitam putih (tanpa rona) menghasilkan palet netral.
+     Fungsi murni: dipakai dasbor (canvas) dan diuji di Node. */
+  function hsl(h, s, l) {
+    h = ((h % 360) + 360) % 360;
+    var c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
+    var t = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x]
+          : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+    return rgbHex(t.map(function (v) { return (v + m) * 255; }));
+  }
+
+  function keHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    var mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn, h = 0, s = 0;
+    if (d) {
+      s = d / (1 - Math.abs(2 * l - 1));
+      h = mx === r ? 60 * (((g - b) / d) % 6) : mx === g ? 60 * ((b - r) / d + 2) : 60 * ((r - g) / d + 4);
+    }
+    return [(h + 360) % 360, s, l];
+  }
+
+  /* Gelapkan (atau terangkan) warna dengan rona tetap sampai kontrasnya
+     terhadap `alas` mencapai `batas`. */
+  function cukupKontras(h, s, l, alas, batas) {
+    var w = hsl(h, s, l);
+    for (var i = 0; i < 60 && kontras(w, alas) < batas; i++) { l -= 0.01; w = hsl(h, s, Math.max(0, l)); }
+    return w;
+  }
+
+  function paletDariPiksel(data) {
+    var BIN = 24, berat = [], jenuh = [], n = 0, sumS = 0;
+    for (var b = 0; b < BIN; b++) { berat[b] = 0; jenuh[b] = []; }
+    for (var i = 0; i + 3 < data.length; i += 4) {
+      if (data[i + 3] < 128) continue;
+      var c = keHsl(data[i], data[i + 1], data[i + 2]);
+      n++; sumS += c[1];
+      if (c[1] < 0.12 || c[2] < 0.12 || c[2] > 0.92) continue;   // abu-abu, hitam, putih: tanpa rona
+      var k = Math.floor(c[0] / (360 / BIN)) % BIN;
+      berat[k] += c[1] * (1 - Math.abs(c[2] - 0.5));
+      jenuh[k].push(c[1]);
+    }
+    var puncak = 0;
+    for (b = 1; b < BIN; b++) if (berat[b] > berat[puncak]) puncak = b;
+    var netral = !n || berat[puncak] < n * 0.02;
+    var h = (puncak + 0.5) * (360 / BIN);
+    var sAksen = 0.03;
+    if (!netral) {
+      var j = jenuh[puncak].sort(function (x, y) { return x - y; });
+      sAksen = Math.max(0.3, Math.min(0.65, j[Math.floor(j.length * 0.6)] || 0.4));
+    }
+    var sLatar = netral ? 0.04 : Math.min(0.32, 0.12 + (sumS / Math.max(n, 1)) * 0.3);
+
+    var latar  = hsl(h, sLatar, 0.94);
+    var kertas = hsl(h, sLatar * 0.8, 0.975);
+    var teks   = cukupKontras(h, netral ? 0.06 : 0.28, 0.2, latar, 9);
+    var aksen  = cukupKontras(h, sAksen, 0.46, latar, 3.4);
+    return {
+      latar: latar, teks: teks, aksen: aksen,
+      latar_2: hsl(h, sLatar, 0.89),
+      kertas: kertas, kertas_2: hsl(h, sLatar, 0.9),
+      kertas_teks: teks,
+      kertas_aksen: cukupKontras(h, sAksen, 0.4, kertas, 4.5),
+      ornamen: aksen
+    };
+  }
+
+  var KUNCI_PALET = ['latar', 'teks', 'aksen', 'latar_2', 'latar_3', 'latar_tengah', 'bayang', 'aksen_terang',
+                     'aksen_redup', 'kertas', 'kertas_2', 'kertas_teks', 'kertas_aksen', 'ornamen'];
+
   function tokenPalet(p) {
     var l = paletLengkap(p), t = {};
     Object.keys(l).forEach(function (k) { t['--' + k.replace(/_/g, '-')] = l[k]; });
@@ -553,8 +629,10 @@
     var palet = null;
     if (setel.palet === 'foto' && m.palet_foto && setel.palet_foto &&
         !periksaPalet(setel.palet_foto).length) {
-      palet = { kode: 'foto', nama: 'Dari foto', latar: setel.palet_foto.latar,
-                teks: setel.palet_foto.teks, aksen: setel.palet_foto.aksen };
+      palet = { kode: 'foto', nama: 'Dari foto' };
+      KUNCI_PALET.forEach(function (k) {
+        if (HEX.test(setel.palet_foto[k] || '')) palet[k] = setel.palet_foto[k];
+      });
     }
     palet = palet || cariKode(m.palet, setel.palet) || cariKode(m.palet, bawaan.palet) || (m.palet || [])[0] || null;
     var huruf = cariKode(m.huruf, setel.huruf) || cariKode(m.huruf, bawaan.huruf) || (m.huruf || [])[0] || null;
@@ -969,6 +1047,7 @@
       campur: campur,
       kontras: kontras,
       paletLengkap: paletLengkap,
+      paletDariPiksel: paletDariPiksel,
       periksaPalet: periksaPalet,
       tokenPalet: tokenPalet,
       tokenHuruf: tokenHuruf,

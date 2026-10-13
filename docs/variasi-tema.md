@@ -131,6 +131,10 @@ Angka di kolom kontras: teks utama / aksen terhadap latar.
 
 ### 3.2 Senja di Alam — earthy, golden hour · *Dari foto: ya (disarankan)*
 
+> **Terpasang (13 Okt)**, termasuk palet **Dari foto**. Palet tetap seperti
+> tabel di bawah (tiap palet juga menulis warna kertas); gaya teks
+> Petualang memakai judul kapital. Amiri ikut di gaya teks bawaan untuk ayat.
+
 | Palet | Latar | Teks | Aksen | Kontras |
 |---|---|---|---|---|
 | Senja Pantai (bawaan) | `#F6EDE3` | `#3A2A20` | `#C0612F` | 11.8 / 3.6 |

@@ -446,6 +446,29 @@ if (DAFTAR.some(t => t.kode === 'monokrom')) {
   await k.ctx.close();
 }
 
+/* ---------- Senja di Alam: palet dari foto ---------- */
+if (DAFTAR.some(t => t.kode === 'senja-alam')) {
+  const pf = { latar: '#EFF3ED', teks: '#2F4125', aksen: '#638B4B', latar_2: '#E3EADF', kertas: '#F8FAF8',
+               kertas_2: '#E4EAE0', kertas_teks: '#2F4125', kertas_aksen: '#577B42', ornamen: '#638B4B' };
+  let r = await buka(isiDengan(SATU, { tema: 'senja-alam', tema_setel: { palet: 'foto', palet_foto: pf } }));
+  let h = await r.page.evaluate(() => ({ latar: getComputedStyle(document.body).backgroundColor,
+    attr: document.documentElement.dataset.palet }));
+  cek('senja-alam palet "Dari foto": warna dari foto terpasang', h.latar === 'rgb(239, 243, 237)' && h.attr === 'foto', JSON.stringify(h));
+  await bukaUndangan(r.page);
+  await r.page.screenshot({ path: 'tema-senja-alam-dari-foto.png', fullPage: true });
+  await r.ctx.close();
+
+  r = await buka(isiDengan(KOSONG, { tema: 'monokrom', tema_setel: { palet: 'foto', palet_foto: pf } }));
+  h = await r.page.evaluate(() => document.documentElement.dataset.palet);
+  cek('monokrom tidak menawarkan palet foto: setelan "foto" jatuh ke bawaan', h === 'arang', h);
+  await r.ctx.close();
+
+  r = await buka(isiDengan(KOSONG, { tema: 'senja-alam', tema_setel: { palet: 'foto' } }));
+  h = await r.page.evaluate(() => document.documentElement.dataset.palet);
+  cek('senja-alam "foto" tanpa warna tersimpan: jatuh ke bawaan', h === 'senja-pantai', h);
+  await r.ctx.close();
+}
+
 await browser.close();
 console.log(`\n${lulus} lulus, ${gagal} gagal`);
 process.exit(gagal ? 1 : 0);

@@ -263,6 +263,40 @@ termasuk "cat ulang saja", tidak memicu tata letak.
 
 ---
 
+## 3d. Tahap D — Senja di Alam, selesai (13 Oktober 2026)
+
+`tema/senja-alam/`: prewed luar ruangan. 4 palet (Senja Pantai, Hutan
+Pinus, Sawah, Ilalang) **+ "Dari foto"**, 3 gaya teks (Organik, Petualang,
+Hangat), ornamen batang ilalang, halaman terima kasih sendiri. Sampul
+berfoto dengan cahaya sore dari bawah; tanpa foto, sampulnya langit sore
+dengan matahari tenggelam. Potret mempelai berbentuk batu kali, galeri
+mengutamakan foto mendatar, hitung mundur berlatar senja. Tanpa migrasi.
+
+**Palet dari foto** (rencana 2.4), sekarang terpasang:
+
+- `MENGUNDANG.tema.paletDariPiksel(rgba)` — fungsi murni: rona yang
+  paling banyak dan paling hidup di foto → latar & kertas sangat terang
+  dari rona itu, teks sangat gelap, aksen digelapkan sampai kontrasnya
+  cukup. Foto hitam putih → palet netral. Hasilnya selalu lulus
+  `periksaPalet`; `uji/uji-palet.mjs` membuktikannya untuk foto senja,
+  hutan, sawah, hitam putih, hampir putih, sangat gelap, dan foto kosong.
+- Dasbor: bulatan **"Dari foto"** muncul untuk tema yang mengizinkan
+  (`palet_foto: true`), mati sampai ada foto sampul, dan begitu dipilih
+  mengecilkan sampul ke 48×48 di canvas, menghitung paletnya, dan
+  menyimpannya di `tema_setel.palet_foto`. Mengganti sampul memperbarui
+  warnanya sendiri.
+- Halaman memakai `palet_foto` hanya bila temanya mengizinkan dan
+  warnanya lulus kontras; selain itu jatuh ke palet bawaan.
+
+Ditemukan uji, ikut diperbaiki: panel tema tidak digambar ulang sesudah
+foto sampul dipilih, jadi "Dari foto" tetap mati sampai halaman dimuat
+ulang.
+
+Ikut di tahap ini: petak kosong di galeri (sisa Tahap C) diperbaiki
+untuk semua tema — foto tegak tanpa pasangan dilebarkan (`.sendiri`).
+
+---
+
 ## Langkah manual — dikumpulkan sampai siap terbit
 
 Semua yang tidak bisa dikerjakan dari repo, untuk seluruh tahap yang
@@ -281,7 +315,7 @@ digabung.
    harus sama seperti sebelumnya, kecuali kotak hitung mundur yang kini
    hilang (acaranya sudah lewat).
 
-Tahap A, B, dan C tidak butuh langkah manual lain (tidak ada edge function,
+Tahap A sampai D tidak butuh langkah manual lain (tidak ada edge function,
 rahasia, atau DNS yang berubah).
 
 ---
