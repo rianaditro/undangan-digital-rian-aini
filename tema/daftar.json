@@ -136,6 +136,126 @@
     }
   },
   {
+    "kode": "monokrom",
+    "nama": "Monokrom",
+    "kategori": "katalog",
+    "konsep": "monokrom",
+    "untuk": "Prewed hitam putih, atau foto dari banyak lokasi yang warnanya tidak seragam — gaya majalah",
+    "foto_min": 0,
+    "paket_min": "standar",
+    "palet_foto": false,
+    "palet": [
+      {
+        "kode": "arang",
+        "nama": "Arang",
+        "latar": "#F7F5F0",
+        "teks": "#141414",
+        "aksen": "#141414",
+        "latar_2": "#EDEAE3",
+        "kertas": "#EDEAE3",
+        "kertas_2": "#E2DED5",
+        "kertas_teks": "#141414",
+        "kertas_aksen": "#141414",
+        "ornamen": "#141414"
+      },
+      {
+        "kode": "negatif",
+        "nama": "Negatif",
+        "latar": "#121212",
+        "teks": "#F2F0EA",
+        "aksen": "#BDBDBD",
+        "latar_2": "#1C1C1C",
+        "kertas": "#1C1C1C",
+        "kertas_2": "#262626",
+        "kertas_teks": "#F2F0EA",
+        "kertas_aksen": "#BDBDBD",
+        "ornamen": "#8A8A8A"
+      },
+      {
+        "kode": "emas-tipis",
+        "nama": "Emas Tipis",
+        "latar": "#F7F5F0",
+        "teks": "#141414",
+        "aksen": "#9C7A42",
+        "latar_2": "#EDEAE3",
+        "kertas": "#EDEAE3",
+        "kertas_2": "#E2DED5",
+        "kertas_teks": "#141414",
+        "kertas_aksen": "#86683A",
+        "ornamen": "#9C7A42"
+      },
+      {
+        "kode": "merah-bibir",
+        "nama": "Merah Bibir",
+        "latar": "#F7F5F0",
+        "teks": "#141414",
+        "aksen": "#9E1B1B",
+        "latar_2": "#EDEAE3",
+        "kertas": "#EDEAE3",
+        "kertas_2": "#E2DED5",
+        "kertas_teks": "#141414",
+        "kertas_aksen": "#9E1B1B",
+        "ornamen": "#9E1B1B"
+      }
+    ],
+    "huruf": [
+      {
+        "kode": "majalah",
+        "nama": "Majalah",
+        "judul": "'Bodoni Moda', Didot, 'Times New Roman', serif",
+        "naskah": "'Bodoni Moda', Didot, 'Times New Roman', serif",
+        "isi": "'Inter', 'Helvetica Neue', Arial, sans-serif",
+        "kapital": true,
+        "jarak": ".06em",
+        "google": "family=Bodoni+Moda:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500;600&family=Amiri"
+      },
+      {
+        "kode": "galeri",
+        "nama": "Galeri",
+        "judul": "'Italiana', 'Times New Roman', serif",
+        "naskah": "'Italiana', 'Times New Roman', serif",
+        "isi": "'Jost', 'Helvetica Neue', Arial, sans-serif",
+        "kapital": true,
+        "jarak": ".14em",
+        "google": "family=Italiana&family=Jost:wght@300;400;500"
+      },
+      {
+        "kode": "klasik",
+        "nama": "Klasik",
+        "judul": "'Cormorant Garamond', Georgia, serif",
+        "naskah": "'Cormorant Garamond', Georgia, serif",
+        "isi": "'Karla', 'Helvetica Neue', Arial, sans-serif",
+        "kapital": true,
+        "jarak": ".1em",
+        "google": "family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Karla:wght@300;400;500;700"
+      }
+    ],
+    "setelan": [
+      {
+        "kode": "warna_foto",
+        "nama": "Warna foto",
+        "pilihan": [
+          {
+            "kode": "hitam-putih",
+            "nama": "Hitam putih"
+          },
+          {
+            "kode": "asli",
+            "nama": "Warna asli"
+          }
+        ]
+      }
+    ],
+    "ornamen": {
+      "ukir-pemisah": "ornamen.svg#pemisah",
+      "ukir-sudut": "ornamen.svg#sudut"
+    },
+    "bawaan": {
+      "palet": "arang",
+      "huruf": "majalah"
+    }
+  },
+  {
     "kode": "ukir-jepara",
     "nama": "Ukir Jepara",
     "kategori": "katalog",

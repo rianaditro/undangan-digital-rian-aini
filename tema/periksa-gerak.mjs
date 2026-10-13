@@ -54,9 +54,14 @@ function pecahKoma(teks){
   return bagian;
 }
 
-for(const tema of fs.readdirSync(TEMA)){
-  const f=path.join(TEMA,tema,'gaya.css');
-  if(!fs.existsSync(f)) continue;
+// gaya.css (undangan) dan kenangan.css (halaman terima kasih) sama-sama
+// dibuka tamu dari HP yang sama.
+const BERKAS=[];
+for(const tema of fs.readdirSync(TEMA))
+  for(const nama of ['gaya.css','kenangan.css'])
+    if(fs.existsSync(path.join(TEMA,tema,nama))) BERKAS.push([tema+(nama==='gaya.css'?'':'/kenangan'), path.join(TEMA,tema,nama)]);
+
+for(const [tema,f] of BERKAS){
   const css=bersih(fs.readFileSync(f,'utf8'));
 
   // --- transition: ---

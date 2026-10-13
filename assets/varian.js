@@ -527,9 +527,14 @@
     return t;
   }
 
+  /* Gaya teks juga menentukan apakah judul ditulis kapital berjarak
+     (Monokrom "Majalah") — selalu dikirim, supaya pilihan sebelumnya
+     tidak tertinggal. */
   function tokenHuruf(h) {
     var t = {};
     ['judul', 'naskah', 'isi'].forEach(function (k) { if (h && h[k]) t['--' + k] = h[k]; });
+    t['--judul-kapital'] = h && h.kapital ? 'uppercase' : 'none';
+    t['--judul-jarak'] = (h && h.jarak) || 'normal';
     return t;
   }
 
@@ -717,6 +722,11 @@
       if (!m) return;
       var p = pilihanTema(m, setel);
       TEMA_AKTIF.setelan = p.setelan;
+      /* Setelan juga jadi atribut <html data-…> supaya CSS tema bisa
+         membacanya (Monokrom: foto hitam putih atau berwarna). */
+      if (root) Object.keys(p.setelan).forEach(function (k) {
+        root.setAttribute('data-' + k.replace(/_/g, '-'), p.setelan[k]);
+      });
       pasangOrnamen();
       if (p.palet) { pasangToken(tokenPalet(p.palet)); TEMA_AKTIF.palet = p.palet.kode; }
       if (p.huruf) { pasangToken(tokenHuruf(p.huruf)); TEMA_AKTIF.huruf = p.huruf.kode; }

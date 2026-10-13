@@ -236,6 +236,33 @@ terbatas sekarang).
 
 ---
 
+## 3c. Tahap C — Monokrom, selesai (13 Oktober 2026)
+
+`tema/monokrom/`: gaya majalah hitam putih. 4 palet (Arang, Negatif,
+Emas Tipis, Merah Bibir), 3 gaya teks (Majalah, Galeri, Klasik — ketiganya
+judul kapital berjarak), garis tipis sebagai ornamen, halaman terima
+kasih sendiri. Tanpa migrasi baru.
+
+Yang membuktikan rencana di bagian 3 ("satu HTML bisa berganti susunan
+total lewat CSS"): dengan `index.html` yang sama, Monokrom menyusun
+mempelai berselang foto-kiri / foto-kanan, sampul rata kiri dengan nama
+raksasa di bawah foto, acara sebagai daftar bernomor 01 / 02, galeri
+sebagai halaman majalah, penutup dibalik hitam. Tidak ada satu baris
+HTML pun yang ditambahkan untuk tema ini.
+
+Tambahan mesin tema:
+
+| Tambahan | Gunanya |
+|---|---|
+| Gaya teks `kapital` / `jarak` → token `--judul-kapital`, `--judul-jarak` | judul kapital berjarak ditentukan gaya teks, bukan tema |
+| Setelan tema jadi atribut `<html data-…>` | CSS tema bisa membaca setelan. Monokrom: `warna_foto` = hitam putih (bawaan) atau warna asli |
+| `periksa-gerak.mjs` ikut memeriksa `kenangan.css` | sebelumnya hanya `gaya.css` |
+
+Animasi muncul Monokrom memakai `clip-path` (disingkap, bukan diangkat) —
+termasuk "cat ulang saja", tidak memicu tata letak.
+
+---
+
 ## Langkah manual — dikumpulkan sampai siap terbit
 
 Semua yang tidak bisa dikerjakan dari repo, untuk seluruh tahap yang
@@ -254,7 +281,7 @@ digabung.
    harus sama seperti sebelumnya, kecuali kotak hitung mundur yang kini
    hilang (acaranya sudah lewat).
 
-Tahap A dan B tidak butuh langkah manual lain (tidak ada edge function,
+Tahap A, B, dan C tidak butuh langkah manual lain (tidak ada edge function,
 rahasia, atau DNS yang berubah).
 
 ---

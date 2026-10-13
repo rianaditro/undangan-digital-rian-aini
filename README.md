@@ -20,6 +20,7 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 │   │   ├── kenangan.css  ← tampilan halaman terima kasih, tema yang sama
 │   │   └── tema.json     ← palet dan gaya teks pilihan, bawaannya
 │   ├── dua-bingkai/      ← tema terang: gaya, kenangan, tema.json, ornamen.svg
+│   ├── monokrom/         ← gaya majalah hitam putih
 │   ├── daftar.json       ← dibangun bangun-daftar.mjs, dibaca dasbor
 │   ├── bangun-daftar.mjs
 │   ├── periksa-palet.mjs ← penjaga: palet terbaca, manifest sah

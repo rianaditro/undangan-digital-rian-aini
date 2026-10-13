@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Ornamen tema Monokrom: bukan hiasan, cuma garis. Majalah memisahkan
+       bagian dengan rule tipis, bukan sulur. -->
+  <g id="pemisah">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke" d="M0 20 H112 M128 20 H240"/>
+    <rect style="fill:var(--ukir-isi)" x="116" y="16" width="8" height="8"/>
+  </g>
+  <g id="sudut">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke" d="M6 60 V6 H60"/>
+  </g>
+</svg>

@@ -39,6 +39,8 @@
   --judul:'Marcellus', 'Times New Roman', serif;
   --naskah:'Cormorant', Georgia, serif;
   --isi:'Karla', 'Helvetica Neue', Arial, sans-serif;
+  --judul-kapital:none;
+  --judul-jarak:normal;
 
   --pad:clamp(22px,6vw,64px);
   --gulir-laju:42;

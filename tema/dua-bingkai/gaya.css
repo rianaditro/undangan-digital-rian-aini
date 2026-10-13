@@ -41,6 +41,8 @@
   --judul:'Amiri', Georgia, serif;
   --naskah:'Amiri', Georgia, serif;
   --isi:'Lato', 'Helvetica Neue', Arial, sans-serif;
+  --judul-kapital:none;
+  --judul-jarak:normal;
 
   --pad:clamp(20px, 6vw, 64px);
   --lengkung:999px 999px 10px 10px;

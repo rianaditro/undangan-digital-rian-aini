@@ -377,6 +377,48 @@ if (DAFTAR.some(t => t.kode === 'dua-bingkai')) {
   await k.ctx.close();
 }
 
+/* ---------- Monokrom: foto hitam putih, judul majalah ---------- */
+if (DAFTAR.some(t => t.kode === 'monokrom')) {
+  const saring = page => page.evaluate(() => ({
+    attr: document.documentElement.dataset.warnaFoto,
+    galeri: getComputedStyle(document.querySelector('#galeriIsi img')).filter,
+    sampul: getComputedStyle(document.getElementById('sampulGambar')).filter,
+    judul: getComputedStyle(document.querySelector('.cover-names')).textTransform
+  }));
+  let r = await buka(isiDengan(BANYAK, { tema: 'monokrom' }));
+  await bukaUndangan(r.page);
+  let h = await saring(r.page);
+  cek('monokrom: semua foto hitam putih, judul kapital (bawaan)',
+    h.attr === 'hitam-putih' && h.galeri.includes('grayscale(1)') && h.sampul.includes('grayscale(1)') && h.judul === 'uppercase', JSON.stringify(h));
+  for (const id of ['mempelai', 'galeri']) await r.page.locator('#' + id).screenshot({ path: `tema-monokrom-banyak-${id}.png` });
+  await r.ctx.close();
+
+  r = await buka(isiDengan(BANYAK, { tema: 'monokrom', tema_setel: { warna_foto: 'asli' } }));
+  await bukaUndangan(r.page);
+  h = await saring(r.page);
+  cek('monokrom "Warna asli": foto tidak disaring', h.attr === 'asli' && h.galeri === 'none' && h.sampul === 'none', JSON.stringify(h));
+  await r.ctx.close();
+
+  r = await buka(isiDengan(KOSONG, { tema: 'ukir-jepara' }));
+  h = await r.page.evaluate(() => getComputedStyle(document.querySelector('.cover-names')).textTransform);
+  cek('ukir-jepara tidak ikut kapital', h === 'none', h);
+  await r.ctx.close();
+
+  const k = await bukaKenangan(kenangan({ tema: 'monokrom',
+    babak: [{ id: 'A1', nama: 'Akad Nikah', tanggal: 'Selasa', jam: '08.00', teks: 'Pagi.', jumlah_foto: 1, latar: null }],
+    foto: [{ id: 'k1', jenis: 'foto', jalur: 'u/sampul.jpg', kecil: 'u/sampul.jpg', lebar: 1200, tinggi: 1600, keterangan: null, acara_id: null, bagian: 'sampul', latar: true },
+           { id: 'k2', jenis: 'foto', jalur: 'u/datar.jpg', kecil: 'u/datar.jpg', lebar: 1600, tinggi: 1000, keterangan: null, acara_id: 'A1', bagian: null, latar: true }] }));
+  await k.page.waitForTimeout(1800);
+  const w = await k.page.evaluate(() => ({
+    f: getComputedStyle(document.querySelector('.lapis img:not(.buram)')).filter,
+    t: getComputedStyle(document.querySelector('.nama-besar')).textTransform,
+    c: getComputedStyle(document.getElementById('namaBesar')).color }));
+  cek('monokrom kenangan: foto bab hitam putih, nama kapital, tulisan di atas foto terang',
+    w.f.includes('grayscale(1)') && w.t === 'uppercase' && w.c === 'rgb(247, 245, 240)', JSON.stringify(w));
+  await k.page.screenshot({ path: 'tema-monokrom-kenangan-berfoto.png' });
+  await k.ctx.close();
+}
+
 await browser.close();
 console.log(`\n${lulus} lulus, ${gagal} gagal`);
 process.exit(gagal ? 1 : 0);

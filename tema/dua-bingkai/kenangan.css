@@ -35,6 +35,8 @@
   --judul:'Amiri', Georgia, serif;
   --naskah:'Amiri', Georgia, serif;
   --isi:'Lato', 'Helvetica Neue', Arial, sans-serif;
+  --judul-kapital:none;
+  --judul-jarak:normal;
 
   /* khas tema, bukan bagian palet */
   --daun:#7C8B63;

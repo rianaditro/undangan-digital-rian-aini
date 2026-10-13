@@ -146,6 +146,12 @@ Angka di kolom kontras: teks utama / aksen terhadap latar.
 
 ### 3.3 Monokrom — editorial · *Dari foto: tidak (warna akan merusak konsep)*
 
+> **Terpasang (13 Okt).** Palet seperti tabel di bawah (tiap palet juga
+> menulis warna kertas). Gaya teks: Majalah (Bodoni Moda · Inter, + Amiri
+> untuk ayat), Galeri (Italiana · Jost), Klasik (Cormorant Garamond ·
+> Karla) — ketiganya judul kapital berjarak. Setelan tambahan: **Warna
+> foto** = hitam putih (bawaan) atau warna asli.
+
 | Palet | Latar | Teks | Aksen | Kontras |
 |---|---|---|---|---|
 | Arang (bawaan) | `#F7F5F0` | `#141414` | `#141414` | 16.9 / 16.9 |
