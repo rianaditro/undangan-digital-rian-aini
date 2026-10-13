@@ -51,12 +51,15 @@
   var ACARA    = [];
   var SILSILAH = {};
   var DARI_KODE = {};
+  /* Foto prewed per peran (migrasi 036). Bentuknya selalu lengkap. */
+  var FOTO     = { sampul: null, pria: null, wanita: null, galeri: [] };
 
   var KONF = {
     siap: false,
     demo: false,
     slug: '',
     tema: '',
+    temaSetel: {},
     status: '',
     canonicalHost: '',
     kota: '',
@@ -331,7 +334,7 @@
         pasang(d);
         KONF.demo  = true;
         KONF.situs = global.location ? location.origin : SITUS_CADANGAN;
-        return gantiTema(KONF.tema).then(function () { return d; });
+        return gantiTema(KONF.tema, KONF.temaSetel).then(function () { return d; });
       });
       return janji;
     }
@@ -354,7 +357,7 @@
         throw e;
       }
       pasang(d);
-      return gantiTema(KONF.tema).then(function () { return d; });
+      return gantiTema(KONF.tema, KONF.temaSetel).then(function () { return d; });
     });
 
     return janji;
@@ -381,6 +384,16 @@
     KONF.demo          = false;
     KONF.slug          = d.slug || '';
     KONF.tema          = d.tema || '';
+    KONF.temaSetel     = (d.tema_setel && typeof d.tema_setel === 'object') ? d.tema_setel : {};
+
+    /* Halaman dari zaman sebelum 036 tidak mengirim `foto`; bentuknya
+       tetap dipenuhi supaya pemakai tidak perlu memeriksa kunci. */
+    var f = d.foto || {};
+    FOTO.sampul = f.sampul || null;
+    FOTO.pria   = f.pria   || null;
+    FOTO.wanita = f.wanita || null;
+    FOTO.galeri.length = 0;
+    (f.galeri || []).forEach(function (x) { FOTO.galeri.push(x); });
     KONF.status        = d.status || '';
     KONF.canonicalHost = d.canonical_host || '';
     KONF.kota          = d.kota || '';
@@ -397,6 +410,152 @@
     KONF.siap = true;
   }
 
+  /* ============================================================
+     Tema: berkas, palet, dan gaya teks
+
+     Satu tema = satu folder di /tema/<kode>/ (docs/rencana-tema.md):
+       gaya.css      tampilan halaman undangan
+       kenangan.css  tampilan halaman terima kasih
+       tema.json     manifest: palet dan gaya teks pilihan, bawaannya
+
+     Palet dan gaya teks tidak ditulis di CSS tema — tema hanya memakai
+     token (--latar, --aksen, --judul, …) yang nilai bawaannya ada di
+     :root. Pilihan pasangan (pasangan.tema_setel) dipasang di sini
+     sebagai style di <html>, menimpa nilai bawaan itu.
+
+     Fungsi warna di bawah fungsi murni dan dipakai juga oleh dasbor dan
+     tema/periksa-palet.mjs — satu rumus, bukan tiga salinan.
+     ============================================================ */
+
+  var KODE_TEMA = /^(custom\/)?[a-z0-9]+(-[a-z0-9]+)*$/;
+  var HEX = /^#[0-9a-fA-F]{6}$/;
+
+  function hexRgb(h) {
+    h = String(h || '').replace('#', '');
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  }
+
+  function rgbHex(c) {
+    return '#' + c.map(function (x) {
+      return ('0' + Math.max(0, Math.min(255, Math.round(x))).toString(16)).slice(-2);
+    }).join('').toUpperCase();
+  }
+
+  /* a dicampur ke arah b sebanyak t (0..1) */
+  function campur(a, b, t) {
+    var x = hexRgb(a), y = hexRgb(b);
+    return rgbHex([0, 1, 2].map(function (i) { return x[i] + (y[i] - x[i]) * t; }));
+  }
+
+  function luminans(h) {
+    var c = hexRgb(h).map(function (v) {
+      v /= 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+
+  /* Rasio kontras WCAG, 1..21 */
+  function kontras(a, b) {
+    var x = luminans(a), y = luminans(b);
+    return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+  }
+
+  /* Palet ditulis cukup tiga warna — latar, teks, aksen. Sisanya boleh
+     ditulis kalau perlu dijaga persis (ukir-jepara menjaga warnanya yang
+     lama), dan kalau tidak, diturunkan dengan urutan ini. Urutan penting:
+     yang belakangan boleh memakai yang lebih dulu. */
+  var TURUNAN = [
+    ['latar_2',      function (p) { return campur(p.latar, p.teks, 0.1); }],
+    ['latar_3',      function (p) { return campur(p.latar, '#000000', 0.3); }],
+    ['aksen_terang', function (p) { return campur(p.aksen, '#FFFFFF', 0.2); }],
+    ['aksen_redup',  function (p) { return campur(p.aksen, p.latar, 0.35); }],
+    ['kertas',       function (p) { return p.teks; }],
+    ['kertas_teks',  function (p) { return p.latar; }],
+    ['kertas_2',     function (p) { return campur(p.kertas, p.kertas_teks, 0.06); }],
+    ['kertas_aksen', function (p) { return campur(p.aksen, p.kertas_teks, 0.35); }],
+    ['ornamen',      function (p) { return p.kertas_aksen; }]
+  ];
+
+  function paletLengkap(p) {
+    var hasil = { latar: p.latar, teks: p.teks, aksen: p.aksen };
+    TURUNAN.forEach(function (t) {
+      hasil[t[0]] = HEX.test(p[t[0]] || '') ? p[t[0]] : t[1](hasil);
+    });
+    return hasil;
+  }
+
+  /* Syarat terbaca. Teks utama di kedua permukaan ≥ 7:1 (AAA), aksen dan
+     label kertas ≥ 3:1 — batas WCAG untuk teks besar dan ornamen. Aksen
+     tidak boleh dipakai untuk teks kecil di tema mana pun. */
+  var SYARAT_KONTRAS = [
+    ['teks', 'latar', 7], ['kertas_teks', 'kertas', 7],
+    ['aksen', 'latar', 3], ['kertas_aksen', 'kertas', 3]
+  ];
+
+  function periksaPalet(p) {
+    var salah = [];
+    ['latar', 'teks', 'aksen'].forEach(function (k) {
+      if (!HEX.test((p && p[k]) || '')) salah.push(k + ' bukan warna #RRGGBB');
+    });
+    if (salah.length) return salah;
+    var l = paletLengkap(p);
+    SYARAT_KONTRAS.forEach(function (s) {
+      var k = kontras(l[s[0]], l[s[1]]);
+      if (k < s[2]) salah.push(s[0] + ' / ' + s[1] + ' ' + k.toFixed(2) + ' < ' + s[2]);
+    });
+    return salah;
+  }
+
+  function tokenPalet(p) {
+    var l = paletLengkap(p), t = {};
+    Object.keys(l).forEach(function (k) { t['--' + k.replace(/_/g, '-')] = l[k]; });
+    ['latar', 'teks', 'aksen', 'kertas_teks', 'ornamen'].forEach(function (k) {
+      t['--' + k.replace(/_/g, '-') + '-rgb'] = hexRgb(l[k]).join(',');
+    });
+    return t;
+  }
+
+  function tokenHuruf(h) {
+    var t = {};
+    ['judul', 'naskah', 'isi'].forEach(function (k) { if (h && h[k]) t['--' + k] = h[k]; });
+    return t;
+  }
+
+  function cariKode(daftar, kode) {
+    for (var i = 0; i < (daftar || []).length; i++) if (daftar[i].kode === kode) return daftar[i];
+    return null;
+  }
+
+  /* Pilihan pasangan → palet dan gaya teks yang benar-benar dipakai.
+     Kode yang tidak dikenal (palet dihapus dari tema, tema diganti)
+     jatuh ke bawaan, tidak pernah ke halaman tanpa warna. Palet "foto"
+     hanya dipakai bila temanya mengizinkan dan warnanya lulus kontras. */
+  function pilihanTema(m, setel) {
+    setel = setel || {};
+    var bawaan = m.bawaan || {};
+    var palet = null;
+    if (setel.palet === 'foto' && m.palet_foto && setel.palet_foto &&
+        !periksaPalet(setel.palet_foto).length) {
+      palet = { kode: 'foto', nama: 'Dari foto', latar: setel.palet_foto.latar,
+                teks: setel.palet_foto.teks, aksen: setel.palet_foto.aksen };
+    }
+    palet = palet || cariKode(m.palet, setel.palet) || cariKode(m.palet, bawaan.palet) || (m.palet || [])[0] || null;
+    var huruf = cariKode(m.huruf, setel.huruf) || cariKode(m.huruf, bawaan.huruf) || (m.huruf || [])[0] || null;
+    return { palet: palet, huruf: huruf, hurufBawaan: (huruf && huruf.kode === bawaan.huruf) };
+  }
+
+  var MANIFEST = {};
+  function muatManifest(kode) {
+    if (!KODE_TEMA.test(kode || '')) return Promise.resolve(null);
+    if (!MANIFEST[kode]) {
+      MANIFEST[kode] = (typeof fetch === 'function'
+        ? fetch('/tema/' + kode + '/tema.json').then(function (r) { return r.ok ? r.json() : null; })
+        : Promise.resolve(null)).catch(function () { return null; });
+    }
+    return MANIFEST[kode];
+  }
+
   /* Menukar berkas tema, lalu MENUNGGU sampai berkas penggantinya benar-
      benar termuat. Tanpa menunggu, halaman sempat digambar dengan tema
      lama sementara tema barunya menyusul — dan itu persis kedipan yang
@@ -404,23 +563,26 @@
 
      Kalau gagal termuat, tema lama dibiarkan berdiri. Undangan dengan
      tampilan yang bukan pilihannya masih jauh lebih baik daripada
-     undangan tanpa tampilan sama sekali. */
-  function gantiTema(nama) {
-    if (!nama || nama === TEMA_BAWAAN) return Promise.resolve(false);
+     undangan tanpa tampilan sama sekali.
 
+     `berkas` gaya.css untuk undangan, kenangan.css untuk halaman terima
+     kasih. <link id="temaGaya"> di halaman menunjuk berkas bawaan. */
+  function tukarBerkas(nama, berkas) {
     var tautan = global.document && document.getElementById('temaGaya');
     if (!tautan) return Promise.resolve(false);
+    var href = '/tema/' + nama + '/' + berkas;
+    if (tautan.getAttribute('href') === href) return Promise.resolve(false);
 
     return new Promise(function (selesai) {
       var baru = document.createElement('link');
       baru.rel = 'stylesheet';
-      baru.href = '/tema/' + nama + '/gaya.css';
+      baru.href = href;
 
       var sudah = false;
       function tuntas(berhasil) {
         if (sudah) return;
         sudah = true;
-        if (berhasil) tautan.parentNode.removeChild(tautan);
+        if (berhasil) { tautan.parentNode.removeChild(tautan); baru.id = 'temaGaya'; }
         else if (baru.parentNode) baru.parentNode.removeChild(baru);
         selesai(berhasil);
       }
@@ -434,6 +596,102 @@
       tautan.parentNode.insertBefore(baru, tautan.nextSibling);
     });
   }
+
+  /* Gaya teks selain bawaan membawa tautan Google Fonts-nya sendiri.
+     Ditunggu sampai hurufnya siap, paling lama 1,5 detik — sesudah itu
+     halaman jalan terus dengan huruf cadangan dan bertukar sendiri saat
+     hurufnya tiba. */
+  function pasangHuruf(h) {
+    var doc = global.document;
+    if (!doc || !h || !h.google) return Promise.resolve();
+    var lama = doc.getElementById('temaHuruf');
+    var href = 'https://fonts.googleapis.com/css2?' + h.google + '&display=swap';
+    if (lama && lama.getAttribute('href') === href) return Promise.resolve();
+    var l = doc.createElement('link');
+    l.rel = 'stylesheet'; l.id = 'temaHuruf'; l.href = href;
+    if (lama) lama.parentNode.replaceChild(l, lama); else doc.head.appendChild(l);
+
+    var tunggu = new Promise(function (selesai) {
+      l.onload = function () {
+        if (!doc.fonts || !doc.fonts.load) return selesai();
+        Promise.all(['judul', 'naskah', 'isi'].map(function (k) {
+          return h[k] ? doc.fonts.load('1em ' + h[k]).catch(function () {}) : null;
+        })).then(function () { selesai(); }, function () { selesai(); });
+      };
+      l.onerror = function () { selesai(); };
+    });
+    return Promise.race([tunggu, new Promise(function (s) { setTimeout(s, 1500); })]);
+  }
+
+  function pasangToken(t) {
+    var root = global.document && document.documentElement;
+    if (!root) return;
+    Object.keys(t).forEach(function (k) { root.style.setProperty(k, t[k]); });
+  }
+
+  /* Pratinjau dari dasbor: ?pratinjau=1&tema=…&palet=…&huruf=… menimpa
+     pilihan yang tersimpan, hanya di peramban yang membukanya. */
+  function timpaPratinjau(nama, setel) {
+    var q;
+    try { q = new URLSearchParams(global.location ? location.search : ''); } catch (e) { return null; }
+    if (q.get('pratinjau') !== '1') return null;
+    var s = {}; Object.keys(setel || {}).forEach(function (k) { s[k] = setel[k]; });
+    if (q.get('palet')) s.palet = q.get('palet');
+    if (q.get('huruf')) s.huruf = q.get('huruf');
+    var t = q.get('tema');
+    return { nama: KODE_TEMA.test(t || '') ? t : nama, setel: s };
+  }
+
+  var TEMA_AKTIF = { kode: '', palet: '', huruf: '' };
+
+  /* Memasang tema lengkap: berkas, palet, gaya teks. Selesai = boleh
+     membuka sampul. Apa pun yang gagal di sini jatuh ke bawaan; tidak
+     ada jalur yang meninggalkan halaman tanpa tampilan. */
+  function pasangTema(nama, setel, berkas) {
+    if (!KODE_TEMA.test(nama || '')) nama = TEMA_BAWAAN;
+    berkas = berkas || 'gaya.css';
+    var timpa = timpaPratinjau(nama, setel);
+    if (timpa) { nama = timpa.nama; setel = timpa.setel; }
+
+    var root = global.document && document.documentElement;
+
+    /* Manifest dulu, baru berkasnya. Tema yang foldernya tidak ada
+       (dihapus, salah ketik di database) tidak pernah dipasang: lapisan
+       aset menjawab alamat yang tidak ada dengan index.html, dan
+       peramban akan menukar tema yang sah dengan "stylesheet" kosong. */
+    return muatManifest(nama).then(function (m) {
+      if (!m && nama !== TEMA_BAWAAN) {
+        nama = TEMA_BAWAAN;
+        return muatManifest(nama).then(function (mb) { return pasangDengan(mb); });
+      }
+      return pasangDengan(m);
+    });
+
+    function pasangDengan(m) {
+      if (root) root.setAttribute('data-tema', nama);
+      TEMA_AKTIF.kode = nama;
+      var berkasSiap = nama === TEMA_BAWAAN && berkas === 'gaya.css'
+        ? Promise.resolve(false)
+        : tukarBerkas(nama, berkas);
+      return Promise.all([berkasSiap, pasangPilihan(m)]).then(function (h) { return h[0]; });
+    }
+
+    function pasangPilihan(m) {
+      if (!m) return;
+      var p = pilihanTema(m, setel);
+      if (p.palet) { pasangToken(tokenPalet(p.palet)); TEMA_AKTIF.palet = p.palet.kode; }
+      if (p.huruf) { pasangToken(tokenHuruf(p.huruf)); TEMA_AKTIF.huruf = p.huruf.kode; }
+      if (root) {
+        root.setAttribute('data-palet', TEMA_AKTIF.palet);
+        root.setAttribute('data-huruf', TEMA_AKTIF.huruf);
+      }
+      /* Huruf bawaan sudah di-@import oleh berkas temanya sendiri. */
+      if (p.huruf && !p.hurufBawaan) return pasangHuruf(p.huruf);
+    }
+  }
+
+  /* Nama lama, dipertahankan untuk pemanggil yang sudah ada. */
+  function gantiTema(nama, setel) { return pasangTema(nama, setel, 'gaya.css'); }
 
   function pastikanSiap() {
     if (!KONF.siap) {
@@ -647,12 +905,27 @@
     TEMPAT: TEMPAT,
     ACARA: ACARA,
     SILSILAH: SILSILAH,
+    FOTO: FOTO,
     DOMPET: DOMPET,
     VARIAN: VARIAN,
     KONF: KONF,
 
     muat: muat,
     TEMA_BAWAAN: TEMA_BAWAAN,
+    pasangTema: pasangTema,
+    tema: {
+      KODE: KODE_TEMA,
+      AKTIF: TEMA_AKTIF,
+      SYARAT_KONTRAS: SYARAT_KONTRAS,
+      campur: campur,
+      kontras: kontras,
+      paletLengkap: paletLengkap,
+      periksaPalet: periksaPalet,
+      tokenPalet: tokenPalet,
+      tokenHuruf: tokenHuruf,
+      pilihan: pilihanTema,
+      manifest: muatManifest
+    },
     slugPasangan: slugPasangan,
     slugTamuDari: slugTamuDari,
     SLUG_COBA: SLUG_COBA,

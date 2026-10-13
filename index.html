@@ -7,7 +7,6 @@
 <script>document.documentElement.className += ' js';</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant:ital,wght@0,400;1,300;1,400&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/tema/ukir-jepara/gaya.css" id="temaGaya">
 </head>
 <body class="locked">
@@ -40,6 +39,10 @@
 
 <!-- ====== SAMPUL ====== -->
 <div id="cover">
+  <!-- Foto sampul (peran 'sampul' di pustaka foto, migrasi 036). Tetap
+       tersembunyi bila pasangan belum memilihnya; tema yang tidak
+       memakai foto cukup tidak menggayakannya. -->
+  <div class="sampul-foto" id="sampulFoto" hidden><img id="sampulGambar" alt="" decoding="async"></div>
   <div class="cover-frame">
     <svg class="ukir corner c-tl" viewBox="0 0 120 120"><use href="#ukir-sudut"/></svg>
     <svg class="ukir corner c-tr" viewBox="0 0 120 120"><use href="#ukir-sudut"/></svg>
@@ -126,6 +129,24 @@
     <svg class="ukir divider draw reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
   </div>
 </section>
+
+<!-- ====== GALERI ====== -->
+<!-- Foto berperan 'galeri'. Tanpa satu pun, bagiannya tidak muncul. -->
+<section id="galeri" class="on-paper center" hidden>
+  <div class="wrap">
+    <p class="eyebrow reveal">Galeri</p>
+    <h2 class="title reveal">Momen Kami</h2>
+    <div class="galeri-grid" id="galeriIsi" data-runtun></div>
+    <div class="gap"></div>
+    <svg class="ukir divider draw reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
+  </div>
+</section>
+
+<!-- Foto galeri dibuka besar. Satu elemen untuk semua foto. -->
+<div id="lihatFoto" hidden role="dialog" aria-modal="true" aria-label="Foto">
+  <img id="lihatGambar" alt="">
+  <button type="button" id="lihatTutup" aria-label="Tutup foto">&times;</button>
+</div>
 
 <section id="hitung">
   <div class="wrap">
@@ -506,8 +527,29 @@
     });
   }
 
-  function kartuMempelai(m){
-    return '<div class="reveal">'
+  /* Potongan foto dari dasbor (migrasi 034): titik fokus dan zum, bukan
+     berkas baru. Dipasang sebagai variabel; tema yang menentukan dipakai
+     untuk object-position dan transform-origin atau tidak. */
+  function gayaFoto(f){
+    var fx = f.fokus_x == null ? 50 : Number(f.fokus_x);
+    var fy = f.fokus_y == null ? 50 : Number(f.fokus_y);
+    var z  = f.zum ? Number(f.zum) : 1;
+    return '--fx:'+fx+'%;--fy:'+fy+'%;--z:'+z;
+  }
+
+  function potret(sisi, m){
+    var f = M.FOTO[sisi];
+    if(!f) return '';
+    return '<div class="person-foto" style="'+gayaFoto(f)+'">'
+      +   '<img src="'+esc(M.fotoUrl(f.kecil || f.jalur))+'" alt="'+esc(m.panggilan || m.lengkap || '')+'"'
+      +   ' loading="lazy" decoding="async"'
+      +   (f.lebar && f.tinggi ? ' width="'+f.lebar+'" height="'+f.tinggi+'"' : '')+'>'
+      + '</div>';
+  }
+
+  function kartuMempelai(m, sisi){
+    return '<div class="reveal'+(M.FOTO[sisi] ? ' ada-foto' : '')+'">'
+      +   potret(sisi, m)
       +   '<p class="person-role">'+esc(m.peran)+'</p>'
       +   '<h3 class="person-name">'+esc(m.lengkap)+'</h3>'
       +   '<p class="person-parents">'
@@ -563,6 +605,62 @@
     seksi.hidden = !blok;
   }
 
+  /* ---------- Foto prewed: sampul dan galeri ----------
+     Tidak bergantung pada pihak tamu, jadi digambar sekali saja. */
+  var fotoTergambar = false;
+  function gambarFoto(){
+    if(fotoTergambar) return;
+    fotoTergambar = true;
+
+    var s = M.FOTO.sampul, wadah = document.getElementById('sampulFoto');
+    if(s && wadah){
+      var img = document.getElementById('sampulGambar');
+      wadah.setAttribute('style', gayaFoto(s));
+      img.onload = function(){ wadah.classList.add('muat'); };
+      img.src = M.fotoUrl(s.jalur);
+      wadah.hidden = false;
+      document.documentElement.classList.add('ada-sampul');
+    }
+
+    var g = M.FOTO.galeri || [];
+    var seksi = document.getElementById('galeri');
+    document.getElementById('galeriIsi').innerHTML = g.map(function(f, i){
+      var tegak = f.lebar && f.tinggi ? f.tinggi >= f.lebar : true;
+      return '<button type="button" class="galeri-item reveal'+(tegak ? '' : ' mendatar')+'"'
+        +   ' data-i="'+i+'" style="'+gayaFoto(f)+'" aria-label="Buka foto '+(i + 1)+'">'
+        +   '<img src="'+esc(M.fotoUrl(f.kecil || f.jalur))+'" alt="'+esc(f.keterangan || '')+'"'
+        +   ' loading="lazy" decoding="async">'
+        + '</button>';
+    }).join('');
+    seksi.hidden = !g.length;
+  }
+
+  /* Foto galeri dibuka besar. Berkas penuh baru diunduh saat diminta. */
+  (function(){
+    var kotak = document.getElementById('lihatFoto');
+    var img   = document.getElementById('lihatGambar');
+    var asal  = null;
+    function tutup(){
+      kotak.hidden = true; img.removeAttribute('src');
+      document.body.classList.remove('melihat');
+      if(asal){ asal.focus(); asal = null; }
+    }
+    document.getElementById('galeriIsi').addEventListener('click', function(e){
+      var b = e.target.closest('.galeri-item');
+      if(!b) return;
+      var f = (M.FOTO.galeri || [])[Number(b.dataset.i)];
+      if(!f) return;
+      asal = b;
+      img.src = M.fotoUrl(f.jalur);
+      img.alt = f.keterangan || '';
+      kotak.hidden = false;
+      document.body.classList.add('melihat');
+      document.getElementById('lihatTutup').focus();
+    });
+    kotak.addEventListener('click', function(e){ if(e.target !== img) tutup(); });
+    document.addEventListener('keydown', function(e){ if(!kotak.hidden && e.key === 'Escape') tutup(); });
+  })();
+
   var BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli',
                   'Agustus','September','Oktober','November','Desember'];
 
@@ -593,9 +691,9 @@
 
     /* kartu mempelai, urutannya menyesuaikan pihak */
     document.getElementById('pasangan').innerHTML =
-        kartuMempelai(M.MEMPELAI[v.urutan[0]])
+        kartuMempelai(M.MEMPELAI[v.urutan[0]], v.urutan[0])
       + '<div class="pair-amp reveal">&amp;</div>'
-      + kartuMempelai(M.MEMPELAI[v.urutan[1]]);
+      + kartuMempelai(M.MEMPELAI[v.urutan[1]], v.urutan[1]);
 
     /* Rangkaian acara. Akad selalu di kediaman mempelai putri; resepsi
        mengikuti pihak tamu. Kalau keduanya jatuh di tempat yang sama —
@@ -625,6 +723,7 @@
     document.getElementById('tempatMaps').href          = tempat.maps;
 
     gambarSilsilah(v);
+    gambarFoto();
 
     /* judul tab dan baris penutup — keduanya ikut isi database */
     var namaPasangan = v.ttdNama[0] + " & " + v.ttdNama[1];
