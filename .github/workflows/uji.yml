@@ -48,6 +48,10 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      # penjaga tema: animasi tanpa pemicu tata letak, palet terbaca,
+      # manifest sah, tema/daftar.json tidak tertinggal
+      - name: penjaga tema
+        run: node ../tema/periksa-gerak.mjs && node ../tema/periksa-palet.mjs
       - run: npm install
       - run: npx playwright install --with-deps chromium
       - name: semua suite

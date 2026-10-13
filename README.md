@@ -16,7 +16,12 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 │   └── backsound.mp3
 ├── tema/
 │   ├── ukir-jepara/
-│   │   └── gaya.css      ← SELURUH tampilan undangan ada di sini
+│   │   ├── gaya.css      ← SELURUH tampilan undangan ada di sini
+│   │   ├── kenangan.css  ← tampilan halaman terima kasih, tema yang sama
+│   │   └── tema.json     ← palet dan gaya teks pilihan, bawaannya
+│   ├── daftar.json       ← dibangun bangun-daftar.mjs, dibaca dasbor
+│   ├── bangun-daftar.mjs
+│   ├── periksa-palet.mjs ← penjaga: palet terbaca, manifest sah
 │   └── periksa-gerak.mjs ← penjaga: tolak animasi pemicu tata letak
 ├── supabase/
 │   ├── migrations/       ← migrasi bernomor, dijalankan berurutan

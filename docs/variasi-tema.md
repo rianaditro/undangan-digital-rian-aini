@@ -180,6 +180,21 @@ kata. Foto tetap hitam putih.
 Ayat (Ar-Rum 21) selalu memakai **Amiri** apa pun gaya teksnya. Hanya
 huruf Arab yang diambil (`subset=arabic` + `text=`), jadi ukurannya kecil.
 
+> **Terpasang (13 Okt) untuk `ukir-jepara`** — tema dua permukaan, jadi
+> paletnya menulis permukaan gelap dan kertas sekaligus:
+>
+> | Palet | Latar | Teks | Aksen | Kertas aksen | Kontras teks / aksen / kertas-aksen |
+> |---|---|---|---|---|---|
+> | Nila Kuningan (bawaan, = tampilan lama) | `#131E33` | `#EDE7D9` | `#C39A5C` | `#8C6A3A` | 13.5 / 6.4 / 4.0 |
+> | Sogan | `#3B2416` | `#F1E7D3` | `#CDA162` | `#87602D` | — / 6.1 / 4.6 |
+> | Marun Keraton | `#4A1520` | `#F5ECE2` | `#D4AF6A` | `#8C6A33` | — / 7.1 / 4.3 |
+> | Hijau Pupus | `#1F3A2C` | `#F2EEDF` | `#C8A456` | `#80662B` | — / 5.2 / 4.7 |
+>
+> Gaya teks: **Keraton** (Marcellus · Cormorant · Karla, bawaan), **Prasasti**
+> (Cinzel · EB Garamond), **Sastra** (Cormorant Garamond · Lora — bukan EB
+> Garamond saja seperti di tabel bawah, supaya tidak kembar dengan Prasasti).
+> Angka pasti setiap palet dihitung ulang oleh `tema/periksa-palet.mjs`.
+
 ### 3.5 Adat Nusantara — palet per daerah · *Dari foto: tidak (warna adat bermakna)*
 
 Di tema ini palet **mengikuti daerah**: memilih daerah memilih ornamen dan

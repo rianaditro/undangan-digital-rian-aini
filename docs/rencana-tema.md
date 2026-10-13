@@ -175,10 +175,46 @@ dan tangkapan layar di deskripsinya.
 
 ---
 
+## 3a. Tahap A — selesai (13 Oktober 2026)
+
+Terpasang di cabang ini, belum di produksi. Yang berbeda dari rencana di
+atas, dan kenapa:
+
+| Rencana | Jadinya | Sebab |
+|---|---|---|
+| Palet = 3 warna (latar, teks, aksen) | 3 warna **wajib** + turunan yang boleh ditulis sendiri: `latar_2`, `latar_tengah`, `latar_3`, `bayang`, `aksen_terang`, `aksen_redup`, `kertas`, `kertas_2`, `kertas_teks`, `kertas_aksen`, `ornamen` | `ukir-jepara` punya **dua permukaan** (nila gelap dan kertas terang). Turunan otomatis untuk tema satu permukaan; ditulis tangan bila warna lama harus dijaga persis |
+| Turunan dihitung saat `daftar.json` dibangun | Dihitung di peramban oleh `MENGUNDANG.tema` (`assets/varian.js`) | Satu rumus dipakai halaman, dasbor, dan `periksa-palet.mjs`; tidak ada berkas hasil bangun yang bisa tertinggal |
+| Warna transparan lewat token turunan | Token `-rgb` (`rgba(var(--aksen-rgb),.3)`) | Tampilan lama terjaga **persis** — gaya terhitung 230 elemen undangan dan 120 elemen halaman terima kasih identik sebelum dan sesudah |
+| Huruf dipasang `gantiTema()` | Huruf **bawaan** di-`@import` oleh `gaya.css`/`kenangan.css`; hanya gaya teks lain yang dipasang JS | Halaman tetap berhuruf benar walau `tema.json` gagal dimuat atau JS mati |
+| Pratinjau di iframe | Contoh kecil di dasbor + tautan "Buka undangan dengan pilihan ini" (`?pratinjau=1&tema=…&palet=…&huruf=…`) | `undangan_isi` menolak undangan yang belum terbit, jadi iframe kosong untuk pasangan yang paling butuh pratinjau: yang masih draf |
+| Slot `#kisah` | Belum | Ikut Tahap H bersama tabelnya |
+| — | Tema tanpa `tema.json` jatuh ke `ukir-jepara` | Ditemukan uji: lapisan aset menjawab berkas yang tidak ada dengan `index.html`, dan peramban menukar tema yang sah dengan "stylesheet" kosong |
+
+### Urutan terbit ke produksi
+
+1. Tempel `supabase/migrations/036_tema_foto_setel.sql` di SQL editor
+   Supabase. Aman untuk `main` yang sedang tayang: `db/kompat.mjs`
+   memastikan kode `main` masih sah terhadap skema 036, dan kunci baru
+   `undangan_isi` diabaikan halaman lama.
+2. Baru gabungkan cabang ini. Urutan ini penting: dasbor baru menulis
+   `foto.peran` dan `pasangan.tema_setel`, yang belum ada sebelum 036.
+3. `db/banding.sh` untuk memastikan produksi = repo.
+
+### Menambah tema berikutnya (Tahap B dst.)
+
+1. Salin `tema/ukir-jepara/` ke `tema/<kode>/`, ganti `tema.json`.
+2. Tulis `gaya.css` dan `kenangan.css` hanya dengan token; `:root` keduanya
+   = palet dan gaya teks bawaan.
+3. `node tema/bangun-daftar.mjs`, lalu `node tema/periksa-palet.mjs` dan
+   `node tema/periksa-gerak.mjs`.
+4. `cd uji && node semua.mjs tema` — tema baru otomatis diuji dengan 0/1/
+   banyak foto, setiap palet, setiap gaya teks, dan halaman terima kasihnya.
+
+---
+
 ## 4. Yang perlu diputuskan
 
-1. **Mulai dari Tahap A sekarang?** Tanpa A, tidak ada tema yang bisa
-   menampilkan foto prewed.
+1. ~~Mulai dari Tahap A sekarang?~~ **Ya** (13 Okt) — selesai, lihat 3a.
 2. **Tema per paket?** Manifest menyiapkan `paket_min`. Usul: Dua Bingkai,
    Monokrom, Studio di paket dasar; Senja, Adat, Dokumenter, Kisah di
    paket atas.
