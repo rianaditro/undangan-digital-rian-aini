@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>mengundang.id — Undangan pernikahan digital</title>
-<meta name="description" content="Undangan pernikahan digital yang menyapa tiap tamu dengan namanya, disebar lewat WhatsApp, lengkap dengan buku tamu dan rekap amplop sesudah acara.">
+<title>mengundang.id — Undangan pernikahan digital untuk keluarga besar</title>
+<meta name="description" content="Bukan sekadar undangan: seluruh urusan mengundang. Sebar lewat WhatsApp bersama keluarga tanpa ada tamu yang terlewat, rekap amplop dan berkat, lalu halaman kenangan sesudah acara.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="mengundang.id — Undangan pernikahan digital">
-<meta property="og:description" content="Undangan yang menyapa tiap tamu dengan namanya. Sebar lewat WhatsApp, rekap amplopnya sesudah acara.">
+<meta property="og:title" content="mengundang.id — Undangan pernikahan digital untuk keluarga besar">
+<meta property="og:description" content="Dari undangan pertama terkirim sampai terima kasih terakhir tersampaikan.">
 <meta property="og:url" content="https://mengundang.id/mulai">
 <link rel="canonical" href="https://mengundang.id/mulai">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,14 +15,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Cormorant:ital,wght@0,400;1,300;1,400&family=Karla:wght@300;400;500;700&display=swap" rel="stylesheet">
 
 <!--
-  Halaman depan mengundang.id. Dua jalan untuk calon klien:
+  Halaman depan mengundang.id. Tulisannya mengikuti docs/brand.md —
+  posisi, urutan penekanan, kata yang dipakai dan dilarang, dan harga
+  paket ada di sana. Ubah dokumennya dulu, baru halaman ini.
+
+  Dua jalan untuk calon klien:
 
     1. Tanya lewat WhatsApp — nomornya di KONTAK di bawah.
     2. Coba dulu (#coba) — menyusun tautan /coba dengan nama mereka
        sendiri; undangan percobaannya dibangun varian.js di peramban,
        tanpa Supabase dan tanpa menyimpan apa pun.
 
-  Contoh di #contoh pasangan rekaan yang digambar dengan HTML/CSS —
+  Contoh di #kirim dan #contoh pasangan dan tamu rekaan yang digambar dengan HTML/CSS —
   tidak ada foto orang sungguhan, dan tidak ada data pasangan mana pun.
 -->
 
@@ -153,17 +157,53 @@ html:not(.js) .reveal{opacity:1;transform:none;}
 .kartu p{font-size:13.5px;color:rgba(237,231,217,.65);margin-top:7px;}
 .kartu .tanda{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--kuningan);}
 
+/* ---------- kirim: halaman panitia rekaan ---------- */
+#kirim{background:var(--nila-3);border-top:1px solid rgba(195,154,92,.14);}
+.kirim-isi{display:grid;gap:40px;align-items:center;margin-top:8px;}
+@media (min-width:820px){ .kirim-isi{grid-template-columns:1.1fr 1fr;} }
+.kirim-teks{text-align:left;}
+.kirim-teks .lead{margin-inline:0;}
+.kirim-teks .langkah{margin-top:22px;}
+.kirim-hp{display:flex;justify-content:center;}
+.layar.panitia{justify-content:flex-start;align-items:stretch;text-align:left;padding:40px 14px 14px;}
+.pn-pihak{font-size:7.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--kuningan);}
+.pn-judul{font-family:var(--display);font-size:15px;margin-top:4px;}
+.pn-angka{margin-top:12px;}
+.pn-angka p{display:flex;justify-content:space-between;font-size:8.5px;color:rgba(237,231,217,.75);margin-top:7px;}
+.pn-angka b{font-weight:500;color:var(--kapur);}
+.pn-batang{height:4px;border-radius:2px;background:rgba(237,231,217,.12);margin-top:4px;overflow:hidden;}
+.pn-batang i{display:block;height:100%;background:var(--kuningan);}
+.pn-batang.daun i{background:var(--daun);}
+.pn-baris{display:flex;align-items:center;gap:6px;border-top:1px solid var(--garis);padding:8px 0;margin-top:2px;}
+.pn-angka + .pn-baris{margin-top:12px;}
+.pn-baris span{flex:1;font-size:9.5px;line-height:1.3;}
+.pn-baris small{display:block;font-size:7.5px;color:rgba(237,231,217,.5);}
+.pn-chip{font-style:normal;font-size:6.5px;letter-spacing:.12em;text-transform:uppercase;border:1px solid currentColor;border-radius:99px;padding:2px 6px;}
+.pn-chip.ok{color:var(--daun);}
+.pn-chip.belum{color:rgba(237,231,217,.45);}
+.pn-wa{width:20px;height:20px;border-radius:50%;background:#25D366;color:#fff;display:grid;place-items:center;flex:none;}
+.pn-wa svg{width:12px;height:12px;}
+.pn-wa.mati{background:rgba(237,231,217,.1);color:rgba(237,231,217,.35);}
+
 /* ---------- paket ---------- */
 .paket{display:grid;gap:16px;margin-top:34px;text-align:left;}
-@media (min-width:680px){ .paket{grid-template-columns:1fr 1fr;} }
-.paket .kotak{border:1px solid rgba(74,51,35,.22);background:rgba(255,255,255,.55);padding:22px 22px 24px;border-radius:3px;}
-.paket .kotak.unggul{border-color:var(--kuningan-dim);box-shadow:0 18px 40px -26px rgba(74,51,35,.5);}
+@media (min-width:860px){ .paket{grid-template-columns:repeat(3,1fr);align-items:start;} }
+.paket .kotak{border:1px solid rgba(74,51,35,.22);background:rgba(255,255,255,.55);padding:22px 22px 24px;border-radius:3px;margin-top:0;display:flex;flex-direction:column;}
+.paket .kotak.unggul{border-color:var(--kuningan-dim);background:rgba(255,255,255,.8);box-shadow:0 18px 40px -26px rgba(74,51,35,.5);}
+.paket .pita{align-self:flex-start;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;
+  background:var(--jati);color:var(--kapur);padding:3px 9px;border-radius:2px;margin-bottom:10px;}
 .paket h3{font-family:var(--display);font-weight:400;font-size:21px;letter-spacing:.03em;}
-.paket .alamat{font-family:var(--script);font-size:17px;color:var(--jati);margin-top:6px;overflow-wrap:anywhere;}
+.paket .untuk{font-size:13px;color:rgba(19,30,51,.62);margin-top:4px;}
+.paket .harga{font-family:var(--display);font-size:27px;color:var(--jati);margin-top:12px;letter-spacing:.02em;}
+.paket .alamat{font-family:var(--script);font-size:16px;color:var(--jati);margin-top:4px;overflow-wrap:anywhere;}
 .paket .alamat b{font-weight:400;background:rgba(195,154,92,.22);padding:0 3px;border-radius:2px;}
 .paket ul{list-style:none;margin-top:14px;display:grid;gap:7px;font-size:14px;color:rgba(19,30,51,.78);}
 .paket li::before{content:"·";color:var(--kuningan-dim);font-weight:700;margin-right:8px;}
-.harga-catatan{font-size:13px;color:rgba(19,30,51,.6);margin-top:20px;}
+.paket li.induk{font-weight:500;color:var(--nila);}
+.paket .kotak .btn{margin-top:20px;align-self:flex-start;}
+.harga-catatan{font-size:13px;color:rgba(19,30,51,.6);margin-top:20px;max-width:620px;margin-inline:auto;}
+.banding{margin:30px auto 0;max-width:620px;border-top:1px solid rgba(74,51,35,.2);padding-top:22px;
+  font-family:var(--script);font-style:italic;font-size:clamp(17px,4.2vw,20px);line-height:1.6;color:var(--jati);}
 
 /* ---------- cara & tanya ---------- */
 .langkah{counter-reset:l;display:grid;gap:14px;margin-top:24px;text-align:left;}
@@ -255,12 +295,47 @@ html:not(.js) .reveal{opacity:1;transform:none;}
 <section id="atas">
   <p class="eyebrow reveal">Undangan Pernikahan Digital</p>
   <h1 class="merek reveal">mengundang<i>.</i>id</h1>
-  <p class="slogan reveal">Undangan yang menyapa tiap tamu dengan namanya. Sebar lewat WhatsApp, rekap amplopnya sesudah acara.</p>
+  <p class="slogan reveal">Bukan sekadar undangan, tapi seluruh urusan mengundang. Dari undangan pertama terkirim sampai terima kasih terakhir tersampaikan.</p>
   <div class="turun reveal">
     <a class="btn solid tautan-wa" href="#" data-pesan="sampul"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ikon-wa"/></svg>Tanya lewat WhatsApp</a>
-    <a class="btn" href="#coba">Coba Gratis</a>
+    <a class="btn" href="#kirim">Lihat Cara Kerjanya</a>
   </div>
   <svg class="ukir divider reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
+</section>
+
+<!-- ====== KIRIM: pembeda utama, sengaja di layar kedua ====== -->
+<section id="kirim">
+  <div class="wrap-lebar">
+    <div class="kirim-isi">
+      <div class="kirim-teks">
+        <p class="eyebrow reveal">Yang Paling Melelahkan</p>
+        <h2 class="judul reveal">Lima ratus tamu, empat orang yang menyebar, tidak ada yang terlewat</h2>
+        <p class="lead reveal">Undangan cantik itu mudah. Yang sulit menyebarnya: daftar tamu bapak, ibu, dan mertua yang berbeda-beda, dikirim dari HP yang berbeda-beda, dan tak seorang pun tahu siapa yang sudah dikirimi.</p>
+        <ol class="langkah reveal">
+          <li><span><strong>Tiap pihak keluarga punya halamannya sendiri.</strong> Bapak, ibu, dan mertua cukup membuka tautan, tanpa daftar akun dan tanpa melihat tamu pihak lain.</span></li>
+          <li><span><strong>Sekali tekan, WhatsApp terbuka.</strong> Pesannya sudah memakai nama tamu dan undangannya sudah menyesuaikan pihak yang mengundang.</span></li>
+          <li><span><strong>Semua tercatat.</strong> Siapa yang sudah dikirimi, siapa yang belum, sampai siapa yang sudah menerima berkat.</span></li>
+        </ol>
+      </div>
+      <figure class="kirim-hp reveal" aria-label="Contoh halaman panitia">
+        <div class="hp"><div class="layar panitia">
+          <p class="pn-pihak">Halaman Panitia · Keluarga Pria</p>
+          <p class="pn-judul">Tamu Bapak Slamet</p>
+          <div class="pn-angka">
+            <p><span>Undangan terkirim</span><b>162 / 214</b></p>
+            <div class="pn-batang"><i style="width:76%"></i></div>
+            <p><span>Berkat diberikan</span><b>98 / 150</b></p>
+            <div class="pn-batang daun"><i style="width:65%"></i></div>
+          </div>
+          <div class="pn-baris"><span>Bapak Ahmad Fauzi<small>Akad &amp; resepsi</small></span><em class="pn-chip ok">Terkirim</em><i class="pn-wa mati"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ikon-wa"/></svg></i></div>
+          <div class="pn-baris"><span>Ibu Sri Wahyuni sekeluarga<small>Resepsi</small></span><em class="pn-chip ok">Terkirim</em><i class="pn-wa mati"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ikon-wa"/></svg></i></div>
+          <div class="pn-baris"><span>Pak RT 04<small>Resepsi</small></span><em class="pn-chip belum">Belum</em><i class="pn-wa"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ikon-wa"/></svg></i></div>
+          <div class="pn-baris"><span>Mas Joko &amp; istri<small>Resepsi</small></span><em class="pn-chip belum">Belum</em><i class="pn-wa"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ikon-wa"/></svg></i></div>
+          <div class="pn-baris"><span>Keluarga Hadi Santoso<small>Akad &amp; resepsi</small></span><em class="pn-chip ok">Terkirim</em><i class="pn-wa mati"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ikon-wa"/></svg></i></div>
+        </div></div>
+      </figure>
+    </div>
+  </div>
 </section>
 
 <!-- ====== CONTOH ====== -->
@@ -268,7 +343,7 @@ html:not(.js) .reveal{opacity:1;transform:none;}
   <div class="wrap-lebar">
     <p class="eyebrow reveal">Contoh</p>
     <h2 class="judul reveal">Yang diterima tamu Anda</h2>
-    <p class="lead reveal">Setiap tamu mendapat tautannya sendiri. Namanya muncul di sampul, alamat acaranya menyesuaikan pihak yang mengundang, dan ucapannya langsung masuk buku tamu.</p>
+    <p class="lead reveal">Setiap tamu mendapat tautannya sendiri. Namanya muncul di sampul, urutan nama dan alamat acaranya menyesuaikan pihak yang mengundang, dan ucapannya langsung masuk buku tamu.</p>
 
     <div class="contoh reveal" role="list">
       <figure class="layar-wadah" role="listitem">
@@ -320,7 +395,7 @@ html:not(.js) .reveal{opacity:1;transform:none;}
   <div class="wrap">
     <p class="eyebrow reveal">Coba Dulu</p>
     <h2 class="judul reveal">Undangan Anda, dalam sepuluh detik</h2>
-    <p class="lead reveal">Sudah lihat contohnya — sekarang dengan nama Anda sendiri. Isi nama Anda berdua. Undangannya langsung jadi — dengan nama Anda di dalamnya — dan bisa langsung Anda kirimkan ke calon pasangan Anda lewat WhatsApp.</p>
+    <p class="lead reveal">Sekarang dengan nama Anda sendiri. Isi nama Anda berdua, undangannya langsung jadi, dan bisa langsung Anda kirimkan ke calon pasangan lewat WhatsApp.</p>
 
     <div class="kotak reveal">
       <div class="dua">
@@ -382,24 +457,19 @@ html:not(.js) .reveal{opacity:1;transform:none;}
 <!-- ====== FITUR ====== -->
 <section id="fitur">
   <div class="wrap-lebar center">
-    <p class="eyebrow reveal">Yang Anda Dapat</p>
-    <h2 class="judul reveal">Bukan cuma halaman undangan</h2>
-    <p class="lead reveal">Yang paling melelahkan dari hajatan bukan undangannya — tapi menyebarnya, dan merekapnya sesudah selesai.</p>
+    <p class="eyebrow reveal">Sebelum, Selama, Sesudah</p>
+    <h2 class="judul reveal">Seluruh urusan mengundang, di satu tempat</h2>
+    <p class="lead reveal">Undangan hanya awalnya. Kami menemani sampai catatan amplop terakhir terekap dan terima kasih terakhir tersampaikan.</p>
     <div class="fitur">
       <div class="kartu reveal">
         <p class="tanda">Sebelum acara</p>
-        <h3>Undangan yang menyapa namanya</h3>
-        <p>Tiap tamu punya tautannya sendiri, dan namanya muncul di sampul. Isi undangan menyesuaikan siapa yang mengundang — alamat acara, urutan nama, sampai nomor dompet digitalnya.</p>
+        <h3>Satu undangan, tiap pihak tampil terhormat</h3>
+        <p>Keluarga pria dan keluarga wanita masing-masing tampil dengan urutan nama, alamat acara, dan nomor dompet digitalnya sendiri. Tidak ada yang merasa numpang.</p>
       </div>
       <div class="kartu reveal">
         <p class="tanda">Sebelum acara</p>
-        <h3>Sebar lewat WhatsApp, terlacak</h3>
-        <p>Tempel daftar tamu, atau ambil langsung dari kontak HP. Sekali tekan, WhatsApp terbuka dengan pesan yang sudah disesuaikan — dan tercatat siapa yang sudah dikirimi.</p>
-      </div>
-      <div class="kartu reveal">
-        <p class="tanda">Sebelum acara</p>
-        <h3>Keluarga ikut membantu menyebar</h3>
-        <p>Bapak, ibu, dan mertua mendapat halaman sendiri berisi tamunya sendiri. Tanpa daftar akun, tanpa bisa melihat atau mengubah daftar pihak lain.</p>
+        <h3>Disebar bersama, tercatat rapi</h3>
+        <p>Tempel daftar tamu atau ambil langsung dari kontak HP. Tiap pihak keluarga menyebar dari halamannya sendiri, dan setiap kiriman tercatat. Tidak ada yang terlewat, tidak ada yang dikirimi dua kali.</p>
       </div>
       <div class="kartu reveal">
         <p class="tanda">Hari acara</p>
@@ -407,47 +477,75 @@ html:not(.js) .reveal{opacity:1;transform:none;}
         <p>Tamu menulis ucapan dan mengabari hadir atau tidak, langsung dari undangannya. Anda bisa membalas satu per satu.</p>
       </div>
       <div class="kartu reveal">
-        <p class="tanda">Sesudah acara</p>
-        <h3>Rekap amplop dan barang</h3>
-        <p>Tandai siapa yang datang, catat amplop, rokok, gula, parsel, sampai sumbangan tenaga. Semuanya bisa diunduh jadi berkas Excel yang angkanya langsung bisa dijumlahkan.</p>
+        <p class="tanda">Hari acara</p>
+        <h3>Berkat sampai ke tangan yang tepat</h3>
+        <p>Tandai siapa yang dijatah berkat dan siapa yang sudah menerimanya, supaya tidak ada yang kelewatan saat acara ramai.</p>
       </div>
       <div class="kartu reveal">
         <p class="tanda">Sesudah acara</p>
-        <h3>Halaman kenangan</h3>
-        <p>Satu halaman terima kasih yang menceritakan hari itu babak demi babak, dengan foto acara Anda sebagai latarnya — untuk tamu yang hadir, dan yang mendoakan dari jauh.</p>
+        <h3>Rekap amplop dan barang</h3>
+        <p>Catat amplop, rokok, gula, parsel, sampai sumbangan tenaga. Semuanya bisa diunduh jadi berkas Excel yang angkanya langsung bisa dijumlahkan, bukan buku tulis yang dihitung ulang semalaman.</p>
+      </div>
+      <div class="kartu reveal">
+        <p class="tanda">Sesudah acara</p>
+        <h3>Halaman terima kasih dan video story</h3>
+        <p>Halaman terima kasih yang menceritakan hari itu babak demi babak dengan foto acara Anda sebagai latarnya, ditambah video tegak yang siap dibagikan ke status dan story keesokan harinya.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ====== PAKET ====== -->
+<!-- ====== PAKET — harga, isi, dan tambahannya mengikuti docs/brand.md bagian 6 ====== -->
 <section id="paket" class="on-paper center">
   <div class="wrap-lebar">
     <p class="eyebrow reveal">Paket</p>
-    <h2 class="judul reveal">Dua pilihan alamat</h2>
-    <p class="lead reveal">Isinya sama lengkap. Yang membedakan alamat undangan yang dibuka tamu.</p>
+    <h2 class="judul reveal">Pilih sejauh mana kami menemani</h2>
+    <p class="lead reveal">Satu kali bayar untuk satu hajatan. Tidak ada biaya per tamu.</p>
     <div class="paket">
       <div class="kotak reveal">
-        <h3>Standar</h3>
+        <h3>Mengundang</h3>
+        <p class="untuk">Undangan dan seluruh urusan menyebarnya</p>
+        <p class="harga">Rp 99.000</p>
         <p class="alamat">mengundang.id/<b>dimas-laras</b></p>
         <ul>
           <li>Undangan dengan nama tiap tamu</li>
-          <li>Sebar lewat WhatsApp, halaman untuk keluarga</li>
-          <li>Buku tamu, konfirmasi hadir, rekap amplop</li>
-          <li>Halaman kenangan sesudah acara</li>
+          <li>Isi menyesuaikan pihak yang mengundang</li>
+          <li>Sebar lewat WhatsApp, setiap kiriman tercatat</li>
+          <li>Halaman panitia untuk tiap pihak keluarga</li>
+          <li>Buku tamu, konfirmasi hadir, pelacak berkat</li>
+          <li>Rekap amplop dan barang ke Excel</li>
         </ul>
+        <a class="btn tautan-wa" href="#" data-pesan="pkMengundang">Pilih Mengundang</a>
       </div>
       <div class="kotak unggul reveal">
+        <span class="pita">Paling dipilih</span>
         <h3>Premium</h3>
+        <p class="untuk">Sampai terima kasih terakhir tersampaikan</p>
+        <p class="harga">Rp 249.000</p>
         <p class="alamat"><b>dimas-laras</b>.mengundang.id</p>
         <ul>
-          <li>Semua yang ada di Standar</li>
-          <li>Alamat sendiri yang lebih ringkas untuk dibagikan</li>
+          <li class="induk">Semua yang ada di Mengundang</li>
+          <li>Halaman terima kasih sesudah acara</li>
+          <li>Video story tegak 60 atau 90 detik</li>
+          <li>Alamat sendiri yang lebih ringkas</li>
         </ul>
+        <a class="btn solid tautan-wa" href="#" data-pesan="pkPremium">Pilih Premium</a>
+      </div>
+      <div class="kotak reveal">
+        <h3>Full Custom</h3>
+        <p class="untuk">Desain yang hanya milik Anda</p>
+        <p class="harga">Rp 549.000</p>
+        <p class="alamat"><b>dimas-laras</b>.mengundang.id</p>
+        <ul>
+          <li class="induk">Semua yang ada di Premium</li>
+          <li>Desain dibuat khusus sesuai permintaan</li>
+          <li>Revisi tanpa batas</li>
+        </ul>
+        <a class="btn tautan-wa" href="#" data-pesan="pkCustom">Pilih Full Custom</a>
       </div>
     </div>
-    <p class="harga-catatan reveal">Harga dan ketersediaan tanggal — tanyakan langsung lewat WhatsApp.</p>
-    <p class="reveal" style="margin-top:18px"><a class="btn solid tautan-wa" href="#" data-pesan="paket"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ikon-wa"/></svg>Tanya Harga</a></p>
+    <p class="harga-catatan reveal">Tambahan untuk Mengundang: alamat sendiri Rp&nbsp;50.000, halaman terima kasih dan video story Rp&nbsp;100.000, bisa ditambahkan sesudah acara. Tambahan untuk Premium: tema turunan dengan warna dan ornamen pilihan Anda, Rp&nbsp;50.000. Ketersediaan tanggal tanyakan langsung lewat WhatsApp.</p>
+    <p class="banding reveal">Undangan cetak untuk tiga ratus tamu sudah jutaan rupiah, belum termasuk mengantarnya satu per satu.</p>
   </div>
 </section>
 
@@ -472,6 +570,14 @@ html:not(.js) .reveal{opacity:1;transform:none;}
     <p class="eyebrow reveal">Pertanyaan</p>
     <h2 class="judul reveal">Yang sering ditanyakan</h2>
     <div class="tanya reveal">
+      <details>
+        <summary>Kenapa harganya di atas undangan digital lain?</summary>
+        <p>Karena yang Anda dapat bukan hanya halaman undangan. Ada halaman panitia untuk tiap pihak keluarga, catatan pengiriman, pelacak berkat, rekap amplop, sampai halaman kenangan. Itulah bagian hajatan yang paling banyak menyita tenaga, dan bagian yang tidak diurus undangan biasa.</p>
+      </details>
+      <details>
+        <summary>Orang tua kami tidak terbiasa dengan aplikasi. Bisakah mereka ikut menyebar?</summary>
+        <p>Bisa. Halaman panitia dibuka dari tautan WhatsApp biasa, tanpa daftar akun dan tanpa kata sandi. Isinya hanya daftar tamu mereka sendiri dengan satu tombol kirim di sebelah tiap nama.</p>
+      </details>
       <details>
         <summary>Apakah tamu perlu memasang aplikasi?</summary>
         <p>Tidak. Undangannya halaman web biasa yang dibuka dari tautan WhatsApp, ringan untuk HP dan jaringan yang pas-pasan.</p>
@@ -500,7 +606,7 @@ html:not(.js) .reveal{opacity:1;transform:none;}
   <a class="btn solid tautan-wa" href="#" data-pesan="tutup"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ikon-wa"/></svg>Chat di WhatsApp</a>
 </section>
 
-<footer class="kaki">mengundang.id · undangan pernikahan digital</footer>
+<footer class="kaki">mengundang.id · dari undangan pertama sampai terima kasih terakhir</footer>
 
 <a id="waApung" class="tautan-wa" href="#" data-pesan="apung" aria-label="Chat di WhatsApp"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#ikon-wa"/></svg></a>
 
@@ -603,7 +709,9 @@ html:not(.js) .reveal{opacity:1;transform:none;}
      yang menjawab tahu calon klien sedang membaca bagian apa. */
   var PESAN = {
     sampul: 'Halo mengundang.id, saya ingin tahu tentang undangan pernikahan digitalnya.',
-    paket:  'Halo mengundang.id, saya ingin tanya harga paket undangan digital. Rencana tanggal acara kami: ',
+    pkMengundang: 'Halo mengundang.id, saya tertarik paket Mengundang. Rencana tanggal acara kami: ',
+    pkPremium:    'Halo mengundang.id, saya tertarik paket Premium. Rencana tanggal acara kami: ',
+    pkCustom:     'Halo mengundang.id, saya tertarik paket Full Custom. Rencana tanggal acara kami: ',
     tutup:  'Halo mengundang.id, saya ingin memakai undangan digital untuk pernikahan kami. Rencana tanggal acara: ',
     apung:  'Halo mengundang.id, saya ingin tanya tentang undangan digital.'
   };

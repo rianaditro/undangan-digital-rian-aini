@@ -21,6 +21,8 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 ├── supabase/
 │   ├── migrations/       ← migrasi bernomor, dijalankan berurutan
 │   └── functions/        ← edge function (jalur tulis yang dijaga)
+├── docs/
+│   └── brand.md          ← posisi, bahasa, paket & harga — pegangan /mulai
 ├── cloudflare/
 │   └── pintu.js          ← Worker: akar mengundang.id → /mulai
 ├── wrangler.jsonc        ← konfigurasi Cloudflare Workers
