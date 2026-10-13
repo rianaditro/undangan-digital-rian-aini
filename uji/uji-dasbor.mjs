@@ -192,6 +192,11 @@ async function pasang(page, model) {
           model.foto.forEach(f => { if (f !== baris && (baris.bagian ? f.bagian === baris.bagian
                                                                      : f.acara_id === baris.acara_id)) f.latar = false; });
         }
+        /* Tiruan pemicu foto_satu_peran (036): satu sampul dan satu potret
+           per sisi. */
+        if (tabel === 'foto' && baris && ['sampul', 'pria', 'wanita'].includes(badan.peran)) {
+          model.foto.forEach(f => { if (f !== baris && f.peran === badan.peran) f.peran = null; });
+        }
         return kirim(null);
       }
       if (req.method() === 'DELETE') {
@@ -404,7 +409,11 @@ const browser = await chromium.launch();
   const hint = await page.locator('#hintFoto').textContent();
   cek('9a sebelum acara, panelnya tetap terlihat',
       await page.locator('#pustakaFoto').isVisible());
-  cek('9b dengan keterangan pra-acara', /belum perlu diisi/i.test(hint), hint.slice(0, 60));
+  /* Sejak 036 pustaka yang sama memegang foto prewed untuk undangan,
+     jadi sebelum acara keterangannya mengajak mengunggah — bukan lagi
+     "belum perlu diisi". */
+  cek('9b dengan keterangan pra-acara: foto prewed untuk undangan',
+      /sebelum acara/i.test(hint) && /prewed/i.test(hint) && /undangan/i.test(hint), hint.slice(0, 80));
   await ctx.close();
 }
 {
@@ -1056,6 +1065,67 @@ const browser = await chromium.launch();
   cek('25g nama unduhan dan keterangan hasil',
       hasil.unduh === 'kenangan-rian-aini-2dtk.mp4' && /MP4/.test(hasil.info) && !/tanpa musik/.test(hasil.info), hasil.unduh + ' / ' + hasil.info);
   await page.locator('#panelVideo').screenshot({ path: 'dasbor-video-400.png' });
+  await ctx.close();
+}
+
+/* ---------- tema, warna, gaya tulisan (036, Tahap A) ---------- */
+{
+  const model = bikinModel();
+  const { ctx, page } = await masuk(browser, model, 1100, 'tampilan');
+  await page.waitForSelector('#pilihTema .kartu-tema', { timeout: 6000 });
+  const t = await page.evaluate(() => ({
+    tema: [...document.querySelectorAll('#pilihTema .kartu-tema')].map(b => b.dataset.tema + ':' + b.getAttribute('aria-checked')),
+    palet: [...document.querySelectorAll('#pilihPalet .bulatan')].map(b => b.dataset.palet + ':' + b.getAttribute('aria-checked')),
+    huruf: [...document.querySelectorAll('#pilihHuruf .kartu-huruf')].map(b => b.dataset.huruf + ':' + b.getAttribute('aria-checked')),
+    contoh: document.getElementById('contohTema').textContent
+  }));
+  cek('tema-1 kartu tema dari daftar.json, yang tersimpan terpilih', t.tema.includes('ukir-jepara:true'), t.tema.join(' '));
+  cek('tema-2 warna & gaya tulisan tema itu, bawaan terpilih',
+      t.palet.length === 4 && t.palet[0] === 'nila-kuningan:true' && t.huruf.length === 3 && t.huruf[0] === 'keraton:true',
+      JSON.stringify(t));
+  cek('tema-3 contoh memakai nama pasangan sendiri', t.contoh.includes('RIAN') && t.contoh.includes("'AINI"), t.contoh);
+
+  const n0 = model.patch.length;
+  await page.click('#pilihPalet [data-palet="sogan"]');
+  await page.waitForFunction(() => document.querySelector('#pilihPalet [data-palet="sogan"]').getAttribute('aria-checked') === 'true');
+  const p1 = model.patch.slice(n0).filter(x => x.tabel === 'pasangan');
+  cek('tema-4 memilih warna langsung tersimpan ke tema_setel',
+      p1.length === 1 && JSON.stringify(p1[0].badan) === '{"tema_setel":{"palet":"sogan"}}', JSON.stringify(p1));
+  const latar = await page.evaluate(() => document.getElementById('contohTema').style.getPropertyValue('--latar'));
+  cek('tema-5 contoh ikut berganti warna', latar.trim().toUpperCase() === '#3B2416', latar);
+
+  await page.click('#pilihHuruf [data-huruf="prasasti"]');
+  await page.waitForFunction(() => document.querySelector('#pilihHuruf [data-huruf="prasasti"]').getAttribute('aria-checked') === 'true');
+  const p2 = model.patch.filter(x => x.tabel === 'pasangan').at(-1);
+  cek('tema-6 gaya tulisan disimpan tanpa membuang warna',
+      JSON.stringify(p2.badan) === '{"tema_setel":{"palet":"sogan","huruf":"prasasti"}}', JSON.stringify(p2.badan));
+  const tautan = await page.evaluate(() => (document.querySelector('#hintTema a') || {}).href || '');
+  cek('tema-7 undangan terbit: tautan pratinjau membawa pilihannya',
+      tautan.startsWith('https://rian-aini.mengundang.id/?pratinjau=1&tema=ukir-jepara&palet=sogan&huruf=prasasti'), tautan);
+  await page.locator('#panelTema').screenshot({ path: 'dasbor-tema-1100.png' });
+
+  /* Simpan Semua tidak boleh menimpa pilihan tadi dengan nilai lama. */
+  await page.click('#btnSimpan');
+  await page.waitForSelector('.toast.on', { timeout: 6000 });
+  cek('tema-8 Simpan Semua tidak menimpa tema_setel', model.pasangan[0].tema === 'ukir-jepara' &&
+      JSON.stringify(model.pasangan[0].tema_setel) === '{"palet":"sogan","huruf":"prasasti"}', JSON.stringify(model.pasangan[0]));
+
+  /* peran foto di pustaka */
+  await ke(page, 'foto');
+  await page.waitForSelector('#pustakaFoto [data-foto="f-1"] [data-f="peran"]');
+  await page.selectOption('#pustakaFoto [data-foto="f-1"] [data-f="peran"]', 'sampul');
+  await page.waitForFunction(() => document.querySelector('.toast.on'));
+  const pf = model.patch.filter(x => x.tabel === 'foto' && x.id === 'f-1').at(-1);
+  cek('tema-9 peran foto tersimpan', pf && pf.badan.peran === 'sampul', JSON.stringify(pf));
+  await page.waitForTimeout(300);
+  await page.selectOption('#pustakaFoto [data-foto="f-2"] [data-f="peran"]', 'sampul');
+  await page.waitForFunction(() => document.querySelector('#pustakaFoto [data-foto="f-1"] [data-f="peran"]').value === '', null, { timeout: 4000 }).catch(() => {});
+  const v = await page.evaluate(() => ['f-1', 'f-2'].map(id => document.querySelector(`#pustakaFoto [data-foto="${id}"] [data-f="peran"]`).value));
+  cek('tema-10 sampul baru mencabut sampul lama di pustaka', v[0] === '' && v[1] === 'sampul', JSON.stringify(v));
+  await page.selectOption('#pustakaFoto [data-foto="f-1"] [data-f="peran"]', '');
+  await page.waitForTimeout(300);
+  const pk = model.patch.filter(x => x.tabel === 'foto' && x.id === 'f-1').at(-1);
+  cek('tema-11 "Tidak di undangan" menyimpan null, bukan string kosong', pk && pk.badan.peran === null, JSON.stringify(pk));
   await ctx.close();
 }
 

@@ -14,6 +14,33 @@
 <style>
 /* Aturan umum (huruf, kartu, isian, tombol, gerbang) ada di /assets/panel.css.
    Di bawah ini hanya komponen khusus dasbor pengantin. */
+/* ---------- Tema (docs/rencana-tema.md, Tahap A) ---------- */
+.pilih-tema{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:12px;}
+.kartu-tema{display:block;width:100%;text-align:left;border:1px solid var(--garis);border-radius:10px;padding:12px 14px;background:#fff;cursor:pointer;font:inherit;color:inherit;}
+.kartu-tema b{display:block;font-size:14px;}
+.kartu-tema span{display:block;font-size:12px;color:rgba(17,24,39,.6);margin-top:4px;line-height:1.45;}
+.kartu-tema[aria-checked="true"],.bulatan[aria-checked="true"],.kartu-huruf[aria-checked="true"]{border-color:var(--kuningan);box-shadow:0 0 0 2px var(--aksen-muda);}
+.sub-tema{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--kuningan-dim);margin:18px 0 8px;font-weight:600;}
+.pilih-palet{display:flex;flex-wrap:wrap;gap:10px;}
+.bulatan{display:flex;align-items:center;gap:8px;border:1px solid var(--garis);border-radius:999px;padding:5px 12px 5px 6px;background:#fff;cursor:pointer;font:inherit;font-size:12.5px;color:inherit;}
+.bulatan i{display:flex;width:42px;height:22px;border-radius:999px;overflow:hidden;border:1px solid rgba(0,0,0,.12);}
+.bulatan i b{flex:1;}
+.pilih-huruf{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.kartu-huruf{border:1px solid var(--garis);border-radius:10px;padding:10px 12px;background:#fff;cursor:pointer;font:inherit;color:inherit;text-align:left;}
+.kartu-huruf .nama{display:block;font-size:20px;line-height:1.25;}
+.kartu-huruf .label{display:block;font-size:11px;color:rgba(17,24,39,.55);margin-top:4px;letter-spacing:.04em;}
+/* Contoh kecil undangan dengan pilihan yang sedang aktif. Token tema
+   dipasang sebagai style di elemen ini saja — dasbor punya --latar
+   sendiri dan tidak boleh tertimpa. */
+.contoh-tema{margin-top:16px;border-radius:10px;overflow:hidden;border:1px solid var(--garis);}
+.contoh-tema .atas{background:var(--latar);color:var(--teks);text-align:center;padding:26px 16px 22px;}
+.contoh-tema .alis{font-family:var(--isi);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--aksen);}
+.contoh-tema .nama{font-family:var(--judul);font-size:28px;line-height:1.2;margin-top:8px;}
+.contoh-tema .nama em{display:block;font-family:var(--naskah);font-size:.7em;color:var(--aksen);}
+.contoh-tema .tgl{font-family:var(--isi);font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;margin-top:10px;opacity:.75;}
+.contoh-tema .bawah{background:var(--kertas);color:var(--kertas-teks);text-align:center;padding:18px 16px;}
+.contoh-tema .bawah .alis{color:var(--kertas-aksen);}
+.contoh-tema .bawah p:not(.alis){font-family:var(--naskah);font-style:italic;font-size:17px;margin-top:6px;}
 .baris{border:1px solid var(--garis);border-radius:8px;padding:12px 14px;margin-top:10px;background:#fafbfc;}
 .baris-kepala{display:flex;justify-content:space-between;align-items:center;gap:10px;}
 .baris-judul{font-family:var(--display);font-size:15px;}
@@ -300,12 +327,23 @@
     <h2 class="halaman-judul">Penutup & tampilan</h2>
     <p class="halaman-sub">Tanggal, kota, tema, dan kalimat tanda tangan di akhir undangan.</p>
   <!-- 6 -->
+  <div class="panel" id="panelTema">
+    <h2>Tema undangan</h2>
+    <p class="hint">Foto prewed kalian seperti apa? Pilih tema yang paling dekat, lalu warna dan gaya tulisannya. Halaman terima kasih sesudah acara ikut tema ini. Tersimpan begitu dipilih.</p>
+    <div class="pilih-tema" id="pilihTema" role="radiogroup" aria-label="Tema"></div>
+    <p class="sub-tema">Warna</p>
+    <div class="pilih-palet" id="pilihPalet" role="radiogroup" aria-label="Warna"></div>
+    <p class="sub-tema">Gaya tulisan</p>
+    <div class="pilih-huruf" id="pilihHuruf" role="radiogroup" aria-label="Gaya tulisan"></div>
+    <div class="contoh-tema" id="contohTema" aria-hidden="true"></div>
+    <p class="hint" id="hintTema" style="margin-top:10px"></p>
+  </div>
+
   <div class="panel">
     <h2>Acara &amp; tampilan</h2>
-    <div class="trio">
+    <div class="duo">
       <div><label for="inTanggal">Tanggal acara</label><input id="inTanggal" type="date"></div>
       <div><label for="inKota">Kota</label><input id="inKota" type="text" maxlength="60" placeholder="Jepara"></div>
-      <div><label for="inTema">Tema</label><select id="inTema"></select></div>
     </div>
     <label for="inPihakBawaan">Varian bawaan</label>
     <select id="inPihakBawaan"></select>
@@ -651,9 +689,7 @@
 
     $('inTanggal').value = pasangan.tanggal_acara || '';
     $('inKota').value    = pasangan.kota || '';
-    $('inTema').innerHTML = ['ukir-jepara'].map(function(t){
-      return '<option value="'+esc(t)+'"'+(pasangan.tema===t?' selected':'')+'>'+esc(t)+'</option>';
-    }).join('');
+    Tema.gambar();
     $('inPihakBawaan').innerHTML = data.pihak.map(function(ph){
       return '<option value="'+esc(ph.kode)+'"'+(pasangan.pihak_bawaan===ph.kode?' selected':'')+'>'+esc(ph.label)+'</option>';
     }).join('');
@@ -698,7 +734,6 @@
     });
     pasangan.tanggal_acara = $('inTanggal').value || null;
     pasangan.kota          = $('inKota').value.trim() || null;
-    pasangan.tema          = $('inTema').value;
     pasangan.pihak_bawaan  = $('inPihakBawaan').value;
   }
 
@@ -974,6 +1009,148 @@
      ============================================================ */
   var BATAS_FOTO = 100;
 
+  /* ============================================================
+     Tema · warna · gaya tulisan (docs/rencana-tema.md, Tahap A)
+
+     Daftar tema dari /tema/daftar.json (dibangun dari manifest tiap
+     tema). Pilihan disimpan begitu diklik: tema → pasangan.tema, warna
+     dan gaya tulisan → pasangan.tema_setel. Rumus palet dan
+     pemilihannya sama persis dengan halaman undangan — M.tema di
+     assets/varian.js — jadi contoh di sini tidak bisa berbeda dari
+     yang dilihat tamu.
+     ============================================================ */
+  var Tema = (function(){
+    var daftar = null, hurufDimuat = {};
+
+    function muatDaftar(){
+      if(!daftar) daftar = fetch('/tema/daftar.json')
+        .then(function(r){ return r.ok ? r.json() : []; })
+        .catch(function(){ return []; });
+      return daftar;
+    }
+    function setel(){
+      var t = pasangan && pasangan.tema_setel;
+      return (t && typeof t === 'object' && !Array.isArray(t)) ? t : {};
+    }
+    /* Huruf setiap gaya tulisan dimuat sekali, supaya kartunya bisa
+       menampilkan nama pasangan dalam huruf itu sendiri. */
+    function muatHuruf(m){
+      (m.huruf || []).forEach(function(h){
+        if(!h.google || hurufDimuat[h.google]) return;
+        hurufDimuat[h.google] = true;
+        var l = document.createElement('link');
+        l.rel = 'stylesheet';
+        l.href = 'https://fonts.googleapis.com/css2?' + h.google + '&display=swap';
+        document.head.appendChild(l);
+      });
+    }
+    function nama(sisi){
+      var m = (data.mempelai || []).find(function(x){ return x.sisi === sisi; });
+      return (m && m.panggilan) || (sisi === 'pria' ? 'Budi' : 'Sari');
+    }
+
+    var BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    function tanggalContoh(iso){
+      var x = String(iso || '').split('-');
+      return x.length === 3 ? Number(x[2]) + ' ' + BULAN[Number(x[1]) - 1] + ' ' + x[0] : '';
+    }
+
+    function contoh(p){
+      var el = $('contohTema');
+      var t = Object.assign({}, p.palet ? M.tema.tokenPalet(p.palet) : {}, p.huruf ? M.tema.tokenHuruf(p.huruf) : {});
+      el.removeAttribute('style');
+      Object.keys(t).forEach(function(k){ el.style.setProperty(k, t[k]); });
+      el.innerHTML = '<div class="atas"><p class="alis">Walimatul &#39;Ursy</p>'
+        + '<p class="nama">'+esc(nama('pria'))+'<em>&amp;</em>'+esc(nama('wanita'))+'</p>'
+        + '<p class="tgl">'+esc(tanggalContoh(pasangan.tanggal_acara))+'</p></div>'
+        + '<div class="bawah"><p class="alis">Kami yang berbahagia</p>'
+        + '<p>Dengan memohon rahmat dan ridha Allah</p></div>';
+
+      var hint = $('hintTema');
+      if(pasangan.terbit){
+        var q = 'pratinjau=1&tema=' + encodeURIComponent(pasangan.tema)
+          + (p.palet ? '&palet=' + encodeURIComponent(p.palet.kode) : '')
+          + (p.huruf ? '&huruf=' + encodeURIComponent(p.huruf.kode) : '');
+        hint.innerHTML = '<a href="'+esc(M.alamatUndangan(pasangan) + '/?' + q)+'" target="_blank" rel="noopener">Buka undangan dengan pilihan ini</a>';
+      }else{
+        hint.textContent = 'Contoh di atas memakai pilihan ini. Undangan lengkapnya bisa dibuka sesudah diterbitkan.';
+      }
+    }
+
+    async function gambar(){
+      if(!pasangan) return;
+      var d = await muatDaftar();
+      var m = d.find(function(t){ return t.kode === pasangan.tema; }) || null;
+      /* Tema custom tidak ada di daftar.json; hanya pasangan pemakainya
+         yang melihat kartunya (docs/halaman-khusus.md). */
+      if(!m) m = await M.tema.manifest(pasangan.tema);
+      var kartu = d.slice();
+      if(m && !d.some(function(t){ return t.kode === m.kode; })) kartu.unshift(m);
+
+      $('pilihTema').innerHTML = kartu.map(function(t){
+        return '<button type="button" class="kartu-tema" role="radio" data-tema="'+esc(t.kode)+'"'
+          + ' aria-checked="'+(t.kode === pasangan.tema)+'">'
+          + '<b>'+esc(t.nama || t.kode)+(t.kategori === 'custom' ? ' · custom' : '')+'</b>'
+          + '<span>'+esc(t.untuk || '')+'</span></button>';
+      }).join('') || '<p class="kosongstate">Daftar tema belum bisa dimuat.</p>';
+
+      if(!m){ $('pilihPalet').innerHTML = ''; $('pilihHuruf').innerHTML = ''; $('contohTema').innerHTML = ''; return; }
+      var p = M.tema.pilihan(m, setel());
+      muatHuruf(m);
+
+      $('pilihPalet').innerHTML = (m.palet || []).map(function(pl){
+        var l = M.tema.paletLengkap(pl);
+        return '<button type="button" class="bulatan" role="radio" data-palet="'+esc(pl.kode)+'"'
+          + ' aria-checked="'+(!!p.palet && p.palet.kode === pl.kode)+'">'
+          + '<i aria-hidden="true"><b style="background:'+esc(l.latar)+'"></b><b style="background:'+esc(l.aksen)+'"></b>'
+          + '<b style="background:'+esc(l.kertas)+'"></b></i>'+esc(pl.nama)+'</button>';
+      }).join('');
+
+      var dua = nama('pria') + ' & ' + nama('wanita');
+      $('pilihHuruf').innerHTML = (m.huruf || []).map(function(h){
+        return '<button type="button" class="kartu-huruf" role="radio" data-huruf="'+esc(h.kode)+'"'
+          + ' aria-checked="'+(!!p.huruf && p.huruf.kode === h.kode)+'">'
+          + '<span class="nama" style="font-family:'+esc(h.judul)+'">'+esc(dua)+'</span>'
+          + '<span class="label">'+esc(h.nama)+'</span></button>';
+      }).join('');
+
+      contoh(p);
+    }
+
+    $('panelTema').addEventListener('click', async function(e){
+      var b = e.target.closest('[data-tema],[data-palet],[data-huruf]');
+      if(!b || b.getAttribute('aria-checked') === 'true') return;
+      var badan;
+      if(b.dataset.tema){
+        /* Warna dan gaya tulisan milik tema lama tidak berarti apa-apa di
+           tema baru — mulai dari bawaan tema itu. */
+        badan = { tema: b.dataset.tema, tema_setel: {} };
+      }else{
+        var s = Object.assign({}, setel());
+        if(b.dataset.palet) s.palet = b.dataset.palet;
+        if(b.dataset.huruf) s.huruf = b.dataset.huruf;
+        badan = { tema_setel: s };
+      }
+      b.disabled = true;
+      try{
+        await api('pasangan?id=eq.'+pasangan.id, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify(badan) });
+        Object.assign(pasangan, badan);
+        await gambar();
+        toast(badan.tema ? 'Tema tersimpan' : 'Tersimpan');
+      }catch(err){ toast(err.message, true); b.disabled = false; }
+    });
+
+    return { gambar: gambar };
+  })();
+
+  /* Peran foto di halaman undangan (migrasi 036). Satu sampul dan satu
+     potret per sisi dijaga database: memilih yang baru mencabut yang
+     lama, jadi sesudah itu pustakanya dimuat ulang. */
+  var PERAN_FOTO = [['', 'Tidak di undangan'], ['sampul', 'Undangan: sampul'],
+                    ['pria', 'Undangan: potret pria'], ['wanita', 'Undangan: potret wanita'],
+                    ['galeri', 'Undangan: galeri']];
+  var opsiPeran = PERAN_FOTO.map(function(x){ return '<option value="'+x[0]+'">'+x[1]+'</option>'; }).join('');
+
   function acaraLewat(){
     if(!pasangan || !pasangan.tanggal_acara) return false;
     /* Dibandingkan sebagai tanggal, bukan waktu: acara pagi tidak boleh
@@ -990,7 +1167,7 @@
        bisa diunggah. */
     $('hintFoto').textContent = acaraLewat()
       ? 'Foto dan video hari itu. Beri tiap berkas bab-nya — sampul, mempelai, kedatangan, akad, resepsi, sungkem, keluarga, para tamu, kami berdua — dan ia ikut bergiliran jadi latar bab itu. Yang tanpa bab masuk album.'
-      : 'Belum perlu diisi sekarang — kotak ini untuk foto dan video SESUDAH acara. Yang masuk ke sini nanti menyusun halaman kenangan, bab demi bab.';
+      : 'Sebelum acara: unggah foto prewed, lalu pilih perannya di undangan — sampul, potret mempelai, atau galeri. Sesudah acara, foto dan video hari itu menyusun halaman kenangan, bab demi bab.';
 
     var jmlVideo = daftar.filter(function(f){ return f.jenis === 'video'; }).length;
     $('kuotaFoto').textContent = daftar.length
@@ -1001,7 +1178,7 @@
 
     if(!daftar.length){
       $('pustakaFoto').innerHTML = '<p class="kosongstate">'
-        + (acaraLewat() ? 'Belum ada foto.' : 'Belum ada foto — wajar, acaranya belum berlangsung.')
+        + (acaraLewat() ? 'Belum ada foto.' : 'Belum ada foto. Foto prewed bisa diunggah sekarang untuk undangan.')
         + '</p>';
       return;
     }
@@ -1015,6 +1192,7 @@
         +   (f.jenis === 'video' ? '<span class="tanda-video">&#9654; '+esc(lamaVideo(f.durasi_ms))+'</span>' : '')
         +   (modeTampil(f) === 'utuh' ? '<span class="tanda-utuh" title="Tampil utuh di layar HP">Utuh</span>' : '')
         + '</span>'
+        + '<select data-f="peran" aria-label="Di undangan"'+(f.jenis === 'video' ? ' disabled title="Video tidak tampil di undangan"' : '')+'>'+opsiPeran+'</select>'
         + '<select data-f="bab" aria-label="Bab">'+opsiBabak+'</select>'
         + '<input data-f="keterangan" type="text" maxlength="280" placeholder="Keterangan" value="'+esc(f.keterangan||'')+'">'
         + '<div class="alat">'
@@ -1032,7 +1210,10 @@
        menghasilkan tulisan "null" sebagai nilai yang tampak sah. */
     daftar.forEach(function(f){
       var ubin = $('pustakaFoto').querySelector('[data-foto="'+f.id+'"]');
-      if(ubin) ubin.querySelector('[data-f="bab"]').value = nilaiBab(f);
+      if(ubin){
+        ubin.querySelector('[data-f="bab"]').value = nilaiBab(f);
+        ubin.querySelector('[data-f="peran"]').value = f.peran || '';
+      }
     });
   }
 
@@ -1443,6 +1624,8 @@
       var v = el.value;
       badan.bagian   = v.indexOf('b:') === 0 ? v.slice(2) : null;
       badan.acara_id = v.indexOf('a:') === 0 ? v.slice(2) : null;
+    }else if(el.dataset.f === 'peran'){
+      badan.peran = el.value || null;
     }else{
       badan[el.dataset.f] = el.value;
     }
@@ -1452,6 +1635,7 @@
       var f = (data.foto||[]).find(function(x){ return x.id === id; });
       if(f) Object.assign(f, badan);
       if(el.dataset.f === 'bab') gambarKenangan();
+      if(badan.peran && badan.peran !== 'galeri') await muatFoto();
       toast('Tersimpan');
     }catch(err){ toast(err.message, true); }
   });
