@@ -5,7 +5,6 @@
   "konsep": "dua-bingkai",
   "untuk": "Foto terpisah tanpa bersentuhan, atau tanpa foto sama sekali — teduh dan santun",
   "foto_min": 0,
-  "paket_min": "standar",
   "palet_foto": false,
   "palet": [
     { "kode": "sage", "nama": "Sage",

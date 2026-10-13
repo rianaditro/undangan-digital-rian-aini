@@ -6,7 +6,6 @@
     "konsep": "dua-bingkai",
     "untuk": "Foto terpisah tanpa bersentuhan, atau tanpa foto sama sekali — teduh dan santun",
     "foto_min": 0,
-    "paket_min": "standar",
     "palet_foto": false,
     "palet": [
       {
@@ -142,7 +141,6 @@
     "konsep": "monokrom",
     "untuk": "Prewed hitam putih, atau foto dari banyak lokasi yang warnanya tidak seragam — gaya majalah",
     "foto_min": 0,
-    "paket_min": "standar",
     "palet_foto": false,
     "palet": [
       {
@@ -262,7 +260,6 @@
     "konsep": "senja-alam",
     "untuk": "Prewed outdoor — pantai, hutan pinus, sawah, ilalang — dengan cahaya sore yang hangat",
     "foto_min": 3,
-    "paket_min": "premium",
     "palet_foto": true,
     "palet": [
       {
@@ -363,7 +360,6 @@
     "daerah": "Jawa",
     "untuk": "Prewed berbusana adat Jawa, atau tanpa foto — ornamen ukir sudah cukup kuat",
     "foto_min": 0,
-    "paket_min": "standar",
     "palet_foto": false,
     "palet": [
       {

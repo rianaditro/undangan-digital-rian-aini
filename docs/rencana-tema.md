@@ -69,8 +69,7 @@ tema/<kode>/
   "slot": ["sampul", "mempelai", "galeri"],
   "setelan": {
     "mode_mempelai": ["foto", "siluet", "monogram"]
-  },
-  "paket_min": "dasar"
+  }
 }
 ```
 
@@ -230,9 +229,7 @@ undangan Rian & 'Aini yang sedang tayang; perbaikannya (`[hidden]{display:
 none!important}` di kedua tema) ikut terbit bersama cabang ini, dan
 `uji-tema` sekarang memeriksanya untuk setiap tema.
 
-Belum: `paket_min` di manifest belum dipakai untuk membatasi pilihan
-tema per paket (Dua Bingkai bertanda `standar`, jadi tidak ada yang
-terbatas sekarang).
+Template katalog tidak dibatasi paket (keputusan 13 Okt, bagian 4).
 
 ---
 
@@ -323,9 +320,10 @@ rahasia, atau DNS yang berubah).
 ## 4. Yang perlu diputuskan
 
 1. ~~Mulai dari Tahap A sekarang?~~ **Ya** (13 Okt) — selesai, lihat 3a.
-2. **Tema per paket?** Manifest menyiapkan `paket_min`. Usul: Dua Bingkai,
-   Monokrom, Studio di paket dasar; Senja, Adat, Dokumenter, Kisah di
-   paket atas.
+2. ~~Tema per paket?~~ **Tidak** (13 Okt). Semua template katalog
+   terbuka untuk semua pasangan. Premium adalah penambahan **fitur**, bukan
+   template: template yang dikunci tidak terlihat pengguna, dan belum
+   tentu sepadan dengan harganya. `paket_min` dihapus dari manifest.
 3. **Aset ilustrasi** (siluet, ornamen daerah, tekstur): digambar sendiri
    sebagai SVG garis (murah, ringan, konsisten) atau beli aset? Usul: SVG
    garis buatan sendiri; ornamen adat perlu dicek orang yang paham
