@@ -98,7 +98,13 @@ ingin dijual dan diberi tanda.
 |---|---|---|
 | **Mengundang** | Rp 99.000 | Undangan dengan nama tiap tamu + pelacak pengiriman: sebar lewat WhatsApp terlacak, halaman panitia per pihak keluarga, varian per pihak, pelacak berkat, buku tamu, konfirmasi hadir, rekap amplop. Alamat `mengundang.id/nama` |
 | **Premium** ⭐ | Rp 249.000 | Semua di Mengundang + halaman terima kasih (kenangan) + video story + alamat `nama.mengundang.id` |
-| **Full Custom** | Rp 549.000 | Semua di Premium + desain dibuat khusus sesuai permintaan, revisi tanpa batas |
+| **Full Custom** | Rp 549.000 | Semua di Premium + desain dibuat khusus sesuai permintaan, revisi tanpa batas sampai H-7 acara |
+
+"Revisi tanpa batas" di Full Custom berlaku **sampai H-7 acara**. Sesudah
+itu yang dilayani hanya perbaikan isi (salah ketik, jam, alamat), bukan
+perubahan desain. Batas ini wajib ditulis di mana pun Full Custom
+ditawarkan, supaya satu klien tidak menyita waktu desain berminggu-minggu
+dengan harga yang sama.
 
 Tambahan untuk **Mengundang**:
 
