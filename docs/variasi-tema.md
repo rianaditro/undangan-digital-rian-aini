@@ -213,6 +213,10 @@ huruf Arab yang diambil (`subset=arabic` + `text=`), jadi ukurannya kecil.
 
 ### 3.5 Adat Nusantara — palet per daerah · *Dari foto: tidak (warna adat bermakna)*
 
+> **Terpasang (13 Okt)** sebagai setelan Daerah di `ukir-jepara` — lihat
+> `docs/rencana-tema.md` bagian 3e untuk palet yang akhirnya dipakai
+> (tema dua permukaan, jadi warnanya berbeda dari tabel di bawah).
+
 Di tema ini palet **mengikuti daerah**: memilih daerah memilih ornamen dan
 membatasi palet ke milik daerah itu. Daerah berikutnya menambah palet di
 sini, bukan tema baru.

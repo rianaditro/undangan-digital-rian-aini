@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Ornamen daerah Bugis-Makassar untuk tema ukir-jepara (setelan
+       daerah): sulapa eppa — belah ketupat empat sisi, lambang
+       kesempurnaan — dirangkai seperti tenun songket. -->
+  <g id="pemisah">
+    <path style="fill:none;stroke:var(--ukir-garis-dim);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M4 20 H84 M156 20 H236"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M88 20 L96 12 L104 20 L96 28 Z M136 20 L144 12 L152 20 L144 28 Z"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M106 20 L120 6 L134 20 L120 34 Z"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M113 20 L120 13 L127 20 L120 27 Z"/>
+    <path style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" d="M117 20 l3 -3 l3 3 l-3 3z"/>
+    <circle style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" cx="60" cy="20" r="1.6"/><circle style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" cx="180" cy="20" r="1.6"/>
+  </g>
+  <g id="sudut">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M6 114 V6 H114"/>
+    <path style="fill:none;stroke:var(--ukir-garis-dim);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M14 114 V14 H114"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M14 30 L30 14 M14 50 L50 14 M14 70 L70 14"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M24 24 L34 34 L24 44 L14 34 Z" transform="translate(10 -10)"/>
+    <path style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" d="M34 18 l6 6 l-6 6 l-6 -6z"/>
+  </g>
+</svg>

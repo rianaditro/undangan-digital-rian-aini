@@ -332,6 +332,8 @@
     <h2>Tema undangan</h2>
     <p class="hint">Foto prewed kalian seperti apa? Pilih tema yang paling dekat, lalu warna dan gaya tulisannya. Halaman terima kasih sesudah acara ikut tema ini. Tersimpan begitu dipilih.</p>
     <div class="pilih-tema" id="pilihTema" role="radiogroup" aria-label="Tema"></div>
+    <!-- setelan yang menentukan pilihan lain (Adat Nusantara: daerah) -->
+    <div id="setelanAtas"></div>
     <p class="sub-tema">Warna</p>
     <div class="pilih-palet" id="pilihPalet" role="radiogroup" aria-label="Warna"></div>
     <p class="sub-tema">Gaya tulisan</p>
@@ -1097,11 +1099,13 @@
           + '<span>'+esc(t.untuk || '')+'</span></button>';
       }).join('') || '<p class="kosongstate">Daftar tema belum bisa dimuat.</p>';
 
-      if(!m){ $('pilihPalet').innerHTML = ''; $('pilihHuruf').innerHTML = ''; $('setelanTema').innerHTML = ''; $('contohTema').innerHTML = ''; return; }
+      if(!m){ $('pilihPalet').innerHTML = ''; $('pilihHuruf').innerHTML = ''; $('setelanTema').innerHTML = ''; $('setelanAtas').innerHTML = ''; $('contohTema').innerHTML = ''; return; }
       var p = M.tema.pilihan(m, setel());
       muatHuruf(m);
 
-      var daftarPalet = (m.palet || []).slice();
+      /* Palet bertanda daerah hanya tampil untuk daerah yang dipilih. */
+      var daerah = p.setelan.daerah;
+      var daftarPalet = (m.palet || []).filter(function(pl){ return !pl.daerah || !daerah || pl.daerah === daerah; });
       /* "Dari foto": hanya untuk tema yang mengizinkan, dan baru bisa
          dipilih kalau ada foto sampul. Bulatannya memakai warna terakhir
          yang diambil dari foto, kalau sudah pernah. */
@@ -1128,7 +1132,7 @@
           + '<span class="label">'+esc(h.nama)+'</span></button>';
       }).join('');
 
-      $('setelanTema').innerHTML = (m.setelan || []).map(function(st){
+      function gambarSetelan(st){
         return '<p class="sub-tema">'+esc(st.nama)+'</p>'
           + '<div class="pilih-palet" role="radiogroup" aria-label="'+esc(st.nama)+'">'
           + (st.pilihan || []).map(function(pl){
@@ -1136,7 +1140,9 @@
                 + ' data-nilai="'+esc(pl.kode)+'" aria-checked="'+(p.setelan[st.kode] === pl.kode)+'">'+esc(pl.nama)+'</button>';
             }).join('')
           + '</div>';
-      }).join('');
+      }
+      $('setelanAtas').innerHTML = (m.setelan || []).filter(function(st){ return st.letak === 'atas'; }).map(gambarSetelan).join('');
+      $('setelanTema').innerHTML = (m.setelan || []).filter(function(st){ return st.letak !== 'atas'; }).map(gambarSetelan).join('');
 
       contoh(p);
     }
@@ -1199,6 +1205,12 @@
         }
         if(b.dataset.huruf) s.huruf = b.dataset.huruf;
         if(b.dataset.setelan) s[b.dataset.setelan] = b.dataset.nilai;
+        /* Ganti daerah: warnanya ikut ke warna pertama daerah itu. */
+        if(b.dataset.setelan === 'daerah'){
+          var mt = (await muatDaftar()).find(function(t){ return t.kode === pasangan.tema; });
+          var pd = mt && (mt.palet || []).find(function(pl){ return pl.daerah === b.dataset.nilai; });
+          if(pd) s.palet = pd.kode;
+        }
         badan = { tema_setel: s };
       }
       b.disabled = true;

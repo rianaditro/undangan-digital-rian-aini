@@ -2,7 +2,7 @@
   <!-- Ornamen tema Dua Bingkai: geometri bintang delapan, bukan ukiran.
        Dipanggil halaman lewat <use href="/tema/dua-bingkai/ornamen.svg#…">
        (manifest → "ornamen"). Warna lewat custom property yang sama dengan
-       ukir-jepara (--ukir-garis, --ukir-isi), supaya halaman tidak perlu
+       ukir-jepara (ukir-garis dan ukir-isi), supaya halaman tidak perlu
        tahu tema mana yang aktif. -->
   <g id="pemisah">
     <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke" d="M18 20 H98 M142 20 H222"/>

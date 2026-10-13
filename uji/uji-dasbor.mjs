@@ -1080,8 +1080,8 @@ const browser = await chromium.launch();
     contoh: document.getElementById('contohTema').textContent
   }));
   cek('tema-1 kartu tema dari daftar.json, yang tersimpan terpilih', t.tema.includes('ukir-jepara:true'), t.tema.join(' '));
-  cek('tema-2 warna & gaya tulisan tema itu, bawaan terpilih',
-      t.palet.length === 4 && t.palet[0] === 'nila-kuningan:true' && t.huruf.length === 3 && t.huruf[0] === 'keraton:true',
+  cek('tema-2 warna (daerah Jawa) & gaya tulisan tema itu, bawaan terpilih',
+      t.palet.length === 3 && t.palet[0] === 'nila-kuningan:true' && t.huruf.length === 3 && t.huruf[0] === 'keraton:true',
       JSON.stringify(t));
   cek('tema-3 contoh memakai nama pasangan sendiri', t.contoh.includes('RIAN') && t.contoh.includes("'AINI"), t.contoh);
 
@@ -1104,11 +1104,27 @@ const browser = await chromium.launch();
       tautan.startsWith('https://rian-aini.mengundang.id/?pratinjau=1&tema=ukir-jepara&palet=sogan&huruf=prasasti'), tautan);
   await page.locator('#panelTema').screenshot({ path: 'dasbor-tema-1100.png' });
 
+  /* Adat Nusantara: daerah di atas, warna disaring per daerah */
+  const atas = await page.evaluate(() => [...document.querySelectorAll('#setelanAtas [data-setelan="daerah"]')].map(b => b.dataset.nilai));
+  cek('tema-6a setelan Daerah tampil di atas warna', atas.join(',') === 'jawa,sunda,bugis,bali', atas.join(','));
+  await page.click('#setelanAtas [data-nilai="bali"]');
+  await page.waitForFunction(() => document.querySelector('#setelanAtas [data-nilai="bali"]').getAttribute('aria-checked') === 'true');
+  const bali = await page.evaluate(() => [...document.querySelectorAll('#pilihPalet .bulatan')].map(b => b.dataset.palet + ':' + b.getAttribute('aria-checked')));
+  const pb = model.patch.filter(x => x.tabel === 'pasangan').at(-1).badan;
+  cek('tema-6b ganti daerah Bali: warna ikut ke warna Bali, hanya warna Bali yang ditawarkan',
+      bali.join(' ') === 'prada:true poleng:false' && pb.tema_setel.daerah === 'bali' && pb.tema_setel.palet === 'prada' && pb.tema_setel.huruf === 'prasasti',
+      bali.join(' ') + ' ' + JSON.stringify(pb));
+  await page.locator('#panelTema').screenshot({ path: 'dasbor-tema-adat-bali-1100.png' });
+  await page.click('#setelanAtas [data-nilai="jawa"]');
+  await page.waitForFunction(() => document.querySelector('#setelanAtas [data-nilai="jawa"]').getAttribute('aria-checked') === 'true');
+  await page.click('#pilihPalet [data-palet="sogan"]');
+  await page.waitForFunction(() => document.querySelector('#pilihPalet [data-palet="sogan"]').getAttribute('aria-checked') === 'true');
+
   /* Simpan Semua tidak boleh menimpa pilihan tadi dengan nilai lama. */
   await page.click('#btnSimpan');
   await page.waitForSelector('.toast.on', { timeout: 6000 });
   cek('tema-8 Simpan Semua tidak menimpa tema_setel', model.pasangan[0].tema === 'ukir-jepara' &&
-      JSON.stringify(model.pasangan[0].tema_setel) === '{"palet":"sogan","huruf":"prasasti"}', JSON.stringify(model.pasangan[0]));
+      JSON.stringify(model.pasangan[0].tema_setel) === '{"palet":"sogan","huruf":"prasasti","daerah":"jawa"}', JSON.stringify(model.pasangan[0]));
 
   /* ganti tema: pilihan warna/gaya tema lama dibuang, setelan khas tema baru muncul */
   await page.click('#pilihTema [data-tema="dua-bingkai"]');

@@ -634,7 +634,6 @@
         if (HEX.test(setel.palet_foto[k] || '')) palet[k] = setel.palet_foto[k];
       });
     }
-    palet = palet || cariKode(m.palet, setel.palet) || cariKode(m.palet, bawaan.palet) || (m.palet || [])[0] || null;
     var huruf = cariKode(m.huruf, setel.huruf) || cariKode(m.huruf, bawaan.huruf) || (m.huruf || [])[0] || null;
 
     /* Setelan khas tema (misal mode potret Dua Bingkai): nilai yang
@@ -644,6 +643,14 @@
       var ada = cariKode(st.pilihan, setel[st.kode]);
       setelan[st.kode] = ada ? ada.kode : ((st.pilihan || [])[0] || {}).kode;
     });
+
+    /* Palet bertanda daerah: tanpa pilihan warna, daerah yang dipilih
+       memakai warna pertamanya (Bali → Prada), bukan bawaan tema. */
+    var dariDaerah = null;
+    if (setelan.daerah && !cariKode(m.palet, setel.palet)) {
+      (m.palet || []).some(function (pl) { if (pl.daerah === setelan.daerah) { dariDaerah = pl; return true; } return false; });
+    }
+    palet = palet || cariKode(m.palet, setel.palet) || dariDaerah || cariKode(m.palet, bawaan.palet) || (m.palet || [])[0] || null;
     return { palet: palet, huruf: huruf, setelan: setelan,
              hurufBawaan: (huruf && huruf.kode === bawaan.huruf) };
   }
@@ -654,13 +661,29 @@
        "ornamen": { "ukir-pemisah": "ornamen.svg#pemisah", … }
      dan rujukannya ditukar ke berkas tema itu. Dipanggil lagi oleh
      halaman sesudah menggambar ornamen baru. */
+  /* Berkas ornamen boleh bergantung pada setelan: "ornamen-{daerah}.svg"
+     memakai nilai setelan `daerah`. Pilihan setelan yang bertanda
+     "ornamen_bawaan": true memakai ornamen yang tertanam di halaman
+     (ukir-jepara: daerah Jawa), tanpa berkas tambahan. */
+  function berkasOrnamen(m, ke) {
+    var bawaan = false;
+    (m.setelan || []).forEach(function (st) {
+      var pl = cariKode(st.pilihan, TEMA_AKTIF.setelan[st.kode]);
+      if (pl && pl.ornamen_bawaan && ke.indexOf('{' + st.kode + '}') >= 0) bawaan = true;
+    });
+    if (bawaan) return null;
+    ke = ke.replace(/\{([a-z0-9_]+)\}/g, function (_, k) { return TEMA_AKTIF.setelan[k] || ''; });
+    return /^[a-z0-9-]+\.svg#[a-z0-9-]+$/.test(ke) ? ke : null;
+  }
+
   function pasangOrnamen(akar) {
     var m = TEMA_AKTIF.manifest, doc = global.document;
     if (!doc || !m || !m.ornamen) return;
     (akar || doc).querySelectorAll('use').forEach(function (u) {
       var h = u.getAttribute('href') || '';
       var ke = h.charAt(0) === '#' && m.ornamen[h.slice(1)];
-      if (ke && /^[a-z0-9-]+\.svg#[a-z0-9-]+$/.test(ke)) u.setAttribute('href', '/tema/' + TEMA_AKTIF.kode + '/' + ke);
+      ke = ke && berkasOrnamen(m, ke);
+      if (ke) u.setAttribute('href', '/tema/' + TEMA_AKTIF.kode + '/' + ke);
     });
   }
 

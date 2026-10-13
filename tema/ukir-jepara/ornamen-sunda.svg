@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Ornamen daerah Sunda untuk tema ukir-jepara (setelan daerah):
+       siger di tengah pemisah, awan bergulung (mega mendung) di sisi dan
+       sudut. Gaya garisnya sama dengan ukiran Jepara di index.html,
+       termasuk animasi tergambar (custom property ukir-off). -->
+  <g id="pemisah">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M6 22 C26 22 34 14 46 14 C56 14 60 22 54 26 C49 29 44 24 48 20"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M234 22 C214 22 206 14 194 14 C184 14 180 22 186 26 C191 29 196 24 192 20"/>
+    <path style="fill:none;stroke:var(--ukir-garis-dim);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M60 22 H100 M140 22 H180"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M102 30 L106 17 L112 23 L120 6 L128 23 L134 17 L138 30 Z"/>
+    <path style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" d="M118 30 h4 v-6 l-2 -3 l-2 3z"/>
+    <circle style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" cx="106" cy="15" r="1.6"/><circle style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" cx="134" cy="15" r="1.6"/><circle style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" cx="120" cy="4" r="1.8"/>
+  </g>
+  <g id="sudut">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M4 116 C4 70 16 40 44 24 C64 12 86 6 116 6"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M18 98 C18 80 30 70 44 70 C56 70 60 82 52 88 C46 92 40 86 44 80"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M70 22 C74 34 86 40 98 36 C108 32 106 20 96 20 C90 20 88 28 92 30"/>
+    <path style="fill:none;stroke:var(--ukir-garis-dim);stroke-width:1.1;stroke-linecap:round;vector-effect:non-scaling-stroke;stroke-dasharray:1;stroke-dashoffset:var(--ukir-off,0)" pathLength="1" d="M26 62 C34 48 48 40 62 38"/>
+    <path style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" d="M44 80 c-5 -1 -6 -6 -3 -9 c3 1 5 5 3 9z"/>
+    <path style="fill:var(--ukir-isi);opacity:var(--ukir-daun,.85)" d="M92 30 c1 -5 5 -7 9 -5 c-1 4 -5 6 -9 5z"/>
+  </g>
+</svg>

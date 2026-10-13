@@ -15,10 +15,11 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 │   ├── motion.js         ← runtun, parallax, angka bergulir
 │   └── backsound.mp3
 ├── tema/
-│   ├── ukir-jepara/
+│   ├── ukir-jepara/      ← "Adat Nusantara": Jawa (bawaan), Sunda, Bugis, Bali
 │   │   ├── gaya.css      ← SELURUH tampilan undangan ada di sini
 │   │   ├── kenangan.css  ← tampilan halaman terima kasih, tema yang sama
-│   │   └── tema.json     ← palet dan gaya teks pilihan, bawaannya
+│   │   ├── tema.json     ← palet dan gaya teks pilihan, bawaannya
+│   │   └── ornamen-*.svg ← ornamen daerah selain Jawa
 │   ├── dua-bingkai/      ← tema terang: gaya, kenangan, tema.json, ornamen.svg
 │   ├── monokrom/         ← gaya majalah hitam putih
 │   ├── senja-alam/       ← prewed luar ruangan, palet bisa diambil dari foto sampul

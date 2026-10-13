@@ -140,6 +140,14 @@ for (const tema of DAFTAR) {
         await page.locator('#' + id).screenshot({ path: `tema-${k}-${nama}-${lebar}-${id}.png` });
       const label = `${k} ${nama} foto @${lebar}`;
       cek(`${label}: tanpa galat, tidak melebar ke samping`, !galat.length && lebih <= 0, galat.join('; ') + ' lebih=' + lebih);
+      if (nama === '0' && lebar === 360) {
+        /* Ornamen benar-benar tergambar: <use> ke berkas ornamen yang rusak
+           tetap ada di DOM, hanya kosong. getBBox() melihat isinya. */
+        const orn = await page.evaluate(() => [...document.querySelectorAll('svg.divider use')]
+          .filter(u => u.closest('svg').getClientRects().length)
+          .map(u => { try { return u.getBBox().width; } catch (e) { return 0; } }));
+        cek(`${label}: ornamen pemisah tergambar`, orn.length > 0 && orn.every(w => w > 10), orn.join(','));
+      }
       if (nama === '0') cek(`${label}: sampul, galeri, potret tidak tampil`, !sampul && !s.galeri && s.potret === 0, JSON.stringify(s));
       if (nama === '0') {
         // acara di data uji sudah lewat: kotak hitung mundur tersembunyi, kalimat penggantinya tampil
@@ -467,6 +475,38 @@ if (DAFTAR.some(t => t.kode === 'senja-alam')) {
   h = await r.page.evaluate(() => document.documentElement.dataset.palet);
   cek('senja-alam "foto" tanpa warna tersimpan: jatuh ke bawaan', h === 'senja-pantai', h);
   await r.ctx.close();
+}
+
+/* ---------- Adat Nusantara: ornamen mengikuti daerah ---------- */
+{
+  const ornamen = page => page.evaluate(() => ({
+    href: [...new Set([...document.querySelectorAll('use')].map(u => u.getAttribute('href')).filter(h => /pemisah|sudut/.test(h)))],
+    lebar: [...document.querySelectorAll('svg.divider use, svg.corner use')].filter(u => u.closest('svg').getClientRects().length)
+      .map(u => { try { return Math.round(u.getBBox().width); } catch (e) { return 0; } })
+  }));
+  let r = await buka(isiDengan(KOSONG, { tema: 'ukir-jepara' }));
+  let h = await ornamen(r.page);
+  cek('adat Jawa (bawaan): ornamen ukir tertanam, tidak berubah', h.href.join(' ') === '#ukir-sudut #ukir-pemisah', h.href.join(' '));
+  await r.ctx.close();
+  for (const d of ['sunda', 'bugis', 'bali']) {
+    r = await buka(isiDengan(KOSONG, { tema: 'ukir-jepara', tema_setel: { daerah: d } }));
+    h = await ornamen(r.page);
+    const pal = await r.page.evaluate(() => document.documentElement.dataset.palet);
+    cek(`adat ${d} tanpa warna tersimpan: warna pertama daerahnya`, pal === { sunda: 'hijau-siger', bugis: 'marun-songket', bali: 'prada' }[d], pal);
+    cek(`adat ${d}: ornamen dari ornamen-${d}.svg dan tergambar`,
+      h.href.length === 2 && h.href.every(x => x.startsWith(`/tema/ukir-jepara/ornamen-${d}.svg#`)) && h.lebar.length > 0 && h.lebar.every(w => w > 10),
+      JSON.stringify(h));
+    await r.page.waitForTimeout(1200);
+    await r.page.screenshot({ path: `tema-adat-${d}-sampul.png` });
+    await bukaUndangan(r.page);
+    await r.page.locator('#mempelai').screenshot({ path: `tema-adat-${d}-mempelai.png` });
+    await r.ctx.close();
+  }
+  const k = await bukaKenangan(kenangan({ tema: 'ukir-jepara', tema_setel: { daerah: 'bali' } }));
+  const kh = await k.page.evaluate(() => [...new Set([...document.querySelectorAll('use')].map(u => u.getAttribute('href')).filter(h => /pemisah/.test(h)))]);
+  cek('adat Bali di halaman terima kasih: ornamen yang digambar belakangan ikut daerahnya',
+    kh.length > 0 && kh.every(x => x === '/tema/ukir-jepara/ornamen-bali.svg#pemisah'), kh.join(' '));
+  await k.ctx.close();
 }
 
 await browser.close();

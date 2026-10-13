@@ -74,12 +74,26 @@ for (const { kode, dir, m } of daftar) {
     if (!(st.pilihan || []).length) s(`setelan "${st.kode}" tanpa pilihan`);
     for (const pl of st.pilihan || []) if (!kodeSah.test(pl.kode || '') || !pl.nama) s(`setelan "${st.kode}": pilihan "${pl.kode}" tidak sah`);
   }
+  /* "ornamen-{daerah}.svg#…" diperiksa untuk setiap pilihan setelan itu
+     (kecuali yang memakai ornamen bawaan halaman). */
+  const ornamenNyata = [];
   for (const [dari, ke] of Object.entries(m.ornamen || {})) {
+    const k = (String(ke).match(/\{([a-z0-9_]+)\}/) || [])[1];
+    if (!k) { ornamenNyata.push([dari, ke]); continue; }
+    const st = (m.setelan || []).find(x => x.kode === k);
+    if (!st) { s(`ornamen "${ke}" menyebut setelan "${k}" yang tidak ada`); continue; }
+    for (const pl of st.pilihan) if (!pl.ornamen_bawaan) ornamenNyata.push([dari, String(ke).replace('{' + k + '}', pl.kode)]);
+  }
+  for (const [dari, ke] of ornamenNyata) {
     const [berkas, id] = String(ke).split('#');
     if (!/^[a-z0-9-]+\.svg$/.test(berkas || '') || !id) { s(`ornamen "${dari}" → "${ke}" bukan berkas.svg#id`); continue; }
     const f = path.join(dir, berkas);
     if (!fs.existsSync(f)) s(`ornamen: ${berkas} tidak ada`);
     else if (!new RegExp(`id=["']${id}["']`).test(fs.readFileSync(f, 'utf8'))) s(`ornamen: ${berkas} tidak punya #${id}`);
+    else for (const k of fs.readFileSync(f, 'utf8').matchAll(/<!--([\s\S]*?)-->/g))
+      // XML melarang "--" di dalam komentar; berkasnya jadi tidak sah dan
+      // <use> yang merujuknya tidak menggambar apa pun, tanpa galat.
+      if (k[1].includes('--')) { s(`ornamen: ${berkas} — komentar berisi "--" (XML tidak sah)`); break; }
   }
 
   const b = m.bawaan || {};

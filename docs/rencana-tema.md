@@ -294,6 +294,42 @@ untuk semua tema — foto tegak tanpa pasangan dilebarkan (`.sendiri`).
 
 ---
 
+## 3e. Tahap E — Adat Nusantara, selesai (13 Oktober 2026)
+
+`ukir-jepara` **tidak dipecah dan tidak diganti nama** — undangan Rian &
+'Aini dan semua tautannya memakai kode itu. Ia mendapat setelan **Daerah**
+dan tampil di dasbor sebagai **Adat Nusantara**:
+
+| Daerah | Ornamen | Palet |
+|---|---|---|
+| Jawa (bawaan) | ukiran Jepara yang tertanam di halaman — **tidak berubah sedikit pun** | Nila Kuningan, Sogan, Hijau Pupus |
+| Sunda | siger dan awan bergulung (`ornamen-sunda.svg`) | Hijau Siger, Biru Priangan |
+| Bugis-Makassar | sulapa eppa, belah ketupat empat sisi (`ornamen-bugis.svg`) | Marun Songket, Ungu Lontara |
+| Bali | patra, sulur bergulung dengan kuncup (`ornamen-bali.svg`) | Prada, Poleng |
+
+- Mesin tema: berkas ornamen boleh bergantung pada setelan
+  (`"ornamen-{daerah}.svg#pemisah"`); pilihan bertanda `ornamen_bawaan`
+  memakai ornamen yang tertanam di halaman.
+- Palet bertanda `daerah`: dasbor hanya menawarkan warna daerah yang
+  dipilih; mengganti daerah sekaligus memilih warna pertamanya. Di halaman,
+  daerah tanpa warna tersimpan memakai warna pertama daerah itu.
+- Setelan bertanda `"letak": "atas"` tampil di atas pilihan warna.
+- Menambah daerah = satu `ornamen-<daerah>.svg` + palet bertanda daerah +
+  satu pilihan setelan. Tidak ada tema baru.
+
+Ditemukan sambil jalan, ikut diperbaiki: **ornamen Dua Bingkai tidak
+pernah tergambar.** Komentar di `ornamen.svg`-nya berisi `--` (dari nama
+`--ukir-garis`), dan XML melarangnya — berkasnya tidak sah, `<use>` yang
+merujuknya kosong tanpa galat. Uji lama hanya memeriksa rujukannya. Sekarang
+`periksa-palet.mjs` menolak komentar seperti itu, dan `uji-tema` mengukur
+ornamen yang benar-benar tergambar (`getBBox`) di setiap tema; uji itu
+terbukti merah terhadap berkas lama.
+
+Belum: teks pembuka di `index.html` (basmalah, "Walimatul 'Ursy",
+Ar-Rum 21, salam) tertulis untuk pasangan muslim — lihat bagian 4.
+
+---
+
 ## Langkah manual — dikumpulkan sampai siap terbit
 
 Semua yang tidak bisa dikerjakan dari repo, untuk seluruh tahap yang
@@ -312,7 +348,7 @@ digabung.
    harus sama seperti sebelumnya, kecuali kotak hitung mundur yang kini
    hilang (acaranya sudah lewat).
 
-Tahap A sampai D tidak butuh langkah manual lain (tidak ada edge function,
+Tahap A sampai E tidak butuh langkah manual lain (tidak ada edge function,
 rahasia, atau DNS yang berubah).
 
 ---
@@ -324,11 +360,18 @@ rahasia, atau DNS yang berubah).
    terbuka untuk semua pasangan. Premium adalah penambahan **fitur**, bukan
    template: template yang dikunci tidak terlihat pengguna, dan belum
    tentu sepadan dengan harganya. `paket_min` dihapus dari manifest.
-3. **Aset ilustrasi** (siluet, ornamen daerah, tekstur): digambar sendiri
+3. **Teks pembuka untuk pasangan non-muslim.** Basmalah, "Walimatul
+   'Ursy", ayat Ar-Rum 21, dan salam tertulis tetap di `index.html` untuk
+   semua tema. Adat Bali (dan pasangan Kristen/Katolik di tema mana pun)
+   membutuhkan pembuka lain — misalnya "Om Swastiastu" dan kutipan yang
+   sesuai. Usul: kolom `pasangan.pembuka` (islam / kristen / hindu /
+   umum) yang menukar blok teks itu; butuh migrasi kecil. Perlu
+   diputuskan sebelum Adat Bali ditawarkan ke pasangan Hindu.
+4. **Aset ilustrasi** (siluet, ornamen daerah, tekstur): digambar sendiri
    sebagai SVG garis (murah, ringan, konsisten) atau beli aset? Usul: SVG
    garis buatan sendiri; ornamen adat perlu dicek orang yang paham
    motifnya.
-4. **Huruf:** sekarang huruf `ukir-jepara` (Marcellus, Cormorant, Karla)
+5. **Huruf:** sekarang huruf `ukir-jepara` (Marcellus, Cormorant, Karla)
    ditautkan keras di `<head>` `index.html`. Di Tahap A tautan itu pindah
    ke manifest (`tema.json → huruf`) dan dipasang oleh `gantiTema()`
    bersama `gaya.css`, supaya tema lain tidak ikut mengunduh huruf yang
