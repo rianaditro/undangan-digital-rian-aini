@@ -1,0 +1,45 @@
+{
+  "kode": "custom/_contoh",
+  "nama": "Kerangka custom",
+  "kategori": "custom",
+  "konsep": "custom",
+  "untuk": "Titik awal tema Full Custom — salin folder ini, jangan dipakai langsung",
+  "asal": "",
+  "izin_ulang": true,
+  "isi_khusus": [],
+  "foto_min": 0,
+  "palet_foto": true,
+  "palet": [
+    {
+      "kode": "gading-emas",
+      "nama": "Gading Emas",
+      "latar": "#FBF7EF",
+      "teks": "#2E2A24",
+      "aksen": "#9C7A48",
+      "latar_2": "#F2EBDD",
+      "kertas": "#FFFDF8",
+      "kertas_2": "#F2EBDD",
+      "kertas_teks": "#2E2A24",
+      "kertas_aksen": "#86683B",
+      "ornamen": "#B8975F"
+    }
+  ],
+  "huruf": [
+    {
+      "kode": "romantis",
+      "nama": "Romantis",
+      "judul": "'Cormorant Garamond', Georgia, serif",
+      "naskah": "'Great Vibes', 'Brush Script MT', cursive",
+      "isi": "'Lato', 'Helvetica Neue', Arial, sans-serif",
+      "google": "family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Great+Vibes&family=Lato:wght@300;400;700"
+    }
+  ],
+  "ornamen": {
+    "ukir-pemisah": "ornamen.svg#pemisah",
+    "ukir-sudut": "ornamen.svg#sudut"
+  },
+  "bawaan": {
+    "palet": "gading-emas",
+    "huruf": "romantis"
+  }
+}

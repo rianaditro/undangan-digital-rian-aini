@@ -26,7 +26,9 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 │   ├── studio-anggun/    ← prewed studio, foto dibingkai, kesan resmi
 │   ├── dokumenter/       ← scrapbook: polaroid, strip film; tata.js = JS khusus tema
 │   ├── kisah/            ← album keluarga: garis waktu bab demi bab (tabel kisah, 038)
+│   ├── custom/           ← Full Custom: tema/custom/<kode>/; _contoh = kerangka
 │   ├── daftar.json       ← dibangun bangun-daftar.mjs, dibaca dasbor
+│   ├── custom.json       ← katalog custom (tidak tampil di dasbor), dibaca /pemilik
 │   ├── bangun-daftar.mjs
 │   ├── periksa-palet.mjs ← penjaga: palet terbaca, manifest sah
 │   └── periksa-gerak.mjs ← penjaga: tolak animasi pemicu tata letak

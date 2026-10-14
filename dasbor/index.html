@@ -19,6 +19,7 @@
 .kartu-tema{display:block;width:100%;text-align:left;border:1px solid var(--garis);border-radius:10px;padding:12px 14px;background:#fff;cursor:pointer;font:inherit;color:inherit;}
 .kartu-tema b{display:block;font-size:14px;}
 .kartu-tema span{display:block;font-size:12px;color:rgba(17,24,39,.6);margin-top:4px;line-height:1.45;}
+.kartu-tema.custom{grid-column:1 / -1;background:linear-gradient(135deg,#fff 60%,var(--aksen-muda));}
 .kartu-tema[aria-checked="true"],.bulatan[aria-checked="true"],.kartu-huruf[aria-checked="true"]{border-color:var(--kuningan);box-shadow:0 0 0 2px var(--aksen-muda);}
 .sub-tema{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--kuningan-dim);margin:18px 0 8px;font-weight:600;}
 .pilih-palet{display:flex;flex-wrap:wrap;gap:10px;}
@@ -1137,10 +1138,12 @@
       if(m && !d.some(function(t){ return t.kode === m.kode; })) kartu.unshift(m);
 
       $('pilihTema').innerHTML = kartu.map(function(t){
-        return '<button type="button" class="kartu-tema" role="radio" data-tema="'+esc(t.kode)+'"'
+        var custom = t.kategori === 'custom';
+        return '<button type="button" class="kartu-tema'+(custom ? ' custom' : '')+'" role="radio" data-tema="'+esc(t.kode)+'"'
           + ' aria-checked="'+(t.kode === pasangan.tema)+'">'
-          + '<b>'+esc(t.nama || t.kode)+(t.kategori === 'custom' ? ' · custom' : '')+'</b>'
-          + '<span>'+esc(t.untuk || '')+'</span></button>';
+          + (custom ? '<b>Tema custom kalian</b><span>'+esc(t.nama || t.kode)+' — dibuat khusus untuk undangan ini</span>'
+                    : '<b>'+esc(t.nama || t.kode)+'</b><span>'+esc(t.untuk || '')+'</span>')
+          + '</button>';
       }).join('') || '<p class="kosongstate">Daftar tema belum bisa dimuat.</p>';
 
       if(!m){ $('pilihPalet').innerHTML = ''; $('pilihHuruf').innerHTML = ''; $('setelanTema').innerHTML = ''; $('setelanAtas').innerHTML = ''; $('contohTema').innerHTML = ''; return; }
@@ -1236,6 +1239,9 @@
       if(!b || b.getAttribute('aria-checked') === 'true') return;
       var badan;
       if(b.dataset.tema){
+        /* Tema custom hanya tampil selama dipakai: sekali dilepas, kartunya
+           hilang dari pilihan. Tanyakan dulu. */
+        if(/^custom\//.test(pasangan.tema || '') && !confirm('Tema custom kalian akan dilepas dan tidak muncul lagi di pilihan. Untuk memakainya kembali, hubungi kami. Lanjutkan?')) return;
         /* Warna dan gaya tulisan milik tema lama tidak berarti apa-apa di
            tema baru — mulai dari bawaan tema itu. */
         badan = { tema: b.dataset.tema, tema_setel: {} };

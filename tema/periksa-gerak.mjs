@@ -21,6 +21,7 @@
    diperiksa.
    ============================================================ */
 import fs from 'node:fs'; import path from 'node:path';
+import { semuaManifest } from './bangun-daftar.mjs';
 const AKAR = path.resolve(new URL('..', import.meta.url).pathname);
 const TEMA = path.join(AKAR, 'tema');
 
@@ -56,10 +57,11 @@ function pecahKoma(teks){
 
 // gaya.css (undangan) dan kenangan.css (halaman terima kasih) sama-sama
 // dibuka tamu dari HP yang sama.
+// Termasuk tema custom (tema/custom/<kode>/) dan kerangkanya.
 const BERKAS=[];
-for(const tema of fs.readdirSync(TEMA))
+for(const {kode:tema, dir} of semuaManifest({kerangka:true}))
   for(const nama of ['gaya.css','kenangan.css'])
-    if(fs.existsSync(path.join(TEMA,tema,nama))) BERKAS.push([tema+(nama==='gaya.css'?'':'/kenangan'), path.join(TEMA,tema,nama)]);
+    if(fs.existsSync(path.join(dir,nama))) BERKAS.push([tema+(nama==='gaya.css'?'':'/kenangan'), path.join(dir,nama)]);
 
 for(const [tema,f] of BERKAS){
   const css=bersih(fs.readFileSync(f,'utf8'));

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Ornamen tema Studio Anggun: garis ganda tipis dan belah ketupat kecil,
+       seperti bingkai kartu undangan cetak yang mahal. Tanpa sulur. -->
+  <g id="pemisah">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke" d="M10 18 H104 M136 18 H230"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke;opacity:.5" d="M40 22 H104 M136 22 H200"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke" d="M120 8 L132 20 L120 32 L108 20 Z"/>
+    <path style="fill:var(--ukir-isi)" d="M120 14 L126 20 L120 26 L114 20 Z"/>
+    <circle style="fill:var(--ukir-isi)" cx="104" cy="20" r="1.4"/><circle style="fill:var(--ukir-isi)" cx="136" cy="20" r="1.4"/>
+  </g>
+  <g id="sudut">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke" d="M8 100 V8 H100"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke;opacity:.5" d="M14 100 V14 H100"/>
+    <path style="fill:var(--ukir-isi)" d="M8 2 L14 8 L8 14 L2 8 Z"/>
+  </g>
+</svg>

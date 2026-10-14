@@ -8,6 +8,7 @@ import { chromium } from 'playwright';
 import { mulai, MEDIA, MEDIA_KUNCI } from './server.mjs';
 import { tandatangan } from '../cloudflare/media.js';
 import { randomUUID } from 'node:crypto';
+import fs from 'node:fs';
 
 const GAMBAR_DATAR = 'iVBORw0KGgoAAAANSUhEUgAAACgAAAAUCAIAAABwJOjsAAAAJElEQVR4nGM4MS1lQBDDqMWjFo9aPGrxqMWjFo9aPGrxyLEYAIILfozXZrotAAAAAElFTkSuQmCC';
 const PORT = 4401, ASAL = 'http://127.0.0.1:' + PORT;
@@ -64,6 +65,8 @@ function bikinModel() {
 }
 
 async function pasang(page, model) {
+  /* rute tambahan per uji (misal manifest tema custom yang tidak ada di repo) */
+  for (const [pola, layani] of model.rute || []) await page.route(pola, layani);
   // /media/: yang sudah diunggah dalam uji dilayani Worker di server uji
   // (R2 tiruan); jalur data contoh yang tidak ada di sana diganti gambar
   // mendatar, supaya ubin dan editor potongan punya gambar sungguhan.
@@ -1285,6 +1288,38 @@ cek('99 tidak ada galat JavaScript di halaman sepanjang uji',
   cek('kisah-9 bab dihapus: DELETE id=in.(…)', model.hapus.some(x => x.tabel === 'kisah') && model.kisah.length === 3);
   await page.locator('#panelKisah').screenshot({ path: 'dasbor-kisah-400.png' });
   await ctx.close();
+}
+
+/* ---------- tema custom (Full Custom K1) ---------- */
+{
+  const model = bikinModel();
+  model.pasangan[0].tema = 'custom/contoh-uji';
+  const manifest = JSON.parse(fs.readFileSync(new URL('../tema/custom/_contoh/tema.json', import.meta.url), 'utf8'));
+  model.rute = [['**/tema/custom/contoh-uji/tema.json', r => r.fulfill({ status: 200, contentType: 'application/json',
+    body: JSON.stringify({ ...manifest, kode: 'custom/contoh-uji', nama: 'Teras Jati' }) })]];
+  const m = await masuk(browser, model, 1100, 'tampilan');
+  await m.page.waitForSelector('#pilihTema .kartu-tema.custom', { timeout: 6000 });
+  const k = await m.page.evaluate(() => {
+    const b = [...document.querySelectorAll('#pilihTema .kartu-tema')];
+    return { pertama: b[0].dataset.tema, cek: b[0].getAttribute('aria-checked'), teks: b[0].textContent, jumlah: b.length,
+             palet: document.querySelectorAll('#pilihPalet .bulatan').length };
+  });
+  cek('custom-1 tema custom tampil sebagai kartu pertama "Tema custom kalian", terpilih',
+    k.pertama === 'custom/contoh-uji' && k.cek === 'true' && /Tema custom kalian/.test(k.teks) && /Teras Jati/.test(k.teks) && k.jumlah > 1 && k.palet >= 1,
+    JSON.stringify(k));
+  await m.page.locator('#panelTema').screenshot({ path: 'dasbor-tema-custom-1100.png' }).catch(() => {});
+  const n0 = model.patch.length;
+  m.page.once('dialog', d => d.dismiss());
+  await m.page.click('#pilihTema [data-tema="dua-bingkai"]');
+  await m.page.waitForTimeout(400);
+  cek('custom-2 melepas tema custom ditanya dulu; batal = tidak ada yang tersimpan',
+    model.patch.length === n0 && model.pasangan[0].tema === 'custom/contoh-uji');
+  m.page.once('dialog', d => d.accept());
+  await m.page.click('#pilihTema [data-tema="dua-bingkai"]');
+  await m.page.waitForFunction(() => document.querySelector('#pilihTema [data-tema="dua-bingkai"]').getAttribute('aria-checked') === 'true');
+  cek('custom-3 setuju = tema katalog tersimpan, kartu custom hilang',
+    model.pasangan[0].tema === 'dua-bingkai' && await m.page.locator('#pilihTema .kartu-tema.custom').count() === 0);
+  await m.ctx.close();
 }
 
 await browser.close(); srv.close();

@@ -307,7 +307,7 @@ token, manifest, `kenangan.css`). Sesudahnya:
 
 | Tahap | Isi |
 |---|---|
-| **K1** | tema custom: validasi nama `custom/…`, kerangka `_contoh` (dengan `kenangan.css`), `tema/custom.json`, uji pakai ulang di `uji-tema.mjs`, kartu di dasbor |
+| **K1** ✅ | tema custom: validasi nama `custom/…`, kerangka `_contoh` (dengan `kenangan.css`), `tema/custom.json`, uji pakai ulang di `uji-tema.mjs`, kartu di dasbor |
 | **K2** | migrasi: paket `full_custom`, kolom `pasangan.khusus`, tabel `brief_custom` + `revisi_custom`; panel brief & revisi di dasbor; antrean dan katalog custom di `/pemilik` |
 | **K3** | skill `full-custom` + satu tema custom percontohan (misal untuk Rian & 'Aini) |
 | **K4** | kit v1 (dibakukan dari `varian.js`, termasuk `Kit.kenangan()`), `custom/peta.json` + rute di Worker, `uji-custom.mjs`, kerangka `custom/_contoh/` |
@@ -325,3 +325,37 @@ permintaan yang memang butuh struktur HTML sendiri.
    `pasangan.khusus`, setelan tema), pakai data dan temanya tetap sama.
    Bila menyentuh CSS/HTML, buat turunan (`custom/<kode>-2`, dengan
    `"turunan": "<kode>"` di manifest).
+
+---
+
+## 10. K1 — tema custom, selesai (14 Oktober 2026)
+
+Belum ada tema custom sungguhan; yang terpasang jalannya, supaya tema
+custom pertama tinggal dibuat.
+
+- **Kerangka `tema/custom/_contoh/`** — salinan Studio Anggun dengan satu
+  palet dan satu gaya teks, manifest berkategori `custom` (`asal`,
+  `izin_ulang`, `isi_khusus`), dan petunjuk langkah di kepala `gaya.css`.
+  Awalan `_` membuatnya bukan tema: tidak bisa dipasang ke pasangan
+  (nama tidak lolos `KODE_TEMA`), tidak masuk daftar mana pun.
+- **`tema/custom.json`** — katalog custom, dibangun `bangun-daftar.mjs`
+  bersama `daftar.json`; dibaca `/pemilik` nanti (K2). Tema dengan
+  `izin_ulang: false` tidak masuk. Kosong sampai tema custom pertama ada.
+- **Penjaga** — `periksa-palet` dan `periksa-gerak` kini juga memeriksa
+  `tema/custom/*` dan kerangkanya. Untuk tema custom, kontrak butir 9
+  diperiksa dari berkasnya: `asal` wajib, tidak ada gambar raster di
+  folder, tidak ada alamat `/media/`, dan kata dari slug pemesan asal
+  tidak boleh muncul di berkas mana pun (utuh per kata).
+- **`uji-tema`** menjalankan setiap tema custom — dan kerangkanya, sebagai
+  `custom/contoh-uji` — melalui semua uji yang sama dengan tema katalog
+  (0/1/banyak foto, HP/layar lebar, palet, gaya teks, halaman terima
+  kasih, kisah). Ditambah **uji pakai ulang**: undangan dan halaman terima
+  kasih dibuka dengan pasangan rekaan, dan tidak boleh ada nama pemesan
+  asal yang tampil.
+- **Dasbor** — pasangan pemakai tema custom melihatnya sebagai kartu
+  pertama "Tema custom kalian". Kartu itu hilang begitu tema lain dipilih,
+  jadi melepasnya ditanya dulu.
+
+Memasang tema custom ke pasangan, sampai `/pemilik` punya tombolnya (K2):
+`update pasangan set tema = 'custom/<kode>', tema_setel = '{}' where slug = '…';`
+— sesudah foldernya ada di `main`.

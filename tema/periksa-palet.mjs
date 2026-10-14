@@ -14,10 +14,15 @@
      teks bawaan — keduanya berlaku sebelum JS jalan, dan tidak boleh
      berselisih dengan yang dipasang JS sesudahnya
    · @import huruf di kedua berkas itu memuat huruf gaya teks bawaan
-   · tema/daftar.json sama dengan hasil tema/bangun-daftar.mjs
+   · tema/daftar.json dan tema/custom.json sama dengan hasil
+     tema/bangun-daftar.mjs
+   · tema custom (dan kerangkanya, tema/custom/_contoh) siap dipakai
+     ulang: tercatat asalnya, tanpa foto di folder, tanpa alamat /media/,
+     dan tanpa nama pemesan asal di berkas mana pun (kontrak butir 9,
+     docs/halaman-khusus.md)
    ============================================================ */
 import fs from 'node:fs'; import path from 'node:path'; import { createRequire } from 'node:module';
-import { semuaManifest, isiDaftar, TEMA } from './bangun-daftar.mjs';
+import { semuaManifest, isiDaftar, isiCustom, TEMA } from './bangun-daftar.mjs';
 
 createRequire(import.meta.url)('../assets/varian.js');
 const T = globalThis.MENGUNDANG.tema;
@@ -38,13 +43,44 @@ function bacaRoot(css) {
 }
 const rapi = v => String(v).replace(/\s+/g, '').replace(/"/g, "'").toLowerCase();
 
-const daftar = semuaManifest();
+/* Kontrak butir 9 untuk tema custom: tema ini akan dijual ulang, jadi
+   tidak boleh membawa apa pun milik pemesan asalnya. Nama diperiksa
+   dari slug "asal" (biasanya nama panggilan: budi-sari), utuh per kata,
+   supaya "rian" tidak menangkap "variant". */
+const GAMBAR_FOTO = /\.(jpe?g|png|webp|gif|avif|heic|heif|bmp|tiff?)$/i;
+function semuaBerkas(dir) {
+  return fs.readdirSync(dir).flatMap(n => {
+    const f = path.join(dir, n);
+    return fs.statSync(f).isDirectory() ? semuaBerkas(f) : [f];
+  });
+}
+function periksaCustom(kode, dir, m, s) {
+  const kerangka = kode === 'custom/_contoh';
+  if (typeof m.asal !== 'string' || (!kerangka && !kodeSah.test(m.asal))) s('"asal" harus slug pemesan pertama (misal "budi-sari")');
+  if ('izin_ulang' in m && typeof m.izin_ulang !== 'boolean') s('"izin_ulang" harus true/false');
+  if ('isi_khusus' in m && !Array.isArray(m.isi_khusus)) s('"isi_khusus" harus daftar');
+  if (m.turunan !== undefined && !daftar.some(t => t.kode === 'custom/' + m.turunan)) s(`"turunan": custom/${m.turunan} tidak ada`);
+  const kata = (m.asal || '').split('-').filter(k => k.length >= 3);
+  for (const f of semuaBerkas(dir)) {
+    const rel = path.relative(dir, f);
+    if (GAMBAR_FOTO.test(f)) { s(`${rel}: berkas gambar raster — foto pasangan tidak boleh di folder tema (ornamen pakai svg)`); continue; }
+    if (rel === 'tema.json') continue;
+    const isi = fs.readFileSync(f, 'utf8');
+    if (/\/media\//.test(isi)) s(`${rel}: menunjuk /media/ — foto pasangan datang dari data, bukan dari tema`);
+    for (const k of kata) if (new RegExp('\\b' + k + '\\b', 'i').test(isi)) s(`${rel}: memuat "${k}" dari nama pemesan asal`);
+  }
+}
+
+const daftar = semuaManifest({ kerangka: true });
 for (const { kode, dir, m } of daftar) {
   const s = msg => salah.push(kode + ': ' + msg);
 
   if (m.kode !== kode) s(`kode di manifest "${m.kode}" ≠ nama folder`);
+  if (kode.startsWith('custom/') && kode !== 'custom/_contoh' && !kodeSah.test(kode.slice(7))) s('kode tema custom tidak sah');
   if (!['katalog', 'custom'].includes(m.kategori)) s('kategori harus katalog atau custom');
   if ((m.kategori === 'custom') !== kode.startsWith('custom/')) s('tema custom tinggal di tema/custom/, dan hanya di sana');
+
+  if (m.kategori === 'custom') periksaCustom(kode, dir, m, s);
 
   const palet = m.palet || [], huruf = m.huruf || [];
   if (!palet.length) s('tidak ada palet');
@@ -128,6 +164,11 @@ const tertulis = fs.existsSync(path.join(TEMA, 'daftar.json'))
   ? fs.readFileSync(path.join(TEMA, 'daftar.json'), 'utf8') : '';
 if (tertulis !== JSON.stringify(isiDaftar(), null, 2) + '\n') {
   salah.push('tema/daftar.json tertinggal dari manifest — jalankan: node tema/bangun-daftar.mjs');
+}
+const tertulisCustom = fs.existsSync(path.join(TEMA, 'custom.json'))
+  ? fs.readFileSync(path.join(TEMA, 'custom.json'), 'utf8') : '';
+if (tertulisCustom !== JSON.stringify(isiCustom(), null, 2) + '\n') {
+  salah.push('tema/custom.json tertinggal dari manifest — jalankan: node tema/bangun-daftar.mjs');
 }
 
 for (const { kode, m } of daftar) {

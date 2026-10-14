@@ -16,10 +16,37 @@ let lulus = 0, gagal = 0;
 const cek = (n, ok, k) => ok ? (lulus++, console.log('OK    ' + n))
                              : (gagal++, console.log('GAGAL ' + n + (k ? '  — ' + k : '')));
 
-const DAFTAR = JSON.parse(fs.readFileSync(new URL('../tema/daftar.json', import.meta.url), 'utf8'));
+/* Tema katalog, tema custom (tema/custom/<kode>/), dan kerangkanya
+   (tema/custom/_contoh, dilayani di uji sebagai custom/contoh-uji karena
+   "_" bukan kode tema yang sah). Tema custom diuji persis seperti katalog
+   — Full Custom tidak boleh jadi warga kelas dua yang diam-diam rusak. */
+import { semuaManifest, TEMA as DIR_TEMA } from '../tema/bangun-daftar.mjs';
+import path from 'node:path';
+const KERANGKA = path.join(DIR_TEMA, 'custom', '_contoh');
+const DAFTAR = [
+  ...JSON.parse(fs.readFileSync(new URL('../tema/daftar.json', import.meta.url), 'utf8')),
+  ...semuaManifest().filter(t => t.m.kategori === 'custom').map(t => t.m),
+  { ...JSON.parse(fs.readFileSync(path.join(KERANGKA, 'tema.json'), 'utf8')), kode: 'custom/contoh-uji' }
+];
+const nm = k => k.replace(/\//g, '-');   // nama berkas tangkapan layar
 
 await mulai(PORT);
 const browser = await chromium.launch();
+/* Setiap konteks peramban melayani kerangka di /tema/custom/contoh-uji/. */
+const konteksAsli = browser.newContext.bind(browser);
+browser.newContext = async (o) => {
+  const c = await konteksAsli(o);
+  await c.route('**/tema/custom/contoh-uji/**', r => {
+    const nama = decodeURIComponent(new URL(r.request().url()).pathname.split('/contoh-uji/')[1] || '');
+    const f = path.join(KERANGKA, nama);
+    if (!nama || nama.includes('..') || !fs.existsSync(f)) return r.fulfill({ status: 404, body: '' });
+    let isi = fs.readFileSync(f);
+    if (nama === 'tema.json') isi = JSON.stringify({ ...JSON.parse(isi), kode: 'custom/contoh-uji' });
+    const jenis = { css: 'text/css', json: 'application/json', svg: 'image/svg+xml', js: 'text/javascript' }[nama.split('.').pop()] || 'application/octet-stream';
+    return r.fulfill({ status: 200, contentType: jenis, body: isi });
+  });
+  return c;
+};
 
 /* Foto uji dibuat di peramban (canvas → JPEG), seperti uji-lihat: potret
    tegak dan foto mendatar, dengan "gaun" terang di tengah — tempat teks
@@ -126,7 +153,7 @@ for (const tema of DAFTAR) {
       const { ctx, page, galat } = await buka(isiDengan(f, { tema: k }), { lebar });
       const sampul = await page.evaluate(() => !document.getElementById('sampulFoto').hidden);
       await page.waitForTimeout(1500);   // sampul dan fotonya memudar masuk
-      await page.screenshot({ path: `tema-${k}-${nama}-${lebar}-sampul.png` });
+      await page.screenshot({ path: `tema-${nm(k)}-${nama}-${lebar}-sampul.png` });
       await bukaUndangan(page);
       const s = await page.evaluate(() => ({
         galeri: !document.getElementById('galeri').hidden,
@@ -135,9 +162,9 @@ for (const tema of DAFTAR) {
         mendatar: document.querySelectorAll('#galeriIsi .galeri-item.mendatar').length
       }));
       const lebih = await melebar(page);
-      await page.screenshot({ path: `tema-${k}-${nama}-${lebar}.png`, fullPage: true });
+      await page.screenshot({ path: `tema-${nm(k)}-${nama}-${lebar}.png`, fullPage: true });
       if (nama === 'banyak') for (const id of ['mempelai', 'galeri'])
-        await page.locator('#' + id).screenshot({ path: `tema-${k}-${nama}-${lebar}-${id}.png` });
+        await page.locator('#' + id).screenshot({ path: `tema-${nm(k)}-${nama}-${lebar}-${id}.png` });
       const label = `${k} ${nama} foto @${lebar}`;
       cek(`${label}: tanpa galat, tidak melebar ke samping`, !galat.length && lebih <= 0, galat.join('; ') + ' lebih=' + lebih);
       if (nama === '0' && lebar === 360) {
@@ -381,7 +408,7 @@ for (const tema of DAFTAR) {
     const h = await page.evaluate(() => ({ href: document.getElementById('temaGaya').getAttribute('href'),
       lebih: document.documentElement.scrollWidth - document.documentElement.clientWidth }));
     await page.waitForTimeout(1800);   // isi sampul memudar masuk
-    await page.screenshot({ path: `tema-${k}-kenangan-${lebar}.png` });
+    await page.screenshot({ path: `tema-${nm(k)}-kenangan-${lebar}.png` });
     cek(`${k} kenangan @${lebar}: memuat kenangan.css temanya, tanpa galat, tidak melebar`,
       h.href === `/tema/${k}/kenangan.css` && !galat.length && h.lebih <= 0, JSON.stringify(h) + galat.join('; '));
     await ctx.close();
@@ -659,7 +686,7 @@ if (DAFTAR.some(t => t.kode === 'dokumenter')) {
         h.tampak && h.urutan && h.bab === 4 && h.kelas === 'ftft' && h.tahun === '2015|2025|2026' && h.judulAman
         && h.foto.length === 2 && h.foto.every(Boolean) && !h.keluar && h.terbaca && lebih <= 0 && !r.galat.length,
         JSON.stringify({ ...h, lebih, galat: r.galat }));
-      await r.page.locator('#kisah').screenshot({ path: `tema-${tema.kode}-kisah-${lebar}.png` });
+      await r.page.locator('#kisah').screenshot({ path: `tema-${nm(tema.kode)}-kisah-${lebar}.png` });
       await r.ctx.close();
     }
   }
@@ -671,6 +698,33 @@ if (DAFTAR.some(t => t.kode === 'dokumenter')) {
   h = await r.page.evaluate(() => [...document.querySelectorAll('#kisah .kisah-bab')].map(b => getComputedStyle(b).opacity));
   cek('kisah dengan gerak dikurangi: bab tampak tanpa menunggu animasi', h.length === 4 && h.every(o => o === '1'), h.join());
   await r.ctx.close();
+}
+
+/* ---------- tema custom siap dipakai ulang (kontrak butir 9) ---------- */
+{
+  /* Pasangan rekaan: data stub dengan semua nama diganti. Tema custom
+     yang dipakai pasangan kedua tidak boleh menampilkan apa pun milik
+     pemesan asalnya — nama asal dibaca dari "asal" di manifest. */
+  const REKAAN = JSON.parse(JSON.stringify(ISI)
+    .replace(/RIAN ADI SAPUTRO/g, 'BIMA ARYA').replace(/NURUL ZAKIYATUL 'AINI/g, 'LARAS SEKAR')
+    .replace(/'AINI|AINI/g, 'LARAS').replace(/RIAN/g, 'BIMA').replace(/'Aini|Aini/g, 'Laras').replace(/Rian/g, 'Bima')
+    .replace(/rian-aini/g, 'bima-laras').replace(/Jepara/g, 'Salatiga'));
+  for (const tema of DAFTAR.filter(t => t.kategori === 'custom')) {
+    const kata = (tema.asal || '').split('-').filter(x => x.length >= 3);
+    for (const [jalur, buka2] of [['undangan', async () => {
+        const r = await buka({ ...REKAAN, foto: BANYAK, tema: tema.kode }, { lebar: 360 });
+        await bukaUndangan(r.page); return r; }],
+      ['terima kasih', async () => bukaKenangan(kenangan({ tema: tema.kode, slug: 'bima-laras', kota: 'salatiga', mempelai: REKAAN.mempelai }), 360)]]) {
+      const r = await buka2();
+      const teks = await r.page.evaluate(() => document.body.innerText + ' ' + document.title);
+      const bocor = kata.filter(x => new RegExp('\\b' + x + '\\b', 'i').test(teks));
+      const lebih = await melebar(r.page);
+      cek(`${tema.kode} ${jalur} dengan pasangan rekaan: tanpa sisa pemesan asal${kata.length ? ' (' + kata.join(', ') + ')' : ''}, tanpa galat, tidak melebar`,
+        !bocor.length && (jalur !== 'undangan' || /BIMA|Bima/.test(teks)) && !r.galat.length && lebih <= 0,
+        JSON.stringify({ bocor, lebih, galat: r.galat }));
+      await r.ctx.close();
+    }
+  }
 }
 
 await browser.close();
