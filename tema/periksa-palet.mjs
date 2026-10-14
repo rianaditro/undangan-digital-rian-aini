@@ -96,6 +96,12 @@ for (const { kode, dir, m } of daftar) {
       if (k[1].includes('--')) { s(`ornamen: ${berkas} — komentar berisi "--" (XML tidak sah)`); break; }
   }
 
+  if (m.tata !== undefined) {
+    if (!/^[a-z0-9-]+\.js$/.test(m.tata)) s(`tata "${m.tata}" bukan nama berkas .js`);
+    else if (!fs.existsSync(path.join(dir, m.tata))) s(`tata: ${m.tata} tidak ada`);
+    else if (!fs.readFileSync(path.join(dir, m.tata), 'utf8').includes(`daftarTata('${kode}'`)) s(`tata: ${m.tata} tidak mendaftar dengan daftarTata('${kode}', …)`);
+  }
+
   const b = m.bawaan || {};
   const pb = palet.find(p => p.kode === b.palet), hb = huruf.find(h => h.kode === b.huruf);
   if (!pb) s(`palet bawaan "${b.palet}" tidak ada`);

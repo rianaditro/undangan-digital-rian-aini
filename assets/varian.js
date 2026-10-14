@@ -918,6 +918,48 @@
 
   var TEMA_AKTIF = { kode: '', palet: '', huruf: '', setelan: {}, manifest: null };
 
+  /* ---------- JS khusus tema (tema.json → "tata": "tata.js") ----------
+     Untuk perilaku yang tidak bisa dicapai CSS (Dokumenter: polaroid
+     miring, cap tanggal, strip film yang bisa diseret). Kontraknya:
+       · berkasnya mendaftar sendiri: MENGUNDANG.tema.daftarTata(kode, {
+           pasang: function (akar, konteks) { … } })
+       · halaman memanggil jalankanTata() setiap kali selesai menggambar;
+         pasang() harus aman dipanggil berulang
+       · halaman HARUS tetap utuh tanpa berkas ini — ia dimuat tanpa
+         ditunggu, dan galatnya ditelan di sini supaya tidak merusak
+         undangan */
+  var TATA = {}, tataAkar = null;
+
+  function jalankanTata(akar) {
+    if (akar) tataAkar = akar;
+    var t = TATA[TEMA_AKTIF.kode];
+    if (!t || !t.pasang || !tataAkar) return;
+    var dikurangi = false;
+    try { dikurangi = global.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    try {
+      t.pasang(tataAkar, { setelan: TEMA_AKTIF.setelan, konf: KONF, gerakDikurangi: dikurangi });
+    } catch (e) {
+      if (global.console) console.warn('tata tema ' + TEMA_AKTIF.kode + ':', e);
+    }
+  }
+
+  function daftarTata(kode, isi) {
+    if (!KODE_TEMA.test(kode || '')) return;
+    TATA[kode] = isi;
+    if (TEMA_AKTIF.kode === kode) jalankanTata();
+  }
+
+  function muatTata(m, kode) {
+    var doc = global.document;
+    if (!doc || !m || !/^[a-z0-9-]+\.js$/.test(m.tata || '')) return;
+    if (doc.querySelector('script[data-tata="' + kode + '"]')) return;
+    var sc = doc.createElement('script');
+    sc.src = '/tema/' + kode + '/' + m.tata;
+    sc.async = true;
+    sc.setAttribute('data-tata', kode);
+    doc.head.appendChild(sc);
+  }
+
   /* Memasang tema lengkap: berkas, palet, gaya teks. Selesai = boleh
      membuka sampul. Apa pun yang gagal di sini jatuh ke bawaan; tidak
      ada jalur yang meninggalkan halaman tanpa tampilan. */
@@ -955,6 +997,7 @@
       if (!m) return;
       var p = pilihanTema(m, setel);
       TEMA_AKTIF.setelan = p.setelan;
+      muatTata(m, nama);
       /* Setelan juga jadi atribut <html data-…> supaya CSS tema bisa
          membacanya (Monokrom: foto hitam putih atau berwarna). */
       if (root) Object.keys(p.setelan).forEach(function (k) {
@@ -1214,6 +1257,8 @@
       tokenHuruf: tokenHuruf,
       pilihan: pilihanTema,
       pasangOrnamen: pasangOrnamen,
+      daftarTata: daftarTata,
+      jalankanTata: jalankanTata,
       manifest: muatManifest
     },
     slugPasangan: slugPasangan,

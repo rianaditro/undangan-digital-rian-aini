@@ -240,6 +240,9 @@ di batas 3:1, jadi aksennya hanya untuk ornamen, tidak untuk teks.
 
 ### 3.6 Dokumenter — film, scrapbook · *Dari foto: ya*
 
+> **Terpasang (14 Okt)**, palet dan gaya teks seperti tabel di bawah (tiap
+> palet juga menulis warna kertas); cap tanggal ditambahkan `tata.js`.
+
 | Palet | Latar | Teks | Aksen | Kontras |
 |---|---|---|---|---|
 | Film Hangat (bawaan) | `#F3EBDD` | `#2B2622` | `#C4561F` | 12.6 / 3.8 |

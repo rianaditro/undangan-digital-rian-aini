@@ -1,5 +1,107 @@
 [
   {
+    "kode": "dokumenter",
+    "nama": "Dokumenter",
+    "kategori": "katalog",
+    "konsep": "dokumenter",
+    "untuk": "Prewed santai dan spontan — kafe, jalan kota, rumah, ber-flash, nuansa film — gaya scrapbook",
+    "foto_min": 5,
+    "palet_foto": true,
+    "palet": [
+      {
+        "kode": "film-hangat",
+        "nama": "Film Hangat",
+        "latar": "#F3EBDD",
+        "teks": "#2B2622",
+        "aksen": "#C4561F",
+        "latar_2": "#EADFCC",
+        "kertas": "#FBF7F0",
+        "kertas_2": "#EADFCC",
+        "kertas_teks": "#2B2622",
+        "kertas_aksen": "#A9481A",
+        "ornamen": "#C4561F"
+      },
+      {
+        "kode": "fuji-hijau",
+        "nama": "Fuji Hijau",
+        "latar": "#EEF0EA",
+        "teks": "#23282A",
+        "aksen": "#3F7D6E",
+        "latar_2": "#E2E6DE",
+        "kertas": "#F8F9F6",
+        "kertas_2": "#E2E6DE",
+        "kertas_teks": "#23282A",
+        "kertas_aksen": "#366C5F",
+        "ornamen": "#3F7D6E"
+      },
+      {
+        "kode": "malam-flash",
+        "nama": "Malam Flash",
+        "latar": "#151515",
+        "teks": "#F2EFE9",
+        "aksen": "#E8C547",
+        "latar_2": "#1F1F1F",
+        "kertas": "#1F1F1F",
+        "kertas_2": "#2A2A2A",
+        "kertas_teks": "#F2EFE9",
+        "kertas_aksen": "#E8C547",
+        "ornamen": "#E8C547"
+      },
+      {
+        "kode": "pastel-kafe",
+        "nama": "Pastel Kafe",
+        "latar": "#F8EFEA",
+        "teks": "#33302E",
+        "aksen": "#B4606C",
+        "latar_2": "#F0E2DA",
+        "kertas": "#FDF8F5",
+        "kertas_2": "#F0E2DA",
+        "kertas_teks": "#33302E",
+        "kertas_aksen": "#9A4F5B",
+        "ornamen": "#B4606C"
+      }
+    ],
+    "huruf": [
+      {
+        "kode": "catatan",
+        "nama": "Catatan",
+        "judul": "'Karla', 'Helvetica Neue', Arial, sans-serif",
+        "naskah": "'Caveat', 'Comic Sans MS', cursive",
+        "isi": "'Karla', 'Helvetica Neue', Arial, sans-serif",
+        "google": "family=Caveat:wght@500;700&family=Karla:wght@300;400;500;700&family=Amiri"
+      },
+      {
+        "kode": "ketik",
+        "nama": "Ketik",
+        "judul": "'Courier Prime', 'Courier New', monospace",
+        "naskah": "'Courier Prime', 'Courier New', monospace",
+        "isi": "'Work Sans', 'Helvetica Neue', Arial, sans-serif",
+        "kapital": true,
+        "jarak": ".04em",
+        "google": "family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Work+Sans:wght@300;400;500;600"
+      },
+      {
+        "kode": "poster",
+        "nama": "Poster",
+        "judul": "'Space Grotesk', 'Helvetica Neue', Arial, sans-serif",
+        "naskah": "'Space Grotesk', 'Helvetica Neue', Arial, sans-serif",
+        "isi": "'Space Grotesk', 'Helvetica Neue', Arial, sans-serif",
+        "kapital": true,
+        "jarak": "-.01em",
+        "google": "family=Space+Grotesk:wght@400;500;700"
+      }
+    ],
+    "tata": "tata.js",
+    "ornamen": {
+      "ukir-pemisah": "ornamen.svg#pemisah",
+      "ukir-sudut": "ornamen.svg#sudut"
+    },
+    "bawaan": {
+      "palet": "film-hangat",
+      "huruf": "catatan"
+    }
+  },
+  {
     "kode": "dua-bingkai",
     "nama": "Dua Bingkai",
     "kategori": "katalog",

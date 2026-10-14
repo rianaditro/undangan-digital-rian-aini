@@ -351,6 +351,34 @@ lengkung, galeri berbingkai tipis. Nama mempelai memakai `--naskah`
 
 ---
 
+## 3h. Tahap G — Dokumenter, selesai (14 Oktober 2026)
+
+`tema/dokumenter/`: prewed santai, gaya scrapbook. Semua foto jadi
+polaroid berselotip, galeri jadi **strip film** satu baris yang digeser
+menyamping, ucapan tamu jadi catatan tempel warna-warni, tombol dan judul
+bergaya spidol dan stabilo. 4 palet (Film Hangat, Fuji Hijau, Malam
+Flash, Pastel Kafe) + "Dari foto", 3 gaya teks (Catatan, Ketik, Poster).
+Tanpa migrasi.
+
+**JS khusus tema yang pertama** — kontraknya di `assets/varian.js`:
+
+- manifest `"tata": "tata.js"`; berkasnya mendaftar sendiri lewat
+  `MENGUNDANG.tema.daftarTata(kode, { pasang(akar, konteks) })`
+- halaman memanggil `jalankanTata()` setiap kali selesai menggambar
+  (undangan dan halaman terima kasih); `pasang()` wajib aman dipanggil
+  berulang
+- berkasnya dimuat tanpa ditunggu dan galatnya ditelan: **halaman harus
+  utuh tanpa berkas itu**. `uji-tema` memblokir `tata.js` dan memastikan
+  galeri tetap tampil, tanpa galat, tanpa melebar
+- `periksa-palet.mjs` memastikan berkasnya ada dan mendaftar dengan kode
+  temanya sendiri
+
+Dokumenter memakainya untuk: kemiringan polaroid yang acak tapi tetap,
+cap tanggal oranye ala kamera saku ("15 9 '26") di tiap foto, dan seret
+strip film dengan tetikus.
+
+---
+
 ## Langkah manual — dikumpulkan sampai siap terbit
 
 Semua yang tidak bisa dikerjakan dari repo, untuk seluruh tahap yang
@@ -373,7 +401,7 @@ digabung.
    harus sama seperti sebelumnya, kecuali kotak hitung mundur yang kini
    hilang (acaranya sudah lewat).
 
-Tahap A sampai F tidak butuh langkah manual lain selain migrasi 036 dan 037 (tidak ada edge function,
+Tahap A sampai G tidak butuh langkah manual lain selain migrasi 036 dan 037 (tidak ada edge function,
 rahasia, atau DNS yang berubah).
 
 ---

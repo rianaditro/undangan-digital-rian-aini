@@ -24,6 +24,7 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 │   ├── monokrom/         ← gaya majalah hitam putih
 │   ├── senja-alam/       ← prewed luar ruangan, palet bisa diambil dari foto sampul
 │   ├── studio-anggun/    ← prewed studio, foto dibingkai, kesan resmi
+│   ├── dokumenter/       ← scrapbook: polaroid, strip film; tata.js = JS khusus tema
 │   ├── daftar.json       ← dibangun bangun-daftar.mjs, dibaca dasbor
 │   ├── bangun-daftar.mjs
 │   ├── periksa-palet.mjs ← penjaga: palet terbaca, manifest sah

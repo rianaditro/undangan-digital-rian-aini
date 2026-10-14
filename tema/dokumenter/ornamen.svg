@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Ornamen tema Dokumenter: coretan spidol dan selotip, bukan hiasan
+       yang rapi. -->
+  <g id="pemisah">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke" d="M20 22 C40 14 52 28 72 20 S104 12 120 20 S152 30 172 20 S206 12 220 22"/>
+    <path style="fill:var(--ukir-isi)" d="M120 10 l2.4 5 l5.4 .6 l-4 3.7 l1.1 5.4 l-4.9 -2.7 l-4.9 2.7 l1.1 -5.4 l-4 -3.7 l5.4 -.6z"/>
+  </g>
+  <g id="sudut">
+    <path style="fill:var(--ukir-isi);opacity:.35" d="M6 30 L30 6 L58 34 L34 58 Z"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke;opacity:.6" d="M12 30 L30 12 M20 38 L38 20 M28 46 L46 28"/>
+  </g>
+</svg>

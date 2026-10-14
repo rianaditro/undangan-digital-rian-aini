@@ -803,6 +803,8 @@
     document.querySelectorAll('.reveal:not(.in), .draw:not(.in)').forEach(function(el){
       io.observe(el);
     });
+    /* JS khusus tema (bila ada) menata ulang yang baru digambar */
+    M.tema.jalankanTata(document);
   }
 
   /* ---------- Tampilkan sampul begitu variannya pasti ---------- */

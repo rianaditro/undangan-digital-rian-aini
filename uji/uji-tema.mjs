@@ -211,11 +211,14 @@ for (const tema of DAFTAR) {
   const h = await r.page.evaluate(() => {
     const el = [...document.querySelectorAll('#galeriIsi .galeri-item')];
     const lebar = document.getElementById('galeriIsi').getBoundingClientRect().width;
+    const g = document.getElementById('galeriIsi');
     return { sendiri: el.map((e, i) => e.classList.contains('sendiri') ? i : -1).filter(i => i >= 0),
-             penuh: el.filter(e => e.getBoundingClientRect().width > lebar * 0.9).length };
+             penuh: el.filter(e => e.getBoundingClientRect().width > lebar * 0.9).length,
+             strip: getComputedStyle(g).overflowX === 'auto' && el.every(e => Math.abs(e.getBoundingClientRect().top - el[0].getBoundingClientRect().top) < 30) };
   });
-  cek(`${tema.kode}: galeri tegak ganjil — yang tak berpasangan dilebarkan (tanpa petak kosong)`,
-    JSON.stringify(h.sendiri) === '[0,4]' && h.penuh === 3, JSON.stringify(h));
+  /* tema bergaleri strip (Dokumenter) tidak punya petak sama sekali: satu baris yang digeser */
+  cek(`${tema.kode}: galeri tegak ganjil — ${h.strip ? 'strip satu baris' : 'yang tak berpasangan dilebarkan (tanpa petak kosong)'}`,
+    JSON.stringify(h.sendiri) === '[0,4]' && (h.strip || h.penuh === 3), JSON.stringify(h));
   await r.ctx.close();
 }
 
@@ -536,6 +539,48 @@ if (DAFTAR.some(t => t.kode === 'senja-alam')) {
   h = await r.page.evaluate(() => document.documentElement.dataset.palet);
   cek('senja-alam "foto" tanpa warna tersimpan: jatuh ke bawaan', h === 'senja-pantai', h);
   await r.ctx.close();
+}
+
+/* ---------- Dokumenter: JS tema (tata.js) ---------- */
+if (DAFTAR.some(t => t.kode === 'dokumenter')) {
+  const baca = page => page.evaluate(() => ({
+    tata: !!document.querySelector('script[data-tata="dokumenter"]'),
+    cap: [...document.querySelectorAll('#galeriIsi .cap-tanggal')].map(e => e.textContent),
+    miring: [...document.querySelectorAll('#galeriIsi .galeri-item')].map(e => e.style.getPropertyValue('--miring')),
+    strip: getComputedStyle(document.getElementById('galeriIsi')).overflowX
+  }));
+  let r = await buka(isiDengan(BANYAK, { tema: 'dokumenter' }));
+  await bukaUndangan(r.page);
+  await r.page.waitForFunction(() => document.querySelector('#galeriIsi .cap-tanggal'), null, { timeout: 4000 }).catch(() => {});
+  let h = await baca(r.page);
+  cek('dokumenter: tata.js dimuat — cap tanggal "15 9 \'26" di tiap foto galeri, polaroid miring tetap',
+    h.tata && h.cap.length === 6 && h.cap.every(c => c === "15 9 '26") && h.miring.every(m => /deg$/.test(m)) && h.strip === 'auto', JSON.stringify(h));
+  const m1 = h.miring.join();
+  await r.page.evaluate(() => window.MENGUNDANG.tema.jalankanTata(document));
+  h = await baca(r.page);
+  cek('dokumenter: tata.js aman dipanggil berulang (cap tidak dobel, miring tidak berubah)', h.cap.length === 6 && h.miring.join() === m1, JSON.stringify(h));
+  await r.page.locator('#galeri').screenshot({ path: 'tema-dokumenter-galeri.png' });
+  await r.page.locator('#mempelai').screenshot({ path: 'tema-dokumenter-mempelai.png' });
+  await r.ctx.close();
+
+  /* tanpa tata.js: halaman tetap utuh */
+  const ctx = await browser.newContext({ viewport: { width: 360, height: 900 } });
+  const pg = await ctx.newPage();
+  const galat = []; pg.on('pageerror', e => galat.push(e.message));
+  await pg.route('**/tema/dokumenter/tata.js', x => x.fulfill({ status: 404, body: '' }));
+  await pg.route('**/fonts.googleapis.com/**', x => x.fulfill({ status: 200, contentType: 'text/css', body: '' }));
+  await pg.route('**/media/**', x => x.fulfill({ status: 404, body: '' }));
+  await pg.route('**/*.supabase.co/**', x => x.request().method() === 'OPTIONS' ? x.fulfill({ status: 204, body: '' })
+    : x.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' },
+        body: JSON.stringify(new URL(x.request().url()).pathname.endsWith('/undangan_isi') ? isiDengan(BANYAK, { tema: 'dokumenter' }) : []) }));
+  await pg.goto(ASAL + '/');
+  await pg.waitForSelector('.cover-frame.siap', { timeout: 8000 });
+  await pg.click('#btnOpen'); await pg.waitForTimeout(600);
+  const t = await pg.evaluate(() => ({ item: document.querySelectorAll('#galeriIsi .galeri-item').length,
+    cap: document.querySelectorAll('.cap-tanggal').length, lebih: document.documentElement.scrollWidth - document.documentElement.clientWidth }));
+  cek('dokumenter tanpa tata.js (gagal dimuat): galeri tetap tampil, tanpa galat, tidak melebar',
+    t.item === 6 && t.cap === 0 && t.lebih <= 0 && !galat.length, JSON.stringify(t) + galat.join(';'));
+  await ctx.close();
 }
 
 /* ---------- Adat Nusantara: ornamen mengikuti daerah ---------- */
