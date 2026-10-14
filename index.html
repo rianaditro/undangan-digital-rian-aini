@@ -49,8 +49,8 @@
     <svg class="ukir corner c-bl" viewBox="0 0 120 120"><use href="#ukir-sudut"/></svg>
     <svg class="ukir corner c-br" viewBox="0 0 120 120"><use href="#ukir-sudut"/></svg>
 
-    <p class="cover-basmalah">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
-    <p class="eyebrow cover-label">Walimatul 'Ursy</p>
+    <p class="cover-basmalah" data-pembuka="basmalah">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</p>
+    <p class="eyebrow cover-label" data-pembuka="label">Walimatul 'Ursy</p>
     <!-- Kerangka netral. Nama, tanggal, mempelai, acara, alamat, dan
          dompet tidak ditulis di sini untuk pasangan mana pun: halaman ini
          melayani semua pasangan, dan isi statis akan tampil di undangan
@@ -94,10 +94,10 @@
        Yang digeser wadahnya, bukan tiap paragraf, supaya cuma ada satu
        lapisan yang dipindahkan. -->
   <div class="wrap" data-parallax data-runtun>
-    <p class="arabic hero-arabic reveal">وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا</p>
-    <p class="hero-salam reveal">Assalamu'alaikum Warahmatullahi Wabarakatuh</p>
-    <p class="hero-verse reveal">Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu pasangan hidup dari jenismu sendiri, supaya kamu merasa tenteram di sisinya, dan dijadikan-Nya di antaramu rasa kasih dan sayang.</p>
-    <p class="hero-source reveal">QS. Ar-Rum : 21</p>
+    <p class="arabic hero-arabic reveal" data-pembuka="ayat">وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا</p>
+    <p class="hero-salam reveal" data-pembuka="salam">Assalamu'alaikum Warahmatullahi Wabarakatuh</p>
+    <p class="hero-verse reveal" data-pembuka="kutipan">Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu pasangan hidup dari jenismu sendiri, supaya kamu merasa tenteram di sisinya, dan dijadikan-Nya di antaramu rasa kasih dan sayang.</p>
+    <p class="hero-source reveal" data-pembuka="sumber">QS. Ar-Rum : 21</p>
     <div class="gap"></div>
     <svg class="ukir divider draw reveal" viewBox="0 0 240 40"><use href="#ukir-pemisah"/></svg>
   </div>
@@ -106,9 +106,9 @@
 <!-- ====== MEMPELAI ====== -->
 <section class="on-paper center" id="mempelai">
   <div class="wrap">
-    <p class="eyebrow reveal">Bismillahirrahmanirrahim</p>
+    <p class="eyebrow reveal" data-pembuka="alis">Bismillahirrahmanirrahim</p>
     <h2 class="title reveal">Kami yang berbahagia</h2>
-    <p class="lead reveal">Dengan memohon rahmat dan ridha Allah Subhanahu wa Ta'ala, kami bermaksud menyelenggarakan pernikahan putra-putri kami.</p>
+    <p class="lead reveal" data-pembuka="pengantar">Dengan memohon rahmat dan ridha Allah Subhanahu wa Ta'ala, kami bermaksud menyelenggarakan pernikahan putra-putri kami.</p>
 
     <!-- Urutan kartu mengikuti pihak tamu; diisi terapkanVarian(). -->
     <div class="pair" id="pasangan" data-runtun></div>
@@ -152,7 +152,7 @@
   <div class="wrap">
     <p class="eyebrow reveal">Menghitung Hari</p>
     <h2 class="title reveal" id="hitungJudul">&nbsp;</h2>
-    <p class="lead reveal">Semoga Allah memudahkan langkah kami sampai pada hari itu.</p>
+    <p class="lead reveal" data-pembuka="doaHitung">Semoga Allah memudahkan langkah kami sampai pada hari itu.</p>
 
     <div class="count-grid reveal" id="countGrid" data-runtun>
       <div class="count-box"><div class="count-num" id="cd-d">—</div><div class="count-lbl">Hari</div></div>
@@ -160,7 +160,7 @@
       <div class="count-box"><div class="count-num" id="cd-m">—</div><div class="count-lbl">Menit</div></div>
       <div class="count-box"><div class="count-num" id="cd-s">—</div><div class="count-lbl">Detik</div></div>
     </div>
-    <p class="count-done" id="countDone" hidden>Alhamdulillah, hari bahagia telah tiba.</p>
+    <p class="count-done" id="countDone" hidden><span data-pembuka="selesai">Alhamdulillah, hari bahagia telah tiba.</span></p>
   </div>
 </section>
 
@@ -216,14 +216,14 @@
       <div class="field">
         <label for="inHadir">Konfirmasi kehadiran</label>
         <select id="inHadir">
-          <option value="Hadir">Insya Allah hadir</option>
+          <option value="Hadir" data-pembuka="hadir">Insya Allah hadir</option>
           <option value="Belum pasti">Masih belum pasti</option>
           <option value="Tidak hadir">Berhalangan hadir</option>
         </select>
       </div>
       <div class="field">
         <label for="inPesan">Ucapan</label>
-        <textarea id="inPesan" maxlength="500" placeholder="Barakallahu lakuma wa baraka 'alaikuma..."></textarea>
+        <textarea id="inPesan" maxlength="500" data-pembuka-placeholder="contohUcapan" placeholder="Barakallahu lakuma wa baraka 'alaikuma..."></textarea>
       </div>
       <button class="btn" id="btnKirim" style="margin-top:18px">Kirim Ucapan</button>
       <p class="form-note">Ucapan yang terkirim dapat dibaca oleh semua tamu undangan.</p>
@@ -243,7 +243,7 @@
   <div class="wrap center">
     <p class="close-text reveal">Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu kepada kedua mempelai.</p>
     <p class="close-text reveal" style="margin-top:16px">Atas kehadiran dan doa restunya, kami ucapkan terima kasih.</p>
-    <p class="hero-salam reveal" style="margin-top:26px">Wassalamu'alaikum Warahmatullahi Wabarakatuh</p>
+    <p class="hero-salam reveal" style="margin-top:26px" data-pembuka="salamTutup">Wassalamu'alaikum Warahmatullahi Wabarakatuh</p>
 
     <p class="eyebrow reveal" id="ttdLabel">Kami yang berbahagia</p>
     <h2 class="close-names reveal" id="ttdNama">&nbsp;</h2>
@@ -865,6 +865,9 @@
     : Promise.resolve(null);
 
   M.muat().then(function(){
+    /* Teks pembuka menurut agama pasangan (037). Sebelum sampul dibuka,
+       jadi tidak ada basmalah yang sempat tampil di undangan lain. */
+    M.pasangPembuka(M.KONF.pembuka);
     pihakTamu = M.pihakSah(pihakMentah);
     terapkanVarian(pihakTamu);
     Motion.pasang();

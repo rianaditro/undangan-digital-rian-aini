@@ -1120,9 +1120,15 @@ const browser = await chromium.launch();
   await page.click('#pilihPalet [data-palet="sogan"]');
   await page.waitForFunction(() => document.querySelector('#pilihPalet [data-palet="sogan"]').getAttribute('aria-checked') === 'true');
 
+  /* teks pembuka (037) tersimpan lewat Simpan Semua */
+  const opsiPembuka = await page.evaluate(() => [...document.querySelectorAll('#inPembuka option')].map(o => o.value).join(','));
+  cek('tema-6c pilihan teks pembuka: enam, bawaan islam',
+      opsiPembuka === 'islam,kristen,katolik,hindu,buddha,umum' && await page.inputValue('#inPembuka') === 'islam', opsiPembuka);
   /* Simpan Semua tidak boleh menimpa pilihan tadi dengan nilai lama. */
   await page.click('#btnSimpan');
   await page.waitForSelector('.toast.on', { timeout: 6000 });
+  const pp = model.patch.filter(x => x.tabel === 'pasangan' && 'pembuka' in x.badan).at(-1);
+  cek('tema-7b Simpan Semua mengirim pembuka', pp && pp.badan.pembuka === 'islam', JSON.stringify(pp && pp.badan));
   cek('tema-8 Simpan Semua tidak menimpa tema_setel', model.pasangan[0].tema === 'ukir-jepara' &&
       JSON.stringify(model.pasangan[0].tema_setel) === '{"palet":"sogan","huruf":"prasasti","daerah":"jawa"}', JSON.stringify(model.pasangan[0]));
 

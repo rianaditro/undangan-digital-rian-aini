@@ -109,7 +109,7 @@ foto.peran  text  null | 'sampul' | 'mempelai_pria' | 'mempelai_wanita' | 'galer
   Divalidasi di halaman terhadap `tema.json`, bukan di database (supaya
   tema baru tidak butuh migrasi).
 
-**037 — kisah** (baru dikerjakan saat tema Kisah)
+**038 — kisah** (baru dikerjakan saat tema Kisah)
 
 ```
 kisah (id, pasangan_id, urutan, tahun, judul, teks ≤140, foto_id → foto on delete set null)
@@ -164,7 +164,7 @@ Tanpa server, tanpa pustaka.
 | **E. Adat Nusantara** | `ukir-jepara` jadi varian Jawa; tambah Sunda, Bugis, Bali sebagai paket ornamen + palet lewat `tema_setel.daerah` | menata ulang yang sudah ada sebelum menambah; aset ornamen paling banyak |
 | **F. Studio Anggun** | tema | tidak ada fitur baru; tema "aman" untuk katalog |
 | **G. Dokumenter** | tema + `tata.js` pertama (strip film, polaroid) | menguji kontrak JS tema |
-| **H. Kisah** | migrasi 037, editor bab di dasbor, tema | satu-satunya yang butuh tabel dan editor baru; paling banyak kerja dasbor |
+| **H. Kisah** | migrasi 038, editor bab di dasbor, tema | satu-satunya yang butuh tabel dan editor baru; paling banyak kerja dasbor |
 
 Setiap tema masuk bersama `kenangan.css`-nya: halaman terima kasih selalu
 mengikuti template undangannya.
@@ -336,12 +336,16 @@ Semua yang tidak bisa dikerjakan dari repo, untuk seluruh tahap yang
 belum terbit. Dikerjakan sekali, berurutan, waktu cabang ini akan
 digabung.
 
-1. **Migrasi 036** — tempel `supabase/migrations/036_tema_foto_setel.sql`
-   di SQL editor Supabase. Aman untuk `main` yang sedang tayang:
-   `db/kompat.mjs` memastikan kode `main` masih sah terhadap skema 036,
-   dan kunci baru `undangan_isi` diabaikan halaman lama.
+1. **Migrasi 036, lalu 037** — tempel
+   `supabase/migrations/036_tema_foto_setel.sql`, kemudian
+   `037_pembuka.sql`, di SQL editor Supabase, berurutan. Aman untuk `main`
+   yang sedang tayang: `db/kompat.mjs` memastikan kode `main` masih sah
+   terhadap skema 037, dan kunci baru `undangan_isi` diabaikan halaman
+   lama. 037 berbawaan `pembuka = 'islam'`, jadi pasangan yang sudah ada
+   tidak berubah.
 2. **Gabungkan cabang ini ke `main`** — sesudah langkah 1, bukan sebelum:
-   dasbor baru menulis `foto.peran` dan `pasangan.tema_setel`.
+   dasbor baru menulis `foto.peran`, `pasangan.tema_setel`, dan
+   `pasangan.pembuka`.
 3. **Cocokkan produksi dengan repo** — `PGURL=… uji/db/banding.sh >
    /tmp/banding.sql`, jalankan isinya di SQL editor; hasil kosong = sama.
 4. **Periksa sekali di HP** — buka undangan Rian & 'Aini: tampilannya
@@ -360,13 +364,14 @@ rahasia, atau DNS yang berubah).
    terbuka untuk semua pasangan. Premium adalah penambahan **fitur**, bukan
    template: template yang dikunci tidak terlihat pengguna, dan belum
    tentu sepadan dengan harganya. `paket_min` dihapus dari manifest.
-3. **Teks pembuka untuk pasangan non-muslim.** Basmalah, "Walimatul
-   'Ursy", ayat Ar-Rum 21, dan salam tertulis tetap di `index.html` untuk
-   semua tema. Adat Bali (dan pasangan Kristen/Katolik di tema mana pun)
-   membutuhkan pembuka lain — misalnya "Om Swastiastu" dan kutipan yang
-   sesuai. Usul: kolom `pasangan.pembuka` (islam / kristen / hindu /
-   umum) yang menukar blok teks itu; butuh migrasi kecil. Perlu
-   diputuskan sebelum Adat Bali ditawarkan ke pasangan Hindu.
+3. ~~Teks pembuka untuk pasangan non-muslim?~~ **Ya** (14 Okt) — migrasi
+   037, `pasangan.pembuka`: Islam (bawaan), Kristen, Katolik, Hindu,
+   Buddha, Umum (tanpa teks keagamaan). Teksnya di `assets/varian.js` →
+   `MENGUNDANG.PEMBUKA`: salam, ayat/kutipan kitab, doa, label sampul,
+   pilihan "hadir", contoh ucapan, salam penutup, dan salam di pesan
+   WhatsApp dari `/kirim`. Kutipan kitab memakai terjemahan yang lazim
+   di undangan — **sebaiknya dibaca ulang oleh orang dari tiap umat
+   sebelum ditawarkan luas.**
 4. **Aset ilustrasi** (siluet, ornamen daerah, tekstur): digambar sendiri
    sebagai SVG garis (murah, ringan, konsisten) atau beli aset? Usul: SVG
    garis buatan sendiri; ornamen adat perlu dicek orang yang paham

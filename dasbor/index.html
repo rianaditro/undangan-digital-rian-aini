@@ -346,10 +346,12 @@
 
   <div class="panel">
     <h2>Acara &amp; tampilan</h2>
-    <div class="duo">
+    <div class="trio">
       <div><label for="inTanggal">Tanggal acara</label><input id="inTanggal" type="date"></div>
       <div><label for="inKota">Kota</label><input id="inKota" type="text" maxlength="60" placeholder="Jepara"></div>
+      <div><label for="inPembuka">Teks pembuka</label><select id="inPembuka"></select></div>
     </div>
+    <p class="hint" style="margin-top:6px" id="hintPembuka"></p>
     <label for="inPihakBawaan">Varian bawaan</label>
     <select id="inPihakBawaan"></select>
     <p class="hint" style="margin-top:6px">Dipakai kalau link tamu tidak menyebut pihaknya.</p>
@@ -693,12 +695,25 @@
     }).join('');
 
     $('inTanggal').value = pasangan.tanggal_acara || '';
+    /* Pembuka menurut agama (037): salam, ayat/kutipan, doa, dan salam di
+       pesan WhatsApp. Teksnya dari M.PEMBUKA, sama dengan halaman. */
+    $('inPembuka').innerHTML = Object.keys(M.PEMBUKA).map(function(k){
+      return '<option value="'+esc(k)+'"'+((pasangan.pembuka || 'islam') === k ? ' selected' : '')+'>'+esc(M.PEMBUKA[k].nama)+'</option>';
+    }).join('');
+    hintPembuka();
     $('inKota').value    = pasangan.kota || '';
     Tema.gambar();
     $('inPihakBawaan').innerHTML = data.pihak.map(function(ph){
       return '<option value="'+esc(ph.kode)+'"'+(pasangan.pihak_bawaan===ph.kode?' selected':'')+'>'+esc(ph.label)+'</option>';
     }).join('');
   }
+
+  function hintPembuka(){
+    var t = M.teksPembuka($('inPembuka').value);
+    $('hintPembuka').textContent = 'Contoh: ' + [t.salam, t.sumber, t.salamTutup].filter(Boolean).join(' · ')
+      + (t.salam ? '' : 'tanpa salam, ayat, atau doa keagamaan.');
+  }
+  $('inPembuka').addEventListener('change', function(){ hintPembuka(); });
 
   function kabarStatus(){
     var l = $('lencanaStatus');
@@ -739,6 +754,7 @@
     });
     pasangan.tanggal_acara = $('inTanggal').value || null;
     pasangan.kota          = $('inKota').value.trim() || null;
+    pasangan.pembuka       = $('inPembuka').value || 'islam';
     pasangan.pihak_bawaan  = $('inPihakBawaan').value;
   }
 
@@ -755,7 +771,7 @@
     try{
       await api('pasangan?id=eq.'+pasangan.id, {
         method:'PATCH', prefer:'return=minimal',
-        body: JSON.stringify(bersih(pasangan, ['tanggal_acara','kota','tema','pihak_bawaan']))
+        body: JSON.stringify(bersih(pasangan, ['tanggal_acara','kota','tema','pihak_bawaan','pembuka']))
       });
 
       var tugas = [];
@@ -1065,11 +1081,12 @@
       var t = Object.assign({}, p.palet ? M.tema.tokenPalet(p.palet) : {}, p.huruf ? M.tema.tokenHuruf(p.huruf) : {});
       el.removeAttribute('style');
       Object.keys(t).forEach(function(k){ el.style.setProperty(k, t[k]); });
-      el.innerHTML = '<div class="atas"><p class="alis">Walimatul &#39;Ursy</p>'
+      var tp = M.teksPembuka(pasangan.pembuka);
+      el.innerHTML = '<div class="atas"><p class="alis">'+esc(tp.label)+'</p>'
         + '<p class="nama">'+esc(nama('pria'))+'<em>&amp;</em>'+esc(nama('wanita'))+'</p>'
         + '<p class="tgl">'+esc(tanggalContoh(pasangan.tanggal_acara))+'</p></div>'
         + '<div class="bawah"><p class="alis">Kami yang berbahagia</p>'
-        + '<p>Dengan memohon rahmat dan ridha Allah</p></div>';
+        + '<p>'+esc(tp.salam || tp.alis)+'</p></div>';
 
       var hint = $('hintTema');
       if(pasangan.terbit){

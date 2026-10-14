@@ -30,6 +30,136 @@
 
   var BACKSOUND_URL = '/assets/backsound.mp3';
 
+  /* ---------- Teks pembuka menurut agama (migrasi 037) ----------
+     Milik platform, bukan milik pasangan: satu salinan, bisa diperbaiki
+     tanpa migrasi. Halaman menandai tiap teks dengan data-pembuka="kunci";
+     nilai null menyembunyikan elemennya (pembuka "umum" tidak punya ayat).
+     Teks Islam di index.html dan di sini SAMA PERSIS — pasangan lama
+     (bawaan 'islam') tidak berubah satu huruf pun.
+
+     Kutipan kitab memakai terjemahan yang lazim di undangan; sebaiknya
+     dibaca ulang oleh orang dari tiap umat sebelum ditawarkan luas. */
+  var PEMBUKA = {
+    islam: {
+      nama: 'Islam',
+      basmalah: 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ',
+      label: "Walimatul 'Ursy",
+      ayat: 'وَمِنْ اٰيٰتِهٖٓ اَنْ خَلَقَ لَكُمْ مِّنْ اَنْفُسِكُمْ اَزْوَاجًا',
+      salam: "Assalamu'alaikum Warahmatullahi Wabarakatuh",
+      kutipan: 'Dan di antara tanda-tanda kekuasaan-Nya ialah Dia menciptakan untukmu pasangan hidup dari jenismu sendiri, supaya kamu merasa tenteram di sisinya, dan dijadikan-Nya di antaramu rasa kasih dan sayang.',
+      sumber: 'QS. Ar-Rum : 21',
+      alis: 'Bismillahirrahmanirrahim',
+      pengantar: "Dengan memohon rahmat dan ridha Allah Subhanahu wa Ta'ala, kami bermaksud menyelenggarakan pernikahan putra-putri kami.",
+      doaHitung: 'Semoga Allah memudahkan langkah kami sampai pada hari itu.',
+      selesai: 'Alhamdulillah, hari bahagia telah tiba.',
+      hadir: 'Insya Allah hadir',
+      contohUcapan: "Barakallahu lakuma wa baraka 'alaikuma...",
+      salamTutup: "Wassalamu'alaikum Warahmatullahi Wabarakatuh"
+    },
+    kristen: {
+      nama: 'Kristen',
+      basmalah: null,
+      label: 'Pemberkatan Nikah',
+      ayat: null,
+      salam: 'Salam sejahtera dalam kasih Tuhan kita Yesus Kristus',
+      kutipan: 'Demikianlah mereka bukan lagi dua, melainkan satu. Karena itu, apa yang telah dipersatukan Allah, tidak boleh diceraikan manusia.',
+      sumber: 'Matius 19 : 6',
+      alis: 'Dengan sukacita',
+      pengantar: 'Dengan penuh sukacita dan atas berkat kasih Tuhan, kami bermaksud melangsungkan pernikahan putra-putri kami.',
+      doaHitung: 'Kiranya Tuhan memberkati langkah kami sampai pada hari itu.',
+      selesai: 'Puji Tuhan, hari bahagia telah tiba.',
+      hadir: 'Saya akan hadir',
+      contohUcapan: 'Tuhan Yesus memberkati pernikahan kalian...',
+      salamTutup: 'Tuhan memberkati'
+    },
+    katolik: {
+      nama: 'Katolik',
+      basmalah: null,
+      label: 'Sakramen Perkawinan',
+      ayat: null,
+      salam: 'Salam damai dalam Kristus',
+      kutipan: 'Kasih itu sabar; kasih itu murah hati; ia tidak cemburu. Ia tidak memegahkan diri dan tidak sombong.',
+      sumber: '1 Korintus 13 : 4',
+      alis: 'Dengan sukacita',
+      pengantar: 'Dengan penuh sukacita dan atas rahmat Tuhan, kami bermaksud menerimakan Sakramen Perkawinan putra-putri kami.',
+      doaHitung: 'Kiranya Tuhan menyertai langkah kami sampai pada hari itu.',
+      selesai: 'Syukur kepada Allah, hari bahagia telah tiba.',
+      hadir: 'Saya akan hadir',
+      contohUcapan: 'Selamat menerimakan Sakramen Perkawinan, Tuhan memberkati...',
+      salamTutup: 'Berkah Dalem'
+    },
+    hindu: {
+      nama: 'Hindu',
+      basmalah: null,
+      label: 'Pawiwahan',
+      ayat: null,
+      salam: 'Om Swastiastu',
+      kutipan: 'Wahai pasangan suami istri, semoga kalian tetap bersatu dan tidak pernah terpisahkan. Semoga kalian mencapai hidup penuh kebahagiaan, tinggal di rumah yang penuh kegembiraan bersama seluruh keturunanmu.',
+      sumber: 'Rgveda X.85.42',
+      alis: 'Om Swastiastu',
+      pengantar: 'Atas asung kertha wara nugraha Ida Sang Hyang Widhi Wasa, kami bermaksud menyelenggarakan upacara Manusa Yadnya Pawiwahan putra-putri kami.',
+      doaHitung: 'Semoga Ida Sang Hyang Widhi Wasa menuntun langkah kami sampai pada hari itu.',
+      selesai: 'Hari bahagia telah tiba.',
+      hadir: 'Saya akan hadir',
+      contohUcapan: 'Selamat menempuh hidup baru, semoga langgeng...',
+      salamTutup: 'Om Shanti Shanti Shanti Om'
+    },
+    buddha: {
+      nama: 'Buddha',
+      basmalah: null,
+      label: 'Upacara Pernikahan',
+      ayat: null,
+      salam: 'Namo Buddhaya',
+      kutipan: 'Bila suami dan istri ingin terus bersama dalam kehidupan ini dan kehidupan yang akan datang, hendaknya keduanya memiliki keyakinan, sila, kemurahan hati, dan kebijaksanaan yang sama.',
+      sumber: 'Anguttara Nikaya 4.55',
+      alis: 'Namo Buddhaya',
+      pengantar: 'Dengan penuh sukacita, kami bermaksud menyelenggarakan pernikahan putra-putri kami.',
+      doaHitung: 'Semoga semua makhluk berbahagia, juga di hari yang kami nantikan.',
+      selesai: 'Hari bahagia telah tiba.',
+      hadir: 'Saya akan hadir',
+      contohUcapan: 'Selamat menempuh hidup baru, semoga berbahagia...',
+      salamTutup: 'Sabbe satta bhavantu sukhitatta'
+    },
+    umum: {
+      nama: 'Umum (tanpa teks keagamaan)',
+      basmalah: null,
+      label: 'Undangan Pernikahan',
+      ayat: null,
+      salam: null,
+      kutipan: null,
+      sumber: null,
+      alis: 'Dengan sukacita',
+      pengantar: 'Dengan penuh sukacita, kami bermaksud menyelenggarakan pernikahan putra-putri kami.',
+      doaHitung: 'Menghitung hari menuju hari bahagia kami.',
+      selesai: 'Hari bahagia telah tiba.',
+      hadir: 'Saya akan hadir',
+      contohUcapan: 'Selamat menempuh hidup baru...',
+      salamTutup: null
+    }
+  };
+
+  function teksPembuka(kode) { return PEMBUKA[kode] || PEMBUKA.islam; }
+
+  /* Memasang teks pembuka ke elemen bertanda data-pembuka="kunci".
+     Nilai null menyembunyikan elemennya. Untuk <option> dan placeholder
+     dipakai data-pembuka-placeholder. */
+  function pasangPembuka(kode, akar) {
+    var t = teksPembuka(kode), doc = global.document;
+    if (!doc) return;
+    if (doc.documentElement) doc.documentElement.setAttribute('data-pembuka', PEMBUKA[kode] ? kode : 'islam');
+    (akar || doc).querySelectorAll('[data-pembuka]').forEach(function (el) {
+      var k = el.getAttribute('data-pembuka'), v = t[k];
+      if (!(k in t)) return;
+      if (v == null) { el.hidden = true; return; }
+      el.hidden = false;
+      el.textContent = v;
+    });
+    (akar || doc).querySelectorAll('[data-pembuka-placeholder]').forEach(function (el) {
+      var v = t[el.getAttribute('data-pembuka-placeholder')];
+      if (v) el.setAttribute('placeholder', v);
+    });
+  }
+
   /* Tema yang sudah tertaut di HTML. Halaman memuatnya sebagai <link>
      biasa supaya tidak ada kedipan; kalau database menyebut tema lain,
      yang tertaut ditukar lewat gantiTema() di bawah. */
@@ -60,6 +190,7 @@
     slug: '',
     tema: '',
     temaSetel: {},
+    pembuka: 'islam',
     status: '',
     canonicalHost: '',
     kota: '',
@@ -384,6 +515,7 @@
     KONF.demo          = false;
     KONF.slug          = d.slug || '';
     KONF.tema          = d.tema || '';
+    KONF.pembuka       = PEMBUKA[d.pembuka] ? d.pembuka : 'islam';
     KONF.temaSetel     = (d.tema_setel && typeof d.tema_setel === 'object') ? d.tema_setel : {};
 
     /* Halaman dari zaman sebelum 036 tidak mengirim `foto`; bentuknya
@@ -1032,7 +1164,10 @@
       }).join("\n\n");
     }
 
-    return "Assalamu'alaikum Warahmatullahi Wabarakatuh\n\n"
+    /* Salam pembuka dan penutup mengikuti agama pasangan (037); pembuka
+       "umum" tidak memakai salam sama sekali. */
+    var tp = teksPembuka(KONF.pembuka);
+    return (tp.salam ? tp.salam + "\n\n" : "")
       + "Yth. Bapak/Ibu/Saudara/i\n"
       + "*" + nama + "*\n\n"
       + "Tanpa mengurangi rasa hormat, kami bermaksud mengundang Anda untuk hadir pada acara pernikahan kami:\n\n"
@@ -1042,7 +1177,7 @@
       + "Detail lengkap, lokasi, dan konfirmasi kehadiran dapat dibuka di:\n"
       + linkTamu(slug, pihak) + "\n\n"
       + "Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu.\n\n"
-      + "Wassalamu'alaikum Warahmatullahi Wabarakatuh\n\n"
+      + (tp.salamTutup ? tp.salamTutup + "\n\n" : "")
       + v.ttdLabel + ",\n"
       + ur;
   }
@@ -1061,6 +1196,9 @@
     KONF: KONF,
 
     muat: muat,
+    PEMBUKA: PEMBUKA,
+    teksPembuka: teksPembuka,
+    pasangPembuka: pasangPembuka,
     TEMA_BAWAAN: TEMA_BAWAAN,
     pasangTema: pasangTema,
     tema: {

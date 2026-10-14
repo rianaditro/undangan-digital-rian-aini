@@ -216,6 +216,64 @@ for (const tema of DAFTAR) {
   await r.ctx.close();
 }
 
+/* ---------- teks pembuka menurut agama (037) ---------- */
+{
+  const baca = page => page.evaluate(() => {
+    const t = sel => { const e = document.querySelector(sel); return !e ? null : (e.hidden || !e.getClientRects().length ? '(sembunyi)' : e.textContent.trim()); };
+    return {
+      attr: document.documentElement.dataset.pembuka,
+      basmalah: t('.cover-basmalah'), label: t('.cover-label'), ayat: t('.hero-arabic'), salam: t('#mulai .hero-salam'),
+      sumber: t('.hero-source'), alis: t('#mempelai .eyebrow'), selesai: document.querySelector('#countDone span').textContent,
+      hadir: document.querySelector('#inHadir option[value="Hadir"]').textContent,
+      contoh: document.getElementById('inPesan').getAttribute('placeholder'),
+      tutup: t('#penutup .hero-salam'),
+      wa: window.MENGUNDANG.pesanWA('Bapak Budi', 'bapak-budi', null)
+    };
+  });
+  let r = await buka(isiDengan(KOSONG));
+  await bukaUndangan(r.page);
+  let h = await baca(r.page);
+  cek('pembuka bawaan (tanpa kunci, pasangan lama): teks Islam persis seperti sebelumnya',
+    h.attr === 'islam' && h.basmalah === 'بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ' && h.label === "Walimatul 'Ursy" &&
+    h.salam === "Assalamu'alaikum Warahmatullahi Wabarakatuh" && h.sumber === 'QS. Ar-Rum : 21' &&
+    h.selesai === 'Alhamdulillah, hari bahagia telah tiba.' && h.hadir === 'Insya Allah hadir' &&
+    h.wa.startsWith("Assalamu'alaikum Warahmatullahi Wabarakatuh\n\nYth.") && h.wa.includes("Wassalamu'alaikum"), JSON.stringify(h));
+  await r.ctx.close();
+
+  r = await buka(isiDengan(KOSONG, { pembuka: 'hindu' }));
+  await bukaUndangan(r.page);
+  h = await baca(r.page);
+  cek('pembuka Hindu: Om Swastiastu, Rgveda, tanpa basmalah dan ayat Arab, salam WA ikut',
+    h.attr === 'hindu' && h.basmalah === '(sembunyi)' && h.ayat === '(sembunyi)' && h.label === 'Pawiwahan' &&
+    h.salam === 'Om Swastiastu' && h.sumber === 'Rgveda X.85.42' && h.tutup === 'Om Shanti Shanti Shanti Om' &&
+    h.hadir === 'Saya akan hadir' && !/Allah|Assalam|Insya/.test(JSON.stringify(h)) &&
+    h.wa.startsWith('Om Swastiastu\n\nYth.'), JSON.stringify(h));
+  await r.page.screenshot({ path: 'pembuka-hindu-mulai.png' });
+  await r.ctx.close();
+
+  r = await buka(isiDengan(KOSONG, { pembuka: 'umum' }));
+  await bukaUndangan(r.page);
+  h = await baca(r.page);
+  cek('pembuka umum: tanpa salam, ayat, kutipan, dan salam penutup; WA tanpa salam',
+    h.salam === '(sembunyi)' && h.ayat === '(sembunyi)' && h.sumber === '(sembunyi)' && h.tutup === '(sembunyi)' &&
+    h.label === 'Undangan Pernikahan' && h.wa.startsWith('Yth.') && !/Allah|Assalam|Tuhan|Om /.test(h.wa), JSON.stringify(h));
+  await r.ctx.close();
+
+  for (const k of ['kristen', 'katolik', 'buddha']) {
+    r = await buka(isiDengan(KOSONG, { pembuka: k, tema: 'dua-bingkai' }));
+    await bukaUndangan(r.page);
+    h = await baca(r.page);
+    cek(`pembuka ${k}: teksnya sendiri, tanpa teks Islam`, h.attr === k && h.basmalah === '(sembunyi)' &&
+      !/Allah Subhanahu|Assalam|Insya|Barakallah|Ar-Rum/.test(JSON.stringify(h)), JSON.stringify(h));
+    await r.ctx.close();
+  }
+
+  r = await buka(isiDengan(KOSONG, { pembuka: 'agama-tak-dikenal' }));
+  h = await r.page.evaluate(() => document.documentElement.dataset.pembuka);
+  cek('pembuka tak dikenal jatuh ke islam (bawaan database)', h === 'islam', h);
+  await r.ctx.close();
+}
+
 /* ---------- pilihan tak dikenal jatuh ke bawaan ---------- */
 {
   const t = DAFTAR[0];
