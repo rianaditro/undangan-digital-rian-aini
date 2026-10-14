@@ -309,7 +309,7 @@ token, manifest, `kenangan.css`). Sesudahnya:
 |---|---|
 | **K1** ✅ | tema custom: validasi nama `custom/…`, kerangka `_contoh` (dengan `kenangan.css`), `tema/custom.json`, uji pakai ulang di `uji-tema.mjs`, kartu di dasbor |
 | **K2** ✅ | migrasi: paket `full_custom`, kolom `pasangan.khusus`, tabel `brief_custom` + `revisi_custom`; panel brief & revisi di dasbor; antrean dan katalog custom di `/pemilik` |
-| **K3** | skill `full-custom` + satu tema custom percontohan (misal untuk Rian & 'Aini) |
+| **K3** ✅ | skill `full-custom` + satu tema custom percontohan (misal untuk Rian & 'Aini) |
 | **K4** | kit v1 (dibakukan dari `varian.js`, termasuk `Kit.kenangan()`), `custom/peta.json` + rute di Worker, `uji-custom.mjs`, kerangka `custom/_contoh/` |
 
 K1–K3 sudah cukup untuk mulai menjual paket. K4 menyusul saat ada
@@ -402,3 +402,24 @@ Custom juga ada di formulir pasangan baru dan pilihan paket.
 
 Yang belum: lampiran tangkapan layar di catatan revisi (sementara cukup
 tulisan; foto acuan dari pustaka sudah bisa).
+
+## 12. K3 — skill dan tema percontohan, selesai (14 Oktober 2026)
+
+- **`.claude/skills/full-custom/SKILL.md`** — urutan kerja setiap sesi AI:
+  baca brief (SQL baca-saja lewat Supabase MCP), putuskan titik awal
+  (pasang ulang / turunan / dari nol), bangun dari kerangka, uji, PR
+  dengan tangkapan layar, revisi dalam satu komit, terbit. Memuat aturan
+  yang tidak ditawar: tanpa data pasangan di folder tema, warna lewat
+  token, `kenangan.css` wajib, tidak menulis ke produksi tanpa izin,
+  turunan untuk pembeli kedua.
+- **`tema/cetak-root.mjs`** — mencetak `:root` + `@import` huruf bawaan
+  sebuah tema, untuk ditempel ke `gaya.css` dan `kenangan.css`. Token
+  khas tema (ukuran, bingkai, gerak) di kerangka kini tinggal di blok
+  `:root` kedua, supaya penempelan itu tidak menghapusnya.
+- **`tema/custom/batik-pesisir/`** — tema custom pertama, dibuat dengan
+  mengikuti skill itu dari kerangka: batik pesisir utara Jawa (merah
+  Lasem, biru indigo, sogan), awan mega mendung sebagai pemisah, tumpal
+  di pinggir sampul, seksi, dan penutup, latar kawung samar dari gradien
+  CSS. 3 palet, 2 gaya teks. `asal: "percontohan"` — belum ada pemesan,
+  jadi siap ditawarkan sebagai titik awal katalog custom. Ikut semua uji
+  `uji-tema`, termasuk uji pakai ulang.

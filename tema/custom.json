@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "kode": "custom/batik-pesisir",
+    "nama": "Batik Pesisir",
+    "untuk": "Percontohan Full Custom: batik pesisir utara Jawa — merah Lasem, biru indigo, mega mendung, pinggiran tumpal",
+    "asal": "percontohan",
+    "turunan": null,
+    "tangga": 2,
+    "isi_khusus": [],
+    "palet": [
+      {
+        "kode": "merah-lasem",
+        "nama": "Merah Lasem",
+        "latar": "#F5EEE2",
+        "teks": "#2B1B16",
+        "aksen": "#9B2D24"
+      },
+      {
+        "kode": "biru-indigo",
+        "nama": "Biru Indigo",
+        "latar": "#EEF0F3",
+        "teks": "#16233A",
+        "aksen": "#2C4A7A"
+      },
+      {
+        "kode": "sogan-pesisir",
+        "nama": "Sogan Pesisir",
+        "latar": "#F3ECE0",
+        "teks": "#2E2016",
+        "aksen": "#7A4A1E"
+      }
+    ]
+  }
+]

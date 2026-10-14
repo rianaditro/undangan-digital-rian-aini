@@ -45,7 +45,10 @@
   --isi:'Lato', 'Helvetica Neue', Arial, sans-serif;
   --judul-kapital:none;
   --judul-jarak:normal;
+}
 
+/* Token khas tema — bukan palet atau gaya teks, bebas diubah. */
+:root{
   --pad:clamp(20px, 6vw, 64px);
   /* bingkai garis ganda: garis luar + garis dalam berjarak 5px */
   --bingkai:1px solid rgba(var(--ornamen-rgb),.75);

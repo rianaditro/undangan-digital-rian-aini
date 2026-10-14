@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Ornamen Batik Pesisir: awan mega mendung berlapis (pemisah) dan
+       sudut tumpal, segitiga berjajar seperti kepala kain. -->
+  <g id="pemisah">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.4;vector-effect:non-scaling-stroke" d="M8 24 H78 M162 24 H232"/>
+    <path style="fill:var(--ukir-isi);opacity:.18" d="M84 28 C84 14 98 8 108 14 C112 4 128 4 132 14 C142 8 156 14 156 28 Z"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.4;vector-effect:non-scaling-stroke" d="M84 28 C84 14 98 8 108 14 C112 4 128 4 132 14 C142 8 156 14 156 28"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke;opacity:.7" d="M92 28 C92 19 101 15 108 19 C112 12 128 12 132 19 C139 15 148 19 148 28"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke;opacity:.45" d="M101 28 C101 23 106 21 110 23 C114 18 126 18 130 23 C134 21 139 23 139 28"/>
+    <circle style="fill:var(--ukir-isi)" cx="78" cy="24" r="2"/><circle style="fill:var(--ukir-isi)" cx="162" cy="24" r="2"/>
+  </g>
+  <g id="sudut">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.2;vector-effect:non-scaling-stroke" d="M6 100 V6 H100"/>
+    <path style="fill:var(--ukir-isi);opacity:.85" d="M12 12 L24 12 L12 30 Z M28 12 L40 12 L34 24 Z M44 12 L56 12 L50 24 Z M12 34 L12 46 L24 40 Z M12 50 L12 62 L24 56 Z"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke;opacity:.6" d="M64 12 C70 6 78 6 82 12 C86 6 94 8 96 14"/>
+  </g>
+</svg>

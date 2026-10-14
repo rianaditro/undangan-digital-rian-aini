@@ -426,7 +426,8 @@ for (const tema of DAFTAR) {
     const h = await page.evaluate(() => ({ f: getComputedStyle(document.querySelector('.nama-besar')).fontFamily,
       t: (document.getElementById('temaHuruf') || {}).href || '' }));
     cek(`${k} kenangan gaya teks ${lain.kode}: hurufnya ikut terpasang`,
-      h.f.includes(lain.judul.split(',')[0].replace(/'/g, '').trim()) && h.t.includes('fonts.googleapis.com'), JSON.stringify(h));
+      // nama besar boleh memakai --judul atau --naskah (tulisan tangan), sama seperti sampul undangan
+      [lain.judul, lain.naskah].some(f => h.f.includes(f.split(',')[0].replace(/'/g, '').trim())) && h.t.includes('fonts.googleapis.com'), JSON.stringify(h));
     await ctx.close();
   }
 }
