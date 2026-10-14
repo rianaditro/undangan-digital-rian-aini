@@ -330,6 +330,27 @@ Ar-Rum 21, salam) tertulis untuk pasangan muslim — lihat bagian 4.
 
 ---
 
+## 3f. Teks pembuka (14 Oktober 2026)
+
+Migrasi 037 — `pasangan.pembuka`. Lihat keputusan 3 di bagian 4. Berlaku
+untuk semua tema, tidak bergantung tema.
+
+## 3g. Tahap F — Studio Anggun, selesai (14 Oktober 2026)
+
+`tema/studio-anggun/`: prewed studio berlatar polos. 4 palet (Gading
+Emas, Navy Emas, Champagne, Hitam Mewah) + "Dari foto", 3 gaya teks
+(Romantis: nama dalam Great Vibes; Royal: Cinzel; Modern Elegan:
+Playfair Display + Montserrat), ornamen garis ganda dan belah ketupat,
+halaman terima kasih sendiri. Tanpa migrasi.
+
+Yang membedakannya dari tema lain: foto **dibingkai, bukan dibentangkan**
+— sampul berfoto oval di atas kartu bergaris ganda (kilau emas pelan
+melintas di kartu itu, `transform` saja), potret mempelai berbingkai
+lengkung, galeri berbingkai tipis. Nama mempelai memakai `--naskah`
+(huruf tulisan tangan), bukan `--judul`.
+
+---
+
 ## Langkah manual — dikumpulkan sampai siap terbit
 
 Semua yang tidak bisa dikerjakan dari repo, untuk seluruh tahap yang
@@ -352,7 +373,7 @@ digabung.
    harus sama seperti sebelumnya, kecuali kotak hitung mundur yang kini
    hilang (acaranya sudah lewat).
 
-Tahap A sampai E tidak butuh langkah manual lain (tidak ada edge function,
+Tahap A sampai F tidak butuh langkah manual lain selain migrasi 036 dan 037 (tidak ada edge function,
 rahasia, atau DNS yang berubah).
 
 ---

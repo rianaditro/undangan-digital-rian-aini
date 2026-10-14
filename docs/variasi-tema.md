@@ -258,6 +258,10 @@ pojok foto.
 
 ### 3.7 Studio Anggun — formal, mewah · *Dari foto: ya (latar polos mudah diambil warnanya)*
 
+> **Terpasang (14 Okt)**, palet dan gaya teks seperti tabel di bawah (tiap
+> palet juga menulis warna kertas). Nama mempelai memakai huruf naskah
+> gaya teks (Great Vibes / Cinzel / Playfair Display).
+
 | Palet | Latar | Teks | Aksen | Kontras |
 |---|---|---|---|---|
 | Gading Emas (bawaan) | `#FBF7EF` | `#2E2A24` | `#9C7A48` | 13.3 / 3.7 |

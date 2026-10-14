@@ -192,10 +192,13 @@ for (const tema of DAFTAR) {
       tautan: (document.getElementById('temaHuruf') || {}).href || '',
       attr: document.documentElement.dataset.huruf
     }));
-    const keluarga = g.judul.split(',')[0].replace(/'/g, '').trim();
+    /* nama di sampul memakai huruf judul ATAU naskah gaya teks itu
+       (Studio Anggun: nama dalam huruf tulisan tangan) */
+    const kel = x => x.split(',')[0].replace(/'/g, '').trim();
+    const keluarga = h => [kel(g.judul), kel(g.naskah)].find(k => h.includes(k));
     const bawaan = g.kode === tema.bawaan.huruf;
-    cek(`${k} gaya teks ${g.kode}: judul ${keluarga}, ${bawaan ? 'tanpa tautan tambahan' : 'tautan hurufnya dipasang'}`,
-      h.judul.includes(keluarga) && h.attr === g.kode &&
+    cek(`${k} gaya teks ${g.kode}: nama berhuruf ${kel(g.judul)}/${kel(g.naskah)}, ${bawaan ? 'tanpa tautan tambahan' : 'tautan hurufnya dipasang'}`,
+      !!keluarga(h.judul) && h.attr === g.kode &&
       (bawaan ? !h.tautan : h.tautan.includes(g.google.split('&')[0])), JSON.stringify(h));
     await ctx.close();
   }
