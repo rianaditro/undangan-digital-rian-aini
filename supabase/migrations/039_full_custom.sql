@@ -228,13 +228,19 @@ comment on table public.revisi_custom is 'Satu permintaan revisi Full Custom per
 create index if not exists revisi_custom_pasangan_idx on public.revisi_custom (pasangan_id, dibuat);
 
 -- Paket diperiksa di database, bukan hanya disembunyikan di dasbor.
-create or replace function public._paket_full_custom(p_pasangan uuid)
+-- Dipanggil kebijakan RLS sebagai `authenticated`, jadi bukan fungsi
+-- "_" dalaman; ia hanya menjawab untuk undangan milik pemanggil sendiri
+-- (pola yang sama dengan pasangan_saya), sehingga tidak membocorkan
+-- paket undangan orang lain.
+create or replace function public.full_custom_saya(p_pasangan uuid)
 returns boolean
 language sql stable security definer set search_path = public, pg_temp as $$
-  select exists (select 1 from public.pasangan p where p.id = p_pasangan and p.paket = 'full_custom')
+  select exists (select 1 from public.pasangan p
+                  where p.id = p_pasangan and p.paket = 'full_custom'
+                    and p.id in (select public.pasangan_saya()))
 $$;
-revoke all on function public._paket_full_custom(uuid) from public, anon;
-grant execute on function public._paket_full_custom(uuid) to authenticated;
+revoke all on function public.full_custom_saya(uuid) from public, anon;
+grant execute on function public.full_custom_saya(uuid) to authenticated;
 
 alter table public.brief_custom  enable row level security;
 alter table public.revisi_custom enable row level security;
@@ -244,14 +250,14 @@ drop policy if exists "brief pemilik" on public.brief_custom;
 create policy "brief pemilik" on public.brief_custom
   for all to authenticated
   using      (pasangan_id in (select public.pasangan_saya()) or public.is_admin())
-  with check ((pasangan_id in (select public.pasangan_saya()) and public._paket_full_custom(pasangan_id))
+  with check ((pasangan_id in (select public.pasangan_saya()) and public.full_custom_saya(pasangan_id))
               or public.is_admin());
 
 drop policy if exists "revisi pemilik" on public.revisi_custom;
 create policy "revisi pemilik" on public.revisi_custom
   for all to authenticated
   using      (pasangan_id in (select public.pasangan_saya()) or public.is_admin())
-  with check ((pasangan_id in (select public.pasangan_saya()) and public._paket_full_custom(pasangan_id))
+  with check ((pasangan_id in (select public.pasangan_saya()) and public.full_custom_saya(pasangan_id))
               or public.is_admin());
 
 -- Pasangan menulis isinya; status, alamat pratinjau, dan hash komit
