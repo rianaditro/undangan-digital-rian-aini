@@ -62,6 +62,20 @@
              padding-bottom:10px;border-bottom:1px solid var(--garis);}
 }
 @media (min-width:900px){ #btnKeluarHp{display:none;} }
+
+/* Full Custom */
+.brief{margin-top:8px;font-size:13px;display:grid;gap:3px;max-width:640px;}
+.brief b{font-weight:600;color:var(--tinta-3);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;margin-right:6px;}
+.brief p{overflow-wrap:anywhere;white-space:pre-line;}
+.kc-alat{margin-top:12px;display:grid;gap:8px;max-width:640px;}
+.kc-alat .sebaris{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.kc-alat .sebaris > *{flex:1 1 160px;}
+.kc-alat .sebaris > .btn{flex:0 0 auto;}
+.kc-alat textarea{min-height:160px;font-family:var(--mono);font-size:12px;}
+.revisi{border-left:3px solid var(--garis);padding:6px 10px;margin:6px 0;font-size:13px;white-space:pre-line;overflow-wrap:anywhere;}
+.revisi.baru{border-color:var(--kuningan);}
+.revisi small{display:block;font-family:var(--mono);font-size:11px;color:var(--tinta-3);margin-top:4px;white-space:normal;}
+.bulat-palet{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid var(--garis);vertical-align:middle;margin-right:2px;}
 </style>
 </head>
 <body>
@@ -96,7 +110,7 @@
   <aside class="menu">
     <div class="menu-merek"><span class="logo">m</span><div><b>Meja Pemilik</b><small id="siapa">mengundang.id</small></div></div>
     <nav aria-label="Menu pemilik">
-      <div class="grup"><p class="grup-judul">Undangan</p><a href="#pasangan"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M3.5 20c.6-3.4 3-5.4 5.5-5.4s4.9 2 5.5 5.4"/><path d="M14.5 15c2.6-.4 5 1.3 5.8 4.6"/></svg><span>Pasangan</span></a><a href="#baru"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span>Buka pasangan baru</span></a><a href="#akun"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg><span>Akun klien</span></a></div>
+      <div class="grup"><p class="grup-judul">Undangan</p><a href="#pasangan"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M3.5 20c.6-3.4 3-5.4 5.5-5.4s4.9 2 5.5 5.4"/><path d="M14.5 15c2.6-.4 5 1.3 5.8 4.6"/></svg><span>Pasangan</span></a><a href="#baru"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span>Buka pasangan baru</span></a><a href="#akun"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg><span>Akun klien</span></a><a href="#custom"><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg><span>Full Custom</span></a></div>
       <div class="grup"><p class="grup-judul">Penjualan</p><a href="#pesanan"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><span>Pesanan</span></a><a href="#mitra"><svg viewBox="0 0 24 24"><path d="M3 12l4-4 5 3 5-3 4 4"/><path d="M7 8v9l5 3 5-3V8"/></svg><span>Admin &amp; komisi</span></a></div>
     </nav>
     <div class="menu-kaki"><button class="btn ghost kecil" id="btnKeluar" style="width:100%">Keluar</button></div>
@@ -138,6 +152,7 @@
       <select id="inPaket">
         <option value="standar" selected>Standar — jalur di domain bersama</option>
         <option value="premium">Premium — subdomain sendiri</option>
+        <option value="full_custom">Full Custom — subdomain, tampilan dibuat khusus</option>
       </select>
       <p class="hint" id="hintPaket" style="margin:6px 0 0"></p>
     </div>
@@ -217,6 +232,19 @@
   Halaman ini sengaja tidak bisa menambah pemilik — pintu yang bisa
   menambah pemegang kuncinya sendiri adalah pintu yang paling mahal kalau salah.
 </p>
+</section>
+
+  <section class="halaman" data-halaman="custom" data-judul="Full Custom">
+    <p class="halaman-sub">Pasangan paket Full Custom, acara terdekat paling atas. Brief dan catatan revisi ditulis pasangan di dasbornya; status, alamat pratinjau, dan revisi selesai diisi di sini. Langkah kerjanya: <code>docs/halaman-khusus.md</code> bagian 7.</p>
+<div class="panel">
+  <h2>Antrean</h2>
+  <div id="antreanCustom"><p class="memuat">Memuat…</p></div>
+</div>
+<div class="panel">
+  <h2>Katalog custom</h2>
+  <p class="hint">Tema custom yang sudah jadi, siap dijual ulang dengan harga Full Custom. Tidak tampil di pemilih tema pasangan mana pun. Dibangun dari <code>tema/custom/*/tema.json</code>.</p>
+  <div id="katalogCustom"><p class="memuat">Memuat…</p></div>
+</div>
 </section>
 
   <section class="halaman" data-halaman="pesanan" data-judul="Pesanan">
@@ -418,7 +446,7 @@
      dengan halaman undangan — supaya yang tertulis di sini persis yang
      nanti benar-benar dipakai. */
   function alamatCalon(slug){
-    var premium = $('inPaket').value === 'premium';
+    var premium = $('inPaket').value !== 'standar';
     return M.alamatUndangan({
       slug: slug,
       canonical_host: premium ? slug + '.mengundang.id' : ''
@@ -426,9 +454,11 @@
   }
 
   function kabarPaket(){
-    $('hintPaket').textContent = $('inPaket').value === 'premium'
-      ? 'Subdomain sendiri. Perlu DNS wildcard aktif untuk *.mengundang.id.'
-      : 'Menumpang di domain bersama — tanpa DNS tambahan.';
+    var pk = $('inPaket').value;
+    $('hintPaket').textContent = pk === 'standar'
+      ? 'Menumpang di domain bersama — tanpa DNS tambahan.'
+      : 'Subdomain sendiri. Perlu DNS wildcard aktif untuk *.mengundang.id.'
+        + (pk === 'full_custom' ? ' Brief dan revisinya muncul di halaman Full Custom.' : '');
     periksaSlug();
   }
 
@@ -555,7 +585,7 @@
       var opsi = ['draf','aktif','lewat','arsip'].map(function(s){
         return '<option value="'+s+'"'+(p.status===s?' selected':'')+'>'+s+'</option>';
       }).join('');
-      var opsiPaket = [['standar','standar'],['premium','premium']].map(function(x){
+      var opsiPaket = [['standar','standar'],['premium','premium'],['full_custom','full custom']].map(function(x){
         return '<option value="'+x[0]+'"'+(p.paket===x[0]?' selected':'')+'>'+x[1]+'</option>';
       }).join('');
       return '<div class="ps" data-id="'+esc(p.id)+'">'
@@ -740,6 +770,171 @@
   /* ============================================================
      Gerbang
      ============================================================ */
+  /* ============================================================
+     Full Custom (039, docs/halaman-khusus.md)
+     ============================================================ */
+  var antrean = [], katalogCustom = [], katalogTema = [];
+  var STATUS_CUSTOM = [['baru','baru'],['dikerjakan','dikerjakan'],['pratinjau','pratinjau'],['revisi','revisi'],['terbit','terbit']];
+  var LABEL_BRIEF = { titik_awal:'Titik awal', referensi:'Referensi', warna:'Warna', suasana:'Suasana', hindari:'Yang tidak diinginkan', catatan:'Catatan' };
+
+  async function rest(jalur, ulang){
+    var r = await fetch(M.SB.url + '/rest/v1/' + jalur, { headers: kepala() });
+    if(r.status === 401 && !ulang && await segarkan()) return rest(jalur, true);
+    if(!r.ok) throw new Error('Gagal memuat (HTTP ' + r.status + ')');
+    return r.json();
+  }
+  function ambilJson(url){
+    return fetch(url).then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; });
+  }
+
+  function opsiTema(kini){
+    var semua = katalogCustom.map(function(t){ return [t.kode, 'custom · ' + t.nama]; })
+      .concat(katalogTema.map(function(t){ return [t.kode, t.nama]; }));
+    if(kini && !semua.some(function(x){ return x[0] === kini; })) semua.unshift([kini, kini]);
+    return semua.map(function(x){
+      return '<option value="'+esc(x[0])+'"'+(x[0] === kini ? ' selected' : '')+'>'+esc(x[1])+'</option>';
+    }).join('');
+  }
+
+  function briefHtml(a){
+    var isi = a.isi || {}, baris = [];
+    Object.keys(LABEL_BRIEF).forEach(function(k){
+      if(isi[k]) baris.push('<p><b>'+LABEL_BRIEF[k]+'</b>'+esc(isi[k])+'</p>');
+    });
+    if((isi.foto_acuan || []).length) baris.push('<p><b>Foto acuan</b>'+isi.foto_acuan.length+' foto dari pustaka</p>');
+    if(a.tenggat) baris.push('<p><b>Tenggat</b>'+esc(a.tenggat)+'</p>');
+    return baris.length ? '<div class="brief">'+baris.join('')+'</div>'
+                        : '<p class="hint" style="margin-top:8px">Brief belum diisi pasangan.</p>';
+  }
+
+  function gambarAntrean(){
+    if(!antrean.length){
+      $('antreanCustom').innerHTML = '<p class="kosongstate">Belum ada pasangan Full Custom. Naikkan paketnya di halaman Pasangan.</p>';
+      return;
+    }
+    $('antreanCustom').innerHTML = antrean.map(function(a){
+      var st = a.status || 'baru';
+      return '<div class="baris" data-pid="'+esc(a.pasangan_id)+'">'
+        + '<div>'
+        +   '<div class="judul">'+esc(a.slug)+'</div>'
+        +   '<div class="ps-meta">'
+        +     '<span class="cap">'+(a.tanggal_acara ? esc(a.tanggal_acara) : 'tanggal belum ada')+'</span>'
+        +     '<span class="cap">'+esc(a.status || 'belum ada brief')+'</span>'
+        +     '<span class="cap">'+esc(a.tema)+'</span>'
+        +     (Number(a.revisi_baru) ? '<span class="cap peringatan">'+Number(a.revisi_baru)+' revisi baru</span>' : '')
+        +     (a.pratinjau ? '<a class="cap" href="'+esc(a.pratinjau)+'" target="_blank" rel="noopener">pratinjau</a>' : '')
+        +   '</div>'
+        +   briefHtml(a)
+        +   '<div class="kc-alat">'
+        +     '<div class="sebaris"><select data-isi="status" aria-label="Status">'
+        +       STATUS_CUSTOM.map(function(x){ return '<option value="'+x[0]+'"'+(x[0] === st ? ' selected' : '')+'>'+x[1]+'</option>'; }).join('')
+        +     '</select><input data-isi="pratinjau" placeholder="https://… alamat pratinjau PR" value="'+esc(a.pratinjau || '')+'">'
+        +     '<button class="btn kecil" data-aksi="statusCustom">Simpan status</button></div>'
+        +     '<div class="sebaris"><select data-isi="tema" aria-label="Tema">'+opsiTema(a.tema)+'</select>'
+        +     '<button class="btn kecil ghost" data-aksi="temaCustom">Pasang tema</button></div>'
+        +     '<div class="sebaris"><button class="btn kecil ghost" data-aksi="revisiCustom">Catatan revisi</button>'
+        +     '<button class="btn kecil ghost" data-aksi="khususCustom">Isi khusus</button></div>'
+        +     '<div data-wadah="revisi" hidden></div>'
+        +     '<div data-wadah="khusus" hidden><textarea spellcheck="false" aria-label="Isi khusus (JSON)">'+esc(JSON.stringify(a.khusus || {}, null, 2))+'</textarea>'
+        +       '<div class="aksi"><button class="btn kecil" data-aksi="simpanKhusus">Simpan isi khusus</button></div></div>'
+        +   '</div>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function gambarKatalogCustom(){
+    if(!katalogCustom.length){
+      $('katalogCustom').innerHTML = '<p class="kosongstate">Belum ada. Tema custom pertama dibuat dari kerangka <code>tema/custom/_contoh/</code>.</p>';
+      return;
+    }
+    $('katalogCustom').innerHTML = katalogCustom.map(function(t){
+      var dipakai = pasangan.filter(function(p){ return p.tema === t.kode; }).map(function(p){ return p.slug; });
+      return '<div class="baris"><div>'
+        + '<div class="judul">'+esc(t.nama)+' <code>'+esc(t.kode)+'</code></div>'
+        + '<div class="ket">asal '+esc(t.asal || '—')+(t.turunan ? ' · turunan dari custom/'+esc(t.turunan) : '')
+        +   ' · dipakai '+dipakai.length+(dipakai.length ? ' ('+esc(dipakai.join(', '))+')' : '')+'</div>'
+        + '<p class="hint" style="margin:6px 0 0">'+esc(t.untuk || '')+'</p>'
+        + '<div style="margin-top:6px">'+(t.palet || []).map(function(p){
+            return '<span title="'+esc(p.nama)+'"><i class="bulat-palet" style="background:'+esc(p.latar)+'"></i><i class="bulat-palet" style="background:'+esc(p.aksen)+'"></i></span> ';
+          }).join('')
+        + ((t.isi_khusus || []).length ? '<span class="cap">isi khusus: '+esc(t.isi_khusus.map(function(x){ return x.kunci || x; }).join(', '))+'</span>' : '')
+        + '</div></div></div>';
+    }).join('');
+  }
+
+  async function muatCustom(){
+    try{
+      var hasil = await Promise.all([rpc('admin_custom_antrean'), ambilJson('/tema/custom.json'), ambilJson('/tema/daftar.json')]);
+      antrean = hasil[0] || []; katalogCustom = hasil[1] || []; katalogTema = hasil[2] || [];
+      gambarAntrean();
+      gambarKatalogCustom();
+    }catch(e){
+      $('antreanCustom').innerHTML = '<p class="kosongstate">Gagal memuat: ' + esc(e.message) + '</p>';
+      $('katalogCustom').innerHTML = '';
+    }
+  }
+
+  async function gambarRevisi(wadah, pid){
+    var daftar = await rest('revisi_custom?pasangan_id=eq.' + encodeURIComponent(pid) + '&order=dibuat');
+    var baru = daftar.filter(function(r){ return r.status === 'baru'; });
+    wadah.innerHTML = (daftar.length ? daftar.map(function(r){
+        return '<div class="revisi '+esc(r.status)+'">'
+          + (r.status === 'baru' ? '<label style="display:inline;text-transform:none;letter-spacing:0;margin:0"><input type="checkbox" data-rid="'+esc(r.id)+'" checked style="width:auto;margin-right:6px">' : '')
+          + esc(r.isi) + (r.status === 'baru' ? '</label>' : '')
+          + '<small>'+esc(tgl(r.dibuat))+' · '+esc(r.status)+(r.komit ? ' · '+esc(r.komit) : '')+'</small></div>';
+      }).join('') : '<p class="hint">Belum ada catatan revisi.</p>')
+      + (baru.length ? '<div class="sebaris" style="margin-top:8px"><input data-isi="komit" placeholder="hash komit, mis. 6e19802" maxlength="40">'
+          + '<button class="btn kecil" data-aksi="revisiSelesai">Tandai selesai</button></div>' : '');
+    wadah.hidden = false;
+  }
+
+  $('antreanCustom').addEventListener('click', async function(e){
+    var b = e.target.closest('button[data-aksi]');
+    if(!b) return;
+    var baris = b.closest('.baris'), pid = baris.dataset.pid, aksi = b.dataset.aksi;
+    var nilai = function(k){ return baris.querySelector('[data-isi="'+k+'"]').value; };
+    b.disabled = true;
+    try{
+      if(aksi === 'statusCustom'){
+        await rpc('admin_custom_status', { p_pasangan: pid, p_status: nilai('status'), p_pratinjau: nilai('pratinjau').trim() || null });
+        toast('Status tersimpan'); await muatCustom(); return;
+      }
+      if(aksi === 'temaCustom'){
+        if(!confirm('Pasang tema ' + nilai('tema') + ' untuk undangan ini? Warna dan gaya teks pilihan pasangan kembali ke bawaan tema itu.')) return;
+        await rpc('admin_tema', { p_pasangan: pid, p_tema: nilai('tema') });
+        toast('Tema terpasang'); await Promise.all([muatCustom(), muat()]); return;
+      }
+      if(aksi === 'revisiCustom'){
+        var w = baris.querySelector('[data-wadah="revisi"]');
+        if(!w.hidden){ w.hidden = true; return; }
+        await gambarRevisi(w, pid); return;
+      }
+      if(aksi === 'revisiSelesai'){
+        var ids = Array.prototype.map.call(baris.querySelectorAll('[data-rid]:checked'), function(x){ return x.dataset.rid; });
+        if(!ids.length){ toast('Pilih catatan yang sudah dikerjakan', true); return; }
+        var komit = nilai('komit').trim();
+        if(komit && !/^[0-9a-fA-F]{7,40}$/.test(komit)){ toast('Hash komit 7–40 huruf heksadesimal', true); return; }
+        var n = await rpc('admin_revisi_selesai', { p_ids: ids, p_komit: komit || null });
+        toast(n + ' revisi ditandai selesai');
+        await gambarRevisi(baris.querySelector('[data-wadah="revisi"]'), pid);
+        muatCustom(); return;
+      }
+      if(aksi === 'khususCustom'){
+        var k = baris.querySelector('[data-wadah="khusus"]'); k.hidden = !k.hidden; return;
+      }
+      if(aksi === 'simpanKhusus'){
+        var isi;
+        try{ isi = JSON.parse(baris.querySelector('[data-wadah="khusus"] textarea').value || '{}'); }
+        catch(err){ toast('JSON tidak sah: ' + err.message, true); return; }
+        if(!isi || typeof isi !== 'object' || Array.isArray(isi)){ toast('Isi khusus harus objek { … }', true); return; }
+        await rpc('admin_khusus', { p_pasangan: pid, p_isi: isi });
+        toast('Isi khusus tersimpan'); return;
+      }
+    }catch(err){ toast(err.message, true); }
+    finally{ b.disabled = false; }
+  });
+
   /* ============================================================
      Pesanan dan admin (031 — di database bernama reseller)
      ============================================================ */
@@ -950,7 +1145,7 @@
     $('gerbang').classList.add('pergi');
     $('isi').hidden = false;
     Panel.pasang({ bawaan: 'pasangan' });
-    await Promise.all([muat(), muatPesanan(), muatReseller()]);
+    await Promise.all([muat(), muatPesanan(), muatReseller(), muatCustom()]);
   }
 
   async function cobaMasuk(){
@@ -974,7 +1169,7 @@
   $('btnKeluar').addEventListener('click', function(){
     simpanSesi(null); pasangan = []; gerbang('');
   });
-  $('btnSegarkan').addEventListener('click', function(){ muat(); muatPesanan(); muatReseller(); });
+  $('btnSegarkan').addEventListener('click', function(){ muat(); muatPesanan(); muatReseller(); muatCustom(); });
 
 
   /* Lupa sandi dan tautan dari email — assets/akun.js */

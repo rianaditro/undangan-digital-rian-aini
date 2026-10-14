@@ -131,8 +131,8 @@ async function buat(db: any, b: any) {
   // Paket menentukan bentuk alamat undangan (migrasi 023). Diperiksa di
   // sini juga supaya akun klien tidak terlanjur dibuat untuk sesuatu
   // yang sudah pasti ditolak database.
-  if (paket !== 'premium' && paket !== 'standar')
-    return jawab({ pesan: 'Paket harus "premium" atau "standar"' }, 400);
+  if (paket !== 'premium' && paket !== 'standar' && paket !== 'full_custom')
+    return jawab({ pesan: 'Paket harus "standar", "premium", atau "full_custom"' }, 400);
 
   // Slug diperiksa DULU, keduanya. Kalau tidak, akun klien terlanjur
   // dibuat lalu penyimpanannya gagal — dan yang tersisa adalah akun yatim

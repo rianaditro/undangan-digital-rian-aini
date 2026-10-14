@@ -417,23 +417,32 @@ Semua yang tidak bisa dikerjakan dari repo, untuk seluruh tahap yang
 belum terbit. Dikerjakan sekali, berurutan, waktu cabang ini akan
 digabung.
 
-1. **Migrasi 036, 037, lalu 038** — tempel
+1. **Migrasi 036, 037, 038, lalu 039** — tempel
    `supabase/migrations/036_tema_foto_setel.sql`, `037_pembuka.sql`,
-   kemudian `038_kisah.sql`, di SQL editor Supabase, berurutan. Aman untuk
-   `main` yang sedang tayang: `db/kompat.mjs` memastikan kode `main` masih
-   sah terhadap skema 038, dan kunci baru `undangan_isi` diabaikan halaman
-   lama. 037 berbawaan `pembuka = 'islam'`, jadi pasangan yang sudah ada
-   tidak berubah; 038 hanya menambah tabel kosong.
-2. **Gabungkan cabang ini ke `main`** — sesudah langkah 1, bukan sebelum:
+   `038_kisah.sql`, kemudian `039_full_custom.sql`, di SQL editor
+   Supabase, berurutan. Aman untuk `main` yang sedang tayang:
+   `db/kompat.mjs` memastikan kode `main` masih sah terhadap skema 039,
+   dan kunci baru `undangan_isi` diabaikan halaman lama. 037 berbawaan
+   `pembuka = 'islam'`, jadi pasangan yang sudah ada tidak berubah; 038
+   dan 039 menambah tabel kosong. 039 juga menutup pintu REST yang
+   membuat pasangan bisa menaikkan paketnya sendiri (lihat
+   `docs/halaman-khusus.md` bagian 11) — dasbor di `main` tidak
+   terpengaruh.
+2. **Deploy edge function `admin-pasangan`** — sesudah 039, supaya
+   formulir "Buka pasangan baru" di /pemilik menerima paket Full Custom:
+   `supabase functions deploy admin-pasangan`. Kalau dilewati, semua tetap
+   jalan kecuali membuat pasangan Full Custom langsung; jalan pintasnya:
+   buat sebagai premium, lalu ganti paketnya di daftar pasangan.
+3. **Gabungkan cabang ini ke `main`** — sesudah langkah 1, bukan sebelum:
    dasbor baru menulis `foto.peran`, `pasangan.tema_setel`,
-   `pasangan.pembuka`, dan tabel `kisah`.
-3. **Cocokkan produksi dengan repo** — `PGURL=… uji/db/banding.sh >
+   `pasangan.pembuka`, tabel `kisah`, `brief_custom`, dan `revisi_custom`.
+4. **Cocokkan produksi dengan repo** — `PGURL=… uji/db/banding.sh >
    /tmp/banding.sql`, jalankan isinya di SQL editor; hasil kosong = sama.
-4. **Periksa sekali di HP** — buka undangan Rian & 'Aini: tampilannya
+5. **Periksa sekali di HP** — buka undangan Rian & 'Aini: tampilannya
    harus sama seperti sebelumnya, kecuali kotak hitung mundur yang kini
    hilang (acaranya sudah lewat).
 
-Tahap A sampai H tidak butuh langkah manual lain selain migrasi 036, 037, dan 038 (tidak ada edge function,
+Tahap A sampai H dan Full Custom K1–K2 tidak butuh langkah manual lain selain migrasi 036–039 dan deploy `admin-pasangan` (tidak ada edge function baru,
 rahasia, atau DNS yang berubah).
 
 ---

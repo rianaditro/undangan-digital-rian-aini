@@ -1322,6 +1322,72 @@ cek('99 tidak ada galat JavaScript di halaman sepanjang uji',
   await m.ctx.close();
 }
 
+/* ---------- Desain khusus — paket Full Custom (039) ---------- */
+{
+  // paket biasa: menu tidak tampil dan tabelnya tidak diminta sama sekali
+  const biasa = bikinModel();
+  const minta = [];
+  biasa.rute = [['**/rest/v1/brief_custom**', r => { minta.push(r.request().url()); return r.fallback(); }]];
+  const m0 = await masuk(browser, biasa, 400, 'pengantin');
+  cek('desain-1 paket biasa: menu Desain khusus tersembunyi, brief tidak dimuat',
+    await m0.page.locator('#navDesain').isHidden() && minta.length === 0);
+  await m0.ctx.close();
+
+  const model = bikinModel();
+  model.pasangan[0].paket = 'full_custom';
+  model.brief_custom = [];
+  model.revisi_custom = [{ id: 'rv-1', pasangan_id: 'p-1', isi: 'Warna lebih hangat', status: 'selesai', komit: 'abc1234', dibuat: '2026-10-10T00:00:00Z' }];
+  const { ctx, page } = await masuk(browser, model, 400, 'desain');
+  cek('desain-2 Full Custom: menu tampil, status "Belum ada brief", revisi lama tercantum selesai tanpa tombol hapus',
+    await page.locator('#navDesain').isVisible() && /Belum ada brief/.test(await page.locator('#statusDesain').textContent())
+    && /selesai/.test(await page.locator('#daftarRevisi').textContent()) && await page.locator('[data-hapus-revisi]').count() === 0);
+  const simpan = async (tombol) => {
+    await page.evaluate(() => { document.querySelector('#toast').textContent = ''; });
+    await page.locator(tombol).click();
+    await page.waitForFunction(() => document.querySelector('#toast').textContent !== '', null, { timeout: 5000 });
+    return page.locator('#toast').textContent();
+  };
+  await page.locator('#brSuasana').fill('teduh, seperti taman pagi');
+  await page.locator('#brWarna').fill('sage dan krem');
+  await page.locator('#brTenggat').fill('2026-11-30');
+  await page.locator('#brFoto [data-acuan="f-2"]').check();
+  await simpan('#btnSimpanBrief');
+  const pb = model.post.filter(x => x.tabel === 'brief_custom');
+  cek('desain-3 brief pertama: POST dengan pasangan_id, isi, foto acuan, tenggat; status tidak dikirim',
+    pb.length === 1 && pb[0].badan.pasangan_id === 'p-1' && pb[0].badan.isi.suasana === 'teduh, seperti taman pagi'
+    && JSON.stringify(pb[0].badan.isi.foto_acuan) === '["f-2"]' && pb[0].badan.tenggat === '2026-11-30' && !('status' in pb[0].badan),
+    JSON.stringify(pb));
+  // pemilik platform memindah status ke pratinjau
+  Object.assign(model.brief_custom[0], { status: 'pratinjau', pratinjau: 'https://pr-3.contoh.workers.dev' });
+  await page.locator('#brWarna').fill('sage');
+  await simpan('#btnSimpanBrief');
+  const pp = model.patch.filter(x => x.tabel === 'brief_custom');
+  cek('desain-4 brief berikutnya: PATCH, dan status pratinjau tampil dengan tautannya',
+    pp.length === 1 && pp[0].badan.isi.warna === 'sage' && /Pratinjau siap/.test(await page.locator('#statusDesain').textContent())
+    && (await page.locator('#statusDesain a').getAttribute('href')) === 'https://pr-3.contoh.workers.dev', JSON.stringify(pp));
+
+  const t1 = await simpan('#btnKirimRevisi');
+  cek('desain-5 catatan kosong tidak dikirim', /Tulis dulu/.test(t1) && !model.post.some(x => x.tabel === 'revisi_custom'));
+  await page.locator('#inRevisi').fill('Nama di sampul lebih besar');
+  await simpan('#btnKirimRevisi');
+  const pr = model.post.filter(x => x.tabel === 'revisi_custom');
+  cek('desain-6 revisi terkirim: hanya pasangan_id dan isi', pr.length === 1
+    && JSON.stringify(Object.keys(pr[0].badan).sort()) === '["isi","pasangan_id"]' && (await page.locator('#inRevisi').inputValue()) === '',
+    JSON.stringify(pr));
+  model.revisi_custom.at(-1).status = 'baru';
+  model.revisi_custom.at(-1).dibuat = '2026-10-14T00:00:00Z';
+  await page.locator('#inRevisi').fill('x'); await page.locator('#inRevisi').fill('');
+  await page.evaluate(() => document.querySelector('#btnSimpanBrief').click());
+  await page.waitForFunction(() => document.querySelector('[data-hapus-revisi]'), null, { timeout: 5000 });
+  page.once('dialog', d => d.accept());
+  await page.locator('[data-hapus-revisi]').click();
+  await page.waitForFunction(() => /dihapus/.test(document.querySelector('#toast').textContent), null, { timeout: 5000 });
+  cek('desain-7 catatan yang belum dikerjakan bisa dihapus', model.hapus.some(x => x.tabel === 'revisi_custom')
+    && model.revisi_custom.length === 1);
+  await page.locator('.halaman.aktif').screenshot({ path: 'dasbor-desain-400.png' });
+  await ctx.close();
+}
+
 await browser.close(); srv.close();
 console.log('\n' + lulus + ' lulus, ' + gagal + ' gagal');
 process.exit(gagal ? 1 : 0);

@@ -130,6 +130,18 @@
 .blok-kepala .centang{margin:0;padding:0;border:0;}
 .wajib{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(17,24,39,.4);}
 .baris.mati input:not([type=checkbox]),.baris.mati textarea,.baris.mati .pilih-latar{opacity:.45;}
+.menu nav a[hidden]{display:none;}
+.status-desain{border:1px solid var(--garis);border-radius:10px;padding:14px 16px;background:#fff;}
+.status-desain b{display:block;font-size:15px;}
+.status-desain p{font-size:13px;color:rgba(17,24,39,.65);margin-top:4px;line-height:1.55;}
+.foto-acuan{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-top:6px;}
+.foto-acuan label{position:relative;display:block;margin:0;cursor:pointer;}
+.foto-acuan img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:2px solid transparent;display:block;}
+.foto-acuan input{position:absolute;top:6px;left:6px;width:auto;margin:0;}
+.foto-acuan input:checked + img{border-color:var(--kuningan);}
+.revisi-saya{border-left:3px solid var(--garis);padding:6px 10px;margin:8px 0;font-size:13.5px;white-space:pre-line;overflow-wrap:anywhere;}
+.revisi-saya.baru{border-color:var(--kuningan);}
+.revisi-saya small{display:block;font-size:11.5px;color:rgba(17,24,39,.55);margin-top:4px;white-space:normal;}
 .kisah-baris{display:grid;gap:6px 10px;grid-template-columns:1fr;}
 .kisah-baris .atas{display:grid;gap:6px;grid-template-columns:110px 1fr;}
 .kisah-baris .bawah{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
@@ -217,7 +229,7 @@
     <div class="menu-merek"><span class="logo">m</span><div><b>Dasbor Pengantin</b><small id="menuPasangan">mengundang.id</small></div></div>
     <nav aria-label="Menu dasbor">
       <div class="grup"><a href="#beranda"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Beranda</a></div>
-      <div class="grup"><p class="grup-judul">Undangan</p><a href="#pengantin"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M3.5 20c.6-3.4 3-5.4 5.5-5.4s4.9 2 5.5 5.4"/><path d="M14.5 15c2.6-.4 5 1.3 5.8 4.6"/></svg>Pengantin</a><a href="#kisah"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 013 3v12a2.5 2.5 0 00-2.5-2.5H4z"/><path d="M20 5h-4a2 2 0 00-2 2"/><path d="M20 5v12.5h-5"/></svg>Kisah kami</a><a href="#acara"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Acara & tempat</a><a href="#hadiah"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M3 12h18M12 8v13"/><path d="M12 8c-1.5-3-5-3.5-5-1s3 1 5 1c2 0 5 1.5 5-1s-3.5-2-5 1z"/></svg>Hadiah</a><a href="#tampilan"><svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 16l4-10 4 10"/><path d="M7.5 12.5h5"/><path d="M16 9h4M18 7v4"/></svg>Penutup & tampilan</a></div>
+      <div class="grup"><p class="grup-judul">Undangan</p><a href="#pengantin"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M3.5 20c.6-3.4 3-5.4 5.5-5.4s4.9 2 5.5 5.4"/><path d="M14.5 15c2.6-.4 5 1.3 5.8 4.6"/></svg>Pengantin</a><a href="#kisah"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 013 3v12a2.5 2.5 0 00-2.5-2.5H4z"/><path d="M20 5h-4a2 2 0 00-2 2"/><path d="M20 5v12.5h-5"/></svg>Kisah kami</a><a href="#acara"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Acara & tempat</a><a href="#hadiah"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M3 12h18M12 8v13"/><path d="M12 8c-1.5-3-5-3.5-5-1s3 1 5 1c2 0 5 1.5 5-1s-3.5-2-5 1z"/></svg>Hadiah</a><a href="#tampilan"><svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 16l4-10 4 10"/><path d="M7.5 12.5h5"/><path d="M16 9h4M18 7v4"/></svg>Penutup & tampilan</a><a href="#desain" id="navDesain" hidden><svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/></svg>Desain khusus</a></div>
       <div class="grup"><p class="grup-judul">Halaman kenangan</p><a href="#foto"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>Foto & video</a><a href="#kenangan"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>Isi halaman</a><a href="#vendor"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.6-7 10-7 10z"/></svg>Vendor & pendukung</a><a href="#video"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 9.5v5l4-2.5z"/></svg>Video story</a></div>
     </nav>
     <div class="menu-kaki"><button class="btn ghost kecil" id="btnKeluar" style="width:100%">Keluar</button></div>
@@ -312,6 +324,41 @@
       <button class="btn ghost" id="btnContohKisah" type="button">Isi kerangka bab</button>
       <button class="btn solid" id="btnSimpanKisah" type="button">Simpan Kisah</button>
     </div>
+  </div>
+  </section>
+
+  <section class="halaman" data-halaman="desain" data-judul="Desain khusus">
+    <h2 class="halaman-judul">Desain khusus</h2>
+    <p class="halaman-sub">Paket Full Custom: tampilan undangan kalian dibuat khusus oleh tim kami, bebas revisi. Ceritakan maunya di sini — semakin jelas, semakin sedikit putaran revisi.</p>
+  <div class="panel">
+    <div class="status-desain" id="statusDesain"></div>
+  </div>
+  <div class="panel" id="panelBrief">
+    <h2>Brief desain</h2>
+    <div class="kisi">
+      <div class="lebar"><label for="brTitik">Titik awal</label>
+        <input id="brTitik" maxlength="200" placeholder="Dari nol, atau nama karya yang kami tawarkan"></div>
+      <div class="lebar"><label for="brReferensi">Referensi — tautan Pinterest/Instagram, satu per baris</label>
+        <textarea id="brReferensi" maxlength="2000" rows="3"></textarea></div>
+      <div><label for="brWarna">Warna</label><input id="brWarna" maxlength="200" placeholder="mis. hijau sage dan krem"></div>
+      <div><label for="brSuasana">Suasana</label><input id="brSuasana" maxlength="200" placeholder="mis. teduh, seperti taman pagi"></div>
+      <div class="lebar"><label for="brHindari">Yang tidak diinginkan</label>
+        <textarea id="brHindari" maxlength="1000" rows="2" placeholder="mis. jangan terlalu banyak bunga"></textarea></div>
+      <div class="lebar"><label for="brCatatan">Catatan lain</label>
+        <textarea id="brCatatan" maxlength="2000" rows="3"></textarea></div>
+      <div><label for="brTenggat">Ingin selesai sebelum</label><input id="brTenggat" type="date"></div>
+      <div class="lebar"><label>Foto acuan dari pustaka <span class="hint" style="display:inline">(paling banyak 10)</span></label>
+        <div class="foto-acuan" id="brFoto"></div></div>
+    </div>
+    <div class="aksi"><button class="btn solid" id="btnSimpanBrief" type="button">Simpan Brief</button></div>
+  </div>
+  <div class="panel" id="panelRevisi">
+    <h2>Permintaan revisi</h2>
+    <p class="hint">Satu catatan untuk satu permintaan. Semua catatan baru dikerjakan sekaligus; yang sudah dikerjakan ditandai selesai.</p>
+    <div id="daftarRevisi"></div>
+    <label for="inRevisi">Catatan baru</label>
+    <textarea id="inRevisi" maxlength="2000" rows="3" placeholder="mis. nama di sampul dibuat lebih besar"></textarea>
+    <div class="aksi"><button class="btn solid" id="btnKirimRevisi" type="button">Kirim Catatan</button></div>
   </div>
   </section>
 
@@ -630,6 +677,9 @@
     data.silsilah = hasil[7] || [];
     data.kenangan_vendor = hasil[8] || [];
     data.kisah = hasil[9] || [];
+    /* Full Custom (039): tabelnya hanya dibaca pasangan paket itu. */
+    $('navDesain').hidden = pasangan.paket !== 'full_custom';
+    if(pasangan.paket === 'full_custom') await muatDesain();
     gambar();
     gambarSilsilah();
     gambarFoto();
@@ -2061,6 +2111,104 @@
     finally{ btn.disabled = false; btn.textContent = label; }
   }
   $('btnSimpanKisah').addEventListener('click', simpanKisah);
+
+  /* ============================================================
+     Desain khusus — paket Full Custom (migrasi 039)
+
+     Brief: satu baris per pasangan, isinya jsonb. Revisi: satu catatan
+     per permintaan; status dan hash komitnya diisi pemilik platform
+     (database menolak kalau pasangan yang mengisinya).
+     ============================================================ */
+  var STATUS_DESAIN = {
+    baru:       ['Brief diterima', 'Kami akan membacanya dan mulai mengerjakan. Brief masih bisa diubah.'],
+    dikerjakan: ['Sedang dikerjakan', 'Desain kalian sedang dibuat. Kalau ada yang ingin ditambahkan, ubah brief di bawah.'],
+    pratinjau:  ['Pratinjau siap', 'Buka tautan pratinjau, lalu tulis permintaan revisi di bawah — satu catatan untuk satu hal.'],
+    revisi:     ['Revisi sedang dikerjakan', 'Catatan revisi kalian sudah masuk antrean. Tautan pratinjau yang sama akan menampilkan versi terbarunya.'],
+    terbit:     ['Sudah terbit', 'Desain khusus kalian sudah tayang. Revisi tetap boleh diminta.']
+  };
+  var BATAS_FOTO_ACUAN = 10;
+  function gambarDesain(){
+    var b = data.brief, isi = (b && b.isi) || {}, st = b ? b.status : null;
+    var teks = (st && STATUS_DESAIN[st]) || ['Belum ada brief', 'Isi brief di bawah supaya kami bisa mulai.'];
+    $('statusDesain').innerHTML = '<b>'+esc(teks[0])+'</b><p>'+esc(teks[1])+'</p>'
+      + (b && b.pratinjau ? '<p><a href="'+esc(b.pratinjau)+'" target="_blank" rel="noopener">Buka pratinjau</a></p>' : '');
+    $('brTitik').value = isi.titik_awal || '';
+    $('brReferensi').value = isi.referensi || '';
+    $('brWarna').value = isi.warna || '';
+    $('brSuasana').value = isi.suasana || '';
+    $('brHindari').value = isi.hindari || '';
+    $('brCatatan').value = isi.catatan || '';
+    $('brTenggat').value = (b && b.tenggat) || '';
+    var pilih = isi.foto_acuan || [];
+    var foto = (data.foto || []).filter(function(f){ return f.jenis !== 'video'; });
+    $('brFoto').innerHTML = foto.length ? foto.map(function(f){
+      return '<label><input type="checkbox" data-acuan="'+esc(f.id)+'"'+(pilih.indexOf(f.id) >= 0 ? ' checked' : '')+'>'
+        + '<img alt="" loading="lazy" src="'+esc(window.Gambar.url(f.jalur_kecil || f.jalur))+'"></label>';
+    }).join('') : '<p class="hint">Belum ada foto di pustaka. Unggah di <a href="#foto">Foto &amp; video</a>.</p>';
+    $('daftarRevisi').innerHTML = (data.revisi || []).map(function(r){
+      return '<div class="revisi-saya '+esc(r.status)+'" data-rid="'+esc(r.id)+'">'+esc(r.isi)
+        + '<small>'+esc(new Date(r.dibuat).toLocaleDateString('id-ID', { day:'numeric', month:'short', year:'numeric' }))
+        + ' · '+(r.status === 'selesai' ? 'selesai' : 'menunggu dikerjakan')
+        + (r.status === 'baru' ? ' · <a href="#" data-hapus-revisi>hapus</a>' : '')+'</small></div>';
+    }).join('') || '<p class="kosongstate">Belum ada permintaan revisi.</p>';
+  }
+  $('brFoto').addEventListener('change', function(e){
+    if(!e.target.dataset.acuan) return;
+    if($('brFoto').querySelectorAll('[data-acuan]:checked').length > BATAS_FOTO_ACUAN){
+      e.target.checked = false;
+      toast('Paling banyak ' + BATAS_FOTO_ACUAN + ' foto acuan', true);
+    }
+  });
+  async function muatDesain(){
+    var fc = await Promise.all([
+      api('brief_custom?select=*&pasangan_id=eq.'+pasangan.id),
+      api('revisi_custom?select=*&pasangan_id=eq.'+pasangan.id+'&order=dibuat.desc')
+    ]);
+    data.brief = (fc[0] || [])[0] || null;
+    data.revisi = fc[1] || [];
+    gambarDesain();
+  }
+  $('btnSimpanBrief').addEventListener('click', async function(){
+    var btn = this, isi = {};
+    [['titik_awal','brTitik'],['referensi','brReferensi'],['warna','brWarna'],['suasana','brSuasana'],
+     ['hindari','brHindari'],['catatan','brCatatan']].forEach(function(x){
+      var v = $(x[1]).value.trim(); if(v) isi[x[0]] = v;
+    });
+    var acuan = Array.prototype.map.call($('brFoto').querySelectorAll('[data-acuan]:checked'), function(c){ return c.dataset.acuan; });
+    if(acuan.length) isi.foto_acuan = acuan;
+    var badan = { isi: isi, tenggat: $('brTenggat').value || null };
+    btn.disabled = true;
+    try{
+      if(data.brief) await api('brief_custom?id=eq.'+data.brief.id, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify(badan) });
+      else await api('brief_custom', { method:'POST', prefer:'return=minimal', body: JSON.stringify(Object.assign({ pasangan_id: pasangan.id }, badan)) });
+      await muatDesain();
+      toast('Brief tersimpan');
+    }catch(err){ toast(err.message, true); }
+    finally{ btn.disabled = false; }
+  });
+  $('btnKirimRevisi').addEventListener('click', async function(){
+    var btn = this, isi = $('inRevisi').value.trim();
+    if(!isi){ toast('Tulis dulu permintaan revisinya', true); return; }
+    btn.disabled = true;
+    try{
+      await api('revisi_custom', { method:'POST', prefer:'return=minimal', body: JSON.stringify({ pasangan_id: pasangan.id, isi: isi }) });
+      $('inRevisi').value = '';
+      await muatDesain();
+      toast('Catatan revisi terkirim');
+    }catch(err){ toast(err.message, true); }
+    finally{ btn.disabled = false; }
+  });
+  $('daftarRevisi').addEventListener('click', async function(e){
+    var a = e.target.closest('[data-hapus-revisi]');
+    if(!a) return;
+    e.preventDefault();
+    if(!confirm('Hapus catatan revisi ini?')) return;
+    try{
+      await api('revisi_custom?id=eq.'+a.closest('[data-rid]').dataset.rid, { method:'DELETE', prefer:'return=minimal' });
+      await muatDesain();
+      toast('Catatan dihapus');
+    }catch(err){ toast(err.message, true); }
+  });
 
   /* ---------- Terima kasih kepada ---------- */
   function vendorBarisHtml(v){

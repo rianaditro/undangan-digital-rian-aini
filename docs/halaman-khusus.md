@@ -308,7 +308,7 @@ token, manifest, `kenangan.css`). Sesudahnya:
 | Tahap | Isi |
 |---|---|
 | **K1** ✅ | tema custom: validasi nama `custom/…`, kerangka `_contoh` (dengan `kenangan.css`), `tema/custom.json`, uji pakai ulang di `uji-tema.mjs`, kartu di dasbor |
-| **K2** | migrasi: paket `full_custom`, kolom `pasangan.khusus`, tabel `brief_custom` + `revisi_custom`; panel brief & revisi di dasbor; antrean dan katalog custom di `/pemilik` |
+| **K2** ✅ | migrasi: paket `full_custom`, kolom `pasangan.khusus`, tabel `brief_custom` + `revisi_custom`; panel brief & revisi di dasbor; antrean dan katalog custom di `/pemilik` |
 | **K3** | skill `full-custom` + satu tema custom percontohan (misal untuk Rian & 'Aini) |
 | **K4** | kit v1 (dibakukan dari `varian.js`, termasuk `Kit.kenangan()`), `custom/peta.json` + rute di Worker, `uji-custom.mjs`, kerangka `custom/_contoh/` |
 
@@ -359,3 +359,46 @@ custom pertama tinggal dibuat.
 Memasang tema custom ke pasangan, sampai `/pemilik` punya tombolnya (K2):
 `update pasangan set tema = 'custom/<kode>', tema_setel = '{}' where slug = '…';`
 — sesudah foldernya ada di `main`.
+
+## 11. K2 — paket, brief, revisi, antrean, selesai (14 Oktober 2026)
+
+**Migrasi 039** (`supabase/migrations/039_full_custom.sql`, uji
+`uji/sql/039-full-custom.sql`, 36 cek):
+
+- Paket ketiga `full_custom` di `pasangan`, `pasangan_siapkan`, dan
+  `admin_paket`. Alamatnya subdomain (pemicu 023 tidak berubah). Pesanan
+  lewat admin/reseller tetap standar/premium saja — Full Custom dijual
+  pemilik langsung.
+- `pasangan.khusus` (objek JSON ≤ 20 KB) ikut `undangan_isi`; diisi
+  pemilik lewat `admin_khusus`.
+- `brief_custom` (satu per pasangan: `isi` jsonb, `tenggat`, `status`,
+  `pratinjau` https) dan `revisi_custom` (satu catatan per baris, `status`,
+  `komit`). RLS: pasangan sendiri, dan hanya bila paketnya `full_custom`;
+  pemilik platform melihat semuanya. Status, alamat pratinjau, dan hash
+  komit hanya bisa diisi pemilik platform (dijaga pemicu). Catatan revisi
+  baru memindahkan brief yang `pratinjau`/`terbit` ke `revisi`.
+- RPC pemilik: `admin_custom_antrean`, `admin_custom_status`,
+  `admin_revisi_selesai`, `admin_khusus`, `admin_tema`.
+- **Pintu yang ditutup:** sebelum 039, pasangan yang login bisa mengubah
+  seluruh baris `pasangan`-nya lewat REST — termasuk menaikkan paket,
+  memperpanjang `masa_aktif`, menunda `hapus_pada`, melepas `reseller_id`,
+  menghapus undangannya, dan (dengan Full Custom) memasang tema custom
+  orang lain. Pemicu `pasangan_jaga_kolom` kini menolaknya untuk peran
+  `authenticated` yang bukan pemilik platform. Yang dipakai dasbor tetap
+  boleh, termasuk terbit/tarik (status draf ↔ aktif). Diuji kedua arah;
+  tanpa pemicu, ujinya merah 11.
+
+**Dasbor** — halaman "Desain khusus", hanya untuk paket Full Custom:
+status pengerjaan dengan tautan pratinjau, brief (titik awal, referensi,
+warna, suasana, yang tidak diinginkan, catatan, tenggat, sampai 10 foto
+acuan dari pustaka), dan permintaan revisi (kirim, hapus yang belum
+dikerjakan).
+
+**/pemilik** — halaman "Full Custom": antrean (acara terdekat dulu),
+brief, status + alamat pratinjau, pasang tema (katalog atau custom),
+catatan revisi dengan centang + hash komit, isi khusus (JSON), dan katalog
+custom dari `tema/custom.json` beserta siapa yang memakainya. Paket Full
+Custom juga ada di formulir pasangan baru dan pilihan paket.
+
+Yang belum: lampiran tangkapan layar di catatan revisi (sementara cukup
+tulisan; foto acuan dari pustaka sudah bisa).

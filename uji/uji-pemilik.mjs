@@ -41,7 +41,18 @@ function bikinModel(){
     { user_id:'u-o', email:'owner@contoh.com', nama:'Owner', peran:'owner', dibuat:'2026-09-01T00:00:00Z' },
     { user_id:'u-a', email:'staf@contoh.com', nama:'Staf', peran:'admin', dibuat:'2026-10-01T00:00:00Z' }
   ];
-  return { pasangan, token, pesanan, reseller, admins, peran:'owner', panggilan: [], adminOk: true, hapusGagal: false };
+  const antrean = [
+    { pasangan_id:'p-fc', slug:'bima-laras', terbit:false, tanggal_acara:'2026-12-20', tema:'ukir-jepara', khusus:{},
+      brief_id:'b-1', status:'pratinjau', isi:{ suasana:'teduh <i>pagi</i>', warna:'sage', foto_acuan:['f1','f2'] },
+      tenggat:'2026-11-30', pratinjau:'https://pr-3.contoh.workers.dev', diubah:'2026-10-12T00:00:00Z', revisi_baru:1 },
+    { pasangan_id:'p-fc2', slug:'dewa-ayu', terbit:false, tanggal_acara:null, tema:'kisah', khusus:{},
+      brief_id:null, status:null, isi:null, tenggat:null, pratinjau:null, diubah:null, revisi_baru:0 }
+  ];
+  const revisi = [
+    { id:'rv-1', pasangan_id:'p-fc', isi:'Nama lebih besar', status:'baru', komit:null, dibuat:'2026-10-13T00:00:00Z' },
+    { id:'rv-2', pasangan_id:'p-fc', isi:'Warna lebih hangat', status:'selesai', komit:'abc1234', dibuat:'2026-10-10T00:00:00Z' }
+  ];
+  return { pasangan, token, pesanan, reseller, admins, antrean, revisi, peran:'owner', panggilan: [], adminOk: true, hapusGagal: false };
 }
 
 async function pasang(page, model){
@@ -98,9 +109,30 @@ async function pasang(page, model){
         p.canonical_host = arg.p_paket === 'premium' ? p.slug + '.mengundang.id' : null;
         return kirim(null);
       }
+      /* Full Custom (039) */
+      if (nama === 'admin_custom_antrean') return kirim(model.antrean);
+      if (nama === 'admin_custom_status'){
+        const a = model.antrean.find(x => x.pasangan_id === arg.p_pasangan);
+        a.status = arg.p_status; if (arg.p_pratinjau) a.pratinjau = arg.p_pratinjau; return kirim(null);
+      }
+      if (nama === 'admin_tema'){
+        model.antrean.find(x => x.pasangan_id === arg.p_pasangan).tema = arg.p_tema; return kirim(null);
+      }
+      if (nama === 'admin_khusus'){
+        model.antrean.find(x => x.pasangan_id === arg.p_pasangan).khusus = arg.p_isi; return kirim(null);
+      }
+      if (nama === 'admin_revisi_selesai'){
+        let n = 0;
+        for (const r of model.revisi) if (arg.p_ids.includes(r.id) && r.status === 'baru'){ r.status = 'selesai'; r.komit = arg.p_komit; n++; }
+        return kirim(n);
+      }
       if (nama === 'admin_hapus_kosong')
         return kirim({ message:'Pasangan ini sudah berisi 465 baris data; arsipkan saja, jangan dihapus' }, 400);
       return kirim({ message:'rpc tak dikenal: ' + nama }, 404);
+    }
+    if (jalur === '/rest/v1/revisi_custom'){
+      model.panggilan.push({ nama:'rest revisi', arg:url.search, auth });
+      return kirim(model.revisi.filter(r => url.searchParams.get('pasangan_id') === 'eq.' + r.pasangan_id));
     }
     if (jalur === '/functions/v1/admin-pasangan'){
       model.panggilan.push({ nama:'fn', arg, auth });
@@ -539,12 +571,81 @@ const browser = await chromium.launch();
   cek('15 tata letak 400px bersih', buruk.length === 0, buruk.join(' ; '));
   await page.screenshot({ path:'admin-400.png', clip:{x:0,y:0,width:400,height:1000} });
   const lebarnya = [];
-  for (const h of ['baru', 'akun', 'pesanan', 'mitra']) {
+  for (const h of ['baru', 'akun', 'pesanan', 'mitra', 'custom']) {
     await ke(page, h);
     const w = await page.evaluate(() => document.documentElement.scrollWidth);
     if (w > 401) lebarnya.push(h + ' ' + w);
   }
   cek('15b setiap halaman muat di 400px tanpa gulir mendatar', lebarnya.length === 0, lebarnya.join(' ; '));
+  await ctx.close();
+}
+
+/* ===== Full Custom (039) ===== */
+{
+  const { ctx, page, model } = await halaman(browser, {});
+  await page.route('**/tema/custom.json', r => r.fulfill({ status:200, contentType:'application/json',
+    body: JSON.stringify([{ kode:'custom/teras-jati', nama:'Teras Jati', untuk:'Rumah joglo', asal:'bima-laras', turunan:null,
+      tangga:2, isi_khusus:[], palet:[{ kode:'a', nama:'A', latar:'#F4EFE6', teks:'#2B2B2B', aksen:'#7A5C3A' }] }]) }));
+  const dialog = []; page.on('dialog', d => { dialog.push(d.message()); d.accept(); });
+  await page.locator('#inEmail').fill('admin@contoh.com');
+  await page.locator('#inSandi').fill('benar');
+  await page.locator('#btnMasuk').click();
+  await page.waitForSelector('.ps', { timeout:8000 });
+  await ke(page, 'custom');
+  await page.waitForSelector('#antreanCustom .baris');
+  const b = page.locator('#antreanCustom .baris');
+  const t0 = await b.first().textContent();
+  cek('fc-1 antrean: acara terdekat dulu, brief tampil ter-escape, revisi baru ditandai',
+      (await b.count()) === 2 && t0.includes('bima-laras') && t0.includes('teduh <i>pagi</i>') && t0.includes('2 foto')
+      && t0.includes('1 revisi baru') && await b.first().locator('i').count() === 0
+      && (await b.nth(1).textContent()).includes('Brief belum diisi'), t0.replace(/\s+/g, ' ').slice(0, 200));
+  cek('fc-2 pilihan tema memuat katalog custom dan katalog biasa',
+      await b.first().locator('[data-isi="tema"] option[value="custom/teras-jati"]').count() === 1
+      && await b.first().locator('[data-isi="tema"] option[value="kisah"]').count() === 1);
+  const kat = await page.locator('#katalogCustom').textContent();
+  cek('fc-3 katalog custom: nama, kode, asal', kat.includes('Teras Jati') && kat.includes('custom/teras-jati') && kat.includes('bima-laras'), kat);
+
+  await b.first().locator('[data-isi="status"]').selectOption('dikerjakan');
+  await b.first().locator('[data-aksi="statusCustom"]').click();
+  await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('Status'));
+  const st = model.panggilan.filter(p => p.nama === 'admin_custom_status').at(-1);
+  cek('fc-4 simpan status: RPC dengan status dan alamat pratinjau', st && st.arg.p_status === 'dikerjakan'
+      && st.arg.p_pratinjau === 'https://pr-3.contoh.workers.dev' && st.auth === 'JWT-admin@contoh.com', JSON.stringify(st));
+
+  await page.locator('#antreanCustom .baris').first().locator('[data-isi="tema"]').selectOption('custom/teras-jati');
+  await page.locator('#antreanCustom .baris').first().locator('[data-aksi="temaCustom"]').click();
+  await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('Tema terpasang'));
+  cek('fc-5 pasang tema custom: ditanya dulu, lalu admin_tema', dialog.some(m => /Pasang tema custom\/teras-jati/.test(m))
+      && model.antrean[0].tema === 'custom/teras-jati');
+
+  const bb = () => page.locator('#antreanCustom .baris').first();
+  await bb().locator('[data-aksi="revisiCustom"]').click();
+  await page.waitForSelector('#antreanCustom [data-rid]');
+  await bb().locator('[data-isi="komit"]').fill('zzz');
+  await bb().locator('[data-aksi="revisiSelesai"]').click();
+  await page.waitForFunction(() => /heksadesimal/.test(document.querySelector('#toast').textContent));
+  await bb().locator('[data-isi="komit"]').fill('6E19802');
+  await bb().locator('[data-aksi="revisiSelesai"]').click();
+  await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('ditandai selesai'));
+  const rs = model.panggilan.filter(p => p.nama === 'admin_revisi_selesai');
+  cek('fc-6 revisi: hash komit diperiksa, yang dicentang ditandai selesai', rs.length === 1
+      && JSON.stringify(rs[0].arg.p_ids) === '["rv-1"]' && rs[0].arg.p_komit === '6E19802' && model.revisi[0].status === 'selesai');
+
+  await bb().locator('[data-aksi="khususCustom"]').click();
+  await bb().locator('[data-wadah="khusus"] textarea').fill('[1,2]');
+  await bb().locator('[data-aksi="simpanKhusus"]').click();
+  await page.waitForFunction(() => /objek/.test(document.querySelector('#toast').textContent));
+  await bb().locator('[data-wadah="khusus"] textarea').fill('{"kutipan":"Bersama"}');
+  await bb().locator('[data-aksi="simpanKhusus"]').click();
+  await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('Isi khusus tersimpan'));
+  cek('fc-7 isi khusus: larik ditolak di halaman, objek dikirim', model.antrean[0].khusus.kutipan === 'Bersama'
+      && model.panggilan.filter(p => p.nama === 'admin_khusus').length === 1);
+  await page.locator('.halaman.aktif').screenshot({ path:'pemilik-custom-1100.png' });
+
+  await page.evaluate(() => window.Panel.ke('baru'));
+  await page.locator('#inPaket').selectOption('full_custom');
+  cek('fc-8 buka pasangan baru: paket Full Custom tersedia, alamatnya subdomain',
+      /Subdomain sendiri/.test(await page.locator('#hintPaket').textContent()));
   await ctx.close();
 }
 
