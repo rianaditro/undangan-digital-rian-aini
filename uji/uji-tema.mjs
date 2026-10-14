@@ -214,7 +214,11 @@ for (const tema of DAFTAR) {
     const g = document.getElementById('galeriIsi');
     return { sendiri: el.map((e, i) => e.classList.contains('sendiri') ? i : -1).filter(i => i >= 0),
              penuh: el.filter(e => e.getBoundingClientRect().width > lebar * 0.9).length,
-             strip: getComputedStyle(g).overflowX === 'auto' && el.every(e => Math.abs(e.getBoundingClientRect().top - el[0].getBoundingClientRect().top) < 30) };
+             // satu baris = rentang tegak setiap foto bertumpang dengan foto pertama
+             // (foto mendatar lebih pendek dan ditengahkan, jadi tepi atasnya beda)
+             strip: getComputedStyle(g).overflowX === 'auto' && el.every(e => {
+               const a = e.getBoundingClientRect(), b = el[0].getBoundingClientRect();
+               return a.top < b.bottom && a.bottom > b.top; }) };
   });
   /* tema bergaleri strip (Dokumenter) tidak punya petak sama sekali: satu baris yang digeser */
   cek(`${tema.kode}: galeri tegak ganjil — ${h.strip ? 'strip satu baris' : 'yang tak berpasangan dilebarkan (tanpa petak kosong)'}`,
@@ -652,7 +656,7 @@ if (DAFTAR.some(t => t.kode === 'dokumenter')) {
       });
       const lebih = await melebar(r.page);
       cek(`kisah ${tema.kode} ${lebar}: empat bab setelah mempelai, foto tergambar, tidak melebar, judul ter-escape`,
-        h.tampak && h.urutan && h.bab === 4 && h.kelas === 'fttf' && h.tahun === '2015|2025|2026' && h.judulAman
+        h.tampak && h.urutan && h.bab === 4 && h.kelas === 'ftft' && h.tahun === '2015|2025|2026' && h.judulAman
         && h.foto.length === 2 && h.foto.every(Boolean) && !h.keluar && h.terbaca && lebih <= 0 && !r.galat.length,
         JSON.stringify({ ...h, lebih, galat: r.galat }));
       await r.page.locator('#kisah').screenshot({ path: `tema-${tema.kode}-kisah-${lebar}.png` });
