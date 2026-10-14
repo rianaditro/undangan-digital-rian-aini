@@ -116,6 +116,9 @@ Angka di kolom kontras: teks utama / aksen terhadap latar.
 
 ### 3.1 Kisah — album keluarga · *Dari foto: ya*
 
+> **Terpasang (14 Okt)** bersama tabel `kisah` (migrasi 038) dan halaman
+> "Kisah kami" di dasbor. Palet dan gaya teks seperti tabel di bawah.
+
 | Palet | Latar | Teks | Aksen | Kontras |
 |---|---|---|---|---|
 | Sepia Klasik (bawaan) | `#F4ECDD` | `#3B2A1E` | `#A0522D` | 11.6 / 4.8 |

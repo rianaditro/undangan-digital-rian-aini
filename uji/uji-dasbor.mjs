@@ -179,7 +179,13 @@ async function pasang(page, model) {
       const tabel = m[1];
       let badan = {};
       try { badan = JSON.parse(req.postData() || '{}'); } catch {}
-      if (req.method() === 'GET')   return kirim(model[tabel] || []);
+      if (req.method() === 'GET') {
+        /* PostgREST mengurutkan menurut order=urutan…; tiruan ikut, supaya
+           daftar yang dimuat ulang sama urutannya dengan di server. */
+        const baris = model[tabel] || [];
+        return kirim(/^urutan/.test(u.searchParams.get('order') || '')
+          ? [...baris].sort((a, b) => (a.urutan ?? 0) - (b.urutan ?? 0)) : baris);
+      }
       if (req.method() === 'PATCH') {
         const id = (u.searchParams.get('id') || '').replace(/^eq\./, '');
         model.patch.push({ tabel, id, badan });
@@ -1227,6 +1233,59 @@ const browser = await chromium.launch();
 
 cek('99 tidak ada galat JavaScript di halaman sepanjang uji',
     galatHalaman.length === 0, '\n' + galatHalaman.join('\n---\n'));
+
+/* ---------- Kisah kami (038) ---------- */
+{
+  const model = bikinModel();
+  model.kisah = [{ id: 'k-1', pasangan_id: 'p-1', urutan: 0, tahun: '2015', judul: 'Pertama bertemu', teks: 'Di kampus.', foto_id: 'f-1' }];
+  const { ctx, page } = await masuk(browser, model, 400, 'kisah');
+  const baris = page.locator('#formKisah .kisah-baris');
+  cek('kisah-1 halaman Kisah kami ada di menu dan bab tersimpan tergambar',
+      await page.locator('.menu nav a[href="#kisah"]').count() === 1 && await page.locator('#panelKisah').isVisible()
+      && (await baris.count()) === 1 && (await baris.nth(0).locator('[data-kk="judul"]').inputValue()) === 'Pertama bertemu'
+      && (await baris.nth(0).locator('[data-kk="foto_id"]').inputValue()) === 'f-1'
+      && await baris.nth(0).locator('img').isVisible());
+
+  const simpan = async () => {
+    await page.evaluate(() => { document.querySelector('#toast').textContent = ''; });
+    await page.locator('#btnSimpanKisah').click();
+    await page.waitForFunction(() => document.querySelector('#toast').textContent !== '', null, { timeout: 5000 });
+    return page.locator('#toast').textContent();
+  };
+
+  await page.locator('#btnContohKisah').click();
+  cek('kisah-2 kerangka menambah lima bab, tanpa kata "pacaran"', (await baris.count()) === 6
+      && !(await page.locator('#formKisah').evaluate(el => [...el.querySelectorAll('input')].map(i => i.value).join(' '))).match(/pacaran/i));
+  await baris.nth(3).locator('[data-kk="judul"]').fill('');
+  await baris.nth(3).locator('[data-kk="teks"]').fill('x'.repeat(150));
+  cek('kisah-3 penghitung huruf memperingatkan tulisan panjang',
+      await baris.nth(3).locator('.hitung.panjang').count() === 1);
+  const t1 = await simpan();
+  cek('kisah-4 bab tanpa judul ditolak sebelum dikirim', /judul/i.test(t1) && !model.post.some(x => x.tabel === 'kisah'), t1);
+  await baris.nth(3).locator('[data-kisah-aksi="hapus"]').click();
+  // bab 1 diubah dan dipindah ke bawah bab kerangka pertama
+  await baris.nth(0).locator('[data-kk="teks"]').fill('Di perpustakaan kampus.');
+  await baris.nth(0).locator('[data-kisah-aksi="turun"]').click();
+  await baris.nth(2).locator('[data-kk="foto_id"]').selectOption('f-2');
+  await simpan();
+  const post = model.post.filter(x => x.tabel === 'kisah');
+  const patch = model.patch.filter(x => x.tabel === 'kisah');
+  cek('kisah-5 bab baru: satu POST berisi empat bab, urutan ikut posisi, foto terpilih ikut',
+      post.length === 1 && post[0].badan.length === 4 && post[0].badan.every(b => b.pasangan_id === 'p-1')
+      && post[0].badan[0].judul === 'Masa kecil' && post[0].badan[0].urutan === 0
+      && post[0].badan[1].foto_id === 'f-2' && post[0].badan[1].urutan === 2, JSON.stringify(post));
+  cek('kisah-6 bab lama yang diubah: PATCH teks dan urutan', patch.length === 1 && patch[0].id === 'k-1'
+      && patch[0].badan.teks === 'Di perpustakaan kampus.' && patch[0].badan.urutan === 1, JSON.stringify(patch));
+  cek('kisah-7 sesudah simpan daftar dimuat ulang', (await baris.count()) === 5);
+  const t2 = await simpan();
+  cek('kisah-8 simpan tanpa perubahan tidak mengirim apa-apa', /tidak ada yang berubah/i.test(t2), t2);
+  await baris.nth(0).locator('[data-kisah-aksi="hapus"]').click();
+  await baris.nth(0).locator('[data-kisah-aksi="hapus"]').click();
+  await simpan();
+  cek('kisah-9 bab dihapus: DELETE id=in.(…)', model.hapus.some(x => x.tabel === 'kisah') && model.kisah.length === 3);
+  await page.locator('#panelKisah').screenshot({ path: 'dasbor-kisah-400.png' });
+  await ctx.close();
+}
 
 await browser.close(); srv.close();
 console.log('\n' + lulus + ' lulus, ' + gagal + ' gagal');

@@ -129,6 +129,14 @@
 .blok-kepala .centang{margin:0;padding:0;border:0;}
 .wajib{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(17,24,39,.4);}
 .baris.mati input:not([type=checkbox]),.baris.mati textarea,.baris.mati .pilih-latar{opacity:.45;}
+.kisah-baris{display:grid;gap:6px 10px;grid-template-columns:1fr;}
+.kisah-baris .atas{display:grid;gap:6px;grid-template-columns:110px 1fr;}
+.kisah-baris .bawah{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.kisah-baris .bawah select{flex:1 1 180px;}
+.kisah-baris .bawah img{width:44px;height:44px;object-fit:cover;border-radius:6px;background:var(--nila-2);}
+.kisah-baris .hitung{font-size:11px;color:rgba(17,24,39,.5);text-align:right;margin-top:-4px;}
+.kisah-baris .hitung.panjang{color:#b45309;}
+.kisah-baris .btn{padding:6px 10px;font-size:10px;}
 .vendor-baris{display:grid;gap:6px;grid-template-columns:1fr 1fr;align-items:end;}
 .vendor-baris input[data-kv="tautan"]{grid-column:1 / -1;}
 .vendor-baris .btn{grid-column:1 / -1;justify-self:start;padding:6px 10px;font-size:10px;}
@@ -208,7 +216,7 @@
     <div class="menu-merek"><span class="logo">m</span><div><b>Dasbor Pengantin</b><small id="menuPasangan">mengundang.id</small></div></div>
     <nav aria-label="Menu dasbor">
       <div class="grup"><a href="#beranda"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Beranda</a></div>
-      <div class="grup"><p class="grup-judul">Undangan</p><a href="#pengantin"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M3.5 20c.6-3.4 3-5.4 5.5-5.4s4.9 2 5.5 5.4"/><path d="M14.5 15c2.6-.4 5 1.3 5.8 4.6"/></svg>Pengantin</a><a href="#acara"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Acara & tempat</a><a href="#hadiah"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M3 12h18M12 8v13"/><path d="M12 8c-1.5-3-5-3.5-5-1s3 1 5 1c2 0 5 1.5 5-1s-3.5-2-5 1z"/></svg>Hadiah</a><a href="#tampilan"><svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 16l4-10 4 10"/><path d="M7.5 12.5h5"/><path d="M16 9h4M18 7v4"/></svg>Penutup & tampilan</a></div>
+      <div class="grup"><p class="grup-judul">Undangan</p><a href="#pengantin"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><circle cx="16.5" cy="9" r="2.6"/><path d="M3.5 20c.6-3.4 3-5.4 5.5-5.4s4.9 2 5.5 5.4"/><path d="M14.5 15c2.6-.4 5 1.3 5.8 4.6"/></svg>Pengantin</a><a href="#kisah"><svg viewBox="0 0 24 24"><path d="M4 5h7a3 3 0 013 3v12a2.5 2.5 0 00-2.5-2.5H4z"/><path d="M20 5h-4a2 2 0 00-2 2"/><path d="M20 5v12.5h-5"/></svg>Kisah kami</a><a href="#acara"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Acara & tempat</a><a href="#hadiah"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M3 12h18M12 8v13"/><path d="M12 8c-1.5-3-5-3.5-5-1s3 1 5 1c2 0 5 1.5 5-1s-3.5-2-5 1z"/></svg>Hadiah</a><a href="#tampilan"><svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 16l4-10 4 10"/><path d="M7.5 12.5h5"/><path d="M16 9h4M18 7v4"/></svg>Penutup & tampilan</a></div>
       <div class="grup"><p class="grup-judul">Halaman kenangan</p><a href="#foto"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>Foto & video</a><a href="#kenangan"><svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>Isi halaman</a><a href="#vendor"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.6-7 10-7 10z"/></svg>Vendor & pendukung</a><a href="#video"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 9.5v5l4-2.5z"/></svg>Video story</a></div>
     </nav>
     <div class="menu-kaki"><button class="btn ghost kecil" id="btnKeluar" style="width:100%">Keluar</button></div>
@@ -257,6 +265,7 @@
     <h3 class="subjudul">Jalan pintas</h3>
     <div class="pintas">
       <a href="#pengantin"><b>Pengantin</b><span>Nama, orang tua, silsilah keluarga</span></a>
+      <a href="#kisah"><b>Kisah kami</b><span>Perjalanan kalian, bab demi bab</span></a>
       <a href="#acara"><b>Acara &amp; tempat</b><span>Akad, resepsi, alamat, peta</span></a>
       <a href="#foto"><b>Foto &amp; video</b><span>Unggah, impor Drive, atur potongan</span></a>
       <a href="#vendor"><b>Vendor &amp; pendukung</b><span>Fotografer, dekorasi, katering, MUA</span></a>
@@ -288,6 +297,21 @@
     <input id="berkasSilsilah" type="file" accept="image/*" hidden>
   </div>
 
+  </section>
+
+  <section class="halaman" data-halaman="kisah" data-judul="Kisah kami">
+    <h2 class="halaman-judul">Kisah kami</h2>
+    <p class="halaman-sub">Perjalanan kalian, bab demi bab — dari kecil, bertemu, sampai menikah. Tampil di undangan sebagai garis waktu; tema Kisah menjadikannya inti. Kosong = bagian ini tidak muncul.</p>
+  <div class="panel" id="panelKisah">
+    <h2>Bab</h2>
+    <p class="hint">Tahun boleh bebas — "2015", "Kelas 2 SMA", "Ramadan 2023". Tulisan cukup satu-dua kalimat: lebih dari 140 huruf mulai terasa panjang di layar HP. Foto diambil dari pustaka <a href="#foto">Foto &amp; video</a>; bab tanpa foto tetap tampil sebagai bab tulisan.</p>
+    <div id="formKisah"></div>
+    <div class="aksi">
+      <button class="btn ghost" id="btnTambahKisah" type="button">+ Tambah bab</button>
+      <button class="btn ghost" id="btnContohKisah" type="button">Isi kerangka bab</button>
+      <button class="btn solid" id="btnSimpanKisah" type="button">Simpan Kisah</button>
+    </div>
+  </div>
   </section>
 
   <section class="halaman" data-halaman="acara" data-judul="Acara & tempat">
@@ -538,7 +562,7 @@
      sekalipun ia berhasil mendaftar sendiri.
      ============================================================ */
   var KUNCI='dasbor-sesi', sesi=null, pasangan=null;
-  var data = { mempelai:[], tempat:[], acara:[], dompet:[], pihak:[], foto:[], kenangan_blok:[], silsilah:[], kenangan_vendor:[] };
+  var data = { mempelai:[], tempat:[], acara:[], dompet:[], pihak:[], foto:[], kenangan_blok:[], silsilah:[], kenangan_vendor:[], kisah:[] };
 
   try{ sesi = JSON.parse(localStorage.getItem(KUNCI)||'null'); }catch(e){}
 
@@ -595,7 +619,8 @@
       api('foto?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,diunggah'),
       api('kenangan_blok?select=*&pasangan_id=eq.'+pasangan.id),
       api('silsilah?select=*&pasangan_id=eq.'+pasangan.id+'&order=sisi,urutan'),
-      api('kenangan_vendor?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,dibuat')
+      api('kenangan_vendor?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,dibuat'),
+      api('kisah?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,dibuat')
     ]);
     data.mempelai=hasil[0]; data.tempat=hasil[1]; data.acara=hasil[2];
     data.dompet=hasil[3];   data.pihak=hasil[4];
@@ -603,11 +628,13 @@
     data.kenangan_blok = hasil[6] || [];
     data.silsilah = hasil[7] || [];
     data.kenangan_vendor = hasil[8] || [];
+    data.kisah = hasil[9] || [];
     gambar();
     gambarSilsilah();
     gambarFoto();
     gambarKenangan();
     gambarVendor();
+    gambarKisah();
     kabarKenangan();
   }
 
@@ -1912,6 +1939,122 @@
         + '</div>';
     }).join('');
   }
+
+  /* ============================================================
+     Kisah kami (migrasi 038)
+
+     Pola yang sama dengan vendor: baris di layar → PATCH yang berubah,
+     POST yang baru, DELETE yang hilang. Foto bab menunjuk baris `foto`
+     yang sudah ada; database menolak foto milik undangan lain.
+     ============================================================ */
+  var BATAS_KISAH_ENAK = 140;
+  function opsiFotoKisah(pilih){
+    var foto = (data.foto || []).filter(function(f){ return f.jenis !== 'video'; });
+    return '<option value="">Tanpa foto</option>' + foto.map(function(f, i){
+      return '<option value="'+esc(f.id)+'"'+(f.id === pilih ? ' selected' : '')+'>Foto '+(i + 1)
+        + (f.keterangan ? ' — '+esc(String(f.keterangan).slice(0, 40)) : '')+'</option>';
+    }).join('');
+  }
+  function kecilFoto(id){
+    var f = (data.foto || []).find(function(x){ return x.id === id; });
+    return f ? window.Gambar.url(f.jalur_kecil || f.jalur) : '';
+  }
+  function kisahBarisHtml(k){
+    var teks = k.teks || '', src = k.foto_id ? kecilFoto(k.foto_id) : '';
+    return '<div class="baris kisah-baris" data-kisah="'+esc(k.id || '')+'">'
+      + '<div class="atas">'
+      +   '<input data-kk="tahun" maxlength="30" placeholder="Tahun" value="'+esc(k.tahun || '')+'" aria-label="Tahun">'
+      +   '<input data-kk="judul" maxlength="60" placeholder="Judul bab, mis. Pertama bertemu" value="'+esc(k.judul || '')+'" aria-label="Judul bab">'
+      + '</div>'
+      + '<textarea data-kk="teks" maxlength="280" rows="2" placeholder="Satu-dua kalimat" aria-label="Tulisan">'+esc(teks)+'</textarea>'
+      + '<p class="hitung'+(teks.length > BATAS_KISAH_ENAK ? ' panjang' : '')+'">'+teks.length+' / '+BATAS_KISAH_ENAK+'</p>'
+      + '<div class="bawah">'
+      +   '<img alt=""'+(src ? ' src="'+esc(src)+'"' : ' hidden')+'>'
+      +   '<select data-kk="foto_id" aria-label="Foto bab">'+opsiFotoKisah(k.foto_id)+'</select>'
+      +   '<button type="button" class="btn ghost" data-kisah-aksi="naik" title="Naikkan">&uarr;</button>'
+      +   '<button type="button" class="btn ghost" data-kisah-aksi="turun" title="Turunkan">&darr;</button>'
+      +   '<button type="button" class="btn bahaya" data-kisah-aksi="hapus">Hapus</button>'
+      + '</div>'
+      + '</div>';
+  }
+  function gambarKisah(){
+    $('formKisah').innerHTML = (data.kisah || []).map(kisahBarisHtml).join('')
+      || '<p class="kosongstate" data-kisah-kosong>Belum ada bab. Tekan "Isi kerangka bab" untuk memulai dari kerangka, atau tambah satu per satu.</p>';
+  }
+  function tambahKisah(k){
+    var kosong = $('formKisah').querySelector('[data-kisah-kosong]');
+    if(kosong) kosong.remove();
+    $('formKisah').insertAdjacentHTML('beforeend', kisahBarisHtml(k || {}));
+  }
+  $('btnTambahKisah').addEventListener('click', function(){
+    tambahKisah({});
+    $('formKisah').lastElementChild.querySelector('[data-kk="judul"]').focus();
+  });
+  /* Kerangka: lima bab yang lazim. Tidak menulis "pacaran" — pasangan
+     ta'aruf bisa langsung memakainya. */
+  $('btnContohKisah').addEventListener('click', function(){
+    ['Masa kecil', 'Pertama bertemu', 'Saling mengenal', 'Lamaran', 'Menikah'].forEach(function(j){ tambahKisah({ judul: j }); });
+  });
+  $('formKisah').addEventListener('input', function(e){
+    if(e.target.dataset.kk !== 'teks') return;
+    var h = e.target.closest('.kisah-baris').querySelector('.hitung'), n = e.target.value.length;
+    h.textContent = n + ' / ' + BATAS_KISAH_ENAK;
+    h.classList.toggle('panjang', n > BATAS_KISAH_ENAK);
+  });
+  $('formKisah').addEventListener('change', function(e){
+    if(e.target.dataset.kk !== 'foto_id') return;
+    var img = e.target.closest('.kisah-baris').querySelector('img'), src = kecilFoto(e.target.value);
+    img.hidden = !src; if(src) img.src = src; else img.removeAttribute('src');
+  });
+  $('formKisah').addEventListener('click', function(e){
+    var t = e.target.closest('[data-kisah-aksi]');
+    if(!t) return;
+    var baris = t.closest('.kisah-baris'), aksi = t.dataset.kisahAksi;
+    if(aksi === 'hapus') baris.remove();
+    else if(aksi === 'naik' && baris.previousElementSibling) baris.parentNode.insertBefore(baris, baris.previousElementSibling);
+    else if(aksi === 'turun' && baris.nextElementSibling) baris.parentNode.insertBefore(baris.nextElementSibling, baris);
+  });
+  function bacaKisah(){
+    var baris = [], salah = null;
+    document.querySelectorAll('#formKisah .kisah-baris').forEach(function(el){
+      var nilai = function(k){ return el.querySelector('[data-kk="'+k+'"]').value.trim(); };
+      var k = { id: el.dataset.kisah || null, tahun: nilai('tahun') || null, judul: nilai('judul'),
+                teks: nilai('teks') || null, foto_id: nilai('foto_id') || null };
+      if(!k.id && !k.tahun && !k.judul && !k.teks && !k.foto_id) return;   // baris baru yang dibiarkan kosong
+      if(!k.judul) salah = salah || 'Setiap bab perlu judul.';
+      k.urutan = baris.length;
+      baris.push(k);
+    });
+    if(salah) throw new Error(salah);
+    return baris;
+  }
+  async function simpanKisah(){
+    var btn = $('btnSimpanKisah'), label = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Menyimpan…';
+    try{
+      var baris = bacaKisah(), lama = {}, tetap = {}, tugas = [];
+      (data.kisah || []).forEach(function(k){ lama[k.id] = k; });
+      var KOLOM = ['tahun','judul','teks','foto_id','urutan'];
+      baris.forEach(function(k){
+        if(!k.id || !lama[k.id]) return;
+        tetap[k.id] = true;
+        if(KOLOM.every(function(c){ return (lama[k.id][c] == null ? null : lama[k.id][c]) === k[c]; })) return;
+        tugas.push(api('kisah?id=eq.'+k.id, { method:'PATCH', prefer:'return=minimal', body: JSON.stringify(bersih(k, KOLOM)) }));
+      });
+      var baru = baris.filter(function(k){ return !k.id; }).map(function(k){
+        return Object.assign({ pasangan_id: pasangan.id }, bersih(k, KOLOM));
+      });
+      if(baru.length) tugas.push(api('kisah', { method:'POST', prefer:'return=minimal', body: JSON.stringify(baru) }));
+      var buang = Object.keys(lama).filter(function(id){ return !tetap[id]; });
+      if(buang.length) tugas.push(api('kisah?id=in.('+buang.join(',')+')', { method:'DELETE', prefer:'return=minimal' }));
+      await Promise.all(tugas);
+      data.kisah = await api('kisah?select=*&pasangan_id=eq.'+pasangan.id+'&order=urutan,dibuat') || [];
+      gambarKisah();
+      toast(tugas.length ? 'Kisah tersimpan' : 'Tidak ada yang berubah');
+    }catch(err){ toast(err.message, true); }
+    finally{ btn.disabled = false; btn.textContent = label; }
+  }
+  $('btnSimpanKisah').addEventListener('click', simpanKisah);
 
   /* ---------- Terima kasih kepada ---------- */
   function vendorBarisHtml(v){

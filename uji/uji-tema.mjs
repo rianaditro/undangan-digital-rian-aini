@@ -615,6 +615,60 @@ if (DAFTAR.some(t => t.kode === 'dokumenter')) {
   await k.ctx.close();
 }
 
+/* ---------- Kisah kami (038): slot di semua tema ---------- */
+{
+  const BAB = [
+    { tahun: '2015', judul: 'Pertama bertemu', teks: 'Satu kelas di semester pertama, berbagi catatan sebelum ujian.', foto: foto('u/tegak.jpg') },
+    { tahun: null, judul: 'Saling mengenal', teks: null, foto: null },
+    { tahun: '2025', judul: 'Lamaran', teks: 'Dua keluarga bertemu di Jepara.', foto: foto('u/datar.jpg', { lebar: 1600, tinggi: 1000 }) },
+    { tahun: '2026', judul: 'Menikah <b>', teks: 'Dan kisah ini berlanjut.', foto: null }
+  ];
+  let r = await buka(isiDengan(KOSONG, { tema: 'ukir-jepara' }));
+  await bukaUndangan(r.page);
+  let h = await r.page.evaluate(() => ({ sembunyi: document.getElementById('kisah').hidden,
+    tampak: document.getElementById('kisah').getClientRects().length }));
+  cek('kisah: tanpa bab (pasangan lama / belum diisi) bagian tidak tampil', h.sembunyi && h.tampak === 0, JSON.stringify(h));
+  await r.ctx.close();
+
+  for (const tema of DAFTAR) {
+    for (const lebar of [360, 1280]) {
+      r = await buka(isiDengan(BANYAK, { tema: tema.kode, kisah: BAB }), { lebar });
+      await bukaUndangan(r.page);
+      h = await r.page.evaluate(() => {
+        const s = document.getElementById('kisah');
+        const bab = [...s.querySelectorAll('.kisah-bab')];
+        const kotak = s.getBoundingClientRect();
+        return {
+          tampak: !s.hidden && s.getClientRects().length > 0,
+          urutan: s.compareDocumentPosition(document.getElementById('mempelai')) & Node.DOCUMENT_POSITION_PRECEDING,
+          bab: bab.length,
+          kelas: bab.map(b => b.classList.contains('ada-foto') ? 'f' : 't').join(''),
+          tahun: [...s.querySelectorAll('.kisah-tahun')].map(e => e.textContent).join('|'),
+          judulAman: bab[3].querySelector('.kisah-judul').textContent === 'Menikah <b>' && !bab[3].querySelector('b'),
+          foto: [...s.querySelectorAll('.kisah-foto img')].map(i => i.complete && i.naturalWidth > 0 && i.getBoundingClientRect().width > 40),
+          keluar: bab.some(b => { const k = b.getBoundingClientRect(); return k.left < kotak.left - 1 || k.right > kotak.right + 1; }),
+          terbaca: bab.every(b => { const j = b.querySelector('.kisah-judul'); return getComputedStyle(j).opacity === '1' && j.getBoundingClientRect().height > 0; })
+        };
+      });
+      const lebih = await melebar(r.page);
+      cek(`kisah ${tema.kode} ${lebar}: empat bab setelah mempelai, foto tergambar, tidak melebar, judul ter-escape`,
+        h.tampak && h.urutan && h.bab === 4 && h.kelas === 'fttf' && h.tahun === '2015|2025|2026' && h.judulAman
+        && h.foto.length === 2 && h.foto.every(Boolean) && !h.keluar && h.terbaca && lebih <= 0 && !r.galat.length,
+        JSON.stringify({ ...h, lebih, galat: r.galat }));
+      await r.page.locator('#kisah').screenshot({ path: `tema-${tema.kode}-kisah-${lebar}.png` });
+      await r.ctx.close();
+    }
+  }
+
+  /* gerak dikurangi: garis waktu langsung utuh, bab langsung tampak */
+  r = await buka(isiDengan(KOSONG, { tema: 'kisah', kisah: BAB }), { reduced: true });
+  await r.page.click('#btnOpen'); await r.page.waitForTimeout(1100);
+  await r.page.locator('#kisah').scrollIntoViewIfNeeded(); await r.page.waitForTimeout(400);
+  h = await r.page.evaluate(() => [...document.querySelectorAll('#kisah .kisah-bab')].map(b => getComputedStyle(b).opacity));
+  cek('kisah dengan gerak dikurangi: bab tampak tanpa menunggu animasi', h.length === 4 && h.every(o => o === '1'), h.join());
+  await r.ctx.close();
+}
+
 await browser.close();
 console.log(`\n${lulus} lulus, ${gagal} gagal`);
 process.exit(gagal ? 1 : 0);

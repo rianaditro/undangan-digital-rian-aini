@@ -118,6 +118,19 @@
   </div>
 </section>
 
+<!-- ====== KISAH ====== -->
+<!-- Bab perjalanan pasangan (migrasi 038). Tanpa satu bab pun, bagiannya
+     tidak muncul. Semua tema menggambarnya; tema Kisah menjadikannya inti. -->
+<section id="kisah" class="on-paper center" hidden>
+  <div class="wrap">
+    <p class="eyebrow reveal">Perjalanan Kami</p>
+    <h2 class="title reveal">Kisah Kami</h2>
+    <ol class="kisah-daftar" id="kisahIsi"></ol>
+    <div class="gap"></div>
+    <svg class="ukir divider draw reveal" viewBox="0 0 240 40" aria-hidden="true"><use href="#ukir-pemisah"/></svg>
+  </div>
+</section>
+
 <!-- ====== COUNTDOWN ====== -->
 <!-- ====== SILSILAH ====== -->
 <section id="silsilah" class="on-paper center" hidden>
@@ -678,6 +691,29 @@
     seksi.hidden = !g.length;
   }
 
+  /* ---------- Kisah: bab demi bab ----------
+     Tahun, judul, satu-dua kalimat, foto opsional. Bab tanpa foto tetap
+     bab — tema menggambarnya sebagai bab teks. */
+  var kisahTergambar = false;
+  function gambarKisah(){
+    if(kisahTergambar) return;
+    kisahTergambar = true;
+    var bab = M.KISAH || [];
+    document.getElementById('kisahIsi').innerHTML = bab.map(function(k, i){
+      var f = k.foto;
+      return '<li class="kisah-bab reveal'+(f ? ' ada-foto' : ' tanpa-foto')+'" data-bab="'+i+'">'
+        +   (f ? '<div class="kisah-foto" style="'+gayaFoto(f)+'"><img src="'+esc(M.fotoUrl(f.kecil || f.jalur))+'" alt=""'
+               +  ' loading="lazy" decoding="async"></div>' : '')
+        +   '<div class="kisah-isi">'
+        +     (k.tahun ? '<p class="kisah-tahun">'+esc(k.tahun)+'</p>' : '')
+        +     '<h3 class="kisah-judul">'+esc(k.judul)+'</h3>'
+        +     (k.teks ? '<p class="kisah-teks">'+esc(k.teks)+'</p>' : '')
+        +   '</div>'
+        + '</li>';
+    }).join('');
+    document.getElementById('kisah').hidden = !bab.length;
+  }
+
   /* Foto galeri dibuka besar. Berkas penuh baru diunduh saat diminta. */
   (function(){
     var kotak = document.getElementById('lihatFoto');
@@ -767,6 +803,7 @@
 
     gambarSilsilah(v);
     gambarFoto();
+    gambarKisah();
 
     /* judul tab dan baris penutup — keduanya ikut isi database */
     var namaPasangan = v.ttdNama[0] + " & " + v.ttdNama[1];

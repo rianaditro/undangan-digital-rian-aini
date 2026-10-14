@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Ornamen tema Kisah: tinta pena — garis bertitik seperti jahitan buku
+       dan hati kecil, gaya catatan di album keluarga. -->
+  <g id="pemisah">
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1.2;stroke-linecap:round;stroke-dasharray:2 5;vector-effect:non-scaling-stroke" d="M14 20 H100 M140 20 H226"/>
+    <path style="fill:var(--ukir-isi)" d="M120 30 C108 22 104 15 108 10 C111 6 117 7 120 12 C123 7 129 6 132 10 C136 15 132 22 120 30 Z"/>
+  </g>
+  <g id="sudut">
+    <path style="fill:var(--ukir-isi);opacity:.85" d="M4 4 H44 L4 44 Z"/>
+    <path style="fill:none;stroke:var(--ukir-garis);stroke-width:1;vector-effect:non-scaling-stroke;opacity:.6" d="M4 54 V4 H54"/>
+  </g>
+</svg>

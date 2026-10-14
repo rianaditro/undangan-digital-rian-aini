@@ -91,7 +91,7 @@ halaman (bukan oleh tema), jadi tema tidak perlu menebak.
 
 `<body data-tema="…">` diisi supaya `tata.js` dan uji tahu tema aktif.
 
-### 2.3 Data (migrasi 036, 037)
+### 2.3 Data (migrasi 036, 037, 038)
 
 **036 — peran foto di undangan**
 
@@ -109,16 +109,17 @@ foto.peran  text  null | 'sampul' | 'mempelai_pria' | 'mempelai_wanita' | 'galer
   Divalidasi di halaman terhadap `tema.json`, bukan di database (supaya
   tema baru tidak butuh migrasi).
 
-**038 — kisah** (baru dikerjakan saat tema Kisah)
+**038 — kisah** (terpasang di Tahap H, lihat 3i)
 
 ```
-kisah (id, pasangan_id, urutan, tahun, judul, teks ≤140, foto_id → foto on delete set null)
+kisah (id, pasangan_id, urutan, tahun ≤30, judul ≤60, teks ≤280, foto_id → foto on delete set null)
 ```
 
-RLS mengikuti pola `silsilah`: pemilik menulis lewat REST, anon membaca
-lewat `undangan_isi`.
+RLS mengikuti pola `kenangan_vendor`: pemilik menulis lewat REST, anon
+membaca lewat `undangan_isi`. Batas teks di database 280; dasbor
+menyarankan ≤140 dengan penghitung huruf, tidak menolak.
 
-Kedua migrasi lewat jalur staging seperti di `docs/laporan-dev-dan-rencana.md`.
+Ketiga migrasi lewat jalur staging seperti di `docs/laporan-dev-dan-rencana.md`.
 
 ### 2.4 Palet dari foto
 
@@ -186,7 +187,7 @@ atas, dan kenapa:
 | Warna transparan lewat token turunan | Token `-rgb` (`rgba(var(--aksen-rgb),.3)`) | Tampilan lama terjaga **persis** — gaya terhitung 230 elemen undangan dan 120 elemen halaman terima kasih identik sebelum dan sesudah |
 | Huruf dipasang `gantiTema()` | Huruf **bawaan** di-`@import` oleh `gaya.css`/`kenangan.css`; hanya gaya teks lain yang dipasang JS | Halaman tetap berhuruf benar walau `tema.json` gagal dimuat atau JS mati |
 | Pratinjau di iframe | Contoh kecil di dasbor + tautan "Buka undangan dengan pilihan ini" (`?pratinjau=1&tema=…&palet=…&huruf=…`) | `undangan_isi` menolak undangan yang belum terbit, jadi iframe kosong untuk pasangan yang paling butuh pratinjau: yang masih draf |
-| Slot `#kisah` | Belum | Ikut Tahap H bersama tabelnya |
+| Slot `#kisah` | Belum | Ikut Tahap H bersama tabelnya — terpasang, lihat 3i |
 | — | Tema tanpa `tema.json` jatuh ke `ukir-jepara` | Ditemukan uji: lapisan aset menjawab berkas yang tidak ada dengan `index.html`, dan peramban menukar tema yang sah dengan "stylesheet" kosong |
 
 ### Urutan terbit ke produksi
@@ -377,6 +378,37 @@ Dokumenter memakainya untuk: kemiringan polaroid yang acak tapi tetap,
 cap tanggal oranye ala kamera saku ("15 9 '26") di tiap foto, dan seret
 strip film dengan tetikus.
 
+## 3i. Tahap H — Kisah, selesai (14 Oktober 2026)
+
+**Migrasi 038** — tabel `kisah`, satu baris = satu bab (tahun bebas,
+judul, satu-dua kalimat, foto opsional). Foto tidak diunggah ulang: bab
+menunjuk baris `foto` di pustaka, dan pemicu `_kisah_foto_sendiri`
+menolak foto milik undangan lain. `undangan_isi` menambah kunci `kisah`
+(bab urut, foto hanya bila masih tampil). `uji/sql/038-kisah.sql`: 7 cek.
+
+**Bagian `#kisah` di semua tema**, di antara mempelai dan silsilah. Tanpa
+bab = bagian tidak muncul, jadi pasangan lama dan yang tidak mengisi tidak
+berubah sama sekali. Ketujuh tema mendapat gaya garis waktu dasar (garis
+yang tumbuh dengan `scaleY`, bukan `height` — dijaga `periksa-gerak`).
+
+**Tema `tema/kisah/`** — album keluarga: kertas krem, foto bersudut
+selotip, garis waktu yang berselang kiri-kanan di layar lebar dan satu
+kolom di HP. 4 palet (Sepia Klasik, Zaitun, Biru Pudar, Mawar Kering) +
+"Dari foto", 3 gaya teks (Tulisan Tangan, Buku Cerita, Mesin Ketik),
+`kenangan.css`-nya sendiri.
+
+**Dasbor — halaman "Kisah kami"**: tambah bab, "Isi kerangka bab" (Masa
+kecil, Pertama bertemu, Saling mengenal, Lamaran, Menikah — sengaja tanpa
+kata "pacaran" supaya pasangan ta'aruf bisa langsung memakainya), naik/
+turun, pilih foto dari pustaka dengan gambar kecil, penghitung huruf.
+Simpan = PATCH yang berubah, POST yang baru, DELETE yang hilang — pola
+yang sama dengan vendor.
+
+Uji: `uji-dasbor` kisah-1…9 (kerangka, judul wajib, PATCH/POST/DELETE,
+simpan tanpa perubahan tidak mengirim apa pun), `uji-tema` (bagian
+tersembunyi tanpa bab; 4 bab × 7 tema × HP/layar lebar: urutan, foto
+tergambar, judul di-escape, tidak melebar; gerak dikurangi).
+
 ---
 
 ## Langkah manual — dikumpulkan sampai siap terbit
@@ -385,23 +417,23 @@ Semua yang tidak bisa dikerjakan dari repo, untuk seluruh tahap yang
 belum terbit. Dikerjakan sekali, berurutan, waktu cabang ini akan
 digabung.
 
-1. **Migrasi 036, lalu 037** — tempel
-   `supabase/migrations/036_tema_foto_setel.sql`, kemudian
-   `037_pembuka.sql`, di SQL editor Supabase, berurutan. Aman untuk `main`
-   yang sedang tayang: `db/kompat.mjs` memastikan kode `main` masih sah
-   terhadap skema 037, dan kunci baru `undangan_isi` diabaikan halaman
+1. **Migrasi 036, 037, lalu 038** — tempel
+   `supabase/migrations/036_tema_foto_setel.sql`, `037_pembuka.sql`,
+   kemudian `038_kisah.sql`, di SQL editor Supabase, berurutan. Aman untuk
+   `main` yang sedang tayang: `db/kompat.mjs` memastikan kode `main` masih
+   sah terhadap skema 038, dan kunci baru `undangan_isi` diabaikan halaman
    lama. 037 berbawaan `pembuka = 'islam'`, jadi pasangan yang sudah ada
-   tidak berubah.
+   tidak berubah; 038 hanya menambah tabel kosong.
 2. **Gabungkan cabang ini ke `main`** — sesudah langkah 1, bukan sebelum:
-   dasbor baru menulis `foto.peran`, `pasangan.tema_setel`, dan
-   `pasangan.pembuka`.
+   dasbor baru menulis `foto.peran`, `pasangan.tema_setel`,
+   `pasangan.pembuka`, dan tabel `kisah`.
 3. **Cocokkan produksi dengan repo** — `PGURL=… uji/db/banding.sh >
    /tmp/banding.sql`, jalankan isinya di SQL editor; hasil kosong = sama.
 4. **Periksa sekali di HP** — buka undangan Rian & 'Aini: tampilannya
    harus sama seperti sebelumnya, kecuali kotak hitung mundur yang kini
    hilang (acaranya sudah lewat).
 
-Tahap A sampai G tidak butuh langkah manual lain selain migrasi 036 dan 037 (tidak ada edge function,
+Tahap A sampai H tidak butuh langkah manual lain selain migrasi 036, 037, dan 038 (tidak ada edge function,
 rahasia, atau DNS yang berubah).
 
 ---

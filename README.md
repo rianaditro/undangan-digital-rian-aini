@@ -25,6 +25,7 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 │   ├── senja-alam/       ← prewed luar ruangan, palet bisa diambil dari foto sampul
 │   ├── studio-anggun/    ← prewed studio, foto dibingkai, kesan resmi
 │   ├── dokumenter/       ← scrapbook: polaroid, strip film; tata.js = JS khusus tema
+│   ├── kisah/            ← album keluarga: garis waktu bab demi bab (tabel kisah, 038)
 │   ├── daftar.json       ← dibangun bangun-daftar.mjs, dibaca dasbor
 │   ├── bangun-daftar.mjs
 │   ├── periksa-palet.mjs ← penjaga: palet terbaca, manifest sah

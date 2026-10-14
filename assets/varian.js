@@ -183,6 +183,8 @@
   var DARI_KODE = {};
   /* Foto prewed per peran (migrasi 036). Bentuknya selalu lengkap. */
   var FOTO     = { sampul: null, pria: null, wanita: null, galeri: [] };
+  /* Bab perjalanan pasangan (migrasi 038). Kosong = bagian kisah tidak tampil. */
+  var KISAH    = [];
 
   var KONF = {
     siap: false,
@@ -526,6 +528,8 @@
     FOTO.wanita = f.wanita || null;
     FOTO.galeri.length = 0;
     (f.galeri || []).forEach(function (x) { FOTO.galeri.push(x); });
+    KISAH.length = 0;
+    (d.kisah || []).forEach(function (x) { if (x && x.judul) KISAH.push(x); });
     KONF.status        = d.status || '';
     KONF.canonicalHost = d.canonical_host || '';
     KONF.kota          = d.kota || '';
@@ -1234,6 +1238,7 @@
     ACARA: ACARA,
     SILSILAH: SILSILAH,
     FOTO: FOTO,
+    KISAH: KISAH,
     DOMPET: DOMPET,
     VARIAN: VARIAN,
     KONF: KONF,
