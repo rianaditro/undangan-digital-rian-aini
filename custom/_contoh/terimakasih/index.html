@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terima Kasih</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/custom/_contoh/gaya.css">
+</head>
+<body class="terbuka">
+<div id="surat">
+  <section class="halaman-surat">
+    <p class="kecil">Terima kasih</p>
+    <h1 class="nama-besar" id="nama"></h1>
+    <p id="kalimat">Atas doa dan kehadiran Bapak/Ibu/Saudara/i di hari bahagia kami.</p>
+    <p class="tanggal" id="angka"></p>
+  </section>
+  <section class="halaman-surat" id="galeri" hidden>
+    <h2>Kenangan</h2>
+    <div class="galeri" id="daftarFoto"></div>
+  </section>
+</div>
+<p class="galat" id="galat" hidden>Halaman terima kasih belum dibuka.</p>
+
+<script src="/assets/varian.js"></script>
+<script src="/assets/kit.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); }, esc = Kit.esc;
+  Kit.kenangan().then(function (d) {
+    if (!d || d.aktif === false) throw new Error('belum');
+    var m = d.mempelai || {}, w = (m.wanita || {}).panggilan || '', p = (m.pria || {}).panggilan || '';
+    $('nama').textContent = w + ' & ' + p;
+    document.title = 'Terima Kasih — ' + w + ' & ' + p;
+    var a = d.angka || {};
+    $('angka').textContent = [a.hadir ? a.hadir + ' tamu hadir' : '', a.ucapan ? a.ucapan + ' ucapan' : ''].filter(Boolean).join(' · ');
+    var foto = (d.foto || []).filter(function (f) { return f.jenis !== 'video'; }).slice(0, 12);
+    if (foto.length) {
+      $('daftarFoto').innerHTML = foto.map(function (f) {
+        return '<img loading="lazy" decoding="async" alt="' + esc(f.keterangan || '') + '" src="' + esc(Kit.fotoUrl(f, 'kecil')) + '">';
+      }).join('');
+      $('galeri').hidden = false;
+    }
+    document.body.dataset.siap = 'isi';
+  }).catch(function () {
+    $('surat').hidden = true; $('galat').hidden = false;
+    document.body.dataset.siap = 'galat';
+  });
+})();
+</script>
+</body>
+</html>

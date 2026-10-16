@@ -51,7 +51,7 @@ jobs:
       # penjaga tema: animasi tanpa pemicu tata letak, palet terbaca,
       # manifest sah, tema/daftar.json tidak tertinggal
       - name: penjaga tema
-        run: node ../tema/periksa-gerak.mjs && node ../tema/periksa-palet.mjs
+        run: node ../tema/periksa-gerak.mjs && node ../tema/periksa-palet.mjs && node ../tema/periksa-custom.mjs
       - run: npm install
       - run: npx playwright install --with-deps chromium
       - name: semua suite

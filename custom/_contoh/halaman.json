@@ -1,0 +1,10 @@
+{
+  "kode": "_contoh",
+  "nama": "Kerangka halaman custom — surat beramplop",
+  "kit": 1,
+  "asal": "",
+  "izin_ulang": true,
+  "isi_khusus": [
+    { "kunci": "kutipan", "ket": "Satu kalimat di bawah nama, opsional" }
+  ]
+}

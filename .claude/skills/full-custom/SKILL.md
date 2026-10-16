@@ -20,10 +20,11 @@ sama.
   pembeli berikutnya bisa ganti warna tanpa menyentuh CSS.
 - **Halaman terima kasih ikut**: setiap tema custom wajib punya
   `kenangan.css` yang suasananya sama dengan `gaya.css`.
-- **HTML tetap `index.html` bersama** (anak tangga 2). Naik ke halaman
-  custom (anak tangga 3, `custom/<kode>/`) hanya kalau yang diminta tidak
-  bisa dicapai dengan menata ulang bagian yang ada — dan itu butuh kit
-  (tahap K4, belum ada). Tanyakan pemilik dulu.
+- **Mulai dari tema custom** (anak tangga 2, `index.html` bersama). Naik
+  ke halaman custom (anak tangga 3, `custom/<kode>/`, bagian 7 di bawah)
+  hanya kalau yang diminta tidak bisa dicapai dengan menata ulang bagian
+  yang ada — surat yang dibuka, peta interaktif, alur baru. Tuliskan
+  alasannya di PR. Halaman custom hanya untuk paket bersubdomain.
 - **Tidak menulis ke Supabase produksi tanpa izin pemilik** di sesi itu.
   Membaca brief boleh.
 - **Tidak mengubah tema custom yang sudah dipakai pasangan lain.**
@@ -122,9 +123,34 @@ sebagai pasangan itu, atau stub `uji/undangan-isi.json` dengan isi dari
   status ke `terbit`. Urutannya penting: tema yang foldernya belum ada di
   `main` jatuh ke tema bawaan.
 
-## 7. Selesai berarti
+## 7. Halaman custom (anak tangga 3)
 
-- [ ] `periksa-palet`, `periksa-gerak`, `uji-tema` hijau
+1. `cp -r custom/_contoh custom/<kode>` lalu ganti **setiap**
+   `/custom/_contoh/` di berkasnya dengan `/custom/<kode>/`
+   (`periksa-custom` menolak rujukan ke folder lain). Isi `halaman.json`:
+   `kode`, `nama`, `kit: 1`, `asal`, `isi_khusus`.
+2. Susun HTML bebas, tapi semua data lewat `assets/kit.js` (baca kepala
+   berkasnya): `Kit.muat()`, `Kit.ucapan`, `Kit.kenangan()`,
+   `Kit.musik`, `Kit.fotoUrl`, `Kit.esc`. Jangan memanggil Supabase
+   sendiri. Teks dari data lewat `textContent`, atau `Kit.esc()` untuk
+   `innerHTML` — uji memakai data jahil.
+3. Wajib: penanda `data-kit="ucapan-nama"`, `"ucapan-hadir"`,
+   `"ucapan-pesan"`, `"ucapan-kirim"` (dan `"buka"` bila ada sampul);
+   `document.body.dataset.siap = 'isi'` sesudah isi tergambar;
+   `terimakasih/index.html` sendiri lewat `Kit.kenangan()`; gerak hanya
+   `transform`/`opacity` dengan `prefers-reduced-motion`.
+4. Uji: `node tema/periksa-custom.mjs`, `node tema/periksa-gerak.mjs`,
+   `cd uji && node uji-custom.mjs` (kontrak 1–10 untuk setiap folder,
+   tangkapan layar `uji/custom-<kode>-*.png`).
+5. Memasang: satu baris `"<slug>": "<kode>"` di `custom/peta.json`, di PR
+   yang sama atau PR kecil berikutnya. Berlaku di subdomain pasangan dan
+   alamat pratinjau `*.workers.dev/<slug>/…`, tidak di domain bersama.
+   Menghapus barisnya = kembali ke template.
+
+## 8. Selesai berarti
+
+- [ ] `periksa-palet`, `periksa-gerak`, `uji-tema` hijau (halaman custom:
+      `periksa-custom`, `uji-custom`)
 - [ ] tangkapan layar dilihat, HP dan desktop, undangan dan terima kasih
 - [ ] tidak ada nama/foto pasangan di folder tema
 - [ ] `tema/custom.json` ikut dikomit

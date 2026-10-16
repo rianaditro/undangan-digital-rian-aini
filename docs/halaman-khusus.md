@@ -310,7 +310,7 @@ token, manifest, `kenangan.css`). Sesudahnya:
 | **K1** ✅ | tema custom: validasi nama `custom/…`, kerangka `_contoh` (dengan `kenangan.css`), `tema/custom.json`, uji pakai ulang di `uji-tema.mjs`, kartu di dasbor |
 | **K2** ✅ | migrasi: paket `full_custom`, kolom `pasangan.khusus`, tabel `brief_custom` + `revisi_custom`; panel brief & revisi di dasbor; antrean dan katalog custom di `/pemilik` |
 | **K3** ✅ | skill `full-custom` + satu tema custom percontohan (misal untuk Rian & 'Aini) |
-| **K4** | kit v1 (dibakukan dari `varian.js`, termasuk `Kit.kenangan()`), `custom/peta.json` + rute di Worker, `uji-custom.mjs`, kerangka `custom/_contoh/` |
+| **K4** ✅ | kit v1 (dibakukan dari `varian.js`, termasuk `Kit.kenangan()`), `custom/peta.json` + rute di Worker, `uji-custom.mjs`, kerangka `custom/_contoh/` |
 
 K1–K3 sudah cukup untuk mulai menjual paket. K4 menyusul saat ada
 permintaan yang memang butuh struktur HTML sendiri.
@@ -423,3 +423,53 @@ tulisan; foto acuan dari pustaka sudah bisa).
   CSS. 3 palet, 2 gaya teks. `asal: "percontohan"` — belum ada pemesan,
   jadi siap ditawarkan sebagai titik awal katalog custom. Ikut semua uji
   `uji-tema`, termasuk uji pakai ulang.
+
+## 13. K4 — halaman custom penuh, selesai (16 Oktober 2026)
+
+Jalan untuk anak tangga 3 sudah ada; belum ada halaman custom sungguhan
+(`custom/peta.json` masih `{}`), jadi pasangan mana pun belum berubah.
+
+- **Kit v1 — `assets/kit.js`**: `Kit.muat()` (isi undangan + tamu dari
+  alamat, pihak tamu, acara bertempat, dompet sisi tamu, teks pembuka
+  menurut agama, `khusus`, pilihan kehadiran yang sah), `Kit.ucapan.daftar/
+  kirim`, `Kit.kenangan()`, `Kit.musik(tombol)`, `Kit.fotoUrl`,
+  `Kit.gerak` (= Motion), `Kit.esc`. Membungkus `varian.js`, tidak
+  menyalinnya. Halaman wajib memberi penanda `data-kit="ucapan-nama |
+  ucapan-hadir | ucapan-pesan | ucapan-kirim"` (dan `buka` bila ada
+  sampul), serta `body.dataset.siap = 'isi'`.
+- **Rute — `cloudflare/pintu.js` + `custom/peta.json`**: slug yang
+  tercatat di peta mendapat `/custom/<kode>/` sebagai undangannya dan
+  `/custom/<kode>/terimakasih/` sebagai halaman terima kasihnya; alamat
+  tamu tidak berubah. Hanya di subdomain pasangan dan alamat pratinjau
+  `*.workers.dev` — **tidak pernah** di domain bersama, karena di sana
+  halaman custom berbagi origin dengan `/dasbor`. Folder yang hilang
+  jatuh ke template, bukan halaman kosong.
+- **`run_worker_first` diperluas** ke navigasi halaman (`"/*"`), dengan
+  folder berkas dan halaman kerja dikecualikan (`_headers` dan
+  `_redirects` hanya berlaku untuk jawaban lapisan aset). Satu kunjungan
+  tamu = satu panggilan Worker. Diperiksa dengan `wrangler deploy
+  --dry-run` (wrangler 4.151): konfigurasi dan bundelnya sah; pola `!`
+  butuh wrangler ≥ 4.20. `uji/server.mjs` kini meniru pola `!`.
+- **Kerangka `custom/_contoh/`**: undangan berbentuk surat beramplop
+  (`index.html`, `gaya.css`, `halaman.js`, `halaman.json`) dan
+  `terimakasih/index.html`, semuanya lewat Kit.
+- **Penjaga statis — `tema/periksa-custom.mjs`** (di CI): peta sah dan
+  menunjuk folder yang ada (bukan kerangka); berkas wajib; `halaman.json`
+  (kode, versi kit yang ada, asal); rujukan `/custom/<x>/` hanya ke
+  foldernya sendiri; sumber luar hanya Google Fonts/cdnjs; tanpa gambar
+  raster, `/media/`, panggilan Supabase langsung, atau nama pemesan asal.
+  `periksa-gerak` ikut memeriksa CSS-nya.
+- **Uji peramban — `uji/uji-custom.mjs`**: setiap folder di `custom/`
+  dipetakan ke slug uji dan dibuka lewat Worker yang sama dengan
+  produksi; kontrak 3.3 butir 1–10 (nama tamu, acara + peta, ucapan
+  terkirim dengan pihak dan kehadiran yang sah, hadiah, tanpa galat dan
+  tanpa gulir mendatar di 360/1280, gerak dikurangi, sumber luar, ≤ 500
+  KB, pasangan rekaan + data jahil tidak dieksekusi, halaman terima
+  kasihnya sendiri), ditambah aturan rute (domain bersama tidak, pratinjau
+  ya, pasangan lain tetap template, jalur platform tetap platform).
+- `custom` dan `media` jadi slug terlarang (039) dan jalur platform.
+
+**Saat merge:** perubahan `run_worker_first` ikut tayang. Pasangan yang
+ada tidak berubah (peta kosong, Worker meneruskan semuanya ke lapisan
+aset seperti sebelumnya), tapi Workers Builds harus memakai wrangler ≥
+4.20 — versi bawaannya sekarang jauh di atas itu.

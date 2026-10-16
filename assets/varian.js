@@ -227,7 +227,7 @@
      cermin dari aturan yang dijaga database. */
   var JALUR_PLATFORM = {
     kirim: 1, dasbor: 1, terimakasih: 1, admin: 1, mulai: 1, coba: 1, reseller: 1, pemilik: 1,
-    assets: 1, tema: 1
+    assets: 1, tema: 1, custom: 1, media: 1
   };
 
   /* Apakah host ini subdomain milik satu pasangan. Dipakai bersama oleh
@@ -519,6 +519,8 @@
     KONF.tema          = d.tema || '';
     KONF.pembuka       = PEMBUKA[d.pembuka] ? d.pembuka : 'islam';
     KONF.temaSetel     = (d.tema_setel && typeof d.tema_setel === 'object') ? d.tema_setel : {};
+    /* Isi khusus halaman custom (039) — bentuknya milik halaman itu. */
+    KONF.khusus        = (d.khusus && typeof d.khusus === 'object' && !Array.isArray(d.khusus)) ? d.khusus : {};
 
     /* Halaman dari zaman sebelum 036 tidak mengirim `foto`; bentuknya
        tetap dipenuhi supaya pemakai tidak perlu memeriksa kunci. */

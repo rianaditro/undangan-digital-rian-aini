@@ -155,5 +155,12 @@ begin
     gagal := gagal + 1; lap := lap || E'GAGAL  anon bisa menyentuh Full Custom\n';
   else lulus := lulus + 1; lap := lap || E'ok     anon tidak bisa menyentuh tabel dan RPC Full Custom\n'; end if;
 
+  n := 0;
+  foreach q in array array['custom', 'media'] loop
+    begin insert into public.pasangan (slug) values (q); exception when others then n := n + 1; end;
+  end loop;
+  if n = 2 then lulus := lulus + 1; lap := lap || E'ok     slug custom dan media milik platform\n';
+  else gagal := gagal + 1; lap := lap || E'GAGAL  slug custom/media diterima\n'; end if;
+
   raise exception E'\n===== LAPORAN UJI 039 =====\n%\nLULUS %  GAGAL %\n(transaksi dibatalkan)\n', lap, lulus, gagal;
 end $$;

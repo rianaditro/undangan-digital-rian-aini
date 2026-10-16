@@ -13,6 +13,7 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 │   ├── vcf.js            ← pembaca berkas kontak .vcf
 │   ├── gambar.js         ← pengecil foto sebelum diunggah
 │   ├── motion.js         ← runtun, parallax, angka bergulir
+│   ├── kit.js            ← Kit v1 untuk halaman custom (custom/<kode>/)
 │   └── backsound.mp3
 ├── tema/
 │   ├── ukir-jepara/      ← "Adat Nusantara": Jawa (bawaan), Sunda, Bugis, Bali
@@ -32,13 +33,17 @@ Situs statis. Tidak ada build step, tidak perlu framework.
 │   ├── custom.json       ← katalog custom (tidak tampil di dasbor), dibaca /pemilik
 │   ├── bangun-daftar.mjs
 │   ├── cetak-root.mjs    ← :root + @import bawaan sebuah tema, untuk ditempel
+│   ├── periksa-custom.mjs ← penjaga halaman custom (custom/)
 │   ├── periksa-palet.mjs ← penjaga: palet terbaca, manifest sah
 │   └── periksa-gerak.mjs ← penjaga: tolak animasi pemicu tata letak
+├── custom/
+│   ├── peta.json         ← slug pasangan → halaman custom (dibundel ke Worker)
+│   └── _contoh/          ← kerangka halaman custom (surat beramplop)
 ├── supabase/
 │   ├── migrations/       ← migrasi bernomor, dijalankan berurutan
 │   └── functions/        ← edge function (jalur tulis yang dijaga)
 ├── cloudflare/
-│   └── pintu.js          ← Worker: akar mengundang.id → /mulai
+│   └── pintu.js          ← Worker: akar → /mulai, /media dari R2, halaman custom
 ├── wrangler.jsonc        ← konfigurasi Cloudflare Workers
 ├── _headers              ← noindex untuk kirim, dasbor, admin
 └── .assetsignore         ← yang TIDAK ikut terbit

@@ -60,8 +60,14 @@ if (fs.existsSync(path.join(ASET, '_redirects')))
     ALIH.set(dari, { ke, status: Number(status || 302) });
   }
 
-const POLA_WORKER = (konf.assets.run_worker_first || []).map(p =>
-  new RegExp('^' + p.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$'));
+// run_worker_first: pola biasa memanggil Worker, pola "!" mengecualikan
+// — dan pengecualian selalu menang, apa pun urutannya (dokumentasi
+// Cloudflare, static-assets/binding).
+const keRegex = p => new RegExp('^' + p.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
+const POLA = konf.assets.run_worker_first || [];
+const POLA_MASUK  = POLA.filter(p => !p.startsWith('!')).map(keRegex);
+const POLA_KECUALI = POLA.filter(p => p.startsWith('!')).map(p => keRegex(p.slice(1)));
+export const lewatWorker = p => POLA_MASUK.some(re => re.test(p)) && !POLA_KECUALI.some(re => re.test(p));
 
 const MIME = {'.html':'text/html;charset=utf-8', '.js':'text/javascript;charset=utf-8',
   '.css':'text/css;charset=utf-8', '.json':'application/json', '.svg':'image/svg+xml',
@@ -118,7 +124,7 @@ export function mulai(port, envTambahan = {}){
     const p = new URL(permintaan.url).pathname;
     let jwb;
     try {
-      jwb = POLA_WORKER.some(re => re.test(p))
+      jwb = lewatWorker(p)
         ? await pintu.fetch(permintaan, { ASSETS, MEDIA, MEDIA_KUNCI, ...envTambahan }, { waitUntil() {} })
         : await ASSETS.fetch(permintaan);
     } catch (e) {

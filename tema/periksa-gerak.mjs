@@ -62,6 +62,15 @@ const BERKAS=[];
 for(const {kode:tema, dir} of semuaManifest({kerangka:true}))
   for(const nama of ['gaya.css','kenangan.css'])
     if(fs.existsSync(path.join(dir,nama))) BERKAS.push([tema+(nama==='gaya.css'?'':'/kenangan'), path.join(dir,nama)]);
+// Halaman custom (custom/<kode>/, anak tangga 3): semua berkas .css-nya.
+const CUSTOM=path.join(AKAR,'custom');
+if(fs.existsSync(CUSTOM))
+  for(const kode of fs.readdirSync(CUSTOM).sort()){
+    const dir=path.join(CUSTOM,kode);
+    if(!fs.statSync(dir).isDirectory()) continue;
+    for(const f of fs.readdirSync(dir,{recursive:true}).filter(f=>String(f).endsWith('.css')))
+      BERKAS.push(['custom/'+kode+'/'+f, path.join(dir,f)]);
+  }
 
 for(const [tema,f] of BERKAS){
   const css=bersih(fs.readFileSync(f,'utf8'));

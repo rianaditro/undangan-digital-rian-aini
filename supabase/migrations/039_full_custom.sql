@@ -1,7 +1,8 @@
 -- 039 — Full Custom (docs/halaman-khusus.md, tahap K2), dan pintu
 -- pasangan yang selama ini terlalu lebar.
 --
---   SATU   paket ketiga: full_custom (subdomain, seperti premium)
+--   SATU   paket ketiga: full_custom (subdomain, seperti premium);
+--          slug 'custom' dan 'media' milik platform
 --   DUA    kolom yang hanya boleh diubah pemilik platform
 --   TIGA   pasangan.khusus — isi khusus halaman custom, tanpa migrasi lagi
 --   EMPAT  brief_custom + revisi_custom — brief desain dan catatan revisi,
@@ -114,6 +115,12 @@ revoke all on function public.pasangan_siapkan(text, text, text, text, date, tex
   from public, anon, authenticated;
 grant execute on function public.pasangan_siapkan(text, text, text, text, date, text, text)
   to service_role;
+
+-- /custom/<kode>/ adalah folder halaman custom (K4) dan /media/ tempat
+-- foto: keduanya milik platform di domain bersama, jadi tidak boleh jadi
+-- slug pasangan (mengundang.id/custom/… akan menimpa salah satunya).
+insert into public.slug_terlarang (slug) values ('custom'), ('media')
+on conflict do nothing;
 
 -- ===========================================================================
 -- TIGA — pasangan.khusus (didahulukan: pemicu DUA menjaganya)

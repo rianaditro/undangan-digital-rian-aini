@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Undangan Pernikahan</title>
+<!-- KERANGKA HALAMAN CUSTOM (Full Custom anak tangga 3).
+     Salin folder ini ke custom/<kode>/ dan ganti setiap "/custom/_contoh/"
+     di berkas-berkasnya dengan "/custom/<kode>/". Petunjuk lengkap:
+     .claude/skills/full-custom/SKILL.md bagian "Halaman custom". -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/custom/_contoh/gaya.css">
+</head>
+<body class="tertutup">
+
+<main id="amplop" aria-label="Amplop undangan">
+  <div class="amplop-kertas">
+    <p class="kecil">Kepada Yth.</p>
+    <p class="tamu" id="namaTamu">Tamu Undangan</p>
+    <div class="segel" aria-hidden="true"><span id="inisial">&amp;</span></div>
+    <p class="pasangan" id="namaAmplop"></p>
+    <button type="button" class="tombol" id="btnBuka" data-kit="buka">Buka Surat</button>
+  </div>
+</main>
+
+<div id="surat" hidden>
+  <section class="halaman-surat" id="pembuka">
+    <p class="kecil" id="salam"></p>
+    <h1 class="nama-besar"><span id="namaWanita"></span> <em>&amp;</em> <span id="namaPria"></span></h1>
+    <p class="kutipan" id="kutipan" hidden></p>
+    <p class="tanggal" id="tanggal"></p>
+    <figure class="sampul" id="sampul" hidden><img alt="" id="sampulImg"></figure>
+    <blockquote class="ayat" id="ayat" hidden><p id="ayatTeks"></p><cite id="ayatSumber"></cite></blockquote>
+  </section>
+
+  <section class="halaman-surat" id="mempelai">
+    <h2>Kami yang berbahagia</h2>
+    <div class="dua" id="duaMempelai"></div>
+  </section>
+
+  <section class="halaman-surat" id="acara">
+    <h2>Waktu &amp; tempat</h2>
+    <div id="daftarAcara"></div>
+  </section>
+
+  <section class="halaman-surat" id="galeri" hidden>
+    <h2>Potret</h2>
+    <div class="galeri" id="daftarFoto"></div>
+  </section>
+
+  <section class="halaman-surat" id="hadiah" hidden>
+    <h2>Tanda kasih</h2>
+    <p class="kecil">Doa restu Anda sudah lebih dari cukup. Bila berkenan memberi tanda kasih:</p>
+    <div id="daftarDompet"></div>
+  </section>
+
+  <section class="halaman-surat" id="ucapan">
+    <h2>Ucapan &amp; doa</h2>
+    <form id="formUcapan" novalidate>
+      <label for="inNama">Nama</label>
+      <input id="inNama" data-kit="ucapan-nama" maxlength="40" autocomplete="name">
+      <label for="inHadir">Kehadiran</label>
+      <select id="inHadir" data-kit="ucapan-hadir"></select>
+      <label for="inPesan">Ucapan</label>
+      <textarea id="inPesan" data-kit="ucapan-pesan" maxlength="500" rows="3"></textarea>
+      <button type="submit" class="tombol" id="btnKirim" data-kit="ucapan-kirim">Kirim Ucapan</button>
+      <p class="pesan-form" id="pesanForm" role="status"></p>
+    </form>
+    <ul class="daftar-ucapan" id="daftarUcapan"></ul>
+  </section>
+
+  <footer class="halaman-surat" id="penutup">
+    <p id="penutupTeks">Merupakan kehormatan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir.</p>
+    <p class="nama-besar kecil-nama" id="namaPenutup"></p>
+  </footer>
+</div>
+
+<button type="button" class="musik" id="btnMusik" hidden>&#9835;</button>
+<p class="galat" id="galat" hidden>Undangan ini belum bisa dibuka. Coba lagi sebentar lagi.</p>
+
+<script src="/assets/varian.js"></script>
+<script src="/assets/motion.js"></script>
+<script src="/assets/kit.js"></script>
+<script src="/custom/_contoh/halaman.js"></script>
+</body>
+</html>
